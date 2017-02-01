@@ -1,0 +1,41 @@
+[Unit]
+Description=Cortex
+Documentation=https://cortex-project.org
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Environment=PID_DIR=/var/run/cortex
+WorkingDirectory=/opt/cortex
+
+User=cortex
+Group=cortex
+
+RuntimeDirectory=cortex
+RuntimeDirectoryMode=0750
+
+ExecStart=/opt/cortex/bin/cortex \
+                        -Dconfig.file=/etc/cortex/application.conf \
+                        -Dhttp.port=9000 \
+			-Dpidfile.path=${PID_DIR}/pid
+
+StandardOutput=journal
+StandardError=inherit
+
+# Specifies the maximum file descriptor number that can be opened by this process
+LimitNOFILE=65536
+
+# Disable timeout logic and wait until process is stopped
+TimeoutStopSec=0
+
+# SIGTERM signal is used to stop the Java process
+KillSignal=SIGTERM
+
+# Java process is never killed
+SendSIGKILL=no
+
+# When a JVM receives a SIGTERM signal it exits with code 143
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target

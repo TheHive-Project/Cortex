@@ -1,0 +1,15 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET      /                              controllers.Default.redirect(to = "/index.html")
+GET      /api/analyzer                  controllers.AnalyzerCtrl.list
+GET      /api/analyzer/:id              controllers.AnalyzerCtrl.get(id)
+POST     /api/analyzer/:id/run          controllers.AnalyzerCtrl.analyze(id)
+GET      /api/analyzer/type/:dataType   controllers.AnalyzerCtrl.listForType(dataType)
+GET      /api/job                       controllers.JobCtrl.list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], start: Int=0, limit: Int=10)
+GET      /api/job/:id                   controllers.JobCtrl.get(id)
+DELETE   /api/job/:id                   controllers.JobCtrl.remove(id)
+GET      /api/job/:id/report            controllers.JobCtrl.report(id)
+GET      /api/job/:id/waitreport        controllers.JobCtrl.waitReport(id, atMost ?= "Inf")
+GET      /*file                         controllers.AssetCtrl.get(file)
