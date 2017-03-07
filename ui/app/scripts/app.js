@@ -25,4 +25,9 @@ angular.module('cortex', [
             positionX: 'right',
             positionY: 'bottom'
         });
+    })
+    .run(function($rootScope, $window){
+        $rootScope.$on('$stateChangeSuccess', function() {
+            $window.scrollTo(0, 0);
+        });
     });
