@@ -3,6 +3,7 @@
   "version": "1.0.2",
   "dependencies": {
     "angular": "1.5.10",
+    "angular-sanitize": "1.5.10",
     "bootstrap": "~3.3.7",
     "angular-ui-router": "~0.3.1",
     "es5-shim": "^4.5.9",

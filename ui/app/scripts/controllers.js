@@ -8,7 +8,7 @@
  * Controller of the cortex
  */
 angular.module('cortex')
-    .controller('NavCtrl', function($q, $state, $uibModal, AnalyzerSrv, Notification) {
+    .controller('NavCtrl', function($q, $state, $uibModal, AnalyzerSrv, NotificationService) {
         this.newAnalysis = function () {
 
             AnalyzerSrv.list()
@@ -46,13 +46,13 @@ angular.module('cortex')
                             $state.go('jobs');
                         }
                         _.each(response, function(resp) {
-                            Notification.success(resp.data.analyzerId + ' started successfully on ' + (resp.data.artifact.data || resp.data.artifact.attributes.filename));
+                            NotificationService.success(resp.data.analyzerId + ' started successfully on ' + (resp.data.artifact.data || resp.data.artifact.attributes.filename));
                         });
                     });
                 });
         };
     })
-    .controller('AnalyzersCtrl', function ($state, $uibModal, $q, $log, AnalyzerSrv, Notification, analyzers) {
+    .controller('AnalyzersCtrl', function ($state, $uibModal, $q, $log, AnalyzerSrv, NotificationService, analyzers) {
         this.search = {
             description: '',
             dataTypeList: ''
@@ -82,7 +82,7 @@ angular.module('cortex')
                 return AnalyzerSrv.run(result.analyzer.id, result);
             }).then(function (response) {
                 $state.go('jobs');
-                Notification.success(response.data.analyzerId + ' started successfully on ' + response.data.artifact.data);
+                NotificationService.success(response.data.analyzerId + ' started successfully on ' + response.data.artifact.data);
             });
         };
 
@@ -136,7 +136,7 @@ angular.module('cortex')
             $uibModalInstance.dismiss('cancel');
         };
     })
-    .controller('JobsCtrl', function ($scope, $uibModal, $interval, JobSrv, AnalyzerSrv, Notification, _, analyzers) {
+    .controller('JobsCtrl', function ($scope, $uibModal, $interval, JobSrv, AnalyzerSrv, NotificationService, _, analyzers) {
         var self = this;
 
         this.analyzers = analyzers;
@@ -245,7 +245,7 @@ angular.module('cortex')
                 return JobSrv.remove(id);
             }).then(function ( /*response*/ ) {
                 self.load(1);
-                Notification.success('Job removed successfully');
+                NotificationService.success('Job removed successfully');
             });
 
         };

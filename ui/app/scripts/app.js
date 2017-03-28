@@ -13,6 +13,7 @@ angular.module('cortex', [
         'ui.bootstrap',
         'ui-notification',
         'angularMoment',
+        'ngSanitize',
         'angularUtils.directives.dirPagination'
     ])
     .config(function(NotificationProvider) {
