@@ -1,6 +1,6 @@
 name := """cortex"""
 
-lazy val root = (project in file("."))
+lazy val cortex = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(PublishToBinTray.settings)
 
