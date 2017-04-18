@@ -35,7 +35,7 @@
                     controller: 'JobReportCtrl',
                     controllerAs: 'vm',
                     resolve: {
-                        job: function ($q, $stateParams, $log, JobSrv) {
+                        job: function ($state, $q, $stateParams, $log, JobSrv) {
                             var defered = $q.defer();
 
                             JobSrv.report($stateParams.id)
@@ -44,6 +44,7 @@
                                 }, function (response) {
                                     $log.error('Error while getting job report');
                                     defered.reject(response);
+                                    $state.go('jobs');
                                 });
 
                             return defered.promise;
