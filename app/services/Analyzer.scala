@@ -63,11 +63,20 @@ class AnalyzerSrv(
       command ← (info \ "command").asOpt[String] orElse {
         log.warn(s"command is missing in $infoFile"); None
       }
+      author ← (info \ "author").asOpt[String] orElse {
+        log.warn(s"author is missing in $infoFile"); None
+      }
+      url ← (info \ "url").asOpt[String] orElse {
+        log.warn(s"url is missing in $infoFile"); None
+      }
+      license ← (info \ "license").asOpt[String] orElse {
+        log.warn(s"license is missing in $infoFile"); None
+      }
       config = (info \ "config").asOpt[JsObject].getOrElse(JsObject(Nil))
       baseConfig = (info \ "baseConfig").asOpt[String].flatMap(c ⇒ (analyzerConfig \ c).asOpt[JsObject]).getOrElse(JsObject(Nil))
       absoluteCommand = analyzerPath.resolve(Paths.get(command.replaceAll("[\\/]", File.separator)))
       _ = log.info(s"Register analyzer $name $version (${(name + "_" + version).replaceAll("\\.", "_")})")
-    } yield ExternalAnalyzer(name, version, description, dataTypeList, absoluteCommand, globalConfig deepMerge baseConfig deepMerge config)(analyzeExecutionContext)
+    } yield ExternalAnalyzer(name, version, description, dataTypeList, author, url, license, absoluteCommand, globalConfig deepMerge baseConfig deepMerge config)(analyzeExecutionContext)
   }
 
   private[services] def readInfo(file: Path): JsValue = {

@@ -18,6 +18,9 @@ object JsonFormat {
     "version" → analyzer.version,
     "description" → analyzer.description,
     "dataTypeList" → analyzer.dataTypeList,
+    "author" → analyzer.author,
+    "url" → analyzer.url,
+    "license" → analyzer.license,
     "id" → analyzer.id))
 
   implicit val fileArtifactWrites = OWrites[FileArtifact](fileArtifact ⇒ Json.obj(

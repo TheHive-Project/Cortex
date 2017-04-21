@@ -19,6 +19,9 @@ case class ExternalAnalyzer(
     version: String,
     description: String,
     dataTypeList: Seq[String],
+    author: String,
+    url: String,
+    license: String,
     command: Path,
     config: JsObject)(implicit val ec: ExecutionContext) extends Analyzer {
 
