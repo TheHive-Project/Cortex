@@ -38,7 +38,7 @@ class AnalyzerCtrl @Inject() (
   private[controllers] def readFileArtifact(request: Request[AnyContent]) = {
     for {
       parts ← request.body.asMultipartFormData
-      filePart ← parts.file("data").headOption
+      filePart ← parts.file("data")
       attrList ← parts.dataParts.get("_json")
       attrStr ← attrList.headOption
       attr ← Json.parse(attrStr).asOpt[JsObject]
@@ -47,7 +47,7 @@ class AnalyzerCtrl @Inject() (
       ("filename" → JsString(filePart.filename)))
   }
 
-  def analyze(analyzerId: String) = Action.async { request ⇒
+  def analyze(analyzerId: String): Action[AnyContent] = Action.async { request ⇒
     readDataArtifact(request)
       .orElse(readFileArtifact(request))
       .map { artifact ⇒

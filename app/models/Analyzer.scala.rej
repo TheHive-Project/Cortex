@@ -1,0 +1,9 @@
+--- app/models/Analyzer.scala
++++ app/models/Analyzer.scala
+@@ -9,5 +9,5 @@ abstract class Analyzer {
+   val version: String
+   val description: String
+   val dataTypeList: Seq[String]
+-  val id = (name + "_" + version).replaceAll("\\.", "_")
++  val id: String = (name + "_" + version).replaceAll("\\.", "_")
+ }

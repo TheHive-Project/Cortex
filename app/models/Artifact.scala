@@ -13,7 +13,7 @@ class FileArtifact(val data: File, val attributes: JsObject) extends Artifact(at
   }
 }
 object FileArtifact {
-  def apply(data: File, attributes: JsObject) = {
+  def apply(data: File, attributes: JsObject): FileArtifact = {
     val tempFile = File.createTempFile("cortex-", "-datafile")
     data.renameTo(tempFile)
     new FileArtifact(tempFile, attributes)

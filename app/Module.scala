@@ -10,7 +10,7 @@ import services.JobActor
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
-  override def configure() = {
+  override def configure(): Unit = {
     bindActor[JobActor]("JobActor")
 
     if (environment.mode == Mode.Prod)

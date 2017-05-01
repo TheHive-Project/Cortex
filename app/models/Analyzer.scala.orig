@@ -12,5 +12,5 @@ abstract class Analyzer {
   val author: String
   val url: String
   val license: String
-  val id: String = (name + "_" + version).replaceAll("\\.", "_")
+  val id = (name + "_" + version).replaceAll("\\.", "_")
 }
