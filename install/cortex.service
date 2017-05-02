@@ -1,23 +1,19 @@
 [Unit]
-Description=Cortex
-Documentation=https://cortex-project.org
+Description=cortex
+Documentation=https://thehive-project.org
 Wants=network-online.target
 After=network-online.target
 
 [Service]
-Environment=PID_DIR=/var/run/cortex
 WorkingDirectory=/opt/cortex
 
 User=cortex
 Group=cortex
 
-RuntimeDirectory=cortex
-RuntimeDirectoryMode=0750
-
 ExecStart=/opt/cortex/bin/cortex \
-                        -Dconfig.file=/etc/cortex/application.conf \
-                        -Dhttp.port=9000 \
-			-Dpidfile.path=${PID_DIR}/pid
+	-Dconfig.file=/etc/cortex/application.conf \
+	-Dlogger.file=/etc/cortex/logback.xml \
+	-Dpidfile.path=/dev/null
 
 StandardOutput=journal
 StandardError=inherit

@@ -2,7 +2,7 @@ import sbt.Keys._
 import sbt._
 
 object BasicSettings extends AutoPlugin {
-  override def trigger = allRequirements
+  override def trigger: PluginTrigger = allRequirements
 
   override def projectSettings = Seq(
     organization := "org.cert-bdf",
