@@ -2,6 +2,7 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+
 GET      /                              controllers.Default.redirect(to = "/index.html")
 GET      /api/analyzer                  controllers.AnalyzerCtrl.list
 GET      /api/analyzer/:id              controllers.AnalyzerCtrl.get(id)
@@ -12,4 +13,7 @@ GET      /api/job/:id                   controllers.JobCtrl.get(id)
 DELETE   /api/job/:id                   controllers.JobCtrl.remove(id)
 GET      /api/job/:id/report            controllers.JobCtrl.report(id)
 GET      /api/job/:id/waitreport        controllers.JobCtrl.waitReport(id, atMost ?= "Inf")
+GET	 /modules			controllers.MispCtrl.modules
+POST	 /query                         controllers.MispCtrl.query
 GET      /*file                         controllers.AssetCtrl.get(file)
+

@@ -1,31 +1,26 @@
 package services
 
 import java.util.Date
-
 import javax.inject.{ Inject, Named }
-
-import scala.annotation.implicitNotFound
-import scala.concurrent.{ ExecutionContext, Future, Promise }
-import scala.concurrent.duration.{ DurationInt, FiniteDuration }
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.Duration.Infinite
-import scala.util.Random
 
 import akka.actor.{ Actor, ActorRef, ActorSystem, actorRef2Scala }
 import akka.pattern.ask
 import akka.util.Timeout
-
-import play.api.{ Configuration, Logger }
-import play.api.libs.json.{ JsString, JsValue }
-
 import models.{ Analyzer, Artifact, Job, JobStatus }
+import play.api.libs.json.{ JsString, JsValue }
+import play.api.{ Configuration, Logger }
+
+import scala.concurrent.duration.Duration.Infinite
+import scala.concurrent.duration.{ Duration, DurationInt, FiniteDuration }
+import scala.concurrent.{ ExecutionContext, Future, Promise }
+import scala.util.Random
 
 class JobSrv @Inject() (
     analyzerSrv: AnalyzerSrv,
     @Named("JobActor") jobActor: ActorRef,
     implicit val ec: ExecutionContext,
     implicit val system: ActorSystem) {
-  import JobActor._
+  import services.JobActor._
   implicit val timeout = Timeout(5.seconds)
 
   def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], start: Int, limit: Int): Future[(Int, Seq[Job])] = {
@@ -71,8 +66,8 @@ class JobSrv @Inject() (
       case _: Infinite ⇒ statusResult
       case duration: FiniteDuration ⇒
         val prom = Promise[(JobStatus.Type, JsValue)]()
-        val timeout = system.scheduler.scheduleOnce(duration) { prom.success((JobStatus.Failure, JsString("Timeout"))); () }
-        statusResult onComplete { case _ ⇒ timeout.cancel() }
+        val timeout = system.scheduler.scheduleOnce(duration) { prom.success((JobStatus.InProgress, JsString("Timeout"))); () }
+        statusResult.onComplete(_ ⇒ timeout.cancel())
         Future.firstCompletedOf(List(statusResult, prom.future))
     }
   }
@@ -95,7 +90,7 @@ class JobActor(
     analyzerSrv: AnalyzerSrv,
     implicit val ec: ExecutionContext) extends Actor {
 
-  import JobActor._
+  import services.JobActor._
   @Inject def this(
     configuration: Configuration,
     analyzerSrv: AnalyzerSrv,
@@ -128,7 +123,7 @@ class JobActor(
         dataTypeFilter.fold(true)(j.artifact.dataTypeFilter) &&
           dataFilter.fold(true)(j.artifact.dataFilter) &&
           analyzerFilter.fold(true)(j.analyzerId.contains))
-      sender ! JobList(filteredJobs.size, filteredJobs.drop(start).take(limit))
+      sender ! JobList(filteredJobs.size, filteredJobs.slice(start, start + limit))
     case GetJob(jobId) ⇒ sender ! jobs.find(_.id == jobId).getOrElse(JobNotFound)
     case RemoveJob(jobId) ⇒
       removeJob(jobs, jobId) match {
@@ -148,5 +143,5 @@ class JobActor(
       context.become(jobState(jobs.takeWhile(_.date after limitDate)))
   }
 
-  override def receive = jobState(Nil)
+  override def receive: Receive = jobState(Nil)
 }
