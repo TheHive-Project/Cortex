@@ -39,7 +39,7 @@ def run(argv):
             sys.exit()
 
         elif opt in ('-l', '--list'):
-                print(modules)
+                print(json.dumps(modules))
                 sys.exit(0)
 
         elif opt in ('-r', '--run'):
@@ -51,7 +51,7 @@ def run(argv):
         elif opt in ('-i','--info'):
             module = arg
 
-            print(({'name': module, 'mispattributes': mhandlers[module].mispattributes,
+            print(json.dumps({'name': module, 'mispattributes': mhandlers[module].mispattributes,
                     'moduleinfo':mhandlers[module].moduleinfo}))
 
 
