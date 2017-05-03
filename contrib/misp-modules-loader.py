@@ -16,7 +16,7 @@ def mod(path):
 
 def run(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hp:i:r:', ["help","path=", "info=","run="])
+        opts, args = getopt.getopt(argv, 'hp:i:r:', ["help", "info=","run="])
     except getopt.GetoptError as err:
         print(__file__ + " --info <misp-module>")
         print(__file__ + "  --run <misp-module>")
@@ -47,17 +47,11 @@ def run(argv):
                 print("add module path")
 
         elif opt in ('-i','--info'):
-            module = arg
+            path = arg
             if path:
                 sys.path.append(mod(path)[0])
                 m = __import__(mod(path)[1])
-
-                data = json.load(sys.stdin)
-                print(json.dumps(m.handler(json.dumps(data))))
-                sys.exit(0)
-
-            m = __import__(module)
-            print(({'name': module, 'mispattributes': m.mispattributes,
+                print(({'name': module, 'mispattributes': m.mispattributes,
                         'moduleinfo':m.moduleinfo}))
 
 
