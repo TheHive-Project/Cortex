@@ -2,7 +2,7 @@ package services
 
 import java.io.File
 import java.nio.file.{ Files, Path, Paths }
-import javax.inject.{ Inject, Provider }
+import javax.inject.{ Inject, Provider, Singleton }
 
 import akka.actor.ActorSystem
 import models.{ Analyzer, ExternalAnalyzer, MispModule }
@@ -14,6 +14,7 @@ import scala.collection.JavaConversions.iterableAsScalaIterable
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
+@Singleton
 class AnalyzerSrv(
     mispSrvProvider: Provider[MispSrv],
     analyzerPath: Path,
@@ -87,13 +88,12 @@ class AnalyzerSrv(
 
   private[services] def getMispModules: Seq[Analyzer] = {
     for {
-      moduleFile ← Try(Files.newDirectoryStream(mispModulesPath).toSeq).getOrElse {
-        logger.warn(s"MISP modules directory ($mispModulesPath) is not found")
-        Nil
-      }
-      loaderCommand ← mispModuleLoaderCommand
-      if Files.isRegularFile(moduleFile) && moduleFile.toString.endsWith(".py")
-      mispModule ← MispModule(loaderCommand, moduleFile, mispSrv)(analyzeExecutionContext)
+      loaderCommand ← mispModuleLoaderCommand.toSeq
+      moduleName ← MispModule.list(loaderCommand)
+
+      _ = println("MISP module loading ...")
+      mispModule ← MispModule(loaderCommand, moduleName, mispSrv)(analyzeExecutionContext)
+      _ = println("MISP module load success")
     } yield mispModule
   }
 

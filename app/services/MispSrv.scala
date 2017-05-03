@@ -17,12 +17,12 @@ class MispSrv @Inject() (analyzerSrv: AnalyzerSrv) {
     JsArray(analyzerSrv.list.map { analyzer ⇒
       Json.obj(
         "name" → analyzer.id,
-        "type" → "expansion",
+        "type" → "cortex",
         "mispattributes" → Json.obj(
           "input" → analyzer.dataTypeList.flatMap(dataType2mispType).distinct,
           "output" → Json.arr()),
         "meta" → Json.obj(
-          "module-type" → Json.arr("expansion"),
+          "module-type" → Json.arr("cortex"),
           "description" → analyzer.description,
           "author" → analyzer.author,
           "version" → analyzer.version,
@@ -51,14 +51,17 @@ class MispSrv @Inject() (analyzerSrv: AnalyzerSrv) {
             .getOrElse(false)
           if (success) {
             Json.obj(
-              "results" → (output \ "artifacts")
+              "results" → ((output \ "artifacts")
                 .asOpt[Seq[JsObject]]
                 .getOrElse(Nil)
                 .map { artifact ⇒
                   Json.obj(
                     "types" → dataType2mispType((artifact \ "type").as[String]),
                     "values" → Json.arr((artifact \ "value").as[String]))
-                })
+                }
+                :+ Json.obj(
+                  "types" → Json.arr("cortex"),
+                  "values" → Json.arr(output.toString))))
           }
           else {
             val message = (output \ "error").asOpt[String].getOrElse(output.toString)
