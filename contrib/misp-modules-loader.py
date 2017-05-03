@@ -39,8 +39,9 @@ def run(argv):
             sys.exit()
 
         elif opt in ('-l', '--list'):
-                print(json.dumps(modules))
-                sys.exit(0)
+            modules = [m for m in modules if mhandlers['type:' +  m ] == "expansion"]
+            print(json.dumps(modules))
+            sys.exit(0)
 
         elif opt in ('-r', '--run'):
                 module = arg
