@@ -8,16 +8,18 @@ import getopt
 import json
 
 
+def mod(path):
+    dirname = os.path.dirname(path)
+    name = os.path.basename(path).split('.')[0]
+    return [dirname, name]
 
-# modules_path = "./misp-modules/misp_modules/modules/expansion"
-# sys.path.append(modules_path)
 
 def run(argv):
     try:
         opts, args = getopt.getopt(argv, 'hp:i:r:', ["help","path=", "info=","run="])
     except getopt.GetoptError as err:
         print(__file__ + " --info <misp-module>")
-        print(__file__ + " --path <misp-modules path> --run <misp-module>")
+        print(__file__ + "  --run <misp-module>")
         print(str(err))
         sys.exit(2)
 
@@ -31,14 +33,11 @@ def run(argv):
             print(__file__ + " --run <misp-module>")
             sys.exit()
 
-        elif opt in ('-p', '--path'):
-            path = arg
-            sys.path.append(path)
-
         elif opt in ('-r', '--run'):
-            module = arg
+            path = arg
             if path:
-                m = __import__(module)
+                sys.path.append(mod(path)[0])
+                m = __import__(mod(path)[1])
 
                 data = json.load(sys.stdin)
                 print(json.dumps(m.handler(json.dumps(data))))
