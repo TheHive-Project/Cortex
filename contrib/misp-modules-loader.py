@@ -48,7 +48,14 @@ def run(argv):
 
         elif opt in ('-i','--info'):
             module = arg
-            print(module)
+            if path:
+                sys.path.append(mod(path)[0])
+                m = __import__(mod(path)[1])
+
+                data = json.load(sys.stdin)
+                print(json.dumps(m.handler(json.dumps(data))))
+                sys.exit(0)
+
             m = __import__(module)
             print(({'name': module, 'mispattributes': m.mispattributes,
                         'moduleinfo':m.moduleinfo}))
