@@ -1,18 +1,16 @@
 import java.io.File
 
-import scala.concurrent.duration.Duration
+import bintray.BintrayCredentials
+import bintray.BintrayKeys.{bintrayEnsureCredentials, bintrayOrganization, bintrayPackage, bintrayRepository}
+import bintry.Client
+import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport.Universal
+import dispatch.{FunctionHandler, Http}
+import sbt.Keys._
+import sbt._
+
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-
-import sbt._
-import sbt.Keys._
-
-import dispatch.{ Http, FunctionHandler }
-
-import bintry.Client
-import bintray.BintrayCredentials
-import bintray.BintrayKeys.{ bintrayEnsureCredentials, bintrayOrganization, bintrayRepository, bintrayPackage }
-import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport.Universal
+import scala.concurrent.duration.Duration
 
 object PublishToBinTray extends Plugin {
   val publishRelease = taskKey[Unit]("Publish binary in bintray")

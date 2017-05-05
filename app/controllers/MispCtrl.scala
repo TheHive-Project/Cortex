@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
+import play.api.Logger
 import play.api.libs.json.{ JsObject, JsValue }
 import play.api.mvc.{ Action, AnyContent, Controller }
 import services.MispSrv
@@ -10,6 +11,7 @@ import scala.concurrent.ExecutionContext
 
 class MispCtrl @Inject() (mispSrv: MispSrv, implicit val ec: ExecutionContext) extends Controller {
 
+  private[MispCtrl] lazy val logger = Logger(getClass)
   def modules: Action[AnyContent] = Action { _ ⇒
     Ok(mispSrv.moduleList)
   }

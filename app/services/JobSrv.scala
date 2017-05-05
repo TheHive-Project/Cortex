@@ -6,8 +6,7 @@ import javax.inject.{ Inject, Named }
 import akka.actor.{ Actor, ActorRef, ActorSystem, actorRef2Scala }
 import akka.pattern.ask
 import akka.util.Timeout
-import models.{ Analyzer, Artifact, Job, JobStatus }
-import play.api.libs.json.{ JsString, JsValue }
+import models._
 import play.api.{ Configuration, Logger }
 
 import scala.concurrent.duration.Duration.Infinite
@@ -16,11 +15,13 @@ import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.util.Random
 
 class JobSrv @Inject() (
-    analyzerSrv: AnalyzerSrv,
+    //analyzerSrv: AnalyzerSrv,
     @Named("JobActor") jobActor: ActorRef,
     implicit val ec: ExecutionContext,
     implicit val system: ActorSystem) {
+
   import services.JobActor._
+
   implicit val timeout = Timeout(5.seconds)
 
   def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], start: Int, limit: Int): Future[(Int, Seq[Job])] = {
@@ -36,17 +37,26 @@ class JobSrv @Inject() (
     case _           ⇒ sys.error("TODO")
   }
 
-  def create(artifact: Artifact, analyzerId: String): Future[Job] = {
-    analyzerSrv.get(analyzerId)
-      .map { analyzer ⇒ create(artifact, analyzer) }
-      .getOrElse(Future.failed(new Exception("analyzer not found")))
+  def create(analyzer: Analyzer, artifact: Artifact, report: Future[Report]): Future[Job] = {
+    (jobActor ? CreateJob(artifact, analyzer, report)) map {
+      case job: Job ⇒ job
+      case _        ⇒ sys.error("TODO")
+    }
   }
 
-  def create(artifact: Artifact, analyzer: Analyzer): Future[Job] =
-    (jobActor ? CreateJob(artifact, analyzer)) map {
-      case j: Job ⇒ j
-      case _      ⇒ sys.error("TODO")
-    }
+  //  @deprecated
+  //  def create(artifact: Artifact, analyzerId: String): Future[Job] = {
+  //    analyzerSrv.get(analyzerId)
+  //      .map { analyzer ⇒ create(artifact, analyzer) }
+  //      .getOrElse(Future.failed(new Exception("analyzer not found")))
+  //  }
+  //
+  //  @deprecated
+  //  def create(artifact: Artifact, analyzer: Analyzer): Future[Job] =
+  //    (jobActor ? CreateJob(artifact, analyzer)) map {
+  //      case j: Job ⇒ j
+  //      case _      ⇒ sys.error("TODO")
+  //    }
 
   def remove(jobId: String): Future[Unit] = {
     (jobActor ? RemoveJob(jobId)).map {
@@ -56,19 +66,20 @@ class JobSrv @Inject() (
     }
   }
 
-  def waitReport(jobId: String, atMost: Duration): Future[(JobStatus.Type, JsValue)] = {
-    val statusResult = get(jobId)
-      .flatMap(_.report)
-      .map((JobStatus.Success, _))
-      .recover { case error ⇒ (JobStatus.Failure, JsString(error.getMessage)) }
-
-    atMost match {
-      case _: Infinite ⇒ statusResult
-      case duration: FiniteDuration ⇒
-        val prom = Promise[(JobStatus.Type, JsValue)]()
-        val timeout = system.scheduler.scheduleOnce(duration) { prom.success((JobStatus.InProgress, JsString("Timeout"))); () }
-        statusResult.onComplete(_ ⇒ timeout.cancel())
-        Future.firstCompletedOf(List(statusResult, prom.future))
+  def waitReport(jobId: String, atMost: Duration): Future[Job] = {
+    get(jobId).flatMap { job ⇒
+      val finishedJob = job.report.map(_ ⇒ job)
+      atMost match {
+        case _: Infinite ⇒ finishedJob
+        case duration: FiniteDuration ⇒
+          val prom = Promise[Job]()
+          val timeout = system.scheduler.scheduleOnce(duration) {
+            prom.success(job)
+            ()
+          }
+          finishedJob.onComplete(_ ⇒ timeout.cancel())
+          Future.firstCompletedOf(List(finishedJob, prom.future))
+      }
     }
   }
 }
@@ -78,7 +89,7 @@ object JobActor {
   case class JobList(total: Int, jobs: Seq[Job])
   case class GetJob(jobId: String)
   case object JobNotFound
-  case class CreateJob(artifact: Artifact, analyzer: Analyzer)
+  case class CreateJob(artifact: Artifact, analyzer: Analyzer, report: Future[Report])
   case class RemoveJob(jobId: String)
   case object JobRemoved
   case object JobCleanup
@@ -91,6 +102,7 @@ class JobActor(
     implicit val ec: ExecutionContext) extends Actor {
 
   import services.JobActor._
+
   @Inject def this(
     configuration: Configuration,
     analyzerSrv: AnalyzerSrv,
@@ -122,7 +134,7 @@ class JobActor(
       val filteredJobs = jobs.filter(j ⇒
         dataTypeFilter.fold(true)(j.artifact.dataTypeFilter) &&
           dataFilter.fold(true)(j.artifact.dataFilter) &&
-          analyzerFilter.fold(true)(j.analyzerId.contains))
+          analyzerFilter.fold(true)(j.analyzer.id.contains))
       sender ! JobList(filteredJobs.size, filteredJobs.slice(start, start + limit))
     case GetJob(jobId) ⇒ sender ! jobs.find(_.id == jobId).getOrElse(JobNotFound)
     case RemoveJob(jobId) ⇒
@@ -132,9 +144,9 @@ class JobActor(
           context.become(jobState(j))
         case None ⇒ sender ! JobNotFound
       }
-    case CreateJob(artifact, analyzer) ⇒
+    case CreateJob(artifact, analyzer, report) ⇒
       val jobId = Random.alphanumeric.take(16).mkString
-      val job = Job(jobId, analyzer.id, artifact, analyzer.analyze(artifact))
+      val job = Job(jobId, analyzer, artifact, report)
       sender ! job
       context.become(jobState(job :: jobs))
     case JobCleanup if jobLifeTime.isInstanceOf[FiniteDuration] ⇒

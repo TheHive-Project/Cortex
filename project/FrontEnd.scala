@@ -1,5 +1,5 @@
-import sbt._
 import sbt.Keys._
+import sbt._
 
 object FrontEnd extends AutoPlugin {
 

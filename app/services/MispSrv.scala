@@ -1,20 +1,77 @@
 package services
 
+import java.io.{ ByteArrayInputStream, FileInputStream, InputStream, SequenceInputStream }
 import javax.inject.Inject
 
-import models.JsonFormat.dataActifactReads
-import models.{ DataArtifact, FileArtifact }
-import org.apache.commons.codec.binary.Base64
-import play.api.Logger
-import play.api.libs.json.{ JsArray, JsObject, JsValue, Json }
+import akka.actor.ActorSystem
+import models.JsonFormat._
+import models._
+import org.apache.commons.codec.binary.{ Base64, Base64InputStream }
+import play.api.libs.json.{ Json, _ }
+import play.api.{ Configuration, Logger }
 
+import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.sys.process._
+import scala.util.{ Failure, Success, Try }
 
-class MispSrv @Inject() (analyzerSrv: AnalyzerSrv) {
+class MispSrv(
+    loaderCommandOption: Option[String],
+    externalAnalyzerSrv: ExternalAnalyzerSrv,
+    jobSrv: JobSrv,
+    akkaSystem: ActorSystem) {
+
+  @Inject() def this(
+    configuration: Configuration,
+    externalAnalyzerSrv: ExternalAnalyzerSrv,
+    jobSrv: JobSrv,
+    akkaSystem: ActorSystem) = this(
+    configuration.getString("misp.modules.loader"),
+    externalAnalyzerSrv,
+    jobSrv,
+    akkaSystem)
+
   private[MispSrv] lazy val logger = Logger(getClass)
+  private[MispSrv] lazy val analyzeExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("analyzer")
 
-  def moduleList: JsValue = {
-    JsArray(analyzerSrv.list.map { analyzer ⇒
+  lazy val list: Seq[MispModule] =
+    loaderCommandOption.fold(Seq.empty[MispModule]) { loaderCommand ⇒
+      Json.parse(s"$loaderCommand --list".!!)
+        .as[Seq[String]]
+        .map { moduleName ⇒
+          moduleName → (for {
+            moduleInfo ← Try(Json.parse(s"$loaderCommand --info $moduleName".!!))
+            module ← Try(moduleInfo.as[MispModule](reads(loaderCommand)))
+          } yield module)
+        }
+        .flatMap {
+          case (moduleName, Failure(error)) ⇒
+            logger.warn(s"Load MISP module $moduleName fails", error)
+            Nil
+          case (_, Success(module)) ⇒
+            logger.info(s"Register MISP module ${module.name} ${module.version}")
+            Seq(module)
+        }
+    }
+
+  def get(moduleName: String): Option[MispModule] = list.find(_.name == moduleName)
+
+  def moduleList: JsArray = {
+    val mispModules = list.map { module ⇒
+      Json.obj(
+        "name" → module.name,
+        "type" → "cortex",
+        "mispattributes" → Json.obj(
+          "input" → module.inputAttributes,
+          "output" → Json.arr()),
+        "meta" → Json.obj(
+          "module-type" → Json.arr("cortex"),
+          "description" → module.description,
+          "author" → module.author,
+          "version" → module.version,
+          "config" → module.config))
+    }
+    val externalAnalyzers = externalAnalyzerSrv.list.map { analyzer ⇒
       Json.obj(
         "name" → analyzer.id,
         "type" → "cortex",
@@ -27,58 +84,117 @@ class MispSrv @Inject() (analyzerSrv: AnalyzerSrv) {
           "author" → analyzer.author,
           "version" → analyzer.version,
           "config" → Json.arr()))
-    })
+    }
+    JsArray(mispModules ++ externalAnalyzers)
   }
 
   def query(module: String, mispType: String, data: String)(implicit ec: ExecutionContext): Future[JsObject] = {
-    analyzerSrv.get(module).map { analyzer ⇒
-      val artifact = mispType2dataType(mispType) match {
-        case "file" if mispType == "malware-sample" ⇒ ???
-        case "file" ⇒ FileArtifact(Base64.decodeBase64(data), Json.obj(
-          "tlp" → 1,
-          "dataType" → "file"))
-        case dataType ⇒ DataArtifact(data, Json.obj(
-          "tlp" → 1,
-          "dataType" → dataType))
-      }
+    loaderCommandOption
+      .flatMap { loaderCommand ⇒
+        val artifact = toArtifact(mispType, data)
+        get(module)
+          .map { mispModule ⇒
+            val mispReport = Future {
+              val input = Json.obj(mispType → data)
+              val output = (s"$loaderCommand --run $module" #< input.toString).!!
+              Json.parse(output).as[JsObject]
+            }
+            jobSrv.create(mispModule, artifact, mispReport.map(toReport))
+            mispReport
 
-      analyzer
-        .analyze(artifact)
-        .map { output ⇒
-          logger.info(s"analyzer output:\n$output")
-          val success = (output \ "success")
-            .asOpt[Boolean]
-            .getOrElse(false)
-          if (success) {
-            Json.obj(
-              "results" → ((output \ "artifacts")
-                .asOpt[Seq[JsObject]]
-                .getOrElse(Nil)
-                .map { artifact ⇒
-                  Json.obj(
-                    "types" → dataType2mispType((artifact \ "type").as[String]),
-                    "values" → Json.arr((artifact \ "value").as[String]))
-                }
-                :+ Json.obj(
-                  "types" → Json.arr("cortex"),
-                  "values" → Json.arr(output.toString))))
           }
-          else {
-            val message = (output \ "error").asOpt[String].getOrElse(output.toString)
-            Json.obj(
-              "error" → message)
+          .orElse {
+            externalAnalyzerSrv
+              .get(module)
+              .map { analyzer ⇒
+                externalAnalyzerSrv.analyze(analyzer, artifact)
+                  .map { report ⇒ toMispOutput(report) }
+              }
           }
-        }
-    }
+      }
       .getOrElse(Future.failed(new Exception(s"Module $module not found")))
   }
 
-  def mispType2dataType(mispType: String): String = typeLookup.getOrElse(mispType, {
+  def analyze(module: MispModule, artifact: Artifact): Future[Report] = {
+    def stringStream(string: String): InputStream =
+      new ByteArrayInputStream(string.getBytes)
+
+    val input = artifact match {
+      case DataArtifact(data, _) ⇒
+        stringStream(Json.obj(dataType2mispType(artifact.dataType).head → data).toString)
+      case FileArtifact(data, _) ⇒
+        new SequenceInputStream(Iterator(
+          stringStream("""{"attachment":""""),
+          new Base64InputStream(new FileInputStream(data), true),
+          stringStream("\"}")).asJavaEnumeration)
+    }
+
+    Future {
+      val output = (s"${module.loaderCommand} --run ${module.name}" #< input).!!
+      toReport(Json.parse(output).as[JsObject])
+    }(analyzeExecutionContext)
+  }
+
+  private def toArtifact(mispType: String, data: String): Artifact = {
+    mispType2dataType(mispType) match {
+      case "file" if mispType == "malware-sample" ⇒ ???
+      case "file" ⇒ FileArtifact(Base64.decodeBase64(data), Json.obj(
+        "tlp" → 1,
+        "dataType" → "file"))
+      case dataType ⇒ DataArtifact(data, Json.obj(
+        "tlp" → 1,
+        "dataType" → dataType))
+    }
+  }
+
+  private def toReport(mispOutput: JsObject): Report = {
+    (mispOutput \ "results").asOpt[Seq[JsObject]]
+      .map { attributes ⇒
+        val artifacts: Seq[Artifact] = for {
+          attribute ← attributes
+          tpe ← (attribute \ "types").asOpt[Seq[String]]
+            .orElse((attribute \ "types").asOpt[String].map(Seq(_)))
+            .getOrElse(Nil)
+          dataType = mispType2dataType(tpe) // TODO handle FileArtifact
+          value ← (attribute \ "values").asOpt[Seq[String]]
+            .orElse((attribute \ "values").asOpt[String].map(Seq(_)))
+            .getOrElse(Nil)
+        } yield DataArtifact(value, Json.obj("dataType" → dataType))
+        SuccessReport(artifacts, Json.obj("artifacts" → Json.toJson(artifacts)), JsObject(Nil))
+      }
+      .getOrElse {
+        val message = (mispOutput \ "error").asOpt[String].getOrElse(mispOutput.toString)
+        FailureReport(message)
+      }
+  }
+
+  private def toMispOutput(report: Report): JsObject = {
+    report match {
+      case SuccessReport(artifacts, _, _) ⇒
+        val attributes = artifacts.map {
+          case artifact: DataArtifact ⇒
+            Json.obj(
+              "types" → dataType2mispType(artifact.dataType),
+              "values" → Json.arr(artifact.data))
+          case artifact: FileArtifact ⇒
+            ??? // TODO
+        }
+        val cortexAttribute = Json.obj(
+          "types" → Seq("cortex"),
+          "values" → Json.arr(Json.toJson(report).toString))
+
+        Json.obj("results" → (attributes :+ cortexAttribute))
+      case FailureReport(message) ⇒
+        Json.obj("error" → message)
+    }
+  }
+
+  private def mispType2dataType(mispType: String): String = typeLookup.getOrElse(mispType, {
     logger.warn(s"Misp type $mispType not recognized")
     "other"
   })
 
-  def dataType2mispType(dataType: String): Seq[String] = {
+  private def dataType2mispType(dataType: String): Seq[String] = {
     val mispTypes = typeLookup.filter(_._2 == dataType)
       .keys
       .toSeq
@@ -90,6 +206,17 @@ class MispSrv @Inject() (analyzerSrv: AnalyzerSrv) {
     }
     else mispTypes
   }
+
+  private def reads(loaderCommand: String): Reads[MispModule] =
+    for {
+      name ← (__ \ "name").read[String]
+      version ← (__ \ "meta" \ "version").read[String]
+      description ← (__ \ "meta" \ "description").read[String]
+      author ← (__ \ "meta" \ "author").read[String]
+      config ← (__ \ "meta" \ "config").read[Seq[String]]
+      input ← (__ \ "mispattributes" \ "input").read[Seq[String]]
+      dataTypes = input.map(mispType2dataType)
+    } yield MispModule(name, version, description, author, dataTypes, input, config, loaderCommand)
 
   private val typeLookup = Map(
     "md5" → "hash",

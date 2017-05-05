@@ -41,9 +41,8 @@ mappings in Universal ++= {
 }
 
 // Release //
-import ReleaseTransformations._
-
 import Release._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 bintrayOrganization := Some("cert-bdf")
 
@@ -88,9 +87,9 @@ dockerUpdateLatest := true
 mappings in Universal += file("docker/entrypoint") -> "bin/entrypoint"
 
 mappings in Universal ~= { _.filterNot {
-  case (_, name) => name.startsWith("conf/") && name != "conf/keepme"
+  case (_, fileName) => fileName.startsWith("conf/") && name != "conf/keepme"
 }}
-import com.typesafe.sbt.packager.docker.{ ExecCmd, Cmd }
+import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 
 dockerCommands := dockerCommands.value.map {
   case ExecCmd("ENTRYPOINT", _*) => ExecCmd("ENTRYPOINT", "bin/entrypoint")
@@ -109,9 +108,9 @@ dockerCommands := dockerCommands.value.head +:
   dockerCommands.value.tail
 
 // Scalariform //
-import scalariform.formatter.preferences._
-import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+
+import scalariform.formatter.preferences._
 
 ScalariformKeys.preferences in ThisBuild := ScalariformKeys.preferences.value
   .setPreference(AlignParameters, false)
