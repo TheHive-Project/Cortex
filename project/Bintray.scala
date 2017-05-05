@@ -13,8 +13,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
 object PublishToBinTray extends Plugin {
-  val publishRelease = taskKey[Unit]("Publish binary in bintray")
-  val publishLatest = taskKey[Unit]("Publish latest binary in bintray")
+  val publishRelease: TaskKey[Unit] = taskKey[Unit]("Publish binary in bintray")
+  val publishLatest: TaskKey[Unit] = taskKey[Unit]("Publish latest binary in bintray")
 
   override def settings = Seq(
     publishRelease := {
@@ -52,7 +52,7 @@ object PublishToBinTray extends Plugin {
 
   private def asStatusAndBody = new FunctionHandler({ r => (r.getStatusCode, r.getResponseBody) })
 
-  def removeVersion(credential: BintrayCredentials, org: Option[String], repoName: String, packageName: String, version: String, log: Logger) = {
+  def removeVersion(credential: BintrayCredentials, org: Option[String], repoName: String, packageName: String, version: String, log: Logger): Unit = {
     val BintrayCredentials(user, key) = credential
     val client: Client = Client(user, key, new Http())
     val repo: Client#Repo = client.repo(org.getOrElse(user), repoName)

@@ -15,9 +15,9 @@ libraryDependencies ++= Seq(
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
-releaseVersionUIFile := baseDirectory.value / "ui" / "package.json"
+Release.releaseVersionUIFile := baseDirectory.value / "ui" / "package.json"
 
-changelogFile := baseDirectory.value / "CHANGELOG.md"
+Release.changelogFile := baseDirectory.value / "CHANGELOG.md"
 
 publishArtifact in (Compile, packageDoc) := false
 
@@ -30,87 +30,115 @@ run := {
   (run in Compile).evaluated
   frontendDev.value
 }
-
 mappings in packageBin in Assets ++= frontendFiles.value
 
 // Install files //
-
-mappings in Universal ++= {
-  val dir = baseDirectory.value / "install"
-  (dir.***) pair relativeTo(dir.getParentFile)
+mappings in Universal ~= {
+  _.flatMap {
+    case (file, "conf/application.conf") => Nil
+    case (file, "conf/apllication.sample") => Seq(file -> "conf/application.conf")
+    case other => Seq(other)
+  } ++ Seq(
+    file("install/cortex.service") -> "install/cortex.service",
+    file("install/cortex.conf") -> "install/cortex.conf",
+    file("install/cortex") -> "install/cortex"
+  )
 }
 
-// Release //
-import Release._
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
-
-bintrayOrganization := Some("cert-bdf")
-
-bintrayRepository := "cortex"
-
-publish := {
-  publishRelease.value
-  publishLatest.value
+// Package //
+maintainer := "Thomas Franco <toom@thehive-project.org"
+packageSummary := "-"
+packageDescription := """--""".stripMargin
+defaultLinuxInstallLocation := "/opt"
+linuxPackageMappings ~= { _.map { pm =>
+  val mappings = pm.mappings.filterNot {
+    case (file, path) => path.startsWith("/opt/cortex/install") || path.startsWith("/opt/cortex/conf")
+  }
+  com.typesafe.sbt.packager.linux.LinuxPackageMapping(mappings, pm.fileData).withConfig()
+} :+ packageMapping(
+  file("install/cortex.service") -> "/etc/systemd/system/cortex.service",
+  file("install/cortex.conf") -> "/etc/init/cortex.conf",
+  file("install/cortex") -> "/etc/init.d/cortex",
+  file("conf/application.sample") -> "/etc/cortex/application.conf",
+  file("conf/logback.xml") -> "/etc/cortex/logback.xml"
+).withConfig()
 }
 
-releaseProcess := Seq[ReleaseStep](
-  checkUncommittedChanges,
-  checkSnapshotDependencies,
-  getVersionFromBranch,
-  runTest,
-  releaseMerge,
-  checkoutMaster,
-  setReleaseVersion,
-  setReleaseUIVersion,
-  generateChangelog,
-  commitChanges,
-  tagRelease,
-  publishArtifacts,
-  checkoutDevelop,
-  setNextVersion,
-  setNextUIVersion,
-  commitChanges,
-  //commitNextVersion,
-  pushChanges)
+packageBin := {
+  (packageBin in Universal).value
+  (packageBin in Debian).value
+  //(packageBin in Rpm).value
+}
+// DEB //
+//debianPackageRecommends := Seq("elasticsearch")
+debianPackageDependencies += "java8-runtime-headless | java8-runtime"
+maintainerScripts in Debian := maintainerScriptsFromDirectory(
+  baseDirectory.value / "install" / "debian",
+  Seq(DebianConstants.Postinst, DebianConstants.Prerm, DebianConstants.Postrm)
+)
+linuxEtcDefaultTemplate in Debian := (baseDirectory.value / "install" / "etc_default_cortex").asURL
+linuxMakeStartScript in Debian := None
 
+// RPM //
+rpmRelease := "8"
+rpmVendor in Rpm := "TheHive Project"
+rpmUrl := Some("http://thehive-project.org/")
+rpmLicense := Some("AGPL")
+rpmRequirements += "java-1.8.0-openjdk-headless"
+maintainerScripts in Rpm := maintainerScriptsFromDirectory(
+  baseDirectory.value / "install" / "rpm",
+  Seq(RpmConstants.Pre, RpmConstants.Preun, RpmConstants.Postun)
+)
+linuxPackageSymlinks in Rpm := Nil
+rpmPrefix := Some(defaultLinuxInstallLocation.value)
+linuxEtcDefaultTemplate in Rpm := (baseDirectory.value / "install" / "etc_default_cortex").asURL
 
 // DOCKER //
+import com.typesafe.sbt.packager.docker.{ Cmd, ExecCmd }
 
-dockerBaseImage := "certbdf/thehive:latest"
-
-packageName in Docker := "thehive-cortex"
-
+defaultLinuxInstallLocation in Docker := "/opt/cortex"
 dockerRepository := Some("certbdf")
-
 dockerUpdateLatest := true
+dockerEntrypoint := Seq("/opt/cortex/entrypoint")
+dockerExposedPorts := Seq(9000)
+mappings in Docker ++= Seq(
+  file("install/docker/entrypoint") -> "/opt/cortex/entrypoint",
+  file("conf/logback.xml") -> "/etc/cortex/logback.xml",
+  file("install/empty") -> "/var/log/cortex/application.log")
+mappings in Docker ~= (_.filterNot {
+  case (_, filepath) => filepath == "/opt/cortex/conf/application.conf"
+})
 
-mappings in Universal += file("docker/entrypoint") -> "bin/entrypoint"
-
-mappings in Universal ~= { _.filterNot {
-  case (_, fileName) => fileName.startsWith("conf/") && name != "conf/keepme"
-}}
-import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
-
-dockerCommands := dockerCommands.value.map {
-  case ExecCmd("ENTRYPOINT", _*) => ExecCmd("ENTRYPOINT", "bin/entrypoint")
-  case cmd                       => cmd
+dockerCommands ~= { dc =>
+  val (dockerInitCmds, dockerTailCmds) = dc.splitAt(4)
+  dockerInitCmds ++
+    Seq(
+      Cmd("USER", "root"),
+      ExecCmd("RUN", "bash", "-c",
+        "apt-get update && " +
+          "apt-get install -y --no-install-recommends python-pip python2.7-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git && " +
+          "cd /opt && " +
+          "git clone -b develop https://github.com/CERT-BDF/Cortex-Analyzers.git && " +
+          "pip install $(cat Cortex-Analyzers/analyzers/*/requirements.txt | grep -v hashlib | sort -u)"),
+      Cmd("ADD", "var", "/var"),
+      Cmd("ADD", "etc", "/etc"),
+      ExecCmd("RUN", "chown", "-R", "daemon:daemon", "/var/log/cortex")) ++
+    dockerTailCmds
 }
 
-dockerCommands := dockerCommands.value.head +:
-  Cmd("USER", "root") +:
-  ExecCmd("RUN", "bash", "-c",
-    "apt-get update && " +
-    "apt-get install -y --no-install-recommends python-pip python2.7-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git && " +
-    "cd /opt && " +
-    "git clone https://github.com/CERT-BDF/Cortex-Analyzers.git && " +
-    "pip install $(cat Cortex-Analyzers/analyzers/*/requirements.txt | grep -v hashlib | sort -u)") +:
-  Cmd("EXPOSE", "9001") +:
-  dockerCommands.value.tail
+// Bintray //
+bintrayOrganization := Some("cert-bdf")
+bintrayRepository := "cortex"
+publish := {
+  (publish in Docker).value
+  PublishToBinTray.publishRelease.value
+  PublishToBinTray.publishLatest.value
+}
 
 // Scalariform //
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-
 import scalariform.formatter.preferences._
+import com.typesafe.sbt.SbtScalariform
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 
 ScalariformKeys.preferences in ThisBuild := ScalariformKeys.preferences.value
   .setPreference(AlignParameters, false)
