@@ -8,7 +8,7 @@ import scala.concurrent.duration.Duration
 import scala.util.{ Failure, Success }
 import play.api.libs.json.{ JsString, Json }
 import play.api.mvc.{ Action, AnyContent, Controller }
-import models.JsonFormat.{ jobStatusWrites, jobWrites }
+import models.JsonFormat._
 import services.JobSrv
 
 class JobCtrl @Inject() (
@@ -35,9 +35,9 @@ class JobCtrl @Inject() (
       .get(jobId)
       .map { job ⇒
         val report = job.report.value match {
-          case Some(Success(_report)) ⇒ _report
-          case Some(Failure(error))   ⇒ JsString(error.getMessage)
-          case None                   ⇒ JsString("Running")
+          case Some(Success(r))     ⇒ Json.toJson(r)
+          case Some(Failure(error)) ⇒ JsString(error.getMessage)
+          case None                 ⇒ JsString("Running")
         }
         Ok(jobWrites.writes(job) +
           ("status" → jobStatusWrites.writes(job.status)) +
@@ -46,11 +46,7 @@ class JobCtrl @Inject() (
   }
 
   def waitReport(jobId: String, atMost: String): Action[AnyContent] = Action.async { request ⇒
-    for {
-      job ← jobSrv.get(jobId)
-      (status, report) ← jobSrv.waitReport(jobId, Duration(atMost))
-    } yield Ok(jobWrites.writes(job) +
-      ("status" → jobStatusWrites.writes(job.status)) +
-      ("report" → report))
+    jobSrv.waitReport(jobId, Duration(atMost))
+      .map { job ⇒ Ok(Json.toJson(job)) }
   }
 }

@@ -2,15 +2,13 @@ package controllers
 
 import javax.inject.Inject
 
-import scala.annotation.implicitNotFound
-import scala.concurrent.{ ExecutionContext, Future }
-
+import models.JsonFormat.{ analyzerWrites, dataActifactReads, jobWrites }
+import models.{ DataArtifact, FileArtifact }
 import play.api.libs.json.{ JsObject, JsString, Json }
 import play.api.mvc.{ Action, AnyContent, Controller, Request }
-
-import models.{ DataArtifact, FileArtifact }
-import models.JsonFormat.{ analyzerWrites, dataActifactReads, jobWrites }
 import services.{ AnalyzerSrv, JobSrv }
+
+import scala.concurrent.{ ExecutionContext, Future }
 
 class AnalyzerCtrl @Inject() (
     analyzerSrv: AnalyzerSrv,
@@ -51,7 +49,8 @@ class AnalyzerCtrl @Inject() (
     readDataArtifact(request)
       .orElse(readFileArtifact(request))
       .map { artifact ⇒
-        jobSrv.create(artifact, analyzerId)
+        analyzerSrv.analyze(analyzerId, artifact)
+          //jobSrv.create(artifact, analyzerId)
           .map(j ⇒ Ok(Json.toJson(j)))
       }
       .getOrElse(Future.successful(BadRequest("???")))

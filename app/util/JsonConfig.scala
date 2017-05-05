@@ -8,16 +8,16 @@ import play.api.libs.json._
 import scala.collection.JavaConversions.asScalaBuffer
 
 object JsonConfig {
-  implicit def configValueWrites: Writes[ConfigValue] = Writes[ConfigValue] {
+  implicit val configValueWrites: Writes[ConfigValue] = Writes((value: ConfigValue) ⇒ value match {
     case v: ConfigObject             ⇒ configWrites.writes(Configuration(v.toConfig))
     case v: ConfigList               ⇒ JsArray(v.toSeq.map(x ⇒ configValueWrites.writes(x)))
     case v if v.valueType == NUMBER  ⇒ JsNumber(BigDecimal(v.unwrapped.asInstanceOf[java.lang.Number].toString))
     case v if v.valueType == BOOLEAN ⇒ JsBoolean(v.unwrapped.asInstanceOf[Boolean])
     case v if v.valueType == NULL    ⇒ JsNull
     case v if v.valueType == STRING  ⇒ JsString(v.unwrapped.asInstanceOf[String])
-  }
+  })
 
-  implicit def configWrites: OWrites[Configuration] = OWrites[Configuration] { cfg ⇒
+  implicit def configWrites = OWrites { (cfg: Configuration) ⇒
     JsObject(cfg.subKeys.map(key ⇒ key → configValueWrites.writes(cfg.underlying.getValue(key))).toSeq)
   }
 }

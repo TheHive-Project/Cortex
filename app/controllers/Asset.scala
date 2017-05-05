@@ -4,7 +4,7 @@ import javax.inject.{ Inject, Singleton }
 
 import play.api.Environment
 import play.api.http.HttpErrorHandler
-import play.api.mvc.{ Action, AnyContent, Controller }
+import play.api.mvc.{ Action, AnyContent }
 
 trait AssetCtrl {
   def get(file: String): Action[AnyContent]
