@@ -59,9 +59,11 @@ object JsonFormat {
   val reportWrites: Writes[Report] = Writes[Report] {
     case SuccessReport(artifacts, full, summary) ⇒ Json.obj(
       "artifacts" → artifacts,
-      "full" → full,
-      "summary" → summary)
-    case FailureReport(message) ⇒ Json.obj("errorMessage" → message)
+      "full" → (full + ("success" → JsBoolean(true))),
+      "summary" → (summary + ("success" → JsBoolean(true))))
+    case FailureReport(message) ⇒ Json.obj(
+      "errorMessage" → message,
+      "success" → false)
   }
 
   implicit val reportFormat: Format[Report] = Format[Report](reportReads, reportWrites)
