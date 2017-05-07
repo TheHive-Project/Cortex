@@ -128,8 +128,10 @@ class ExternalAnalyzerSrv(
       command ← (__ \ "command").read[String]
       absoluteCommand = analyzerPath.resolve(Paths.get(command.replaceAll("[\\/]", File.separator)))
       config ← (__ \ "config").read[JsObject]
-      baseConfigKey ← (__ \ "baseConfig").read[String]
-      baseConfig = (analyzerConfig \ baseConfigKey).asOpt[JsObject].getOrElse(JsObject(Nil))
+      baseConfigKey ← (__ \ "baseConfig").readNullable[String]
+      baseConfig = baseConfigKey
+        .flatMap(bc ⇒ (analyzerConfig \ bc).asOpt[JsObject])
+        .getOrElse(Json.obj())
     } yield ExternalAnalyzer(
       name,
       version,
