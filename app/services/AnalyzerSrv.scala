@@ -24,7 +24,7 @@ class AnalyzerSrv @Inject() (
   def analyze(analyzerId: String, artifact: Artifact): Future[Job] = {
     get(analyzerId)
       .map { analyzer ⇒ analyze(analyzer, artifact) }
-      .getOrElse(sys.error("analyzer not found"))
+      .getOrElse(throw AnalyzerNotFoundError(analyzerId))
   }
 
   def analyze(analyzer: Analyzer, artifact: Artifact): Future[Job] = {

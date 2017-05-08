@@ -15,7 +15,6 @@ import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.util.Random
 
 class JobSrv @Inject() (
-    //analyzerSrv: AnalyzerSrv,
     @Named("JobActor") jobActor: ActorRef,
     implicit val ec: ExecutionContext,
     implicit val system: ActorSystem) {
@@ -27,20 +26,20 @@ class JobSrv @Inject() (
   def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], start: Int, limit: Int): Future[(Int, Seq[Job])] = {
     (jobActor ? ListJobs(dataTypeFilter, dataFilter, analyzerFilter, start, limit)).map {
       case JobList(total, jobs) ⇒ total → jobs
-      case _                    ⇒ sys.error("TODO")
+      case m                    ⇒ throw UnexpectedError(s"JobActor.list replies with unexpected message: $m (${m.getClass})")
     }
   }
 
   def get(jobId: String): Future[Job] = (jobActor ? GetJob(jobId)).map {
     case j: Job      ⇒ j
-    case JobNotFound ⇒ sys.error("job not found")
-    case _           ⇒ sys.error("TODO")
+    case JobNotFound ⇒ throw JobNotFoundError(jobId)
+    case m           ⇒ throw UnexpectedError(s"JobActor.GetJob replies with unexpected message: $m (${m.getClass})")
   }
 
   def create(analyzer: Analyzer, artifact: Artifact, report: Future[Report]): Future[Job] = {
     (jobActor ? CreateJob(artifact, analyzer, report)) map {
       case job: Job ⇒ job
-      case _        ⇒ sys.error("TODO")
+      case m        ⇒ throw UnexpectedError(s"JobActor.CreateJob replies with unexpected message: $m (${m.getClass})")
     }
   }
 
@@ -61,8 +60,8 @@ class JobSrv @Inject() (
   def remove(jobId: String): Future[Unit] = {
     (jobActor ? RemoveJob(jobId)).map {
       case JobRemoved  ⇒ ()
-      case JobNotFound ⇒ sys.error("job not found")
-      case _           ⇒ sys.error("TODO")
+      case JobNotFound ⇒ throw JobNotFoundError(jobId)
+      case m           ⇒ throw UnexpectedError(s"JobActor.RemoveJob replies with unexpected message: $m (${m.getClass})")
     }
   }
 
