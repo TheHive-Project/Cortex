@@ -36,12 +36,14 @@ mappings in packageBin in Assets ++= frontendFiles.value
 mappings in Universal ~= {
   _.flatMap {
     case (file, "conf/application.conf") => Nil
-    case (file, "conf/apllication.sample") => Seq(file -> "conf/application.conf")
+    case (file, "conf/apllication.sample") => Seq(file -> "conf/application.conf"
+    case (file, "conf/logback.xml") => Nil
     case other => Seq(other)
   } ++ Seq(
     file("package/cortex.service") -> "package/cortex.service",
     file("package/cortex.conf") -> "package/cortex.conf",
-    file("package/cortex") -> "package/cortex"
+    file("package/cortex") -> "package/cortex",
+    file("package/logback.xml") -> "conf/logback.xml"
   )
 }
 
