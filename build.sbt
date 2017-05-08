@@ -39,9 +39,9 @@ mappings in Universal ~= {
     case (file, "conf/apllication.sample") => Seq(file -> "conf/application.conf")
     case other => Seq(other)
   } ++ Seq(
-    file("install/cortex.service") -> "install/cortex.service",
-    file("install/cortex.conf") -> "install/cortex.conf",
-    file("install/cortex") -> "install/cortex"
+    file("package/cortex.service") -> "package/cortex.service",
+    file("package/cortex.conf") -> "package/cortex.conf",
+    file("package/cortex") -> "package/cortex"
   )
 }
 
@@ -52,13 +52,13 @@ packageDescription := """--""".stripMargin
 defaultLinuxInstallLocation := "/opt"
 linuxPackageMappings ~= { _.map { pm =>
   val mappings = pm.mappings.filterNot {
-    case (file, path) => path.startsWith("/opt/cortex/install") || path.startsWith("/opt/cortex/conf")
+    case (file, path) => path.startsWith("/opt/cortex/package") || path.startsWith("/opt/cortex/conf")
   }
   com.typesafe.sbt.packager.linux.LinuxPackageMapping(mappings, pm.fileData).withConfig()
 } :+ packageMapping(
-  file("install/cortex.service") -> "/etc/systemd/system/cortex.service",
-  file("install/cortex.conf") -> "/etc/init/cortex.conf",
-  file("install/cortex") -> "/etc/init.d/cortex",
+  file("package/cortex.service") -> "/etc/systemd/system/cortex.service",
+  file("package/cortex.conf") -> "/etc/init/cortex.conf",
+  file("package/cortex") -> "/etc/init.d/cortex",
   file("conf/application.sample") -> "/etc/cortex/application.conf",
   file("conf/logback.xml") -> "/etc/cortex/logback.xml"
 ).withConfig()
@@ -73,10 +73,10 @@ packageBin := {
 //debianPackageRecommends := Seq("elasticsearch")
 debianPackageDependencies += "java8-runtime-headless | java8-runtime"
 maintainerScripts in Debian := maintainerScriptsFromDirectory(
-  baseDirectory.value / "install" / "debian",
+  baseDirectory.value / "package" / "debian",
   Seq(DebianConstants.Postinst, DebianConstants.Prerm, DebianConstants.Postrm)
 )
-linuxEtcDefaultTemplate in Debian := (baseDirectory.value / "install" / "etc_default_cortex").asURL
+linuxEtcDefaultTemplate in Debian := (baseDirectory.value / "package" / "etc_default_cortex").asURL
 linuxMakeStartScript in Debian := None
 
 // RPM //
@@ -86,12 +86,12 @@ rpmUrl := Some("http://thehive-project.org/")
 rpmLicense := Some("AGPL")
 rpmRequirements += "java-1.8.0-openjdk-headless"
 maintainerScripts in Rpm := maintainerScriptsFromDirectory(
-  baseDirectory.value / "install" / "rpm",
+  baseDirectory.value / "package" / "rpm",
   Seq(RpmConstants.Pre, RpmConstants.Preun, RpmConstants.Postun)
 )
 linuxPackageSymlinks in Rpm := Nil
 rpmPrefix := Some(defaultLinuxInstallLocation.value)
-linuxEtcDefaultTemplate in Rpm := (baseDirectory.value / "install" / "etc_default_cortex").asURL
+linuxEtcDefaultTemplate in Rpm := (baseDirectory.value / "package" / "etc_default_cortex").asURL
 
 // DOCKER //
 import com.typesafe.sbt.packager.docker.{ Cmd, ExecCmd }
@@ -102,9 +102,9 @@ dockerUpdateLatest := true
 dockerEntrypoint := Seq("/opt/cortex/entrypoint")
 dockerExposedPorts := Seq(9000)
 mappings in Docker ++= Seq(
-  file("install/docker/entrypoint") -> "/opt/cortex/entrypoint",
+  file("package/docker/entrypoint") -> "/opt/cortex/entrypoint",
   file("conf/logback.xml") -> "/etc/cortex/logback.xml",
-  file("install/empty") -> "/var/log/cortex/application.log")
+  file("package/empty") -> "/var/log/cortex/application.log")
 mappings in Docker ~= (_.filterNot {
   case (_, filepath) => filepath == "/opt/cortex/conf/application.conf"
 })
