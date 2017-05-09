@@ -7,12 +7,9 @@ body {
     margin-bottom: 30px;
 }
 
-
 .footer {
-    /*margin-top: 30px;*/
     height: 50px;
 }
-
 
 .clickable {
     cursor: pointer;
@@ -26,12 +23,13 @@ body {
 .nowrap {
     white-space: nowrap;
 }
-/*.header,
-.footer {
-    padding-left: 15px;
-    padding-right: 15px;
-}*/
-
+.navbar-header {
+    padding-left: 10px;
+}
+.navbar-brand {
+    width: 130px;
+    padding: 12px 15px;
+}
 .footer {
     padding-top: 19px;
     border-top: 1px solid #e5e5e5;
