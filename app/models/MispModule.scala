@@ -1,7 +1,7 @@
 package models
 
 case class MispModule(
-  name: String,
+    name: String,
     version: String,
     description: String,
     author: String,
