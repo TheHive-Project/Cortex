@@ -27,7 +27,7 @@ There are currently 21 analyzers.
 + DNSDB\*: leverage Farsight's [DNSDB](https://www.dnsdb.info/) for pDNS.
 + DomainTools\*: look up domain names, IP addresses, WHOIS records, etc. using the popular [DomainTools](http://domaintools.com/) service API.
 + File Info: parse files in several formats such as OLE and OpenXML to detect VBA macros, extract their source code, generate useful information on PE, PDF files and much more.
-+ GoogleSafeBrowsing: check URLs against [Google Safebrowsing](https://www.google.com/transparencyreport/safebrowsing/).
++ GoogleSafebrowsing\*: check URLs against [Google Safebrowsing](https://www.google.com/transparencyreport/safebrowsing/).
 + Hippocampe: query threat feeds through [Hippocampe](https://github.com/CERT-BDF/Hippocampe), a FOSS tool that centralizes feeds and allows you to associate a confidence level to each one of them (that can be changed over time) and get a score indicating the data quality.
 + Joe Sandbox\*: analyze URLs and files using the powerful [Joe Sandbox](https://www.joesecurity.org/) malware analysis solution.
 + MaxMind: geolocation.
@@ -43,7 +43,7 @@ There are currently 21 analyzers.
 + VirusTotal\*: look up files, URLs and hashes through [VirusTotal](https://www.virustotal.com/).
 + Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
 
-The star (\*) indicates that the analyzer needs an API key to work correctly. **We do not provide API keys**. You have to use your own.
+The star (\*) indicates that the analyzer needs either an API key or user accounts to work correctly. **We do not provide API keys or user accounts**. You have to use your own.
 
 # License
 Cortex is an open source and free software released under the [AGPL](https://github.com/CERT-BDF/Cortex/blob/master/LICENSE) (Affero General Public License). We, TheHive Project, are committed to ensure that Cortex will remain a free and open source project on the long-run.
