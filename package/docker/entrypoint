@@ -1,0 +1,55 @@
+#!/bin/bash
+
+CONFIG_SECRET=1
+CONFIG=1
+CONFIG_FILE=/etc/cortex/application.conf
+ANALYZER_PATH=/opt/Cortex-Analyzers/analyzers
+
+function usage {
+	cat <<- _EOF_
+		Available options:
+		--no-config		| do not try to configure Cortex (add secret and analyzers location)
+		--no-config-secret	| do not add random secret to configuration
+		--secret <secret>	| secret to secure sessions
+		--analyzer-path <path>	| where analyzers are located
+	_EOF_
+	exit 1
+}
+
+STOP=0
+while test $# -gt 0 -o $STOP = 1
+do
+	case "$1" in
+		"--no-config")		CONFIG=0;;
+		"--no-config-secret")	CONFIG_SECRET=0;;
+		"--secret")		shift; SECRET=$1;;
+		"--analyzer-path")	shift; ANALYZER_PATH=$1;;
+		"--")			STOP=1;;
+		*)			usage
+	esac
+	shift
+done
+
+if test $CONFIG = 1
+then
+	CONFIG_FILE=$(mktemp).conf
+	if test $CONFIG_SECRET = 1
+	then
+		if test -z "$SECRET"
+		then
+			SECRET=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
+		fi
+		echo Using secret: $SECRET
+		echo play.crypto.secret=\"$SECRET\" >> $CONFIG_FILE
+	fi
+
+	echo analyzer.path=\"$ANALYZER_PATH\" >> $CONFIG_FILE
+
+	echo 'include file("/etc/cortex/application.conf")' >> $CONFIG_FILE
+fi
+
+exec bin/cortex \
+	-Dconfig.file=$CONFIG_FILE \
+	-Dlogger.file=/etc/cortex/logback.xml \
+	-Dpidfile.path=/dev/null \
+	$@

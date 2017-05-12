@@ -1,24 +1,22 @@
 package models
 
-import play.api.libs.json.JsObject
-import scala.concurrent.Future
 import java.util.Date
-import scala.util.Success
-import scala.util.Failure
+
+import scala.concurrent.Future
+import scala.util.{ Failure, Success }
 
 object JobStatus extends Enumeration {
   type Type = Value
   val InProgress, Success, Failure = Value
 }
-case class Job(id: String, analyzerId: String, artifact: Artifact, report: Future[JsObject]) {
+
+case class Job(id: String, analyzer: Analyzer, artifact: Artifact, report: Future[Report]) {
   val date: Date = new Date()
 
   def status: JobStatus.Type = report.value match {
-    case Some(Success(x)) ⇒ (x \ "success").asOpt[Boolean] match {
-      case Some(true) ⇒ JobStatus.Success
-      case _          ⇒ JobStatus.Failure
-    }
-    case Some(Failure(_)) ⇒ JobStatus.Failure
-    case None             ⇒ JobStatus.InProgress
+    case Some(Success(SuccessReport(_, _, _))) ⇒ JobStatus.Success
+    case Some(Success(FailureReport(_)))       ⇒ JobStatus.Failure
+    case Some(Failure(_))                      ⇒ JobStatus.Failure
+    case None                                  ⇒ JobStatus.InProgress
   }
 }

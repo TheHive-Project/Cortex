@@ -44,6 +44,19 @@
                 return Notification.error(sanitized);
             };
         })
+        .service('VersionSrv', function($q, $http) {
+            this.get = function() {
+                var deferred = $q.defer();
+
+                $http.get('./api/status').then(function(response) {
+                    deferred.resolve(response);
+                }, function(rejection) {
+                    deferred.reject(rejection);
+                });
+                return deferred.promise;
+            }
+
+        })
         .service('AnalyzerSrv', function($q, $http) {
             var self = this;
 

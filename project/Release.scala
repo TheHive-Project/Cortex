@@ -1,10 +1,9 @@
-import sbt._
+import play.api.libs.json._
 import sbt.Keys.baseDirectory
-import sbt.{ Project, Extracted, State, IO, File, StateOps }
+import sbt.{File, IO, Project, State, _}
 import sbtrelease.ReleasePlugin.autoImport._
 import sbtrelease.ReleaseStateTransformations.readVersion
-import sbtrelease.{ Vcs, Versions }
-import play.api.libs.json._
+import sbtrelease.{Vcs, Versions}
 
 object Release {
   val releaseVersionUIFile = settingKey[File]("The json package file to write the version to")

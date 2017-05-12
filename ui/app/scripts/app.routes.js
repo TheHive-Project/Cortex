@@ -6,7 +6,7 @@
 
             $urlRouterProvider.otherwise('/analyzers');
 
-            $stateProvider
+            $stateProvider                
                 .state('analyzers', {
                     url: '/analyzers',
                     templateUrl: 'views/analyzers.html',
