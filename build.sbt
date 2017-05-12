@@ -69,10 +69,9 @@ linuxPackageMappings ~= { _.map { pm =>
 packageBin := {
   (packageBin in Universal).value
   (packageBin in Debian).value
-  //(packageBin in Rpm).value
+  (packageBin in Rpm).value
 }
 // DEB //
-//debianPackageRecommends := Seq("elasticsearch")
 debianPackageDependencies += "java8-runtime-headless | java8-runtime"
 maintainerScripts in Debian := maintainerScriptsFromDirectory(
   baseDirectory.value / "package" / "debian",
@@ -82,7 +81,7 @@ linuxEtcDefaultTemplate in Debian := (baseDirectory.value / "package" / "etc_def
 linuxMakeStartScript in Debian := None
 
 // RPM //
-rpmRelease := "8"
+rpmRelease := "1"
 rpmVendor in Rpm := "TheHive Project"
 rpmUrl := Some("http://thehive-project.org/")
 rpmLicense := Some("AGPL")
@@ -94,6 +93,11 @@ maintainerScripts in Rpm := maintainerScriptsFromDirectory(
 linuxPackageSymlinks in Rpm := Nil
 rpmPrefix := Some(defaultLinuxInstallLocation.value)
 linuxEtcDefaultTemplate in Rpm := (baseDirectory.value / "package" / "etc_default_cortex").asURL
+packageBin in Rpm := {
+  val rpmFile = (packageBin in Rpm).value
+  s"rpm --addsign $rpmFile".!!
+  rpmFile
+}
 
 // DOCKER //
 import com.typesafe.sbt.packager.docker.{ Cmd, ExecCmd }
@@ -135,6 +139,8 @@ publish := {
   (publish in Docker).value
   PublishToBinTray.publishRelease.value
   PublishToBinTray.publishLatest.value
+  PublishToBinTray.publishRpm.value
+  PublishToBinTray.publishDebian.value
 }
 
 // Scalariform //
