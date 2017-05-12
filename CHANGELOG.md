@@ -6,7 +6,7 @@
 
 **Implemented enhancements:**
 
-- Packaging [\#20](https://github.com/CERT-BDF/Cortex/issues/20)
+- Add support to .deb and .rpm package generation [\#20](https://github.com/CERT-BDF/Cortex/issues/20)
 - Display analyzers metadata [\#18](https://github.com/CERT-BDF/Cortex/issues/18)
 - MISP integration feature request [\#21](https://github.com/CERT-BDF/Cortex/issues/21)
 
@@ -14,6 +14,7 @@
 
 - Display Cortex version on the footer [\#23](https://github.com/CERT-BDF/Cortex/issues/23)
 - Use new logo and favicon [\#22](https://github.com/CERT-BDF/Cortex/issues/22)
+- Scala code cleanup [\#19](https://github.com/CERT-BDF/Cortex/issues/19)
 
 ## [1.0.2](https://github.com/CERT-BDF/Cortex/tree/1.0.2) (2017-04-19)
 [Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.0.1...1.0.2)
