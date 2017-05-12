@@ -1,7 +1,21 @@
 # Change Log
 
-## [1.0.2](https://github.com/CERT-BDF/Cortex/tree/1.0.2) (2017-04-18)
+## [1.1.0](https://github.com/CERT-BDF/Cortex/tree/1.1.0) (2017-05-12)
 
+[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.0.2...1.1.0)
+
+**Implemented enhancements:**
+
+- Packaging [\#20](https://github.com/CERT-BDF/Cortex/issues/20)
+- Display analyzers metadata [\#18](https://github.com/CERT-BDF/Cortex/issues/18)
+- MISP integration feature request [\#21](https://github.com/CERT-BDF/Cortex/issues/21)
+
+**Closed issues:**
+
+- Display Cortex version on the footer [\#23](https://github.com/CERT-BDF/Cortex/issues/23)
+- Use new logo and favicon [\#22](https://github.com/CERT-BDF/Cortex/issues/22)
+
+## [1.0.2](https://github.com/CERT-BDF/Cortex/tree/1.0.2) (2017-04-19)
 [Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.0.1...1.0.2)
 
 **Fixed bugs:**
