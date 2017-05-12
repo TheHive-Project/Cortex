@@ -124,8 +124,8 @@ dockerCommands ~= { dc =>
         "apt-get update && " +
           "apt-get install -y --no-install-recommends python-pip python2.7-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git && " +
           "cd /opt && " +
-          "git clone -b develop https://github.com/CERT-BDF/Cortex-Analyzers.git && " +
-          "pip install $(cat Cortex-Analyzers/analyzers/*/requirements.txt | grep -v hashlib | sort -u)"),
+          "git clone https://github.com/CERT-BDF/Cortex-Analyzers.git && " +
+          "pip install $(sort -u Cortex-Analyzers/analyzers/*/requirements.txt)"),
       Cmd("ADD", "var", "/var"),
       Cmd("ADD", "etc", "/etc"),
       ExecCmd("RUN", "chown", "-R", "daemon:daemon", "/var/log/cortex")) ++
