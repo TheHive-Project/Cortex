@@ -35,9 +35,9 @@ mappings in packageBin in Assets ++= frontendFiles.value
 // Install files //
 mappings in Universal ~= {
   _.flatMap {
-    case (file, "conf/application.conf") => Nil
+    case (_, "conf/application.conf") => Nil
     case (file, "conf/apllication.sample") => Seq(file -> "conf/application.conf")
-    case (file, "conf/logback.xml") => Nil
+    case (_, "conf/logback.xml") => Nil
     case other => Seq(other)
   } ++ Seq(
     file("package/cortex.service") -> "package/cortex.service",
@@ -54,7 +54,7 @@ packageDescription := """--""".stripMargin
 defaultLinuxInstallLocation := "/opt"
 linuxPackageMappings ~= { _.map { pm =>
   val mappings = pm.mappings.filterNot {
-    case (file, path) => path.startsWith("/opt/cortex/package") || path.startsWith("/opt/cortex/conf")
+    case (_, path) => path.startsWith("/opt/cortex/package") || path.startsWith("/opt/cortex/conf")
   }
   com.typesafe.sbt.packager.linux.LinuxPackageMapping(mappings, pm.fileData).withConfig()
 } :+ packageMapping(
@@ -139,7 +139,6 @@ publish := {
 
 // Scalariform //
 import scalariform.formatter.preferences._
-import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 
 ScalariformKeys.preferences in ThisBuild := ScalariformKeys.preferences.value

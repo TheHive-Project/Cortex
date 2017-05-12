@@ -261,7 +261,7 @@ class MispSrv(
     "mutex" → "other",
     "target-user" → "other",
     "target-email" → "mail",
-    "target-machine" → "hostname",
+    "target-machine" → "fqdn",
     "target-org" → "other",
     "target-location" → "other",
     "target-external" → "other",
