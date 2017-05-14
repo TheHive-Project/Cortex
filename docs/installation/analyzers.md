@@ -60,32 +60,27 @@ analyzer {
         https="http://PROXY_ADDRESS:PORT"
       }
     }
-    DNSDB {
-      server="https://api.dnsdb.info"
-      key="..."
+    CIRCLPassiveDNS {
+      user= "..."
+      password= "..."
+    }
+    CIRCLPassiveSSL {
+      user= "..."
+      password= "..."
     }
     DomainTools {
       username="..."
       key="..."
     }
-    VirusTotal {
+    DNSDB {
+      server="https://api.dnsdb.info"
       key="..."
+    }
+    GoogleSafebrowsing {
+       key = "..."
     }
     Hippocampe {
       url="..."
-    }
-    OTXQuery {
-      key="..."
-    }
-    PhishTank {
-      key="..."
-    }
-    PhishingInitiative {
-      key="..."
-    }
-    PassiveTotal {
-      key="..."
-      username="..."
     }
     JoeSandbox {
       url = "..."
@@ -99,27 +94,27 @@ analyzer {
      ca_bundle="..."
      allowed_network="..."
     }
-   GoogleSafebrowsing {
-      key = "..."
-   }
-   Virusshare {
-      path = "..."
-   }
-   Yara {
-     rules=["..."] 
-   }
-    CIRCLPassiveDNS {
-      user= "..."
-      password= "..."
-    }
-    CIRCLPassiveSSL {
-      user= "..."
-      password= "..."
-    }
-    VMRay {
-      url = "..."
+    OTXQuery {
       key="..."
-      cert="..."
+    }
+    PassiveTotal {
+      key="..."
+      username="..."
+    }
+    PhishingInitiative {
+      key="..."
+    }
+    PhishTank {
+      key="..."
+    }
+    Virusshare {
+      path = "..."
+    }
+    VirusTotal {
+     key="..."
+    }
+    Yara {
+      rules=["..."]
     }
   }
 }
