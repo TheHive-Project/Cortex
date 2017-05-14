@@ -68,12 +68,12 @@ analyzer {
       user= "..."
       password= "..."
     }
-    DomainTools {
-      username="..."
-      key="..."
-    }
     DNSDB {
       server="https://api.dnsdb.info"
+      key="..."
+    }
+    DomainTools {
+      username="..."
       key="..."
     }
     GoogleSafebrowsing {
