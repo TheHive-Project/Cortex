@@ -13,9 +13,9 @@ physical machine with similar specifications.
 Cortex can be installed using:
 - An [RPM package](installation/rpm-guide.md)
 - A [DEB package](installation/deb-guide.md)
-- [docker](installation/docker-guide.md)
-- [binary](installation/binary-guide.md)
-- [ansible script](https://github.com/drewstinnett/ansible-cortex) contributed by
+- [Docker](installation/docker-guide.md)
+- [Binary](installation/binary-guide.md)
+- [Ansible script](https://github.com/drewstinnett/ansible-cortex) contributed by
 [@drewstinnett](https://github.com/drewstinnett)
 
 Cortex can also be [built from sources](installation/build-guide.md).
