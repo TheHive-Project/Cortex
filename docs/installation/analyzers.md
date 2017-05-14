@@ -87,6 +87,40 @@ analyzer {
       key="..."
       username="..."
     }
+    JoeSandbox {
+      url = "..."
+      apikey = "..."
+    }
+    Nessus {
+     url ="..."
+     login="..."
+     password="..."
+     policy="..."
+     ca_bundle="..."
+     allowed_network="..."
+    }
+   GoogleSafebrowsing {
+      key = "..."
+   }
+   Virusshare {
+      path = "..."
+   }
+   Yara {
+     rules=["..."] 
+   }
+    CIRCLPassiveDNS {
+      user= "..."
+      password= "..."
+    }
+    CIRCLPassiveSSL {
+      user= "..."
+      password= "..."
+    }
+    VMRay {
+      url = "..."
+      key="..."
+      cert="..."
+    }
   }
 }
 ```
