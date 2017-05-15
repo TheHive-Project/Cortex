@@ -1,0 +1,82 @@
+# Secret key
+# ~~~~~
+# The secret key is used to secure cryptographics functions.
+# If you deploy your application to several instances be sure to use the same key!
+#play.crypto.secret="***changeme***"
+
+analyzer {
+  path = "path/to/Cortex-Analyzers/analyzers"
+  config {
+    global {
+      proxy {
+        #http="http://PROXY_ADDRESS:PORT",
+        #https="http://PROXY_ADDRESS:PORT"
+      }
+    }
+    CIRCLPassiveDNS {
+      #user= "..."
+      #password= "..."
+    }
+    CIRCLPassiveSSL {
+      #user= "..."
+      #password= "..."
+    }
+    DNSDB {
+      #server="https://api.dnsdb.info"
+      #key="..."
+    }
+    DomainTools {
+      #username="..."
+      #key="..."
+    }
+    GoogleSafebrowsing {
+      #key = "..."
+    }
+    Hippocampe {
+      #url="..."
+    }
+    JoeSandbox {
+      #url = "..."
+      #apikey = "..."
+    }
+    Nessus {
+      #url ="..."
+      #login="..."
+      #password="..."
+      #policy="..."
+      #ca_bundle="..."
+      #allowed_network="..."
+    }
+    OTXQuery {
+      #key="..."
+    }
+    PassiveTotal {
+      #key="..."
+      #username="..."
+    }
+    PhishingInitiative {
+      #key="..."
+    }
+    PhishTank {
+      #key="..."
+    }
+    Virusshare {
+      #path = "..."
+    }
+    VirusTotal {
+      #key="..."
+    }
+    Yara {
+      #rules=["..."]
+    }
+  }
+
+  fork-join-executor {
+    # Min number of threads available for analyze
+    parallelism-min = 2
+    # Parallelism (threads) ... ceil(available processors * factor)
+    parallelism-factor = 2.0
+    # Max number of threads available for analyze
+    parallelism-max = 4
+  }
+}
