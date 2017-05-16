@@ -136,7 +136,7 @@ dockerCommands ~= { dc =>
           "apt-get install -y --no-install-recommends python3-setuptools python3-dev zlib1g-dev libxslt1-dev libxml2-dev libpq5 libjpeg-dev && git clone https://github.com/MISP/misp-modules.git && " +
           "easy_install3 pip && " +
           "(cd misp-modules && pip3 install -I -r REQUIREMENTS && pip3 install -I .) && " +
-          "rm -rf misp_modules /var/lib/apt/lists/*"),
+          "rm -rf misp_modules /var/lib/apt/lists/* /tmp/*"),
       Cmd("ADD", "var", "/var"),
       Cmd("ADD", "etc", "/etc"),
       ExecCmd("RUN", "chown", "-R", "daemon:daemon", "/var/log/cortex")) ++
