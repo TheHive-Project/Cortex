@@ -7,12 +7,6 @@
 analyzer {
   path = "path/to/Cortex-Analyzers/analyzers"
   config {
-    global {
-      proxy {
-        #http="http://PROXY_ADDRESS:PORT",
-        #https="http://PROXY_ADDRESS:PORT"
-      }
-    }
     CIRCLPassiveDNS {
       #user= "..."
       #password= "..."
@@ -78,5 +72,82 @@ analyzer {
     parallelism-factor = 2.0
     # Max number of threads available for analyze
     parallelism-max = 4
+  }
+}
+
+misp.modules {
+  enabled = true
+
+  config {
+    shodan {
+      #apikey = ""
+    }
+    eupi {
+      #apikey = ""
+      #url = ""
+    }
+    passivetotal {
+      #username = ""
+      #api_key = ""
+    }
+    dns {
+      #nameserver = ""
+    }
+    whois {
+      #server = ""
+      #port = ""
+    }
+    sourcecache {
+      #archivepath = ""
+    }
+    geoip_country {
+    }
+    circl_passivessl {
+      #username = ""
+      #password = ""
+    }
+    iprep {
+      #apikey = ""
+    }
+    countrycode {
+    }
+    cve {
+    }
+    virustotal {
+      #apikey = ""
+      #event_limit = ""
+    }
+    ipasn {
+      #host = ""
+      #port = ""
+      #db = ""
+    }
+    circl_passivedns {
+      #username = ""
+      #password = ""
+    }
+    vmray_submit {
+      #apikey = ""
+      #url = ""
+      #shareable = ""
+      #do_not_reanalyze = ""
+      #do_not_include_vmrayjobids = ""
+    }
+    wiki {
+    }
+    domaintools {
+      #username = ""
+      #api_key = ""
+    }
+    reversedns {
+      #nameserver = ""
+    }
+    threatminer {
+    }
+    asn_history {
+      #host = ""
+      #port = ""
+      #db = ""
+    }
   }
 }

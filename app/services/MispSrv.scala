@@ -1,12 +1,13 @@
 package services
 
 import java.io.{ ByteArrayInputStream, FileInputStream, InputStream, SequenceInputStream }
-import javax.inject.Inject
+import javax.inject.{ Inject, Singleton }
 
 import akka.actor.ActorSystem
 import models.JsonFormat._
 import models._
 import org.apache.commons.codec.binary.{ Base64, Base64InputStream }
+import util.JsonConfig
 import play.api.libs.json.{ Json, _ }
 import play.api.{ Configuration, Logger }
 
@@ -15,8 +16,11 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.sys.process._
 import scala.util.{ Failure, Success, Try }
 
+@Singleton
 class MispSrv(
-    loaderCommandOption: Option[String],
+    mispModulesEnabled: Boolean,
+    loaderCommand: String,
+    mispModuleConfig: JsObject,
     externalAnalyzerSrv: ExternalAnalyzerSrv,
     jobSrv: JobSrv,
     akkaSystem: ActorSystem) {
@@ -26,7 +30,9 @@ class MispSrv(
     externalAnalyzerSrv: ExternalAnalyzerSrv,
     jobSrv: JobSrv,
     akkaSystem: ActorSystem) = this(
-    configuration.getString("misp.modules.loader"),
+    configuration.getBoolean("misp.modules.enabled").getOrElse(false),
+    configuration.getString("misp.modules.loader").get,
+    JsonConfig.configWrites.writes(configuration.getConfig("misp.modules.config").getOrElse(Configuration.empty)),
     externalAnalyzerSrv,
     jobSrv,
     akkaSystem)
@@ -34,25 +40,27 @@ class MispSrv(
   private[MispSrv] lazy val logger = Logger(getClass)
   private[MispSrv] lazy val analyzeExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("analyzer")
 
-  lazy val list: Seq[MispModule] =
-    loaderCommandOption.fold(Seq.empty[MispModule]) { loaderCommand ⇒
-      Json.parse(s"$loaderCommand --list".!!)
-        .as[Seq[String]]
-        .map { moduleName ⇒
-          moduleName → (for {
-            moduleInfo ← Try(Json.parse(s"$loaderCommand --info $moduleName".!!))
-            module ← Try(moduleInfo.as[MispModule](reads(loaderCommand)))
-          } yield module)
-        }
-        .flatMap {
-          case (moduleName, Failure(error)) ⇒
-            logger.warn(s"Load MISP module $moduleName fails", error)
-            Nil
-          case (_, Success(module)) ⇒
-            logger.info(s"Register MISP module ${module.name} ${module.version}")
-            Seq(module)
-        }
-    }
+  logger.info(s"MISP modules is ${if (mispModulesEnabled) "enabled" else "disabled"}, loader is $loaderCommand")
+
+  lazy val list: Seq[MispModule] = if (mispModulesEnabled) {
+    Json.parse(s"$loaderCommand --list".!!)
+      .as[Seq[String]]
+      .map { moduleName ⇒
+        moduleName → (for {
+          moduleInfo ← Try(Json.parse(s"$loaderCommand --info $moduleName".!!))
+          module ← Try(moduleInfo.as[MispModule](reads(loaderCommand, mispModuleConfig)))
+        } yield module)
+      }
+      .flatMap {
+        case (moduleName, Failure(error)) ⇒
+          logger.warn(s"Load MISP module $moduleName fails", error)
+          Nil
+        case (_, Success(module)) ⇒
+          logger.info(s"Register MISP module ${module.name} ${module.version}")
+          Seq(module)
+      }
+  }
+  else Nil
 
   def get(moduleName: String): Option[MispModule] = list.find(_.name == moduleName)
 
@@ -89,30 +97,31 @@ class MispSrv(
   }
 
   def query(module: String, mispType: String, data: String)(implicit ec: ExecutionContext): Future[JsObject] = {
-    loaderCommandOption
-      .flatMap { loaderCommand ⇒
-        val artifact = toArtifact(mispType, data)
-        get(module)
-          .map { mispModule ⇒
-            val mispReport = Future {
-              val input = Json.obj(mispType → data)
-              val output = (s"$loaderCommand --run $module" #< input.toString).!!
-              Json.parse(output).as[JsObject]
-            }
-            jobSrv.create(mispModule, artifact, mispReport.map(toReport))
-            mispReport
-
+    val artifact = toArtifact(mispType, data)
+    val mispModule = if (mispModulesEnabled) {
+      get(module)
+        .map { mispModule ⇒
+          val mispReport = Future {
+            val input = Json.obj("config" → mispModule.config, mispType → data)
+            val output = (s"$loaderCommand --run $module" #< input.toString).!!
+            Json.parse(output).as[JsObject]
           }
-          .orElse {
-            externalAnalyzerSrv
-              .get(module)
-              .map { analyzer ⇒
-                externalAnalyzerSrv.analyze(analyzer, artifact)
-                  .map { report ⇒ toMispOutput(report) }
-              }
+          jobSrv.create(mispModule, artifact, mispReport.map(toReport))
+          mispReport
+
+        }
+    }
+    else None
+    mispModule
+      .orElse {
+        externalAnalyzerSrv
+          .get(module)
+          .map { analyzer ⇒
+            externalAnalyzerSrv.analyze(analyzer, artifact)
+              .map { report ⇒ toMispOutput(report) }
           }
       }
-      .getOrElse(Future.failed(new Exception(s"Module $module not found")))
+      .getOrElse(Future.failed(new Exception(s"Module $module not found"))) // TODO add appropriate exception
   }
 
   def analyze(module: MispModule, artifact: Artifact): Future[Report] = {
@@ -121,10 +130,13 @@ class MispSrv(
 
     val input = artifact match {
       case DataArtifact(data, _) ⇒
-        stringStream(Json.obj(dataType2mispType(artifact.dataType).head → data).toString)
+        val mispType = dataType2mispType(artifact.dataType)
+          .filter(module.inputAttributes.contains)
+          .head
+        stringStream((Json.obj("config" → module.config) + (mispType → JsString(data))).toString)
       case FileArtifact(data, _) ⇒
         new SequenceInputStream(Iterator(
-          stringStream("""{"attachment":""""),
+          stringStream(Json.obj("config" → module.config).toString.replaceFirst("}$", ""","attachment":"""")),
           new Base64InputStream(new FileInputStream(data), true),
           stringStream("\"}")).asJavaEnumeration)
     }
@@ -207,15 +219,26 @@ class MispSrv(
     else mispTypes
   }
 
-  private def reads(loaderCommand: String): Reads[MispModule] =
+  private def reads(loaderCommand: String, mispModuleConfig: JsObject): Reads[MispModule] =
     for {
       name ← (__ \ "name").read[String]
-      version ← (__ \ "meta" \ "version").read[String]
-      description ← (__ \ "meta" \ "description").read[String]
-      author ← (__ \ "meta" \ "author").read[String]
-      config ← (__ \ "meta" \ "config").read[Seq[String]]
+      version ← (__ \ "moduleinfo" \ "version").read[String]
+      description ← (__ \ "moduleinfo" \ "description").read[String]
+      author ← (__ \ "moduleinfo" \ "author").read[String]
+      config = (mispModuleConfig \ name).asOpt[JsObject].getOrElse(JsObject(Nil))
+      requiredConfig ← (__ \ "config").read[Set[String]]
+      missingConfig = requiredConfig -- config.keys
+      _ ← if (missingConfig.nonEmpty) {
+        val message = s"MISP module $name is disabled because the following configuration " +
+          s"item${if (missingConfig.size > 1) "s are" else " is"} missing: ${missingConfig.mkString(", ")}"
+        logger.warn(message)
+        Reads[Unit](_ ⇒ JsError(message))
+      }
+      else {
+        Reads[Unit](_ ⇒ JsSuccess(()))
+      }
       input ← (__ \ "mispattributes" \ "input").read[Seq[String]]
-      dataTypes = input.map(mispType2dataType)
+      dataTypes = input.map(mispType2dataType).distinct
     } yield MispModule(name, version, description, author, dataTypes, input, config, loaderCommand)
 
   private val typeLookup = Map(

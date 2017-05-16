@@ -28,4 +28,5 @@ Once you have installed Cortex, you need to [install the analyzers](installation
 - [How to create an analyzer](api/how-to-create-an-analyzer.md)
 
 ## Other
+- [MISP integration](misp.md)
 - [FAQ](FAQ.md)

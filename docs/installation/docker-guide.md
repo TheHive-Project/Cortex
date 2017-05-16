@@ -46,5 +46,6 @@ Docker image accepts more options:
  - --no-config-secret     : do not add random secret to configuration
  - --secret <secret>      : secret to secure sessions
  - --analyzer-path <path> : where analyzers are located
+ - --no-misp-modules      : disabled MISP modules
 
 
