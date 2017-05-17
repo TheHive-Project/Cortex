@@ -4,6 +4,7 @@ CONFIG_SECRET=1
 CONFIG=1
 CONFIG_FILE=/etc/cortex/application.conf
 ANALYZER_PATH=/opt/Cortex-Analyzers/analyzers
+MISP_MODULE=1
 
 function usage {
 	cat <<- _EOF_
@@ -12,6 +13,7 @@ function usage {
 		--no-config-secret	| do not add random secret to configuration
 		--secret <secret>	| secret to secure sessions
 		--analyzer-path <path>	| where analyzers are located
+		--no-misp-modules	| disable MISP modules
 	_EOF_
 	exit 1
 }
@@ -24,6 +26,7 @@ do
 		"--no-config-secret")	CONFIG_SECRET=0;;
 		"--secret")		shift; SECRET=$1;;
 		"--analyzer-path")	shift; ANALYZER_PATH=$1;;
+		"--no-misp-modules")	shift; MISP_MODULE=0;;
 		"--")			STOP=1;;
 		*)			usage
 	esac
@@ -44,6 +47,11 @@ then
 	fi
 
 	echo analyzer.path=\"$ANALYZER_PATH\" >> $CONFIG_FILE
+
+	if test $MISP_MODULE = 1
+	then
+		echo 'misp.modules.enabled = true' >> $CONFIG_FILE
+	fi
 
 	echo 'include file("/etc/cortex/application.conf")' >> $CONFIG_FILE
 fi

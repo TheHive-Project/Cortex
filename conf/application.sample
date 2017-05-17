@@ -1,0 +1,153 @@
+# Secret key
+# ~~~~~
+# The secret key is used to secure cryptographics functions.
+# If you deploy your application to several instances be sure to use the same key!
+#play.crypto.secret="***changeme***"
+
+analyzer {
+  path = "path/to/Cortex-Analyzers/analyzers"
+  config {
+    CIRCLPassiveDNS {
+      #user= "..."
+      #password= "..."
+    }
+    CIRCLPassiveSSL {
+      #user= "..."
+      #password= "..."
+    }
+    DNSDB {
+      #server="https://api.dnsdb.info"
+      #key="..."
+    }
+    DomainTools {
+      #username="..."
+      #key="..."
+    }
+    GoogleSafebrowsing {
+      #key = "..."
+    }
+    Hippocampe {
+      #url="..."
+    }
+    JoeSandbox {
+      #url = "..."
+      #apikey = "..."
+    }
+    Nessus {
+      #url ="..."
+      #login="..."
+      #password="..."
+      #policy="..."
+      #ca_bundle="..."
+      #allowed_network="..."
+    }
+    OTXQuery {
+      #key="..."
+    }
+    PassiveTotal {
+      #key="..."
+      #username="..."
+    }
+    PhishingInitiative {
+      #key="..."
+    }
+    PhishTank {
+      #key="..."
+    }
+    Virusshare {
+      #path = "..."
+    }
+    VirusTotal {
+      #key="..."
+    }
+    Yara {
+      #rules=["..."]
+    }
+  }
+
+  fork-join-executor {
+    # Min number of threads available for analyze
+    parallelism-min = 2
+    # Parallelism (threads) ... ceil(available processors * factor)
+    parallelism-factor = 2.0
+    # Max number of threads available for analyze
+    parallelism-max = 4
+  }
+}
+
+misp.modules {
+  enabled = true
+
+  config {
+    shodan {
+      #apikey = ""
+    }
+    eupi {
+      #apikey = ""
+      #url = ""
+    }
+    passivetotal {
+      #username = ""
+      #api_key = ""
+    }
+    dns {
+      #nameserver = ""
+    }
+    whois {
+      #server = ""
+      #port = ""
+    }
+    sourcecache {
+      #archivepath = ""
+    }
+    geoip_country {
+    }
+    circl_passivessl {
+      #username = ""
+      #password = ""
+    }
+    iprep {
+      #apikey = ""
+    }
+    countrycode {
+    }
+    cve {
+    }
+    virustotal {
+      #apikey = ""
+      #event_limit = ""
+    }
+    ipasn {
+      #host = ""
+      #port = ""
+      #db = ""
+    }
+    circl_passivedns {
+      #username = ""
+      #password = ""
+    }
+    vmray_submit {
+      #apikey = ""
+      #url = ""
+      #shareable = ""
+      #do_not_reanalyze = ""
+      #do_not_include_vmrayjobids = ""
+    }
+    wiki {
+    }
+    domaintools {
+      #username = ""
+      #api_key = ""
+    }
+    reversedns {
+      #nameserver = ""
+    }
+    threatminer {
+    }
+    asn_history {
+      #host = ""
+      #port = ""
+      #db = ""
+    }
+  }
+}
