@@ -18,7 +18,8 @@ object JsonFormat {
   implicit val fileArtifactWrites: OWrites[FileArtifact] = OWrites[FileArtifact](fileArtifact ⇒ Json.obj(
     "attributes" → fileArtifact.attributes))
 
-  implicit val dataArtifactWrites: OWrites[DataArtifact] = Json.writes[DataArtifact]
+  implicit val dataArtifactWrites: OWrites[DataArtifact] = OWrites[DataArtifact](artifact ⇒
+    artifact.attributes + ("data" → JsString(artifact.data)))
   implicit val dataActifactReads: Reads[DataArtifact] = Json.reads[DataArtifact]
 
   val artifactWrites: OWrites[Artifact] = OWrites[Artifact] {

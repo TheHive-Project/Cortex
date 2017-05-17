@@ -1,7 +1,30 @@
 # Change Log
 
-## [1.0.2](https://github.com/CERT-BDF/Cortex/tree/1.0.2) (2017-04-18)
+## [1.1.1](https://github.com/CERT-BDF/Cortex/tree/1.1.1) (2017-05-17)
 
+[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.0...1.1.1)
+
+**Implemented enhancements:**
+
+- Missing logos and favicons [\#25](https://github.com/CERT-BDF/Cortex/issues/25)
+- MISP integration feature request [\#21](https://github.com/CERT-BDF/Cortex/issues/21)
+
+## [1.1.0](https://github.com/CERT-BDF/Cortex/tree/1.1.0) (2017-05-12)
+
+[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.0.2...1.1.0)
+
+**Implemented enhancements:**
+
+- Add support to .deb and .rpm package generation [\#20](https://github.com/CERT-BDF/Cortex/issues/20)
+- Display analyzers metadata [\#18](https://github.com/CERT-BDF/Cortex/issues/18)
+
+**Closed issues:**
+
+- Display Cortex version on the footer [\#23](https://github.com/CERT-BDF/Cortex/issues/23)
+- Use new logo and favicon [\#22](https://github.com/CERT-BDF/Cortex/issues/22)
+- Scala code cleanup [\#19](https://github.com/CERT-BDF/Cortex/issues/19)
+
+## [1.0.2](https://github.com/CERT-BDF/Cortex/tree/1.0.2) (2017-04-19)
 [Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.0.1...1.0.2)
 
 **Fixed bugs:**

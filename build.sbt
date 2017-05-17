@@ -43,14 +43,21 @@ mappings in Universal ~= {
     file("package/cortex.service") -> "package/cortex.service",
     file("package/cortex.conf") -> "package/cortex.conf",
     file("package/cortex") -> "package/cortex",
-    file("package/logback.xml") -> "conf/logback.xml"
+    file("package/logback.xml") -> "conf/logback.xml",
+    file("contrib/misp-modules-loader.py") -> "contrib/misp-modules-loader.py"
   )
 }
 
 // Package //
-maintainer := "Thomas Franco <toom@thehive-project.org"
-packageSummary := "-"
-packageDescription := """--""".stripMargin
+maintainer := "TheHive Project <support@thehive-project.org>"
+packageSummary := "Powerful Observable Analysis Engine"
+packageDescription := """Cortex tries to solve a common problem frequently encountered by SOCs, CSIRTs and security
+  | researchers in the course of threat intelligence, digital forensics and incident response: how to analyze
+  | observables they have collected, at scale, by querying a single tool instead of several?
+  |
+  | Cortex, an open source and free software, has been created by TheHive Project for this very purpose. Observables,
+  | such as IP and email addresses, URLs, domain names, files or hashes, can be analyzed one by one or in bulk mode
+  | using a Web interface. Analysts can also automate these operations thanks to the Cortex REST API. """.stripMargin
 defaultLinuxInstallLocation := "/opt"
 linuxPackageMappings ~= { _.map { pm =>
   val mappings = pm.mappings.filterNot {
@@ -62,7 +69,7 @@ linuxPackageMappings ~= { _.map { pm =>
   file("package/cortex.conf") -> "/etc/init/cortex.conf",
   file("package/cortex") -> "/etc/init.d/cortex",
   file("conf/application.sample") -> "/etc/cortex/application.conf",
-  file("conf/logback.xml") -> "/etc/cortex/logback.xml"
+  file("package/logback.xml") -> "/etc/cortex/logback.xml"
 ).withConfig()
 }
 
@@ -124,8 +131,12 @@ dockerCommands ~= { dc =>
         "apt-get update && " +
           "apt-get install -y --no-install-recommends python-pip python2.7-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git && " +
           "cd /opt && " +
-          "git clone -b develop https://github.com/CERT-BDF/Cortex-Analyzers.git && " +
-          "pip install $(cat Cortex-Analyzers/analyzers/*/requirements.txt | grep -v hashlib | sort -u)"),
+          "git clone https://github.com/CERT-BDF/Cortex-Analyzers.git && " +
+          "pip install $(sort -u Cortex-Analyzers/analyzers/*/requirements.txt) && " +
+          "apt-get install -y --no-install-recommends python3-setuptools python3-dev zlib1g-dev libxslt1-dev libxml2-dev libpq5 libjpeg-dev && git clone https://github.com/MISP/misp-modules.git && " +
+          "easy_install3 pip && " +
+          "(cd misp-modules && pip3 install -I -r REQUIREMENTS && pip3 install -I .) && " +
+          "rm -rf misp_modules /var/lib/apt/lists/* /tmp/*"),
       Cmd("ADD", "var", "/var"),
       Cmd("ADD", "etc", "/etc"),
       ExecCmd("RUN", "chown", "-R", "daemon:daemon", "/var/log/cortex")) ++

@@ -2,7 +2,6 @@
 
 [![Join the chat at https://gitter.im/TheHive-Project/TheHive](https://badges.gitter.im/TheHive-Project/TheHive.svg)](https://gitter.im/TheHive-Project/TheHive)
 
-
 **Cortex** tries to solve a common problem frequently encountered by SOCs, CSIRTs and security researchers in the course of threat intelligence, digital forensics and incident response: how to **analyze observables** they have collected, **at scale**, **by querying a single tool** instead of several?
 
 Cortex, an open source and free software, has been created by [TheHive Project](https://thehive-project.org) for this very purpose. Observables, such as IP and email addresses, URLs, domain names, files or hashes, can be analyzed one by one or in bulk mode using a Web interface. Analysts can also **automate** these operations thanks to the Cortex REST API.
@@ -22,23 +21,31 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 
 
 # Analyzers
-Cortex 1.0.1 is provided with 13 analyzers.
+There are currently 21 analyzers.
 
 + Abuse Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
++ CIRCLPassiveDNS\*: Check [CIRCL's Passive DNS](https://www.circl.lu/services/passive-dns/) for a given domain.
++ CIRCLPassiveSSL\*: Check [CIRCL's Passive SSL](https://www.circl.lu/services/passive-ssl/) service for a given IP address or certificate hash.
 + DNSDB\*: leverage Farsight's [DNSDB](https://www.dnsdb.info/) for pDNS.
 + DomainTools\*: look up domain names, IP addresses, WHOIS records, etc. using the popular [DomainTools](http://domaintools.com/) service API.
 + File Info: parse files in several formats such as OLE and OpenXML to detect VBA macros, extract their source code, generate useful information on PE, PDF files and much more.
++ GoogleSafebrowsing\*: check URLs against [Google Safebrowsing](https://www.google.com/transparencyreport/safebrowsing/).
 + Hippocampe: query threat feeds through [Hippocampe](https://github.com/CERT-BDF/Hippocampe), a FOSS tool that centralizes feeds and allows you to associate a confidence level to each one of them (that can be changed over time) and get a score indicating the data quality.
++ Joe Sandbox\*: analyze URLs and files using the powerful [Joe Sandbox](https://www.joesecurity.org/) malware analysis solution.
 + MaxMind: geolocation.
++ MISP Search\*: search for [MISP](http://www.misp-project.org/) events containing the observable submitted as input.  
++ Nessus: use Tenable's [Nessus Vulnerability Scanner](https://www.tenable.com/products/nessus-vulnerability-scanner) to scan an IP address or a FQDN.
 + Outlook MsgParser: parse Outlook message files automatically and show the key information it contains such as headers, attachments etc.
 + OTXQuery\*: query AlienVault [Open Threat Exchange](https://otx.alienvault.com/) for IPs, domains, URLs, or file hashes.
 + PassiveTotal\*: leverage [RiskIQ's PassiveTotal](https://www.passivetotal.org/) service to gain invaluable insight on observables, identify overlapping infrastructure using Passive DNS, WHOIS, SSL certificates and more.
-+ URLCategory: checks the Fortinet categories of URLs.
-+ Phishing Initiative\*: queries [Phishing Initiative](https://phishing-initiative.fr/contrib/) to assess whether a URL has been flagged a phishing site.
-+ PhishTank\*: queries [PhishTank](https://www.phishtank.com/) to assess whether a URL has been flagged a phishing site.
++ Phishing Initiative\*: query [Phishing Initiative](https://phishing-initiative.fr/contrib/) to assess whether a URL has been flagged a phishing site.
++ PhishTank\*: query [PhishTank](https://www.phishtank.com/) to assess whether a URL has been flagged a phishing site.
++ URLCategory: check the Fortinet categories of URLs.
++ VirusShare: check whether a file/hash is available on [VirusShare.com](https://virusshare.com/).
 + VirusTotal\*: look up files, URLs and hashes through [VirusTotal](https://www.virustotal.com/).
++ Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
 
-The star (\*) indicates that the analyzer needs an API key to work correctly. **We do not provide API keys**. You have to use your own.
+The star (\*) indicates that the analyzer needs either an API key or user accounts to work correctly. **We do not provide API keys or user accounts**. You have to use your own.
 
 # License
 Cortex is an open source and free software released under the [AGPL](https://github.com/CERT-BDF/Cortex/blob/master/LICENSE) (Affero General Public License). We, TheHive Project, are committed to ensure that Cortex will remain a free and open source project on the long-run.
