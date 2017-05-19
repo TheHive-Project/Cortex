@@ -76,7 +76,7 @@ analyzer {
 }
 
 misp.modules {
-  enabled = true
+  enabled = false
 
   config {
     shodan {
