@@ -54,14 +54,13 @@ packageSummary := "Powerful Observable Analysis Engine"
 packageDescription := """Cortex tries to solve a common problem frequently encountered by SOCs, CSIRTs and security
   | researchers in the course of threat intelligence, digital forensics and incident response: how to analyze
   | observables they have collected, at scale, by querying a single tool instead of several?
-  |
   | Cortex, an open source and free software, has been created by TheHive Project for this very purpose. Observables,
   | such as IP and email addresses, URLs, domain names, files or hashes, can be analyzed one by one or in bulk mode
   | using a Web interface. Analysts can also automate these operations thanks to the Cortex REST API. """.stripMargin
 defaultLinuxInstallLocation := "/opt"
 linuxPackageMappings ~= { _.map { pm =>
   val mappings = pm.mappings.filterNot {
-    case (_, path) => path.startsWith("/opt/cortex/package") || path.startsWith("/opt/cortex/conf")
+    case (_, path) => path.startsWith("/opt/cortex/package") || (path.startsWith("/opt/cortex/conf") && path != "/opt/cortex/conf/reference.conf")
   }
   com.typesafe.sbt.packager.linux.LinuxPackageMapping(mappings, pm.fileData).withConfig()
 } :+ packageMapping(
@@ -74,11 +73,12 @@ linuxPackageMappings ~= { _.map { pm =>
 }
 
 packageBin := {
-  (packageBin in Universal).value
   (packageBin in Debian).value
   (packageBin in Rpm).value
+  (packageBin in Universal).value
 }
 // DEB //
+version in Debian := version.value + "-2"
 debianPackageDependencies += "java8-runtime-headless | java8-runtime"
 maintainerScripts in Debian := maintainerScriptsFromDirectory(
   baseDirectory.value / "package" / "debian",
@@ -88,7 +88,7 @@ linuxEtcDefaultTemplate in Debian := (baseDirectory.value / "package" / "etc_def
 linuxMakeStartScript in Debian := None
 
 // RPM //
-rpmRelease := "1"
+rpmRelease := "2"
 rpmVendor in Rpm := "TheHive Project"
 rpmUrl := Some("http://thehive-project.org/")
 rpmLicense := Some("AGPL")
@@ -109,6 +109,7 @@ packageBin in Rpm := {
 // DOCKER //
 import com.typesafe.sbt.packager.docker.{ Cmd, ExecCmd }
 
+version in Docker := version.value + "-1"
 defaultLinuxInstallLocation in Docker := "/opt/cortex"
 dockerRepository := Some("certbdf")
 dockerUpdateLatest := true
