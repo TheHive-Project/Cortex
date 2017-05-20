@@ -12,7 +12,13 @@ By using Cortex, you won't need to rewrite the wheel every time you'd like to us
 # Cortex and TheHive
 Along with [MISP](http://www.misp-project.org/), Cortex is the perfect companion for [TheHive](https://thehive-project.org). Starting from Buckfast (TheHive version 2.10), you can analyze tens or hundreds of observables in a few clicks using one or several Cortex instances depending on your OPSEC needs and security requirements. Moreover, TheHive comes with a report template engine that allows you to adjust the output of Cortex analyzers to your taste instead of having to create your own JSON parsers for Cortex output.
 
-# Architecture
+# Cortex and MISP
+Starting from Cortex 1.1.1, Cortex can be integrated with [MISP](http://www.misp-project.org/) in two ways:
+- Cortex can [invoke MISP modules](misp.md#invoke-misp-modules-within-cortex)
+- MISP can [invoke Cortex analyzers](misp.md#invoke-cortex-analyzers-within-misp)
+
+# Details
+## Architecture
 Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its REST API is stateless which allows it to be horizontally scalable. The provided analyzers are written in Python. Additional analyzers may be written using the same language or any other language supported by Linux.
 
 <p align="center">
@@ -20,7 +26,7 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 </p>
 
 
-# Analyzers
+## Analyzers
 There are currently 21 analyzers.
 
 + Abuse Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
@@ -46,6 +52,9 @@ There are currently 21 analyzers.
 + Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
 
 The star (\*) indicates that the analyzer needs either an API key or user accounts to work correctly. **We do not provide API keys or user accounts**. You have to use your own.
+
+## Documentation
+We have made several guides available in the [Documentation repository](https://github.com/CERT-BDF/CortexDocs).
 
 # License
 Cortex is an open source and free software released under the [AGPL](https://github.com/CERT-BDF/Cortex/blob/master/LICENSE) (Affero General Public License). We, TheHive Project, are committed to ensure that Cortex will remain a free and open source project on the long-run.
