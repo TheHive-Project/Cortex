@@ -45,12 +45,14 @@ class MispSrv(
 
   private[MispSrv] val futureList: Future[Seq[MispModule]] = Future {
     if (mispModulesEnabled) {
-      Json.parse(s"$loaderCommand --list".!!)
-        .asOpt[Seq[String]]
-        .getOrElse {
-          logger.warn("MISP modules loader returns invalid data")
+      val moduleNameList = Try(Json.parse(s"$loaderCommand --list".!!).as[Seq[String]]) match {
+        case Success(l) ⇒ l
+        case Failure(error) ⇒
+          logger.error(s"MISP module loader fails", error)
           Nil
-        }
+      }
+
+      moduleNameList
         .map { moduleName ⇒
           moduleName → (for {
             moduleInfo ← Try(Json.parse(s"$loaderCommand --info $moduleName".!!))
