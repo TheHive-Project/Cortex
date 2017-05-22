@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="bower_components/angular-ui-notification/dist/angular-ui-notification.css" />
     <link rel="stylesheet" href="bower_components/dropzone/dist/min/dropzone.min.css" />
     <link rel="stylesheet" href="bower_components/css-spaces/dist/spaces.css" />
+    <link rel="stylesheet" href="bower_components/angular-page-loader/dist/angular-page-loader.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
@@ -39,7 +40,8 @@
 		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 	<![endif]-->
 </head>
-<body ng-app="cortex" class="hold-transition skin-blue layout-top-nav">
+<body ng-app="cortex" ng-cloak class="hold-transition skin-blue layout-top-nav">
+	<page-loader bg-color="#ecf0f5"></page-loader>
 	<app-container class="wrapper"></app-container>
 
     <!-- build:js(.) scripts/vendor.js -->
@@ -59,6 +61,7 @@
     <script src="bower_components/dropzone/dist/min/dropzone.min.js"></script>
     <script src="bower_components/lodash/lodash.js"></script>
     <script src="bower_components/underscore/underscore.js"></script>
+    <script src="bower_components/angular-page-loader/dist/angular-page-loader.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 

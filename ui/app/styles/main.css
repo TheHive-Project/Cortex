@@ -149,3 +149,7 @@ a.text-white, a.text-white:hover {
 .box-tools .pagination {
     margin: 0;
 }
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+    display: none !important;
+}
