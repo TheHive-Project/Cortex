@@ -27,7 +27,7 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 
 
 ## Analyzers
-There are currently 21 analyzers.
+Cortex has 23 analyzers listed below:
 
 + Abuse Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
 + CIRCLPassiveDNS\*: Check [CIRCL's Passive DNS](https://www.circl.lu/services/passive-dns/) for a given domain.
@@ -35,6 +35,7 @@ There are currently 21 analyzers.
 + DNSDB\*: leverage Farsight's [DNSDB](https://www.dnsdb.info/) for pDNS.
 + DomainTools\*: look up domain names, IP addresses, WHOIS records, etc. using the popular [DomainTools](http://domaintools.com/) service API.
 + File Info: parse files in several formats such as OLE and OpenXML to detect VBA macros, extract their source code, generate useful information on PE, PDF files and much more.
++ FireHOL Blocklists: check IP addresses against the [FireHOL blocklists](https://firehol.org/).
 + GoogleSafebrowsing\*: check URLs against [Google Safebrowsing](https://www.google.com/transparencyreport/safebrowsing/).
 + Hippocampe: query threat feeds through [Hippocampe](https://github.com/CERT-BDF/Hippocampe), a FOSS tool that centralizes feeds and allows you to associate a confidence level to each one of them (that can be changed over time) and get a score indicating the data quality.
 + Joe Sandbox\*: analyze URLs and files using the powerful [Joe Sandbox](https://www.joesecurity.org/) malware analysis solution.
@@ -49,6 +50,7 @@ There are currently 21 analyzers.
 + URLCategory: check the Fortinet categories of URLs.
 + VirusShare: check whether a file/hash is available on [VirusShare.com](https://virusshare.com/).
 + VirusTotal\*: look up files, URLs and hashes through [VirusTotal](https://www.virustotal.com/).
++ VMRay\*: analyze files using [VMRay](https://www.vmray.com/).
 + Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
 
 The star (\*) indicates that the analyzer needs either an API key or user accounts to work correctly. **We do not provide API keys or user accounts**. You have to use your own.
