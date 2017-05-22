@@ -14,7 +14,8 @@ angular.module('cortex', [
         'ui-notification',
         'angularMoment',
         'ngSanitize',
-        'angularUtils.directives.dirPagination'
+        'angularUtils.directives.dirPagination',
+        'angular-page-loader'
     ])
     .config(function(NotificationProvider) {
         NotificationProvider.setOptions({
