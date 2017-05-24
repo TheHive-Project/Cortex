@@ -76,12 +76,26 @@ deleteGroup() {
 
 # #######################################
 
+case "$1" in
+  configure)
+    addGroup cortex ""
+    addUser cortex "" cortex "cortex daemon-user" "/bin/false"
 
-addGroup cortex ""
-addUser cortex "" cortex "cortex daemon-user" "/bin/false"
+    # Chown definitions created by SBT Native Packager
 
-# Chown definitions created by SBT Native Packager
+    chown cortex:cortex /var/log/cortex
+    chown root:cortex /etc/cortex/application.conf /etc/cortex/logback.xml
+    chmod 0640 /etc/cortex/application.conf /etc/cortex/logback.xml
 
-chown cortex:cortex /var/log/cortex
-chown root:cortex /etc/cortex/application.conf /etc/cortex/logback.xml
-chmod 0640 /etc/cortex/application.conf /etc/cortex/logback.xml
+   test -n "$2" && service cortex start
+    exit 0
+  ;;
+  abort-upgrade|abort-remove|abort-deconfigure)
+  ;;
+  *)
+    echo "postinst called with unknown argument \`$1'" >&2
+    exit 1
+  ;;
+esac
+
+
