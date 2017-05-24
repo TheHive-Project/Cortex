@@ -94,7 +94,7 @@ linuxEtcDefaultTemplate in Debian := (baseDirectory.value / "package" / "etc_def
 linuxMakeStartScript in Debian := None
 
 // RPM //
-rpmRelease := "2"
+rpmRelease := "1"
 rpmVendor in Rpm := "TheHive Project"
 rpmUrl := Some("http://thehive-project.org/")
 rpmLicense := Some("AGPL")
