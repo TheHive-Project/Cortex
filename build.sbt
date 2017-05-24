@@ -13,16 +13,22 @@ libraryDependencies ++= Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test
 )
 
+// Add information in manifest
+import Package.ManifestAttributes
+import java.util.jar.Attributes.Name._
+packageOptions  ++= Seq(
+  ManifestAttributes(IMPLEMENTATION_TITLE -> name.value),
+  ManifestAttributes(IMPLEMENTATION_VERSION -> version.value),
+  ManifestAttributes(SPECIFICATION_VENDOR -> "TheHive Project"),
+  ManifestAttributes(SPECIFICATION_TITLE -> name.value),
+  ManifestAttributes(SPECIFICATION_VERSION -> "TheHive Project")
+)
+
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
-
 Release.releaseVersionUIFile := baseDirectory.value / "ui" / "package.json"
-
 Release.changelogFile := baseDirectory.value / "CHANGELOG.md"
-
 publishArtifact in (Compile, packageDoc) := false
-
 publishArtifact in packageDoc := false
-
 sources in (Compile,doc) := Seq.empty
 
 // Front-end //
