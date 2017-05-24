@@ -8,6 +8,7 @@ target
 /RUNNING_PID
 .cache-main
 .cache-tests
+.DS_Store
 *.py[cod]
 /report-templates/*.zip
 
@@ -16,3 +17,4 @@ target
 !/bin/activator.bat
 
 conf/application.conf
+
