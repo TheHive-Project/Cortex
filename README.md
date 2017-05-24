@@ -14,8 +14,8 @@ Along with [MISP](http://www.misp-project.org/), Cortex is the perfect companion
 
 # Cortex and MISP
 Starting from Cortex 1.1.1, Cortex can be integrated with [MISP](http://www.misp-project.org/) in two ways:
-- Cortex can [invoke MISP modules](misp.md#invoke-misp-modules-within-cortex)
-- MISP can [invoke Cortex analyzers](misp.md#invoke-cortex-analyzers-within-misp)
+- Cortex can [invoke MISP modules](https://github.com/CERT-BDF/CortexDocs/blob/master/misp.md#invoke-misp-modules-within-cortex)
+- MISP can [invoke Cortex analyzers](https://github.com/CERT-BDF/CortexDocs/blob/master/misp.md#invoke-cortex-analyzers-within-misp)
 
 # Details
 ## Architecture
