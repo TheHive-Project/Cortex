@@ -1,131 +1,275 @@
-# Secret key
-# ~~~~~
-# The secret key is used to secure cryptographics functions.
-# If you deploy your application to several instances be sure to use the same key!
-#play.crypto.secret="***changeme***"
+# Sample Cortex application.conf file
 
+## SECRET KEY
+#
+# The secret key is used to secure cryptographic functions.
+#
+# IMPORTANT: If you deploy your application to several  instances,  make
+# sure to use the same key.
+#play.crypto.secret="***CHANGEME***"
+
+## ANALYZERS
+#
+# This section holds the configuration of the analyzers.
+#
+# Please note that MISP expansion modules have  their  separate  section
+# (see MISP EXPANSION MODULES below).
+#
+# NOTE: you are highly advised to remove the configuration parts related
+# to unneeded/unused analyzers.
+#
+# NOTE: if you don't need an analyzer, please remove  the  corresponding
+# directory. For example, if you don't use 'MaxMind', remove:
+# /path/to/Cortex-Analyzers/analyzers/MaxMind
+#
+# WARNING: there is overlap between Cortex  native  analyzers  and  MISP
+# expansion modules. We  highly  advise  you  to  use  native  analyzers
+# whenever possible.
+#
+# WARNING: DO NOT CONFIGURE A CORTEX ANALYZER AND A MISP MODULE FOR  THE
+# SAME SERVICE.
 analyzer {
+  # Absolute path where you have pulled the Cortex-Analyzers repository.
   path = "path/to/Cortex-Analyzers/analyzers"
+
+  # Sane defaults. Do not change unless you know what you are doing.
+  fork-join-executor {
+
+    # Min number of threads available for analysis.
+    parallelism-min = 2
+
+    # Parallelism (threads) ... ceil(available processors * factor).
+    parallelism-factor = 2.0
+
+    # Max number of threads available for analysis.
+    parallelism-max = 4
+  }
+
+  # Analyzer configuration
   config {
+
+    # CIRCLPassiveDNS: this analyzer requires credentials  that  may  be
+    # obtained from https://www.circl.lu/contact/.
     CIRCLPassiveDNS {
       #user= "..."
       #password= "..."
     }
+
+    # CIRCLPassiveSSL: this analyzer requires credentials  that  may  be
+    # obtained from https://www.circl.lu/contact/.
     CIRCLPassiveSSL {
       #user= "..."
       #password= "..."
     }
+
+    # DNSDB: an API key is required. This is a commercial service.
     DNSDB {
       #server="https://api.dnsdb.info"
       #key="..."
     }
+
+    # DomainTools: a username and an API key are  required.  This  is  a
+    # commercial service.
     DomainTools {
       #username="..."
       #key="..."
     }
+
+    # FireHOLBlocklists: this analyzer needs you to download the FireHOL
+    # block lists first to a directory. Use 'git' for that  purpose.  We
+    # advise you to keep the lists fresh  by  adding  a  cron  entry  to
+    # regularly download them for example. Then you need to specify  the
+    # directory where the lists have been  downloaded  and  an  optional
+    # parameter to ignore all lists that have not been  updated  in  the
+    # last N days.
+    FireHOLBlocklists {
+      #blocklistpath = ""
+      #ignoreolderthandays=""
+    }
+
+    # GoogleSafebrowsing: this analyzer requires an API key. It  can  be
+    # obtained from https://developers.google.com/safe-browsing/.
     GoogleSafebrowsing {
       #key = "..."
     }
+
+    # Hippocampe: this analyzer  queries  TheHive  Project's  Hippocampe
+    # product. You need to install it and provide the corresponding URL.
     Hippocampe {
       #url="..."
     }
+
+    # JoeSandbox: this analyzer can be used for Joe Sandbox cloud or for
+    # the on-premises version, not both. You need to supply the  URL  of
+    # the sandbox and the corresponding API key. This  is  a  commercial
+    # service.
     JoeSandbox {
       #url = "..."
-      #apikey = "..."
+      #key = "..."
     }
+
+    # MISP: this analyzer requires the URL of a MISP  instance  and  the
+    # corresponding API key.
+    MISP {
+      #url="..."
+      #key="..."
+    }
+
+    # Nessus: this analyzer requires  the  URL  of  the  Tenable  Nessus
+    # scanner, a login and a password, the scan  policy  to  use,  a  CA
+    # bundle to validate the web app's X509 cert against. You  are  also
+    # highly advised to configure  the  networks  that  the  scanner  is
+    # allowed to scan. Otherwise, you might end up scanning assets  that
+    # you are not authorized to and be held  liable  for  any  resulting
+    # damage. Nessus is a commercial product.
     Nessus {
       #url ="..."
       #login="..."
       #password="..."
       #policy="..."
       #ca_bundle="..."
-      #allowed_network="..."
+      #allowed_networks=[ 'x.y.z.t/8', 'a.b.c.d/24', ... ]
     }
+
+    # OTXQuery: this  service  requires  an  API  key.  If  you  are  an
+    # AlienVault USM/OSSIM user, you already have one. Depending on your
+    # usage, you can use a free API key or a paid one.
+    # See https://otx.alienvault.com/api/
     OTXQuery {
       #key="..."
     }
+
+    # PassiveTotal: this analyzer requires a username and  an  API  key.
+    # Depending on your usage, you can use a free API key or a paid one.
+    # See https://passivetotal.org/
     PassiveTotal {
-      #key="..."
       #username="..."
+      #key="..."
     }
+
+    # PhishingInitiative: this analyzer requires an API key.
+    # See https://phishing-initiative.fr/contrib/
     PhishingInitiative {
       #key="..."
     }
+
+    # PhishTank: this analyzer requires an API key.
+    # See https://www.phishtank.com/api_info.php
     PhishTank {
       #key="..."
     }
+
+    # Virusshare: this analyzer needs a local copy of Virusshare's  hash
+    # lists. The 'path' parameter lets you configure the directory where
+    # you've downloaded those lists. To download them,  please  use  the
+    # 'download_hashes.py' script that is located in the same  directory
+    # as the analyzer. You may want  to  regularly  download  the  lists
+    # using a cron entry or a similar system.
     Virusshare {
       #path = "..."
     }
+
+    # VirusTotal: this analyzer requires an API key. Depending  on  your
+    # usage, you can use a free API key or paid one.
+    # See https://www.virustotal.com
     VirusTotal {
       #key="..."
     }
+
+    # Yara: this analyzer needs files and directories  where  your  YARA
+    # rules are located. If you supply a directory, the analyzer expects
+    # to find an 'index.yar' or 'index.yas' file.  The  index  file  can
+    # include other rule files. An example can be  found  in  the  Yara-
+    # rules repository:
+    # https://github.com/Yara-Rules/rules/blob/master/index.yar
     Yara {
-      #rules=["..."]
+      #rules=["/path/a", "/path/b", "/path/my/rules.yar"]
     }
   }
 
-  fork-join-executor {
-    # Min number of threads available for analyze
-    parallelism-min = 2
-    # Parallelism (threads) ... ceil(available processors * factor)
-    parallelism-factor = 2.0
-    # Max number of threads available for analyze
-    parallelism-max = 4
-  }
 }
 
+## MISP EXPANSION MODULES
+#
+# This section holds the configuration of  the  MISP  expansion  modules
+# which Cortex can use as analyzers. They are disabled  by  default.  If
+# you need to enable them, change the value of the  'enabled'  parameter
+# to 'true'.
+#
+# WARNING: there is overlap between Cortex  native  analyzers  and  MISP
+# expansion modules. We  highly  advise  you  to  use  native  analyzers
+# whenever possible.
+#
+# WARNING: DO NOT CONFIGURE A CORTEX ANALYZER AND A MISP MODULE FOR  THE
+# SAME SERVICE.
 misp.modules {
   enabled = false
 
+  # Refer to https://github.com/MISP/misp-modules#expansion-modules  for
+  # the configuration of the MISP expansion modules.
   config {
+
     shodan {
       #apikey = ""
     }
+
     eupi {
       #apikey = ""
       #url = ""
     }
+
     passivetotal {
       #username = ""
       #api_key = ""
     }
+
     dns {
       #nameserver = ""
     }
+
     whois {
       #server = ""
       #port = ""
     }
+
     sourcecache {
       #archivepath = ""
     }
+
     geoip_country {
     }
+
     circl_passivessl {
       #username = ""
       #password = ""
     }
+
     iprep {
       #apikey = ""
     }
+
     countrycode {
     }
+
     cve {
     }
+
     virustotal {
       #apikey = ""
       #event_limit = ""
     }
+
     ipasn {
       #host = ""
       #port = ""
       #db = ""
     }
+
     circl_passivedns {
       #username = ""
       #password = ""
     }
+
     vmray_submit {
       #apikey = ""
       #url = ""
@@ -133,17 +277,22 @@ misp.modules {
       #do_not_reanalyze = ""
       #do_not_include_vmrayjobids = ""
     }
+
     wiki {
     }
+
     domaintools {
       #username = ""
       #api_key = ""
     }
+
     reversedns {
       #nameserver = ""
     }
+
     threatminer {
     }
+
     asn_history {
       #host = ""
       #port = ""
@@ -151,3 +300,5 @@ misp.modules {
     }
   }
 }
+
+# It's the end my friend. Happy hunting!
