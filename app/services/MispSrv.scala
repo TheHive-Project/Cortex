@@ -12,7 +12,8 @@ import play.api.libs.json.{ Json, _ }
 import play.api.{ Configuration, Logger }
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.duration._
 import scala.sys.process._
 import scala.util.{ Failure, Success, Try }
 
@@ -42,25 +43,34 @@ class MispSrv(
 
   logger.info(s"MISP modules is ${if (mispModulesEnabled) "enabled" else "disabled"}, loader is $loaderCommand")
 
-  lazy val list: Seq[MispModule] = if (mispModulesEnabled) {
-    Json.parse(s"$loaderCommand --list".!!)
-      .as[Seq[String]]
-      .map { moduleName ⇒
-        moduleName → (for {
-          moduleInfo ← Try(Json.parse(s"$loaderCommand --info $moduleName".!!))
-          module ← Try(moduleInfo.as[MispModule](reads(loaderCommand, mispModuleConfig)))
-        } yield module)
-      }
-      .flatMap {
-        case (moduleName, Failure(error)) ⇒
-          logger.warn(s"Load MISP module $moduleName fails", error)
+  private[MispSrv] val futureList: Future[Seq[MispModule]] = Future {
+    if (mispModulesEnabled) {
+      val moduleNameList = Try(Json.parse(s"$loaderCommand --list".!!).as[Seq[String]]) match {
+        case Success(l) ⇒ l
+        case Failure(error) ⇒
+          logger.error(s"MISP module loader fails", error)
           Nil
-        case (_, Success(module)) ⇒
-          logger.info(s"Register MISP module ${module.name} ${module.version}")
-          Seq(module)
       }
-  }
-  else Nil
+
+      moduleNameList
+        .map { moduleName ⇒
+          moduleName → (for {
+            moduleInfo ← Try(Json.parse(s"$loaderCommand --info $moduleName".!!))
+            module ← Try(moduleInfo.as[MispModule](reads(loaderCommand, mispModuleConfig)))
+          } yield module)
+        }
+        .flatMap {
+          case (moduleName, Failure(error)) ⇒
+            logger.warn(s"Load MISP module $moduleName fails: ${error.getMessage}")
+            Nil
+          case (_, Success(module)) ⇒
+            logger.info(s"Register MISP module ${module.name} ${module.version}")
+            Seq(module)
+        }
+    }
+    else Nil
+  }(analyzeExecutionContext)
+  lazy val list: Seq[MispModule] = Await.result(futureList, 5.minutes)
 
   def get(moduleName: String): Option[MispModule] = list.find(_.name == moduleName)
 
@@ -149,7 +159,7 @@ class MispSrv(
 
   private def toArtifact(mispType: String, data: String): Artifact = {
     mispType2dataType(mispType) match {
-      case "file" if mispType == "malware-sample" ⇒ ???
+      case "file" if mispType == "malware-sample" ⇒ ??? // TODO
       case "file" ⇒ FileArtifact(Base64.decodeBase64(data), Json.obj(
         "tlp" → 1,
         "dataType" → "file"))
@@ -188,8 +198,7 @@ class MispSrv(
             Json.obj(
               "types" → dataType2mispType(artifact.dataType),
               "values" → Json.arr(artifact.data))
-          case artifact: FileArtifact ⇒
-            ??? // TODO
+          case artifact: FileArtifact ⇒ ??? // TODO
         }
         val cortexAttribute = Json.obj(
           "types" → Seq("cortex"),
@@ -229,10 +238,8 @@ class MispSrv(
       requiredConfig ← (__ \ "config").read[Set[String]]
       missingConfig = requiredConfig -- config.keys
       _ ← if (missingConfig.nonEmpty) {
-        val message = s"MISP module $name is disabled because the following configuration " +
-          s"item${if (missingConfig.size > 1) "s are" else " is"} missing: ${missingConfig.mkString(", ")}"
-        logger.warn(message)
-        Reads[Unit](_ ⇒ JsError(message))
+        Reads[Unit](_ ⇒ JsError(s"MISP module $name is disabled because the following configuration " +
+          s"item${if (missingConfig.size > 1) "s are" else " is"} missing: ${missingConfig.mkString(", ")}"))
       }
       else {
         Reads[Unit](_ ⇒ JsSuccess(()))

@@ -1,28 +1,55 @@
 # Change Log
 
-## [1.1.1](https://github.com/CERT-BDF/Cortex/tree/1.1.1) (2017-05-17)
+## [1.1.2](https://github.com/CERT-BDF/Cortex/tree/1.1.2)
 
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.0...1.1.1)
+[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/rpm/1.1.1-2...1.1.2)
 
 **Implemented enhancements:**
 
+- Add page loader [\#30](https://github.com/CERT-BDF/Cortex/issues/30)
+- Initialize MISP modules at startup [\#28](https://github.com/CERT-BDF/Cortex/issues/28)
+
+**Fixed bugs:**
+
+- jobstatus from jobs within cortex are not updated when status changes [\#31](https://github.com/CERT-BDF/Cortex/issues/31)
+- Cortex and MISP unclear and error-loop [\#29](https://github.com/CERT-BDF/Cortex/issues/29)
+- Error 500 in TheHive when a job is submited to Cortex [\#27](https://github.com/CERT-BDF/Cortex/issues/27)
+
+## [rpm/1.1.1-2](https://github.com/CERT-BDF/Cortex/tree/rpm/1.1.1-2) (2017-05-19)
+[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/debian/1.1.1-2...rpm/1.1.1-2)
+
+## [debian/1.1.1-2](https://github.com/CERT-BDF/Cortex/tree/debian/1.1.1-2) (2017-05-19)
+[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.1...debian/1.1.1-2)
+
+**Fixed bugs:**
+
+- After Upgrade from Cortex 1.0.2 to 1.1.1 system does not come up [\#26](https://github.com/CERT-BDF/Cortex/issues/26)
+
+## [1.1.1](https://github.com/CERT-BDF/Cortex/tree/1.1.1) (2017-05-17)
+[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.0...1.1.1)
+
+**Fixed bugs:**
+
 - Missing logos and favicons [\#25](https://github.com/CERT-BDF/Cortex/issues/25)
-- MISP integration feature request [\#21](https://github.com/CERT-BDF/Cortex/issues/21)
+
+**Closed issues:**
+
+- Cortex 1.1.0 doesnt work with theHive 2.11.0 [\#24](https://github.com/CERT-BDF/Cortex/issues/24)
+- MISP integration [\#21](https://github.com/CERT-BDF/Cortex/issues/21)
 
 ## [1.1.0](https://github.com/CERT-BDF/Cortex/tree/1.1.0) (2017-05-12)
-
 [Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.0.2...1.1.0)
 
 **Implemented enhancements:**
 
 - Add support to .deb and .rpm package generation [\#20](https://github.com/CERT-BDF/Cortex/issues/20)
+- Scala code cleanup [\#19](https://github.com/CERT-BDF/Cortex/issues/19)
 - Display analyzers metadata [\#18](https://github.com/CERT-BDF/Cortex/issues/18)
 
 **Closed issues:**
 
 - Display Cortex version on the footer [\#23](https://github.com/CERT-BDF/Cortex/issues/23)
 - Use new logo and favicon [\#22](https://github.com/CERT-BDF/Cortex/issues/22)
-- Scala code cleanup [\#19](https://github.com/CERT-BDF/Cortex/issues/19)
 
 ## [1.0.2](https://github.com/CERT-BDF/Cortex/tree/1.0.2) (2017-04-19)
 [Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.0.1...1.0.2)
@@ -36,6 +63,7 @@
 
 **Closed issues:**
 
+- Support for cuckoo malware analysis plattform \(link analysis\) [\#17](https://github.com/CERT-BDF/Cortex/issues/17)
 - Documentation on 'How to create an analyzer' [\#10](https://github.com/CERT-BDF/Cortex/issues/10)
 
 ## [1.0.1](https://github.com/CERT-BDF/Cortex/tree/1.0.1) (2017-03-08)
