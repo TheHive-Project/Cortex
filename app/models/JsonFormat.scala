@@ -52,7 +52,7 @@ object JsonFormat {
         } yield SuccessReport(artifacts, full, summary))
           .getOrElse(FailureReport(s"Invalid analyzer output format : $json"))
       else
-        FailureReport((json \ "error").asOpt[String].getOrElse(json.toString))
+        FailureReport((json \ "errorMessage").asOpt[String].getOrElse(json.toString))
     }
   }
 
