@@ -1,8 +1,17 @@
 # Change Log
 
-## [1.1.2](https://github.com/CERT-BDF/Cortex/tree/1.1.2)
+## [1.1.3](https://github.com/CERT-BDF/Cortex/tree/1.1.3)
 
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/rpm/1.1.1-2...1.1.2)
+[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/debian/1.1.2...1.1.3)
+
+**Fixed bugs:**
+
+- Problem Start Cortex on Ubuntu 16.04 [\#35](https://github.com/CERT-BDF/Cortex/issues/35)
+- Error when parsing analyzer failure report [\#33](https://github.com/CERT-BDF/Cortex/issues/33)
+
+
+## [1.1.2](https://github.com/CERT-BDF/Cortex/tree/1.1.2) (2017-05-24)
+[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/debian/1.1.1...1.1.2)
 
 **Implemented enhancements:**
 
@@ -15,22 +24,13 @@
 - Cortex and MISP unclear and error-loop [\#29](https://github.com/CERT-BDF/Cortex/issues/29)
 - Error 500 in TheHive when a job is submited to Cortex [\#27](https://github.com/CERT-BDF/Cortex/issues/27)
 
-## [rpm/1.1.1-2](https://github.com/CERT-BDF/Cortex/tree/rpm/1.1.1-2) (2017-05-19)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/debian/1.1.1-2...rpm/1.1.1-2)
-
-## [debian/1.1.1-2](https://github.com/CERT-BDF/Cortex/tree/debian/1.1.1-2) (2017-05-19)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.1...debian/1.1.1-2)
-
-**Fixed bugs:**
-
-- After Upgrade from Cortex 1.0.2 to 1.1.1 system does not come up [\#26](https://github.com/CERT-BDF/Cortex/issues/26)
-
 ## [1.1.1](https://github.com/CERT-BDF/Cortex/tree/1.1.1) (2017-05-17)
 [Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.0...1.1.1)
 
 **Fixed bugs:**
 
 - Missing logos and favicons [\#25](https://github.com/CERT-BDF/Cortex/issues/25)
+- After Upgrade from Cortex 1.0.2 to 1.1.1 system does not come up [\#26](https://github.com/CERT-BDF/Cortex/issues/26)
 
 **Closed issues:**
 
