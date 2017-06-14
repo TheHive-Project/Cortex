@@ -84,8 +84,8 @@ packageBin := {
   (packageBin in Universal).value
 }
 // DEB //
-version in Debian := version.value + "-2"
-debianPackageDependencies += "java8-runtime-headless | java8-runtime"
+version in Debian := version.value + "-1"
+debianPackageDependencies += "openjdk-8-jre-headless"
 maintainerScripts in Debian := maintainerScriptsFromDirectory(
   baseDirectory.value / "package" / "debian",
   Seq(DebianConstants.Postinst, DebianConstants.Prerm, DebianConstants.Postrm)
