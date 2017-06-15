@@ -21,9 +21,7 @@ Starting from Cortex 1.1.1, Cortex can be integrated with [MISP](http://www.misp
 ## Architecture
 Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its REST API is stateless which allows it to be horizontally scalable. The provided analyzers are written in Python. Additional analyzers may be written using the same language or any other language supported by Linux.
 
-<p align="center">
-  <img src="images/cortex-architecture.png" alt="Cortex Architecture" width="400">
-</p>
+![](images/Architecture.png)
 
 
 ## Analyzers
