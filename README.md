@@ -25,9 +25,10 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 
 
 ## Analyzers
-Cortex has 23 analyzers listed below:
+Cortex has 24 analyzers listed below:
 
 + Abuse Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
++ CERT.at PassiveDNS\*: Check [CERT.at Passive DNS Service](https://www.cert.at/about/contact/contact.html) for a given domain.
 + CIRCLPassiveDNS\*: Check [CIRCL's Passive DNS](https://www.circl.lu/services/passive-dns/) for a given domain.
 + CIRCLPassiveSSL\*: Check [CIRCL's Passive SSL](https://www.circl.lu/services/passive-ssl/) service for a given IP address or certificate hash.
 + DNSDB\*: leverage Farsight's [DNSDB](https://www.dnsdb.info/) for pDNS.
@@ -38,7 +39,7 @@ Cortex has 23 analyzers listed below:
 + Hippocampe: query threat feeds through [Hippocampe](https://github.com/CERT-BDF/Hippocampe), a FOSS tool that centralizes feeds and allows you to associate a confidence level to each one of them (that can be changed over time) and get a score indicating the data quality.
 + Joe Sandbox\*: analyze URLs and files using the powerful [Joe Sandbox](https://www.joesecurity.org/) malware analysis solution.
 + MaxMind: geolocation.
-+ MISP Search\*: search for [MISP](http://www.misp-project.org/) events containing the observable submitted as input.  
++ MISP Search\*: search for [MISP](http://www.misp-project.org/) events in one or several MISP instances containing the observable submitted as input.  
 + Nessus: use Tenable's [Nessus Vulnerability Scanner](https://www.tenable.com/products/nessus-vulnerability-scanner) to scan an IP address or a FQDN.
 + Outlook MsgParser: parse Outlook message files automatically and show the key information it contains such as headers, attachments etc.
 + OTXQuery\*: query AlienVault [Open Threat Exchange](https://otx.alienvault.com/) for IPs, domains, URLs, or file hashes.
@@ -51,7 +52,7 @@ Cortex has 23 analyzers listed below:
 + VMRay\*: analyze files using [VMRay](https://www.vmray.com/).
 + Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
 
-The star (\*) indicates that the analyzer needs either an API key or user accounts to work correctly. **We do not provide API keys or user accounts**. You have to use your own.
+The star (\*) indicates that the analyzer needs an API key, a user account or special access from the service provider to work correctly. **We do not provide API keys, user accounts or request access on your behalf**. You have to use your own or contact the service provider.
 
 ## Documentation
 We have made several guides available in the [Documentation repository](https://github.com/CERT-BDF/CortexDocs).
