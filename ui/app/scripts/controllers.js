@@ -48,6 +48,10 @@ angular.module('cortex')
                         _.each(response, function(resp) {
                             NotificationService.success(resp.data.analyzerId + ' started successfully on ' + (resp.data.artifact.data || resp.data.artifact.attributes.filename));
                         });
+                    }).catch(function(err) {
+                        if(err != 'cancel') {
+                            NotificationService.error(('An error occurred: ' + err.statusText) || 'An unexpected error occurred');
+                        }
                     });
                 });
         };
@@ -83,6 +87,10 @@ angular.module('cortex')
             }).then(function (response) {
                 $state.go('jobs');
                 NotificationService.success(response.data.analyzerId + ' started successfully on ' + response.data.artifact.data);
+            }).catch(function(err) {
+                if(err != 'cancel') {
+                    NotificationService.error(('An error occurred: ' + err.statusText) || 'An unexpected error occurred');
+                }
             });
         };
 
