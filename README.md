@@ -25,12 +25,13 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 
 
 ## Analyzers
-Cortex has 24 analyzers listed below:
+Cortex has 27 analyzers listed below:
 
 + Abuse Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
 + CERT.at PassiveDNS\*: Check [CERT.at Passive DNS Service](https://www.cert.at/about/contact/contact.html) for a given domain.
 + CIRCLPassiveDNS\*: Check [CIRCL's Passive DNS](https://www.circl.lu/services/passive-dns/) for a given domain.
 + CIRCLPassiveSSL\*: Check [CIRCL's Passive SSL](https://www.circl.lu/services/passive-ssl/) service for a given IP address or certificate hash.
++ CuckooSandbox: analyze URLs and files using [Cuckoo Sandbox](https://cuckoosandbox.org/).
 + DNSDB\*: leverage Farsight's [DNSDB](https://www.dnsdb.info/) for pDNS.
 + DomainTools\*: look up domain names, IP addresses, WHOIS records, etc. using the popular [DomainTools](http://domaintools.com/) service API.
 + File Info: parse files in several formats such as OLE and OpenXML to detect VBA macros, extract their source code, generate useful information on PE, PDF files and much more.
@@ -50,7 +51,11 @@ Cortex has 24 analyzers listed below:
 + VirusShare: check whether a file/hash is available on [VirusShare.com](https://virusshare.com/).
 + VirusTotal\*: look up files, URLs and hashes through [VirusTotal](https://www.virustotal.com/).
 + VMRay\*: analyze files using [VMRay](https://www.vmray.com/).
++ WOT\*: check a domain against [Web of Trust](https://www.mywot.com/), a website reputation service.
 + Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
++ Yeti: retrieve all available information related to a domain, a fully qualified domain name, an IP address, a URL or a hash from a [YETI](https://yeti-platform.github.io/) instance.
+
+The new Cortex analyzer for this platform lets you make API calls to YETI and . 
 
 The star (\*) indicates that the analyzer needs an API key, a user account or special access from the service provider to work correctly. **We do not provide API keys, user accounts or request access on your behalf**. You have to use your own or contact the service provider.
 
