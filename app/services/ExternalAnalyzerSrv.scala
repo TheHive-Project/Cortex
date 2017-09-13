@@ -21,12 +21,14 @@ import scala.util.{ Failure, Try }
 @Singleton
 class ExternalAnalyzerSrv(
     analyzerPath: Path,
+    disabledAnalyzers: Seq[String],
     analyzerConfig: JsObject,
     akkaSystem: ActorSystem) {
 
   @Inject() def this(configuration: Configuration, akkaSystem: ActorSystem) =
     this(
       Paths.get(configuration.getString("analyzer.path").getOrElse(".")),
+      configuration.getStringSeq("analyzer.disabled").getOrElse(Nil),
       JsonConfig.configWrites.writes(configuration.getConfig("analyzer.config").getOrElse(Configuration.empty)),
       akkaSystem)
 
@@ -53,7 +55,14 @@ class ExternalAnalyzerSrv(
             Failure(error)
         }
         .toOption
-      _ = logger.info(s"Register analyzer ${analyzer.name} ${analyzer.version} (${analyzer.id})")
+      .flatMap {
+        case a if disabledAnalyzers.contains(a.id) =>
+          logger.info(s"Analyzer ${a.name} ${a.version} (${a.id}) is disabled")
+          None
+        case a =>
+          logger.info(s"Register analyzer ${a.name} ${a.version} (${a.id})")
+          Some(a)
+      }
     } yield analyzer
   }
 
