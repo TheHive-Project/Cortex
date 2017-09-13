@@ -15,7 +15,7 @@ case class Job(id: String, analyzer: Analyzer, artifact: Artifact, report: Futur
 
   def status: JobStatus.Type = report.value match {
     case Some(Success(SuccessReport(_, _, _))) ⇒ JobStatus.Success
-    case Some(Success(FailureReport(_)))       ⇒ JobStatus.Failure
+    case Some(Success(FailureReport(_, _)))    ⇒ JobStatus.Failure
     case Some(Failure(_))                      ⇒ JobStatus.Failure
     case None                                  ⇒ JobStatus.InProgress
   }

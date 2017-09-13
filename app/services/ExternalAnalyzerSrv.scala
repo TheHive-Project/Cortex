@@ -55,14 +55,14 @@ class ExternalAnalyzerSrv(
             Failure(error)
         }
         .toOption
-      .flatMap {
-        case a if disabledAnalyzers.contains(a.id) =>
-          logger.info(s"Analyzer ${a.name} ${a.version} (${a.id}) is disabled")
-          None
-        case a =>
-          logger.info(s"Register analyzer ${a.name} ${a.version} (${a.id})")
-          Some(a)
-      }
+        .flatMap {
+          case a if disabledAnalyzers.contains(a.id) ⇒
+            logger.info(s"Analyzer ${a.name} ${a.version} (${a.id}) is disabled")
+            None
+          case a ⇒
+            logger.info(s"Register analyzer ${a.name} ${a.version} (${a.id})")
+            Some(a)
+        }
     } yield analyzer
   }
 
@@ -109,12 +109,12 @@ class ExternalAnalyzerSrv(
       catch {
         case _: JsonMappingException ⇒
           error.append(output)
-          FailureReport(s"Error: Invalid output\n$error")
+          FailureReport(s"Error: Invalid output\n$error", JsNull)
         case _: JsonParseException ⇒
           error.append(output)
-          FailureReport(s"Error: Invalid output\n$error")
+          FailureReport(s"Error: Invalid output\n$error", JsNull)
         case t: Throwable ⇒
-          FailureReport(t.getMessage + ":" + t.getStackTrace.mkString("", "\n\t", "\n"))
+          FailureReport(t.getMessage + ":" + t.getStackTrace.mkString("", "\n\t", "\n"), JsNull)
       }
     }(analyzeExecutionContext)
   }

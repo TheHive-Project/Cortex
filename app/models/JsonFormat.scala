@@ -50,9 +50,11 @@ object JsonFormat {
           full ← (json \ "full").asOpt[JsObject]
           summary ← (json \ "summary").asOpt[JsObject]
         } yield SuccessReport(artifacts, full, summary))
-          .getOrElse(FailureReport(s"Invalid analyzer output format : $json"))
+          .getOrElse(FailureReport(s"Invalid analyzer output format : $json", JsNull))
       else
-        FailureReport((json \ "errorMessage").asOpt[String].getOrElse(json.toString))
+        FailureReport(
+          (json \ "errorMessage").asOpt[String].getOrElse(json.toString),
+          (json \ "input").asOpt[JsObject].getOrElse(JsNull))
     }
   }
 
@@ -62,8 +64,9 @@ object JsonFormat {
       "full" → full,
       "summary" → summary,
       "success" → true)
-    case FailureReport(message) ⇒ Json.obj(
+    case FailureReport(message, input) ⇒ Json.obj(
       "errorMessage" → message,
+      "input" → input,
       "success" → false)
   }
 
