@@ -186,7 +186,7 @@ class MispSrv(
       }
       .getOrElse {
         val message = (mispOutput \ "error").asOpt[String].getOrElse(mispOutput.toString)
-        FailureReport(message)
+        FailureReport(message, JsNull)
       }
   }
 
@@ -205,7 +205,7 @@ class MispSrv(
           "values" → Json.arr(Json.toJson(report).toString))
 
         Json.obj("results" → (attributes :+ cortexAttribute))
-      case FailureReport(message) ⇒
+      case FailureReport(message, _) ⇒
         Json.obj("error" → message)
     }
   }
