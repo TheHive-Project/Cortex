@@ -95,7 +95,7 @@ linuxMakeStartScript in Debian := None
 
 // RPM //
 rpmRelease := "1"
-rpmVendor in Rpm := "TheHive Project"
+rpmVendor := "TheHive Project"
 rpmUrl := Some("http://thehive-project.org/")
 rpmLicense := Some("AGPL")
 rpmRequirements += "java-1.8.0-openjdk-headless"
@@ -130,7 +130,12 @@ mappings in Docker ~= (_.filterNot {
 })
 
 dockerCommands ~= { dc =>
-  val (dockerInitCmds, dockerTailCmds) = dc.splitAt(4)
+  val (dockerInitCmds, dockerTailCmds) = dc
+    .collect {
+      case ExecCmd("RUN", "chown", _*) => ExecCmd("RUN", "chown", "-R", "daemon:root", ".")
+      case other => other
+    }
+    .splitAt(4)
   dockerInitCmds ++
     Seq(
       Cmd("USER", "root"),
@@ -146,7 +151,8 @@ dockerCommands ~= { dc =>
           "rm -rf misp_modules /var/lib/apt/lists/* /tmp/*"),
       Cmd("ADD", "var", "/var"),
       Cmd("ADD", "etc", "/etc"),
-      ExecCmd("RUN", "chown", "-R", "daemon:daemon", "/var/log/cortex")) ++
+      ExecCmd("RUN", "chown", "-R", "daemon:root", "/var/log/cortex"),
+      ExecCmd("RUN", "chmod", "+x", "/opt/cortex/bin/cortex", "/opt/cortex/entrypoint", "/opt/cortex/contrib/misp-modules-loader.py")) ++
     dockerTailCmds
 }
 

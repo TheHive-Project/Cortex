@@ -3,6 +3,10 @@
 ## [1.1.4](https://github.com/CERT-BDF/Cortex/tree/1.1.4) (2017-09-15)
 [Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.3...1.1.4)
 
+**Implemented enhancements:**
+
+- Group ownership in Docker image prevents running on OpenShift [\#42](https://github.com/CERT-BDF/Cortex/issues/42)
+
 **Fixed bugs:**
 
 - Display a error notification on analyzer start fail [\#39](https://github.com/CERT-BDF/Cortex/issues/39)
