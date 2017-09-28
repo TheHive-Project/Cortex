@@ -175,6 +175,13 @@ analyzer {
     VirusTotal {
       #key="..."
     }
+    
+    # Web Of Trust: this analyzer requires an API key. Depending  on  your
+    # usage, you can use a free API key or paid one.
+    # See https://www.mywot.com/wiki/API#Registration
+    WOT {
+      #key="..."
+    }
 
     # Yara: this analyzer needs files and directories  where  your  YARA
     # rules are located. If you supply a directory, the analyzer expects
