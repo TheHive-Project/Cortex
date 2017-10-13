@@ -2,15 +2,16 @@ name := """cortex"""
 
 lazy val cortex = (project in file("."))
   .enablePlugins(PlayScala)
-  .settings(PublishToBinTray.settings)
+  .enablePlugins(PublishToBinTray)
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.4"
 
 libraryDependencies ++= Seq(
-  cache,
+  ehcache,
   ws,
-  "net.codingwell" %% "scala-guice" % "4.0.1",
-  "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test
+  "net.codingwell" %% "scala-guice" % "4.1.0",
+  "org.cert-bdf" %% "elastic4play" % "1.4.0-SNAPSHOT",
+  "com.typesafe.play" %% "play-guice" % play.core.PlayVersion.current
 )
 
 // Add information in manifest
@@ -25,8 +26,6 @@ packageOptions  ++= Seq(
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
-Release.releaseVersionUIFile := baseDirectory.value / "ui" / "package.json"
-Release.changelogFile := baseDirectory.value / "CHANGELOG.md"
 publishArtifact in (Compile, packageDoc) := false
 publishArtifact in packageDoc := false
 sources in (Compile,doc) := Seq.empty
@@ -107,6 +106,8 @@ linuxPackageSymlinks in Rpm := Nil
 rpmPrefix := Some(defaultLinuxInstallLocation.value)
 linuxEtcDefaultTemplate in Rpm := (baseDirectory.value / "package" / "etc_default_cortex").asURL
 packageBin in Rpm := {
+  import scala.sys.process._
+
   val rpmFile = (packageBin in Rpm).value
   s"rpm --addsign $rpmFile".!!
   rpmFile
@@ -161,42 +162,8 @@ bintrayOrganization := Some("cert-bdf")
 bintrayRepository := "cortex"
 publish := {
   (publish in Docker).value
-  PublishToBinTray.publishRelease.value
-  PublishToBinTray.publishLatest.value
-  PublishToBinTray.publishRpm.value
-  PublishToBinTray.publishDebian.value
+  publishRelease.value
+  publishLatest.value
+  publishRpm.value
+  publishDebian.value
 }
-
-// Scalariform //
-import scalariform.formatter.preferences._
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-
-ScalariformKeys.preferences in ThisBuild := ScalariformKeys.preferences.value
-  .setPreference(AlignParameters, false)
-//  .setPreference(FirstParameterOnNewline, Force)
-  .setPreference(AlignArguments, true)
-//  .setPreference(FirstArgumentOnNewline, true)
-  .setPreference(AlignSingleLineCaseStatements, true)
-  .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 60)
-  .setPreference(CompactControlReadability, true)
-  .setPreference(CompactStringConcatenation, false)
-  .setPreference(DoubleIndentClassDeclaration, true)
-//  .setPreference(DoubleIndentMethodDeclaration, true)
-  .setPreference(FormatXml, true)
-  .setPreference(IndentLocalDefs, false)
-  .setPreference(IndentPackageBlocks, false)
-  .setPreference(IndentSpaces, 2)
-  .setPreference(IndentWithTabs, false)
-  .setPreference(MultilineScaladocCommentsStartOnFirstLine, false)
-//  .setPreference(NewlineAtEndOfFile, true)
-  .setPreference(PlaceScaladocAsterisksBeneathSecondAsterisk, false)
-  .setPreference(PreserveSpaceBeforeArguments, false)
-//  .setPreference(PreserveDanglingCloseParenthesis, false)
-  .setPreference(DanglingCloseParenthesis, Prevent)
-  .setPreference(RewriteArrowSymbols, true)
-  .setPreference(SpaceBeforeColon, false)
-//  .setPreference(SpaceBeforeContextColon, false)
-  .setPreference(SpaceInsideBrackets, false)
-  .setPreference(SpaceInsideParentheses, false)
-  .setPreference(SpacesWithinPatternBinders, true)
-  .setPreference(SpacesAroundMultiImports, true)

@@ -1,5 +1,7 @@
 import sbt.Keys._
 import sbt._
+import scala.sys.process.Process
+import Path.rebase
 
 object FrontEnd extends AutoPlugin {
 
@@ -30,6 +32,6 @@ object FrontEnd extends AutoPlugin {
       s.log.info("grunt build")
       Process("grunt" :: "build" :: Nil, baseDirectory.value / "ui") ! s.log
       val dir = baseDirectory.value / "ui" / "dist"
-      (dir.***) pair rebase(dir, "ui")
+      (dir.**(AllPassFilter) pair rebase(dir, "ui"))
     })
 }
