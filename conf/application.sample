@@ -111,8 +111,10 @@ analyzer {
     # MISP: this analyzer requires the URL of a MISP  instance  and  the
     # corresponding API key.
     MISP {
-      #url="..."
-      #key="..."
+      #url=["https://mymispserver_1", "https://mymispserver_2"]
+      #key=["mykey_1", "mykey_2" ]
+      #certpath=["", ""]
+      #name=["misp_server_name_1", "misp_server_name_2"]
     }
 
     # Nessus: this analyzer requires  the  URL  of  the  Tenable  Nessus
