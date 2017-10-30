@@ -36,6 +36,7 @@ Cortex has 27 analyzers listed below:
 + DomainTools\*: look up domain names, IP addresses, WHOIS records, etc. using the popular [DomainTools](http://domaintools.com/) service API.
 + File Info: parse files in several formats such as OLE and OpenXML to detect VBA macros, extract their source code, generate useful information on PE, PDF files and much more.
 + FireHOL Blocklists: check IP addresses against the [FireHOL blocklists](https://firehol.org/).
++ Fortiguard: check the Fortiguard category of a URL or a domain.
 + GoogleSafebrowsing\*: check URLs against [Google Safebrowsing](https://www.google.com/transparencyreport/safebrowsing/).
 + Hippocampe: query threat feeds through [Hippocampe](https://github.com/CERT-BDF/Hippocampe), a FOSS tool that centralizes feeds and allows you to associate a confidence level to each one of them (that can be changed over time) and get a score indicating the data quality.
 + Joe Sandbox\*: analyze URLs and files using the powerful [Joe Sandbox](https://www.joesecurity.org/) malware analysis solution.
@@ -47,7 +48,6 @@ Cortex has 27 analyzers listed below:
 + PassiveTotal\*: leverage [RiskIQ's PassiveTotal](https://www.passivetotal.org/) service to gain invaluable insight on observables, identify overlapping infrastructure using Passive DNS, WHOIS, SSL certificates and more.
 + Phishing Initiative\*: query [Phishing Initiative](https://phishing-initiative.fr/contrib/) to assess whether a URL has been flagged a phishing site.
 + PhishTank\*: query [PhishTank](https://www.phishtank.com/) to assess whether a URL has been flagged a phishing site.
-+ URLCategory: check the Fortinet categories of URLs.
 + VirusShare: check whether a file/hash is available on [VirusShare.com](https://virusshare.com/).
 + VirusTotal\*: look up files, URLs and hashes through [VirusTotal](https://www.virustotal.com/).
 + VMRay\*: analyze files using [VMRay](https://www.vmray.com/).
