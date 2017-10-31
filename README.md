@@ -41,9 +41,9 @@ Cortex has 27 analyzers listed below:
 + Hippocampe: query threat feeds through [Hippocampe](https://github.com/CERT-BDF/Hippocampe), a FOSS tool that centralizes feeds and allows you to associate a confidence level to each one of them (that can be changed over time) and get a score indicating the data quality.
 + Joe Sandbox\*: analyze URLs and files using the powerful [Joe Sandbox](https://www.joesecurity.org/) malware analysis solution.
 + MaxMind: geolocation.
-+ MISP Search\*: search for [MISP](http://www.misp-project.org/) events in one or several MISP instances containing the observable submitted as input.  
++ MISP*: search for [MISP](http://www.misp-project.org/) events in one or several MISP instances containing the observable submitted as input.
++ Msg_Parser: parse Outlook message files automatically and show the key information it contains such as headers, attachments etc.  
 + Nessus: use Tenable's [Nessus Vulnerability Scanner](https://www.tenable.com/products/nessus-vulnerability-scanner) to scan an IP address or a FQDN.
-+ Outlook MsgParser: parse Outlook message files automatically and show the key information it contains such as headers, attachments etc.
 + OTXQuery\*: query AlienVault [Open Threat Exchange](https://otx.alienvault.com/) for IPs, domains, URLs, or file hashes.
 + PassiveTotal\*: leverage [RiskIQ's PassiveTotal](https://www.passivetotal.org/) service to gain invaluable insight on observables, identify overlapping infrastructure using Passive DNS, WHOIS, SSL certificates and more.
 + Phishing Initiative\*: query [Phishing Initiative](https://phishing-initiative.fr/contrib/) to assess whether a URL has been flagged a phishing site.
