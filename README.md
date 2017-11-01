@@ -53,7 +53,7 @@ a popular vulnerability scanner to scan an IP address or a FQDN.
 + URLCategory: check the Fortinet categories of URLs.
 + VirusShare: check whether a file/hash is available on [VirusShare.com](https://virusshare.com/).
 + VirusTotal\*: look up files, URLs and hashes through [VirusTotal](https://www.virustotal.com/).
-+ VMRay\*: analyze files using [VMRay](https://www.vmray.com/).
++ VMRay\*: analyze files using the [VMRay Analyzer Platform](https://www.vmray.com/products/).
 + WOT\*: check a domain against [Web of Trust](https://www.mywot.com/), a website reputation service.
 + Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
 + Yeti: retrieve all available information related to a domain, a fully qualified domain name, an IP address, a URL or a hash from a [YETI](https://yeti-platform.github.io/) instance.
