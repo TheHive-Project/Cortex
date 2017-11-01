@@ -27,8 +27,7 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 ## Analyzers
 Cortex has 27 analyzers listed below:
 
-+ Abuse_Finder: use CERT-SG's [Abuse Finder](https://github
-.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
++ Abuse_Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
 + CERTatPassiveDNS*: Check [CERT.at Passive DNS Service](https://www.cert.at/about/contact/contact.html) for a given domain.
 + CIRCLPassiveDNS\*: Check [CIRCL's Passive DNS](https://www.circl.lu/services/passive-dns/) for a given domain.
 + CIRCLPassiveSSL\*: Check [CIRCL's Passive SSL](https://www.circl.lu/services/passive-ssl/) service for a given IP address or certificate hash.
@@ -55,9 +54,7 @@ Cortex has 27 analyzers listed below:
 + VMRay\*: analyze files using [VMRay](https://www.vmray.com/).
 + WOT\*: check a domain against [Web of Trust](https://www.mywot.com/), a website reputation service.
 + Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
-+ Yeti: retrieve all available information related to a domain, a fully qualified domain name, an IP address, a URL or a hash from a [YETI](https://yeti-platform.github.io/) instance.
-
-The new Cortex analyzer for this platform lets you make API calls to YETI and . 
++ Yeti: retrieve all available information related to a domain, a fully qualified domain name, an IP address, a URL or a hash from a [YETI](https://yeti-platform.github.io/) instance. 
 
 The star (\*) indicates that the analyzer needs an API key, a user account or special access from the service provider to work correctly. **We do not provide API keys, user accounts or request access on your behalf**. You have to use your own or contact the service provider.
 
