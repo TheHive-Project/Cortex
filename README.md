@@ -25,7 +25,8 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 
 
 ## Analyzers
-Cortex has 27 analyzers listed below:
+Cortex has 27 analyzers listed below. To configure them, read the
+[Cortex Analyzers Requirements Guide](https://github.com/CERT-BDF/CortexDocs/blob/master/analyzer_requirements.md).
 
 + Abuse_Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
 + CERTatPassiveDNS*: Check [CERT.at Passive DNS Service](https://www.cert.at/about/contact/contact.html) for a given domain.
@@ -48,8 +49,10 @@ a popular vulnerability scanner to scan an IP address or a FQDN.
 + MsgParser: parse Outlook message files automatically and show the key information it contains such as headers, attachments etc.
 + OTXQuery\*: query AlienVault [Open Threat Exchange](https://otx.alienvault.com/) for IPs, domains, URLs, or file hashes.
 + PassiveTotal\*: leverage [RiskIQ's PassiveTotal](https://www.passivetotal.org/) service to gain invaluable insight on observables, identify overlapping infrastructure using Passive DNS, WHOIS, SSL certificates and more.
-+ Phishing Initiative\*: query [Phishing Initiative](https://phishing-initiative.fr/contrib/) to assess whether a URL has been flagged a phishing site.
-+ PhishTank\*: query [PhishTank](https://www.phishtank.com/) to assess whether a URL has been flagged a phishing site.
++ Phishing Initiative\*: query [Phishing Initiative](https://phishing-initiative.fr/contrib/) to assess whether a URL has been 
+flagged as a phishing site.
++ PhishTank\*: query [PhishTank](https://www.phishtank.com/) to assess 
+whether a URL has been flagged as a phishing site.
 + URLCategory: check the Fortinet categories of URLs.
 + VirusShare: check whether a file/hash is available on [VirusShare.com](https://virusshare.com/).
 + VirusTotal\*: look up files, URLs and hashes in [VirusTotal](https://www.virustotal.com/).
@@ -70,14 +73,21 @@ Cortex is an open source and free software released under the [AGPL](https://git
 Information, news and updates are regularly posted on [TheHive Project Twitter account](https://twitter.com/thehive_project) and on [the blog](https://blog.thehive-project.org/).
 
 # Contributing
-We welcome your contributions, **[particularly new analyzers](https://github.com/CERT-BDF/cortex-analyzers/)** that can take away the load off overworked fellow analysts. Please feel free to fork the code, play with it, make some patches and send us pull requests using [issues](https://github.com/CERT-BDF/Cortex/issues).
+We welcome your contributions, **[particularly new analyzers](https://github.com/CERT-BDF/CortexDocs/blob/master/api/how-to-create-an-analyzer.md)**
+that can take away the load off overworked fellow analysts. Please feel free 
+to fork the code, play with it, make some patches and send us pull requests 
+using [issues](https://github.com/CERT-BDF/Cortex/issues).
 
 We do have a [Code of conduct](code_of_conduct.md). Make sure to check it out before contributing.
 
 # Support
 Please [open an issue on GitHub](https://github.com/CERT-BDF/Cortex/issues) if you'd like to report a bug or request a feature.
 
-**Important Note**: if you encounter an issue with an analyzer or would like to request a new one or an improvement to an existing analyzer, please open an issue on the [analyzers' dedicated GitHub repository](https://github.com/CERT-BDF/cortex-analyzers/issues/new). If you have problems with TheHive or would like to request a TheHive-related feature, please [open an issue on its dedicated GitHub repository](https://github.com/CERT-BDF/TheHive/issues/new).
+**Important Note**: if you encounter an issue with an analyzer or would like to
+request a new one or an improvement to an existing analyzer, please open an
+issue on the [analyzers' dedicated GitHub repository](https://github.com/CERT-BDF/cortex-analyzers/issues/new).
+If you have problems with TheHive or would like to request a TheHive-related
+feature, please [open an issue on its dedicated GitHub repository](https://github.com/CERT-BDF/TheHive/issues/new).
 
 Alternatively, if you need to contact the project team, send an email to <support@thehive-project.org>.
 
