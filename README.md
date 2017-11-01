@@ -28,7 +28,7 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 Cortex has 27 analyzers listed below:
 
 + Abuse Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
-+ CERT.at PassiveDNS\*: Check [CERT.at Passive DNS Service](https://www.cert.at/about/contact/contact.html) for a given domain.
++ CERTatPassiveDNS*: Check [CERT.at Passive DNS Service](https://www.cert.at/about/contact/contact.html) for a given domain.
 + CIRCLPassiveDNS\*: Check [CIRCL's Passive DNS](https://www.circl.lu/services/passive-dns/) for a given domain.
 + CIRCLPassiveSSL\*: Check [CIRCL's Passive SSL](https://www.circl.lu/services/passive-ssl/) service for a given IP address or certificate hash.
 + CuckooSandbox: analyze URLs and files using [Cuckoo Sandbox](https://cuckoosandbox.org/).
