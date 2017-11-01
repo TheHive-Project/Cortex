@@ -52,7 +52,7 @@ a popular vulnerability scanner to scan an IP address or a FQDN.
 + PhishTank\*: query [PhishTank](https://www.phishtank.com/) to assess whether a URL has been flagged a phishing site.
 + URLCategory: check the Fortinet categories of URLs.
 + VirusShare: check whether a file/hash is available on [VirusShare.com](https://virusshare.com/).
-+ VirusTotal\*: look up files, URLs and hashes through [VirusTotal](https://www.virustotal.com/).
++ VirusTotal\*: look up files, URLs and hashes in [VirusTotal](https://www.virustotal.com/).
 + VMRay\*: analyze files using the [VMRay Analyzer Platform](https://www.vmray.com/products/).
 + WOT\*: check a domain against [Web of Trust](https://www.mywot.com/), a website reputation service.
 + Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
