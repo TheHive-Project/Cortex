@@ -43,7 +43,8 @@ Passive DNS.
 + JoeSandbox\*: analyze URLs and files using the powerful [Joe Sandbox](https://www.joesecurity.org/) malware analysis solution.
 + MaxMind: geolocation.
 + MISP\*: search for [MISP](http://www.misp-project.org/) events in one or several MISP instances containing the observable submitted as input.  
-+ Nessus: use Tenable's [Nessus Vulnerability Scanner](https://www.tenable.com/products/nessus-vulnerability-scanner) to scan an IP address or a FQDN.
++ Nessus: use [Nessus Professional](https://www.tenable.com/products/nessus-vulnerability-scanner),
+a popular vulnerability scanner to scan an IP address or a FQDN.
 + MsgParser: parse Outlook message files automatically and show the key information it contains such as headers, attachments etc.
 + OTXQuery\*: query AlienVault [Open Threat Exchange](https://otx.alienvault.com/) for IPs, domains, URLs, or file hashes.
 + PassiveTotal\*: leverage [RiskIQ's PassiveTotal](https://www.passivetotal.org/) service to gain invaluable insight on observables, identify overlapping infrastructure using Passive DNS, WHOIS, SSL certificates and more.
