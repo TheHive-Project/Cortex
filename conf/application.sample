@@ -118,12 +118,12 @@ analyzer {
     }
 
     # Nessus: this analyzer requires  the  URL  of  the  Tenable  Nessus
-    # scanner, a login and a password, the scan  policy  to  use,  a  CA
-    # bundle to validate the web app's X509 cert against. You  are  also
-    # highly advised to configure  the  networks  that  the  scanner  is
-    # allowed to scan. Otherwise, you might end up scanning assets  that
-    # you are not authorized to and be held  liable  for  any  resulting
-    # damage. Nessus is a commercial product.
+    # Professional scanner, a login and a password, the scan  policy  to
+    # use, a CA bundle to validate the web app's X509 cert against.  You
+    # are also highly advised to configure the networks that the scanner
+    # is allowed to scan. Otherwise, you might end  up  scanning  assets
+    # that you are  not  authorized  to  and  be  held  liable  for  any
+    # resulting damage. Nessus is a commercial product.
     Nessus {
       #url ="..."
       #login="..."
@@ -178,8 +178,18 @@ analyzer {
       #key="..."
     }
 
-    # WOT: this analyzer requires an API key. You can obtain one for free by
-    # signing up for an account at:
+    # VMRay:  this  analyzer  requires  the  URL  of  a  VMRay  Analyzer
+    # Platform, the associated API key and a cert path to  validate  the
+    # X.509 certificate against when applicable. This  is  a  commercial
+    # offering.
+    # See https://www.vmray.com/products/
+    VMRay {
+      #url = "..."
+      #key = "..."
+      #certpath = "..."
+
+    # WOT: this analyzer requires an API key. You  can  obtain  one  for
+    # free by signing up for an account at:
     # https://www.mywot.com/en/signup?destination=profile/api
     WOT {
       #key="..."
