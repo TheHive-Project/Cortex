@@ -178,6 +178,13 @@ analyzer {
       #key="..."
     }
 
+    # WOT: this analyzer requires an API key. You can obtain one for free by
+    # signing up for an account at:
+    # https://www.mywot.com/en/signup?destination=profile/api
+    WOT {
+      #key="..."
+    }
+
     # Yara: this analyzer needs files and directories  where  your  YARA
     # rules are located. If you supply a directory, the analyzer expects
     # to find an 'index.yar' or 'index.yas' file.  The  index  file  can
@@ -186,6 +193,11 @@ analyzer {
     # https://github.com/Yara-Rules/rules/blob/master/index.yar
     Yara {
       #rules=["/path/a", "/path/b", "/path/my/rules.yar"]
+    }
+
+    # Yeti: this analyzer needs the URL of a YETI instance.
+    Yeti {
+      #url ="..."
     }
   }
 
