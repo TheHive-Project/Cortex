@@ -32,7 +32,8 @@ Cortex has 27 analyzers listed below:
 + CIRCLPassiveDNS\*: Check [CIRCL's Passive DNS](https://www.circl.lu/services/passive-dns/) for a given domain.
 + CIRCLPassiveSSL\*: Check [CIRCL's Passive SSL](https://www.circl.lu/services/passive-ssl/) service for a given IP address or certificate hash.
 + CuckooSandbox: analyze URLs and files using [Cuckoo Sandbox](https://cuckoosandbox.org/).
-+ DNSDB\*: leverage Farsight's [DNSDB](https://www.dnsdb.info/) for pDNS.
++ DNSDB\*: leverage Farsight Security's [DNSDB](https://www.dnsdb.info/) for 
+Passive DNS.
 + DomainTools\*: look up domain names, IP addresses, WHOIS records, etc. using the popular [DomainTools](http://domaintools.com/) service API.
 + File_Info: parse files in several formats such as OLE and OpenXML to detect
  VBA macros, extract their source code, generate useful information on PE, PDF files and much more.
