@@ -25,7 +25,7 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 
 
 ## Analyzers
-Cortex has 27 analyzers listed below. To configure them, read the
+Cortex has 30 analyzers listed below. To configure them, read the
 [Cortex Analyzers Requirements Guide](https://github.com/CERT-BDF/CortexDocs/blob/master/analyzer_requirements.md).
 
 + Abuse_Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
@@ -36,10 +36,12 @@ Cortex has 27 analyzers listed below. To configure them, read the
 + DNSDB\*: leverage Farsight Security's [DNSDB](https://www.dnsdb.info/) for 
 Passive DNS.
 + DomainTools\*: look up domain names, IP addresses, WHOIS records, etc. using the popular [DomainTools](http://domaintools.com/) service API.
++ EmergingThreats\*: leverage Proofpoint's [Emerging Threats Intelligence](https://threatintel.proofpoint.com/) to assess the reputation of various observables and obtain additional and valuable information on malware.
 + File_Info: parse files in several formats such as OLE and OpenXML to detect
  VBA macros, extract their source code, generate useful information on PE, PDF files and much more.
 + FireHOLBlocklists: check IP addresses against the [FireHOL blocklists](https://firehol.org/).
 + GoogleSafebrowsing\*: check URLs against [Google Safebrowsing](https://www.google.com/transparencyreport/safebrowsing/).
++ HybridAnalysis\*: fetch [Hybrid Analysis](https://www.hybrid-analysis.com/) reports associated with hashes and filenames.
 + Hippocampe: query threat feeds through [Hippocampe](https://github.com/CERT-BDF/Hippocampe), a FOSS tool that centralizes feeds and allows you to associate a confidence level to each one of them (that can be changed over time) and get a score indicating the data quality.
 + JoeSandbox\*: analyze URLs and files using the powerful [Joe Sandbox](https://www.joesecurity.org/) malware analysis solution.
 + MaxMind: geolocation.
@@ -53,6 +55,7 @@ a popular vulnerability scanner to scan an IP address or a FQDN.
 flagged as a phishing site.
 + PhishTank\*: query [PhishTank](https://www.phishtank.com/) to assess 
 whether a URL has been flagged as a phishing site.
++ Shodan\*: retrieve key [Shodan](https://www.shodan.io/) information on domains and IP addresses.
 + URLCategory: check the Fortinet categories of URLs.
 + VirusShare: check whether a file/hash is available on [VirusShare.com](https://virusshare.com/).
 + VirusTotal\*: look up files, URLs and hashes in [VirusTotal](https://www.virustotal.com/).
