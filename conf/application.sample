@@ -65,7 +65,7 @@ analyzer {
     # DNSDB: an API key is required. This is a commercial service.
     DNSDB {
       #server="https://api.dnsdb.info"
-      #key="..."
+      #key = "..."
     }
 
     # DomainTools: a username and an API key are  required.  This  is  a
@@ -73,6 +73,13 @@ analyzer {
     DomainTools {
       #username="..."
       #key="..."
+    }
+
+    # EmergingThreats: this analyzer needs a Proofpoint Emerging Threats
+    # Intelligence API key. This is a commercial service.
+    # See https://www.proofpoint.com/us/products/et-intelligence
+    EmergingThreats {
+      #key = "..."
     }
 
     # FireHOLBlocklists: this analyzer needs you to download the FireHOL
@@ -99,6 +106,14 @@ analyzer {
       #url="..."
     }
 
+    # HybridAnalysis: this analyzer needs the API key associated with  a
+    # Hybrid Analysis account. You can open one for free.
+    # See https://www.hybrid-analysis.com/
+
+    HybridAnalysis {
+      #secret = "..."
+      #key = "..."
+    }
     # JoeSandbox: this analyzer can be used for Joe Sandbox cloud or for
     # the on-premises version, not both. You need to supply the  URL  of
     # the sandbox and the corresponding API key. This  is  a  commercial
@@ -159,6 +174,14 @@ analyzer {
     # See https://www.phishtank.com/api_info.php
     PhishTank {
       #key="..."
+    }
+
+    # Shodan: this analyzer requires an API key.
+    # For best results, use a Membership level account otherwise a  free
+    # one would work with limited results.
+    # See https://www.shodan.io/
+    Shodan {
+      # key = "..."
     }
 
     # Virusshare: this analyzer needs a local copy of Virusshare's  hash
