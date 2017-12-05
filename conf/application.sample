@@ -47,7 +47,12 @@ analyzer {
 
   # Analyzer configuration
   config {
-
+    #global {
+    #  proxy {
+    #    http="http://PROXYIP:PORT",
+    #    https="http://PROXYIP:PORT"
+    #  }
+    #}
     # CIRCLPassiveDNS: this analyzer requires credentials  that  may  be
     # obtained from https://www.circl.lu/contact/.
     CIRCLPassiveDNS {
