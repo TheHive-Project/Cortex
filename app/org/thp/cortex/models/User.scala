@@ -4,7 +4,6 @@ import scala.concurrent.Future
 
 import play.api.libs.json.{ JsArray, JsBoolean, JsObject, JsString }
 
-import org.thp.cortex.services.AuditedModel
 import org.thp.cortex.models.JsonFormat.userStatusFormat
 
 import org.elastic4play.models.{ AttributeDef, BaseEntity, EntityDef, HiveEnumeration, ModelDef, AttributeFormat ⇒ F, AttributeOption ⇒ O }
@@ -27,7 +26,7 @@ trait UserAttributes { _: AttributeDef ⇒
   val subscription = attribute("subscription", F.stringFmt, "User subscription")
 }
 
-class UserModel extends ModelDef[UserModel, User]("user", "User", "/user") with UserAttributes with AuditedModel {
+class UserModel extends ModelDef[UserModel, User]("user", "User", "/user") with UserAttributes {
 
   private def setUserId(attrs: JsObject) = (attrs \ "login").asOpt[JsString].fold(attrs) { login ⇒
     attrs - "login" + ("_id" → login)

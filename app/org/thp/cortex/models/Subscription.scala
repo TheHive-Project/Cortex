@@ -4,8 +4,6 @@ import javax.inject.{ Inject, Singleton }
 
 import play.api.libs.json.JsObject
 
-import org.thp.cortex.services.AuditedModel
-
 import org.elastic4play.models.{ AttributeDef, EntityDef, HiveEnumeration, ModelDef, AttributeFormat ⇒ F }
 import org.thp.cortex.models.JsonFormat.subscriptionStatusFormat
 
@@ -21,7 +19,7 @@ trait SubscriptionAttributes { _: AttributeDef ⇒
 }
 
 @Singleton
-class SubscriptionModel @Inject() () extends ModelDef[SubscriptionModel, Subscription]("subscription", "Subscription", "/subscription") with SubscriptionAttributes with AuditedModel {
+class SubscriptionModel @Inject() () extends ModelDef[SubscriptionModel, Subscription]("subscription", "Subscription", "/subscription") with SubscriptionAttributes {
 }
 
 class Subscription(model: SubscriptionModel, attributes: JsObject) extends EntityDef[SubscriptionModel, Subscription](model, attributes) with SubscriptionAttributes

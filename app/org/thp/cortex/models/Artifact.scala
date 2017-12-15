@@ -4,8 +4,6 @@ import javax.inject.{ Inject, Singleton }
 
 import play.api.libs.json.JsObject
 
-import org.thp.cortex.services.AuditedModel
-
 import org.elastic4play.models.{ AttributeDef, EntityDef, AttributeFormat ⇒ F, AttributeOption ⇒ O, ChildModelDef }
 
 trait ArtifactAttributes { _: AttributeDef ⇒
@@ -19,7 +17,7 @@ trait ArtifactAttributes { _: AttributeDef ⇒
 
 @Singleton
 class ArtifactModel @Inject() (
-    reportModel: ReportModel) extends ChildModelDef[ArtifactModel, Artifact, ReportModel, Report](reportModel, "artifact", "Artifact", "/artifact") with ArtifactAttributes with AuditedModel {
+    reportModel: ReportModel) extends ChildModelDef[ArtifactModel, Artifact, ReportModel, Report](reportModel, "artifact", "Artifact", "/artifact") with ArtifactAttributes {
 
 }
 

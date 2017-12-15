@@ -10,7 +10,7 @@ libraryDependencies ++= Seq(
   ehcache,
   ws,
   "net.codingwell" %% "scala-guice" % "4.1.0",
-  "org.cert-bdf" %% "elastic4play" % "1.4.0-SNAPSHOT",
+  "org.cert-bdf" %% "elastic4play" % "1.4.0",
   "com.typesafe.play" %% "play-guice" % play.core.PlayVersion.current
 )
 

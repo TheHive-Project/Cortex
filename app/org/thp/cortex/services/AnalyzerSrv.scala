@@ -47,6 +47,10 @@ class AnalyzerSrv @Inject() (
     updateSrv(analyzer, fields)
   }
 
+  def fromAnalyzerConfig[A](analyzerConfigSource: Source[AnalyzerConfig, A]): Source[Analyzer, A] = {
+    analyzerConfigSource.mapAsyncUnordered(2)(ac => get(ac.analyzerId()))
+  }
+
   //  def update(analyzer: Analyzer, analyzerDefinition: AnalyzerDefinition)(implicit authContext: AuthContext): Future[Analyzer] = {
   //    val fields = Fields(Json.obj(
   //      "description" -> analyzerDefinition.description,

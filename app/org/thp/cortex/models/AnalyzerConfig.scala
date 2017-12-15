@@ -6,8 +6,6 @@ import scala.util.Try
 
 import play.api.libs.json.{ JsObject, Json }
 
-import org.thp.cortex.services.AuditedModel
-
 import org.elastic4play.models.{ AttributeDef, ChildModelDef, EntityDef, AttributeFormat ⇒ F, AttributeOption ⇒ O }
 
 trait AnalyzerConfigAttributes { _: AttributeDef ⇒
@@ -17,7 +15,7 @@ trait AnalyzerConfigAttributes { _: AttributeDef ⇒
 
 @Singleton
 class AnalyzerConfigModel @Inject() (
-    subscriptionModel: SubscriptionModel) extends ChildModelDef[AnalyzerConfigModel, AnalyzerConfig, SubscriptionModel, Subscription](subscriptionModel, "analyzerConfig", "AnalyzerConfig", "/analyzerConfig") with AnalyzerConfigAttributes with AuditedModel {
+    subscriptionModel: SubscriptionModel) extends ChildModelDef[AnalyzerConfigModel, AnalyzerConfig, SubscriptionModel, Subscription](subscriptionModel, "analyzerConfig", "AnalyzerConfig", "/analyzerConfig") with AnalyzerConfigAttributes {
 }
 
 class AnalyzerConfig(model: AnalyzerConfigModel, attributes: JsObject) extends EntityDef[AnalyzerConfigModel, AnalyzerConfig](model, attributes) with AnalyzerConfigAttributes {

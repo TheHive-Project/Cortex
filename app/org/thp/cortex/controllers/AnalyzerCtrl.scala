@@ -1,6 +1,16 @@
-//package controllers
+package org.thp.cortex.controllers
 //
-//import javax.inject.Inject
+import javax.inject.{ Inject, Singleton }
+
+import scala.concurrent.ExecutionContext
+
+import play.api.mvc.{ AbstractController, ControllerComponents }
+
+import org.thp.cortex.models.Roles
+import org.thp.cortex.services.AnalyzerConfigSrv
+
+import org.elastic4play.controllers.{ Authenticated, Renderer }
+import org.elastic4play.services.QueryDSL
 //
 //import models.JsonFormat.{ analyzerWrites, dataActifactReads, jobWrites }
 //import models.{ DataArtifact, FileArtifact }
@@ -10,16 +20,22 @@
 //import services.{ AnalyzerSrv, JobSrv }
 //import scala.concurrent.{ ExecutionContext, Future }
 //
-//class AnalyzerCtrl @Inject() (
+@Singleton
+class AnalyzerCtrl @Inject() (
+                             analyzerConfigSrv: AnalyzerConfigSrv,
 //    analyzerSrv: AnalyzerSrv,
 //    jobSrv: JobSrv,
-//    components: ControllerComponents,
-//    implicit val ec: ExecutionContext) extends AbstractController(components) {
+authenticated: Authenticated,
+                             renderer: Renderer,
+    components: ControllerComponents,
+    implicit val ec: ExecutionContext) extends AbstractController(components) {
 //
-//  def list = Action { request ⇒
-//    Ok(Json.toJson(analyzerSrv.list))
-//  }
-//
+  def list = authenticated(Roles.read) { request ⇒
+    val analyzerConfigs = analyzerConfigSrv.findForUser(request.userId, QueryDSL.any, Some("all"), Nil)
+    renderer.toOutput(OK, analyzerConfigs)
+  }
+
+
 //  def get(analyzerId: String) = Action { request ⇒
 //    analyzerSrv.get(analyzerId) match {
 //      case Some(analyzer) ⇒ Ok(Json.toJson(analyzer))
@@ -57,7 +73,8 @@
 //      .getOrElse(Future.successful(BadRequest("???")))
 //  }
 //
-//  def listForType(dataType: String) = Action { request ⇒
-//    Ok(Json.toJson(analyzerSrv.listForType(dataType)))
-//  }
-//}
+  def listForType(dataType: String) = authenticated(Roles.read) { request ⇒
+
+    Ok(Json.toJson(analyzerSrv.listForType(dataType)))
+  }
+}

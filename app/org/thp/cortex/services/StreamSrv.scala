@@ -2,18 +2,16 @@ package org.thp.cortex.services
 
 import javax.inject.{ Inject, Singleton }
 
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ ExecutionContext, Future }
-
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, PoisonPill, actorRef2Scala }
+import akka.stream.Materializer
+import org.elastic4play.services._
+import org.elastic4play.utils.Instance
 import play.api.Logger
 import play.api.libs.json.JsObject
 import play.api.mvc.{ Filter, RequestHeader, Result }
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, PoisonPill, actorRef2Scala }
-import akka.stream.Materializer
-
-import org.elastic4play.services._
-import org.elastic4play.utils.Instance
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
   * This actor monitors dead messages and log them
@@ -133,10 +131,22 @@ class StreamActor(
   }
 
   private def normalizeOperation(operation: AuditOperation) = {
-    operation.entity.model match {
-      case am: AuditedModel ⇒ operation.copy(details = am.selectAuditedAttributes(operation.details))
+    val auditedDetails = operation.details.fields.flatMap {
+      case (attrName, value) ⇒
+        val attrNames = attrName.split("\\.").toSeq
+        operation
+          .entity
+          .model
+          .attributes
+          .find(a ⇒ a.attributeName == attrNames.head && !a.isUnaudited)
+          .map { _ ⇒
+            val reverseNames = attrNames.reverse
+            reverseNames.drop(1).foldLeft(reverseNames.head → value)((jsTuple, name) ⇒ name → JsObject(Seq(jsTuple)))
+          }
     }
+    operation.copy(details = JsObject(auditedDetails))
   }
+
   private def receiveWithState(waitingRequest: Option[WaitingRequest], currentMessages: Map[String, Option[StreamMessageGroup[_]]]): Receive = {
     /* End of HTTP request, mark received messages to ready*/
     case Commit(requestId) ⇒
@@ -158,7 +168,7 @@ class StreamActor(
       context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + ("end" → Some(MigrationEventGroup.endOfMigration))))
 
     /* */
-    case operation: AuditOperation if operation.entity.model.isInstanceOf[AuditedModel] ⇒
+    case operation: AuditOperation ⇒
       val requestId = operation.authContext.requestId
       val normalizedOperation = normalizeOperation(operation)
       logger.debug(s"Receiving audit operation : $operation => $normalizedOperation")
@@ -197,7 +207,6 @@ class StreamActor(
       }
 
     case Initialize(requestId) ⇒ context.become(receiveWithState(waitingRequest, currentMessages + (requestId → None)))
-    case _: AuditOperation     ⇒
     case message               ⇒ logger.warn(s"Unexpected message $message (${message.getClass})")
   }
 

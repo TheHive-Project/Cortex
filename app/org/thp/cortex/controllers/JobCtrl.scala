@@ -19,13 +19,14 @@ import org.elastic4play.utils.RichFuture
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.thp.cortex.services.JobSrv
 
-import org.elastic4play.controllers.Authenticated
+import org.elastic4play.controllers.{ Authenticated, Renderer }
 
 @Singleton
 class JobCtrl @Inject() (
     jobSrv: JobSrv,
     @Named("audit") auditActor: ActorRef,
     authenticated: Authenticated,
+    renderer: Renderer,
     components: ControllerComponents,
     implicit val ec: ExecutionContext,
     implicit val actorSystem: ActorSystem) extends AbstractController(components) with Status {
@@ -38,7 +39,7 @@ class JobCtrl @Inject() (
 
   def get(jobId: String): Action[AnyContent] = authenticated(Roles.read).async { implicit authContext ⇒
     jobSrv.get(jobId).map { job ⇒
-      Ok(Json.toJson(job))
+      renderer.toOutput(OK, job)
     }
   }
 
