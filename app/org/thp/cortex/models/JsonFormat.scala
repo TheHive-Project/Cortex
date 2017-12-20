@@ -2,7 +2,6 @@ package org.thp.cortex.models
 
 import play.api.libs.json._
 
-import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.services.Role
 
 object JsonFormat {
@@ -34,12 +33,12 @@ object JsonFormat {
   //  }
   //  implicit val artifactFormat = Format(artifactReads, artifactWrites)
   //
-  implicit val jobStatusFormat: Format[JobStatus.Type] = enumFormat(JobStatus)
-  implicit val subscriptionStatusFormat: Format[SubscriptionStatus.Type] = enumFormat(SubscriptionStatus)
-  implicit val userStatusFormat: Format[UserStatus.Type] = enumFormat(UserStatus)
-  implicit val analyzerStatusFormat: Format[AnalyzerStatus.Type] = enumFormat(AnalyzerStatus)
-  implicit val analyzerConfigItemTypeFormat: Format[AnalyzerConfigItemType.Type] = enumFormat(AnalyzerConfigItemType)
-  implicit val analyzerConfigItemOptionFormat: Format[AnalyzerConfigItemOption.Type] = enumFormat(AnalyzerConfigItemOption)
+  //  implicit val jobStatusFormat: Format[JobStatus.Type] = enumFormat(JobStatus)
+  //  implicit val subscriptionStatusFormat: Format[SubscriptionStatus.Type] = enumFormat(SubscriptionStatus)
+  //  implicit val userStatusFormat: Format[UserStatus.Type] = enumFormat(UserStatus)
+  //  implicit val analyzerStatusFormat: Format[AnalyzerStatus.Type] = enumFormat(AnalyzerStatus)
+  //  implicit val analyzerConfigItemTypeFormat: Format[AnalyzerConfigItemType.Type] = enumFormat(AnalyzerConfigItemType)
+  //  implicit val analyzerConfigItemOptionFormat: Format[AnalyzerConfigItemOption.Type] = enumFormat(AnalyzerConfigItemOption)
   //  implicit val analyzerConfigItemDefinitionReads = Json.format[AnalyzerConfigItemDefinition]
   //  implicit val analyzerDefinitionFormat = Json.format[AnalyzerDefinition]
   //

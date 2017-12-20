@@ -10,26 +10,26 @@ import scala.sys.process.{ BasicIO, Process, ProcessIO }
 import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
 
-import play.api.{ Configuration, Logger }
+import play.api.Logger
 import play.api.libs.json.{ JsObject, JsString, Json }
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ FileIO, Sink }
-import org.thp.cortex.models._
+import akka.stream.scaladsl.{ FileIO, Sink, Source }
 import org.scalactic.Accumulation._
+import org.scalactic.{ Bad, Good, One, Or }
+import org.thp.cortex.models._
 
-import org.elastic4play.{ AttributeCheckingError, NotFoundError }
-import org.elastic4play.controllers.Fields
+import org.elastic4play.controllers.{ AttachmentInputValue, Fields, FileInputValue }
 import org.elastic4play.services._
+import org.elastic4play._
 
 @Singleton
-class JobSrv(
-    analyzerPath: String,
+class JobSrv @Inject() (
     jobModel: JobModel,
     reportModel: ReportModel,
     analyzerSrv: AnalyzerSrv,
-    analyzerConfigSrv: AnalyzerConfigSrv,
     getSrv: GetSrv,
     createSrv: CreateSrv,
     updateSrv: UpdateSrv,
@@ -38,34 +38,6 @@ class JobSrv(
     akkaSystem: ActorSystem,
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer) {
-
-  @Inject() def this(
-      config: Configuration,
-      jobModel: JobModel,
-      reportModel: ReportModel,
-      analyzerSrv: AnalyzerSrv,
-      analyzerConfigSrv: AnalyzerConfigSrv,
-      getSrv: GetSrv,
-      createSrv: CreateSrv,
-      updateSrv: UpdateSrv,
-      findSrv: FindSrv,
-      attachmentSrv: AttachmentSrv,
-      akkaSystem: ActorSystem,
-      ec: ExecutionContext,
-      mat: Materializer) = this(
-    config.get[String]("analyzers.path"),
-    jobModel,
-    reportModel,
-    analyzerSrv,
-    analyzerConfigSrv,
-    getSrv,
-    createSrv,
-    updateSrv,
-    findSrv,
-    attachmentSrv,
-    akkaSystem,
-    ec,
-    mat)
 
   private lazy val logger = Logger(getClass)
   private lazy val analyzeExecutionContext: ExecutionContext =
@@ -76,39 +48,85 @@ class JobSrv(
     else
       (c: Path) ⇒ s"""sh -c "./$c" """
 
-  //  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], start: Int, limit: Int): Future[(Int, Seq[Job])] = {
-  //    (jobActor ? ListJobs(dataTypeFilter, dataFilter, analyzerFilter, start, limit)).map {
-  //      case JobList(total, jobs) ⇒ total → jobs
-  //      case m                    ⇒ throw UnexpectedError(s"JobActor.list replies with unexpected message: $m (${m.getClass})")
-  //    }
-  //  }
-  //
+  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): (Source[Job, NotUsed], Future[Long]) = {
+    import org.elastic4play.services.QueryDSL._
+    val filter = dataTypeFilter.map("dataType" like _).toList :::
+      dataFilter.map("data" like _).toList :::
+      analyzerFilter.map(af ⇒ or("analyzerId" like af, "analyzerName" like af)).toList
+    find(and(filter: _*), range, Nil)
+    //
+    //
+    //
+    //    (jobActor ? ListJobs(dataTypeFilter, dataFilter, analyzerFilter, start, limit)).map {
+    //      case JobList(total, jobs) ⇒ total → jobs
+    //      case m                    ⇒ throw UnexpectedError(s"JobActor.list replies with unexpected message: $m (${m.getClass})")
+    //    }
+  }
+
+  def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Job, NotUsed], Future[Long]) = {
+    findSrv[JobModel, Job](jobModel, queryDef, range, sortBy)
+  }
+
   def get(jobId: String): Future[Job] = getSrv[JobModel, Job](jobModel, jobId)
 
   def create(analyzerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
     analyzerSrv.get(analyzerId).flatMap { analyzer ⇒
-      create(analyzer, fields)
+      val dataType = Or.from(fields.getString("dataType"), One(MissingAttributeError("dataType")))
+      val dataFiv = (fields.getString("data"), fields.get("attachment")) match {
+        case (Some(data), None)                ⇒ Good(Left(data))
+        case (None, Some(fiv: FileInputValue)) ⇒ Good(Right(fiv))
+        case (None, Some(other))               ⇒ Bad(One(InvalidFormatAttributeError("attachment", "attachment", other)))
+        case (_, Some(fiv))                    ⇒ Bad(One(InvalidFormatAttributeError("data/attachment", "string/attachment", fiv)))
+        case (None, None)                      ⇒ Bad(One(MissingAttributeError("data/attachment")))
+      }
+
+      val tlp = fields.getLong("tlp").getOrElse(2L)
+      val message = fields.getString("message").getOrElse("")
+      val parameters = fields.getValue("parameters").collect {
+        case obj: JsObject ⇒ obj
+      }
+        .getOrElse(JsObject.empty)
+
+      withGood(dataType, dataFiv) {
+        case (dt, Right(fiv)) ⇒ dt -> attachmentSrv.save(fiv).map(Right.apply)
+        case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
+      }
+        .fold(
+          typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters)),
+          errors ⇒ Future.failed(AttributeCheckingError("job", errors)))
     }
   }
 
-  def create(analyzer: Analyzer, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
-    createSrv[JobModel, Job](jobModel, fields).andThen {
-      case Success(job) ⇒
-        analyzerConfigSrv
-          .get(authContext.userId, job.analyzerId())
-          .map(analyzerConfig ⇒ run(analyzer, analyzerConfig, job))
+  def create(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject)(implicit authContext: AuthContext): Future[Job] = {
+    val fields = Fields(Json.obj(
+      "analyzerDefinitionId" -> analyzer.analyzerDefinitionId(),
+      "analyzerId" -> analyzer.id,
+      "analyzerName" -> analyzer.name(),
+      "status" -> JobStatus.Waiting,
+      "dataType" -> dataType,
+      "tlp" -> tlp,
+      "message" -> message,
+      "parameters" -> parameters.toString))
+    val fieldWithData = dataAttachment match {
+      case Left(data)        ⇒ fields.set("data", data)
+      case Right(attachment) ⇒ fields.set("attachment", AttachmentInputValue(attachment))
+    }
+    analyzerSrv.getDefinition(analyzer.analyzerDefinitionId()).flatMap { analyzerDefinition ⇒
+      createSrv[JobModel, Job](jobModel, fieldWithData).andThen {
+        case Success(job) ⇒ run(analyzerDefinition, analyzer, job)
+      }
     }
   }
 
-  def run(analyzer: Analyzer, analyzerConfig: AnalyzerConfig, job: Job)(implicit authContext: AuthContext): Future[Job] = {
-    buildInput(analyzer, analyzerConfig, job)
+  def run(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job)(implicit authContext: AuthContext): Future[Job] = {
+    buildInput(analyzerDefinition, analyzer, job)
       .andThen { case _: Success[_] ⇒ startJob(job) }
       .flatMap { input ⇒
         val output = new StringBuffer
         val error = new StringBuffer
         try {
-          logger.info(s"Execute ${osexec(analyzer.cmd)} in ${analyzer.cmd.getParent}")
-          Process(osexec(analyzer.cmd), analyzer.cmd.getParent.toFile).run(
+          logger.info(s"Execute ${osexec(analyzerDefinition.cmd)} in ${analyzerDefinition.baseDirectory}")
+          Process(osexec(analyzerDefinition.cmd), analyzerDefinition.baseDirectory.toFile).run(
             new ProcessIO(
               { stdin ⇒ Try(stdin.write(input.toString.getBytes("UTF-8"))); stdin.close() },
               { stdout ⇒ readStream(output, stdout) },
@@ -148,7 +166,7 @@ class JobSrv(
       .map(_.getOrElse(throw NotFoundError(s"Job ${job.id} has no report")))
   }
 
-  private def buildInput(analyzer: Analyzer, analyzerConfig: AnalyzerConfig, job: Job) = {
+  private def buildInput(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job) = {
     job.attachment()
       .map { attachment ⇒
         val tempFile = Files.createTempDirectory(s"cortex-job-${job.id}-")
@@ -170,8 +188,8 @@ class JobSrv(
             "data" -> job.data().get)
       }
       .map { artifact ⇒
-        val configAndParam = analyzerConfig.config.deepMerge(job.params)
-        analyzer.configurationDefinition
+        val configAndParam = analyzer.config.deepMerge(job.params)
+        analyzerDefinition.configurationItems
           .validatedBy(_.read(configAndParam))
           .map(JsObject)
           .map(_ deepMerge artifact +
@@ -202,7 +220,7 @@ class JobSrv(
     try BasicIO.processLinesFully { line ⇒
       buffer.append(line).append(System.lineSeparator())
       ()
-    }(reader.readLine _)
+    }(() ⇒ reader.readLine())
     finally reader.close()
   }
 

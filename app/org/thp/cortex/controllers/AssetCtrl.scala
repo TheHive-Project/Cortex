@@ -1,4 +1,4 @@
-package controllers
+package org.thp.cortex.controllers
 
 import javax.inject.{ Inject, Singleton }
 
@@ -7,6 +7,8 @@ import scala.concurrent.ExecutionContext
 import play.api.Environment
 import play.api.http.{ FileMimeTypes, HttpErrorHandler }
 import play.api.mvc.{ Action, AnyContent }
+
+import controllers.{ Assets, AssetsMetadata, ExternalAssets }
 
 trait AssetCtrl {
   def get(file: String): Action[AnyContent]

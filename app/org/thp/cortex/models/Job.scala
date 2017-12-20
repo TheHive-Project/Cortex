@@ -1,26 +1,27 @@
 package org.thp.cortex.models
 
-import java.util.Date
 import javax.inject.{ Inject, Singleton }
 
 import scala.util.Try
 
 import play.api.libs.json.{ JsObject, Json }
 
-import org.thp.cortex.models.JsonFormat.jobStatusFormat
-
+import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.models.{ AttributeDef, EntityDef, HiveEnumeration, ModelDef, AttributeFormat ⇒ F, AttributeOption ⇒ O }
 
 object JobStatus extends Enumeration with HiveEnumeration {
   type Type = Value
-  val InProgress, Success, Failure = Value
+  val Waiting, InProgress, Success, Failure = Value
+  implicit val reads = enumFormat(this)
 }
 
 trait JobAttributes { _: AttributeDef ⇒
-  val analyzerId = attribute("analyzerId", F.stringFmt, "Analyzer id", O.readonly)
+  val analyzerDefinitionId = attribute("analyzerDefinitionId", F.stringFmt, "Analyzer definition id", O.readonly)
+  val analyzerId = attribute("analyzerConfigId", F.stringFmt, "Analyzer id", O.readonly)
+  val analyzerName = attribute("analyzerConfigName", F.stringFmt, "Analyzer name", O.readonly)
   val status = attribute("status", F.enumFmt(JobStatus), "Status of the job", O.model)
-  val startDate = attribute("startDate", F.dateFmt, "Analysis start date", new Date)
-  val endDate = attribute("endDate", F.dateFmt, "Analysis end date", new Date)
+  val startDate = optionalAttribute("startDate", F.dateFmt, "Analysis start date")
+  val endDate = optionalAttribute("endDate", F.dateFmt, "Analysis end date")
   val dataType = attribute("dataType", F.stringFmt, "Type of the artifact", O.readonly)
   val data = optionalAttribute("data", F.stringFmt, "Content of the artifact", O.readonly)
   val attachment = optionalAttribute("attachment", F.attachmentFmt, "Artifact file content", O.readonly)
@@ -31,11 +32,10 @@ trait JobAttributes { _: AttributeDef ⇒
 }
 
 @Singleton
-class JobModel @Inject() () extends ModelDef[JobModel, Job]("job", "Job", "/job") with JobAttributes {
+class JobModel @Inject() () extends ModelDef[JobModel, Job]("job", "Job", "/job") with JobAttributes with AuditedModel {
 
 }
 
 class Job(model: JobModel, attributes: JsObject) extends EntityDef[JobModel, Job](model, attributes) with JobAttributes {
   val params: JsObject = Try(Json.parse(parameters()).as[JsObject]).getOrElse(JsObject.empty)
-
 }

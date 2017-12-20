@@ -9,7 +9,6 @@ import play.api.Logger
 
 import akka.actor.{ Actor, ActorRef }
 import org.thp.cortex.models.JobStatus
-import org.thp.cortex.models.JsonFormat.jobStatusFormat
 
 import org.elastic4play.models.BaseEntity
 import org.elastic4play.services._

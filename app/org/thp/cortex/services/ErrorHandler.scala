@@ -1,4 +1,4 @@
-package services
+package org.thp.cortex.services
 
 import org.thp.cortex.models.{ AnalyzerNotFoundError, InvalidRequestError, JobNotFoundError, UnexpectedError }
 import play.api.Logger

@@ -5,37 +5,36 @@ import javax.inject.{ Inject, Named, Singleton }
 import scala.concurrent.duration.{ Duration, FiniteDuration }
 import scala.concurrent.{ ExecutionContext, Future }
 
-import akka.pattern.ask
 import play.api.http.Status
 import play.api.libs.json.{ JsObject, JsString, JsValue, Json }
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
 import akka.actor.{ ActorRef, ActorSystem }
+import akka.pattern.ask
 import akka.util.Timeout
 import org.thp.cortex.models.{ Job, JobStatus, Roles }
 import org.thp.cortex.services.AuditActor.{ JobEnded, Register }
-
-import org.elastic4play.utils.RichFuture
-import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.thp.cortex.services.JobSrv
 
-import org.elastic4play.controllers.{ Authenticated, Renderer }
+import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
+import org.elastic4play.models.JsonFormat.baseModelEntityWrites
+import org.elastic4play.utils.RichFuture
 
 @Singleton
 class JobCtrl @Inject() (
     jobSrv: JobSrv,
     @Named("audit") auditActor: ActorRef,
+    fieldsBodyParser: FieldsBodyParser,
     authenticated: Authenticated,
     renderer: Renderer,
     components: ControllerComponents,
     implicit val ec: ExecutionContext,
     implicit val actorSystem: ActorSystem) extends AbstractController(components) with Status {
 
-  //  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], start: Int, limit: Int): Action[AnyContent] = Action.async { request ⇒
-  //    jobSrv.list(dataTypeFilter, dataFilter, analyzerFilter, start, limit).map {
-  //      case (total, jobs) ⇒ Ok(Json.toJson(jobs)).withHeaders("X-Total" → total.toString)
-  //    }
-  //  }
+  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
+    val (jobs, jobTotal) = jobSrv.list(dataTypeFilter, dataFilter, analyzerFilter, range)
+    renderer.toOutput(OK, jobs, jobTotal)
+  }
 
   def get(jobId: String): Action[AnyContent] = authenticated(Roles.read).async { implicit authContext ⇒
     jobSrv.get(jobId).map { job ⇒
@@ -43,6 +42,12 @@ class JobCtrl @Inject() (
     }
   }
 
+  def create(analyzerId: String): Action[Fields] = authenticated(Roles.write).async(fieldsBodyParser) { implicit request ⇒
+    jobSrv.create(analyzerId, request.body)
+      .map { job ⇒
+        renderer.toOutput(OK, job)
+      }
+  }
   //  def remove(jobId: String): Action[AnyContent] = Action.async { request ⇒
   //    jobSrv.remove(jobId).map(_ ⇒ Ok(""))
   //  }

@@ -4,13 +4,13 @@ import scala.concurrent.Future
 
 import play.api.libs.json.{ JsArray, JsBoolean, JsObject, JsString }
 
-import org.thp.cortex.models.JsonFormat.userStatusFormat
-
+import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.models.{ AttributeDef, BaseEntity, EntityDef, HiveEnumeration, ModelDef, AttributeFormat ⇒ F, AttributeOption ⇒ O }
 
 object UserStatus extends Enumeration with HiveEnumeration {
   type Type = Value
   val Ok, Locked = Value
+  implicit val reads = enumFormat(this)
 }
 
 trait UserAttributes { _: AttributeDef ⇒
@@ -23,10 +23,10 @@ trait UserAttributes { _: AttributeDef ⇒
   val password = optionalAttribute("password", F.stringFmt, "Password", O.sensitive, O.unaudited)
   val avatar = optionalAttribute("avatar", F.stringFmt, "Base64 representation of user avatar image", O.unaudited)
   val preferences = attribute("preferences", F.stringFmt, "User preferences", "{}", O.sensitive, O.unaudited)
-  val subscription = attribute("subscription", F.stringFmt, "User subscription")
+  val organization = attribute("organization", F.stringFmt, "User organization")
 }
 
-class UserModel extends ModelDef[UserModel, User]("user", "User", "/user") with UserAttributes {
+class UserModel extends ModelDef[UserModel, User]("user", "User", "/user") with UserAttributes with AuditedModel {
 
   private def setUserId(attrs: JsObject) = (attrs \ "login").asOpt[JsString].fold(attrs) { login ⇒
     attrs - "login" + ("_id" → login)
