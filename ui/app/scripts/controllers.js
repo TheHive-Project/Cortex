@@ -43,7 +43,7 @@ angular.module('cortex')
                         if($state.is('jobs')) {
                             $state.reload();
                         } else {
-                            $state.go('jobs');
+                            $state.go('app.jobs');
                         }
                         _.each(response, function(resp) {
                             NotificationService.success(resp.data.analyzerId + ' started successfully on ' + (resp.data.artifact.data || resp.data.artifact.attributes.filename));
@@ -85,7 +85,7 @@ angular.module('cortex')
             modalInstance.result.then(function (result) {
                 return AnalyzerSrv.run(result.analyzer.id, result);
             }).then(function (response) {
-                $state.go('jobs');
+                $state.go('app.jobs');
                 NotificationService.success(response.data.analyzerId + ' started successfully on ' + response.data.artifact.data);
             }).catch(function(err) {
                 if(err != 'cancel') {

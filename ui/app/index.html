@@ -42,7 +42,8 @@
 </head>
 <body ng-app="cortex" ng-cloak class="hold-transition skin-blue layout-top-nav">
 	<page-loader bg-color="#ecf0f5"></page-loader>
-	<app-container class="wrapper"></app-container>
+	<!-- <app-container class="wrapper"></app-container> -->
+	<div ui-view></div>
 
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
@@ -71,6 +72,10 @@
     <script src="scripts/services.js"></script>
     <script src="scripts/controllers.js"></script>
     <script src="scripts/directives.js"></script>
+
+	<script src="scripts/services/AuthenticationSrv.js"></script>
+	<script src="scripts/controllers/AppController.js"></script>
+	<script src="scripts/controllers/LoginController.js"></script>
 
     <script src="scripts/components/app-container.component.js"></script>
     <script src="scripts/components/header.component.js"></script>

@@ -32,7 +32,7 @@
                 }));
             };
         })
-        .service('NotificationService', function(HtmlSanitizer, Notification) {
+        .service('NotificationService', function($state, HtmlSanitizer, Notification) {
             this.success = function(message) {
                 var sanitized = HtmlSanitizer.sanitize(message);
 
@@ -42,6 +42,20 @@
                 var sanitized = HtmlSanitizer.sanitize(message);
 
                 return Notification.error(sanitized);
+            };
+            this.log = function(message, type) {
+                Notification[type || 'error'](HtmlSanitizer.sanitize(message));
+            };
+            this.handleError = function(moduleName, data, status) {
+                if (status === 401) {
+                    $state.go('login');
+                } else if (status === 520) {
+                    $state.go('maintenance');
+                } else if (angular.isString(data) && data !== '') {
+                    this.log(moduleName + ': ' + data, 'error');
+                } else if (angular.isObject(data)) {
+                    this.log(moduleName + ': ' + data.message, 'error');
+                }
             };
         })
         .service('VersionSrv', function($q, $http) {
@@ -71,7 +85,7 @@
                 var defered = $q.defer();
 
                 if (this.analyzers === null) {
-                    $http.get('/api/analyzer')
+                    $http.get('./api/analyzer')
                         .then(function(response) {
                             self.analyzers = response.data;
 
@@ -112,7 +126,7 @@
 
                     return $http({
                         method: 'POST',
-                        url: '/api/analyzer/' + id + '/run',
+                        url: './api/analyzer/' + id + '/run',
                         headers: {
                             'Content-Type': undefined
                         },
@@ -146,24 +160,24 @@
                         }
                     };
 
-                    return $http.post('/api/analyzer/' + id + '/run', postData);
+                    return $http.post('./api/analyzer/' + id + '/run', postData);
                 }
             };
 
         })
         .service('JobSrv', function($http) {
             this.list = function(params) {
-                return $http.get('/api/job', {
+                return $http.get('./api/job', {
                     params: params
                 });
             };
 
             this.report = function(jobId) {
-                return $http.get('/api/job/' + jobId + '/report');
+                return $http.get('./api/job/' + jobId + '/report');
             };
 
             this.remove = function(jobId) {
-                return $http.delete('/api/job/' + jobId);
+                return $http.delete('./api/job/' + jobId);
             };
         })
         .service('UtilsSrv', function() {
