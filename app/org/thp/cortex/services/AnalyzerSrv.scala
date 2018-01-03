@@ -63,7 +63,7 @@ class AnalyzerSrv(
     case None           ⇒ Future.failed(NotFoundError(s"Analyzer $analyzerId not found"))
   }
 
-  def get(analyzerConfigId: String): Future[Analyzer] = getSrv[AnalyzerModel, Analyzer](analyzerModel, analyzerConfigId)
+  def get(analyzerId: String): Future[Analyzer] = getSrv[AnalyzerModel, Analyzer](analyzerModel, analyzerId)
 
   def getForUser(userId: String, analyzerId: String): Future[Analyzer] = {
     userSrv.get(userId)
@@ -130,6 +130,7 @@ class AnalyzerSrv(
     analyzerMapLock.synchronized {
       analyzerMap = analyzers
     }
+    logger.info(s"New analyzer list:\n\n\t${analyzerMap.values.map(a ⇒ s"${a.name} ${a.version}").mkString("\n\t")}\n")
   }
 
   //  def listForType(dataType: String): Source[Analyzer with Entity, Future[Long]] = {

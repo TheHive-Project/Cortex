@@ -4,8 +4,7 @@
 
 
 GET           /                                        controllers.Default.redirect(to = "/index.html")
-GET           /api/status                              org.thp.cortex.controllers.StatusCtrl.get
-#GET      /api/health                              org.thp.cortex.controllers.StatusCtrl.health
+GET           /api/health                              org.thp.cortex.controllers.StatusCtrl.health
 GET           /api/logout                              org.thp.cortex.controllers.AuthenticationCtrl.logout()
 POST          /api/login                               org.thp.cortex.controllers.AuthenticationCtrl.login()
 
@@ -14,15 +13,25 @@ POST          /api/login                               org.thp.cortex.controller
 GET           /api/status                              org.thp.cortex.controllers.StatusCtrl.get
 GET           /api/analyzer                            org.thp.cortex.controllers.AnalyzerCtrl.list
 GET           /api/analyzer/:id                        org.thp.cortex.controllers.AnalyzerCtrl.get(id)
-POST          /api/analyzer/:id/run                    org.thp.cortex.controllers.JobCtrl.create(id)
 GET           /api/analyzer/type/:dataType             org.thp.cortex.controllers.AnalyzerCtrl.listForType(dataType)
+POST          /api/analyzer/:id/run                    org.thp.cortex.controllers.JobCtrl.create(id)
 GET           /api/job/:id/waitreport                  org.thp.cortex.controllers.JobCtrl.waitReport(id, atMost ?= "1m")
 ####################
 
 GET           /api/job                                 org.thp.cortex.controllers.JobCtrl.list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])
 GET           /api/job/:id                             org.thp.cortex.controllers.JobCtrl.get(id)
-#DELETE   /api/job/:id                   controllers.JobCtrl.remove(id)
 GET           /api/job/:id/report                      org.thp.cortex.controllers.JobCtrl.report(id)
+
+GET           /api/organization                        org.thp.cortex.controllers.OrganizationCtrl.find
+GET           /api/organization/:id                    org.thp.cortex.controllers.OrganizationCtrl.get(id)
+POST          /api/organization                        org.thp.cortex.controllers.OrganizationCtrl.create
+PATCH         /api/organization/:id                    org.thp.cortex.controllers.OrganizationCtrl.update(id)
+DELETE        /api/organization/:id                    org.thp.cortex.controllers.OrganizationCtrl.delete(id)
+
+POST          /api/stream                              org.thp.cortex.controllers.StreamCtrl.create()
+GET           /api/stream/status                       org.thp.cortex.controllers.StreamCtrl.status
+GET           /api/stream/:streamId                    org.thp.cortex.controllers.StreamCtrl.get(streamId)
+
 
 #GET	 /modules			controllers.MispCtrl.modules
 #POST	 /query                         controllers.MispCtrl.query

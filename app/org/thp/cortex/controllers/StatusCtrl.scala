@@ -26,4 +26,6 @@ class StatusCtrl @Inject() (
         "authType" → "none",
         "capabilities" → Json.arr())))
   }
+
+  def health = TODO
 }

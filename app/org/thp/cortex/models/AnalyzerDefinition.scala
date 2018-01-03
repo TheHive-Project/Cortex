@@ -110,7 +110,7 @@ object AnalyzerDefinition {
       .map(_.validate[AnalyzerDefinition])
       .flatMap {
         case JsSuccess(analyzerDefinition, _) ⇒ Success(analyzerDefinition)
-        case JsError(errors)                  ⇒ ???
+        case JsError(errors)                  ⇒ sys.error(s"Json description file $definitionFile is invalid: $errors")
       }
   }
 
@@ -125,13 +125,13 @@ object AnalyzerDefinition {
     (JsPath \ "name").read[String] and
     (JsPath \ "version").read[String] and
     (JsPath \ "description").read[String] and
-    (JsPath \ "dataTypeList").read[Seq[String]] and
+    (JsPath \ "dataTypeList").read[Seq[String]].orElse(Reads.pure(Nil)) and
     (JsPath \ "author").read[String] and
     (JsPath \ "url").read[String] and
     (JsPath \ "license").read[String] and
-    (JsPath \ "baseDirectory").read[String].map(p ⇒ Paths.get(p)) and
+    Reads.pure(Paths.get("").toAbsolutePath) and
     (JsPath \ "command").read[String] and
-    (JsPath \ "configurationItems").read[Seq[ConfigurationDefinitionItem]])(AnalyzerDefinition.apply _)
+    (JsPath \ "configurationItems").read[Seq[ConfigurationDefinitionItem]].orElse(Reads.pure(Nil)))(AnalyzerDefinition.apply _)
 }
 
 //trait AnalyzerDefinitionAttributes {
