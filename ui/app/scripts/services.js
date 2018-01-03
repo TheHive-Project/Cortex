@@ -2,7 +2,7 @@
     'use strict';
 
     angular.module('cortex')
-        .value('_', window._)
+        .value('_', _)
         .value('Tlps', [{
             key: 'WHITE',
             value: 0
@@ -63,14 +63,14 @@
                         .then(function(response) {
                             self.analyzers = response.data;
 
-                            self.dataTypes = _.mapObject(
+                            self.dataTypes = _.mapValues(
                                 _.groupBy(
                                     _.flatten(
-                                        _.pluck(response.data, 'dataTypeList')
-                                    ),
+                                        _.map(response.data, 'dataTypeList')
+                                    )/*,
                                     function(item) {
                                         return item;
-                                    }
+                                    }*/
                                 ),
                                 function(value /*, key*/ ) {
                                     return value.length;

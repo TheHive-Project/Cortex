@@ -141,7 +141,7 @@ angular
                 return item.active === true;
             });
 
-            this.formData.ids = _.pluck(active, 'id').join(',');
+            this.formData.ids = _.map(active, 'id').join(',');
         };
 
         this.ok = function() {
