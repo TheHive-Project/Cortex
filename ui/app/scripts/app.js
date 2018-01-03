@@ -15,7 +15,8 @@ angular.module('cortex', [
         'angularMoment',
         'ngSanitize',
         'angularUtils.directives.dirPagination',
-        'angular-page-loader'
+        'angular-page-loader',
+        'thehive-kit'
     ])
     .config(function(NotificationProvider) {
         NotificationProvider.setOptions({

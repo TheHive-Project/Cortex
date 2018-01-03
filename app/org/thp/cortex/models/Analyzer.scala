@@ -7,7 +7,7 @@ import scala.util.Try
 import play.api.libs.json.{ JsObject, Json }
 
 import org.elastic4play.models.JsonFormat.enumFormat
-import org.elastic4play.models.{ AttributeDef, ChildModelDef, EntityDef, HiveEnumeration, AttributeFormat => F, AttributeOption => O }
+import org.elastic4play.models.{ AttributeDef, ChildModelDef, EntityDef, HiveEnumeration, AttributeFormat ⇒ F, AttributeOption ⇒ O }
 
 object RateUnit extends Enumeration with HiveEnumeration {
   type Type = Value

@@ -32,32 +32,6 @@
                 }));
             };
         })
-        .service('NotificationService', function($state, HtmlSanitizer, Notification) {
-            this.success = function(message) {
-                var sanitized = HtmlSanitizer.sanitize(message);
-
-                return Notification.success(sanitized);
-            };
-            this.error = function(message) {
-                var sanitized = HtmlSanitizer.sanitize(message);
-
-                return Notification.error(sanitized);
-            };
-            this.log = function(message, type) {
-                Notification[type || 'error'](HtmlSanitizer.sanitize(message));
-            };
-            this.handleError = function(moduleName, data, status) {
-                if (status === 401) {
-                    $state.go('login');
-                } else if (status === 520) {
-                    $state.go('maintenance');
-                } else if (angular.isString(data) && data !== '') {
-                    this.log(moduleName + ': ' + data, 'error');
-                } else if (angular.isObject(data)) {
-                    this.log(moduleName + ': ' + data.message, 'error');
-                }
-            };
-        })
         .service('VersionSrv', function($q, $http) {
             this.get = function() {
                 var deferred = $q.defer();
