@@ -18,15 +18,14 @@
                 templateUrl: 'views/app.html',
                 controller: 'AppController',
                 resolve: {
-                    currentUser: function($q, $state, AuthenticationSrv) {
+                    currentUser: function($q, $state, AuthService) {
                         var deferred = $q.defer();
 
-                        AuthenticationSrv.current()
+                        AuthService.current()
                             .then(function(userData) {
                                 return deferred.resolve(userData);
-                            })
-                            .catch(function(err, status) {
-                                return deferred.resolve(status === 520 ? status : null);
+                            }).catch(function(err) {
+                                return deferred.resolve(err.status === 520 ? err.status : null);
                             });
 
                         return deferred.promise;

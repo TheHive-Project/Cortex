@@ -22,7 +22,7 @@ angular.module('cortex').controller('AppController', function($scope, $location,
                 $state.go('login');
             },
             function(data, status) {
-                NotificationServiceNotificationSrv.error('AppCtrl', data, status);
+                NotificationService.error('AppCtrl', data, status);
             }
         );
     };

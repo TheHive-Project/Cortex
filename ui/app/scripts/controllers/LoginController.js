@@ -16,11 +16,10 @@
           $state.go('app.analyzers');
         })
         .catch(function(err) {
-          debugger;
           if (err.status === 520) {
             NotificationService.handleError('LoginController', err.data, err.status);
           } else {
-            NotificationService.log(err.data.message, 'error');
+            NotificationService.log(err.data, 'error');
           }
         });
     };

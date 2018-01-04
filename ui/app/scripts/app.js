@@ -18,6 +18,9 @@ angular.module('cortex', [
         'angular-page-loader',
         'thehive-kit'
     ])
+    .config(function(MaintenanceServiceProvider) {
+      MaintenanceServiceProvider.setSuccessState('app.analyzers');
+    })
     .config(function(NotificationProvider) {
         NotificationProvider.setOptions({
             delay: 4000,
