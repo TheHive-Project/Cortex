@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Angular Webpack ES6 Project</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <% for(var i=0; i < htmlWebpackPlugin.files.css; i++) { %>
+        <link href="<%= htmlWebpackPlugin.files.css[i] %>" rel="stylesheet">
+    <% } %>
+
+    <% for(var i=0; i < htmlWebpackPlugin.files.chunks; i++) { %>
+        <script src="<%= htmlWebpackPlugin.files.chunks[i].entry %>" defer></script>
+    <% } %>
+</head>
+<body class="hold-transition skin-blue layout-top-nav">
+    <!--[if lt IE 10]>
+    <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+
+    <div ui-view></div>
+
+    <footer-test></footer-test>
+
+</body>
+</html>

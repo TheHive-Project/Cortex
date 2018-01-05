@@ -1,0 +1,22 @@
+{
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module"
+    },
+    "extends": "eslint:recommended",
+    "rules": {
+        "eqeqeq": "warn",
+        "no-fallthrough": "off",
+        "no-shadow": "warn",
+        "arrow-body-style": ["warn", "as-needed"],
+        "arrow-parens": ["warn", "as-needed"],
+        "no-var": "error"
+    },
+    "globals": {
+        "angular": false
+    },
+    "env": {
+        "browser": true,
+        "node": true
+    }
+}
