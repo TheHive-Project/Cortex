@@ -9,6 +9,7 @@ scalaVersion := "2.12.4"
 libraryDependencies ++= Seq(
   ehcache,
   ws,
+  specs2 % Test,
   "net.codingwell" %% "scala-guice" % "4.1.0",
   "org.cert-bdf" %% "elastic4play" % "1.4.2",
   "org.reflections" % "reflections" % "0.9.11",

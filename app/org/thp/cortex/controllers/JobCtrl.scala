@@ -61,6 +61,7 @@ class JobCtrl @Inject() (
       case JobStatus.Success    ⇒ jobSrv.getReport(job).map(Json.toJson(_))
       case JobStatus.InProgress ⇒ Future.successful(JsString("Running"))
       case JobStatus.Failure    ⇒ Future.successful(JsString(job.errorMessage().getOrElse("error")))
+      case JobStatus.Waiting    ⇒ Future.successful(JsString("Waiting"))
     })
       .map { report ⇒
         Json.toJson(job).as[JsObject] + ("report" -> report)
@@ -74,7 +75,7 @@ class JobCtrl @Inject() (
   def waitReport(jobId: String, atMost: String): Action[AnyContent] = authenticated(Roles.read).async { implicit authContext ⇒
     jobSrv.get(jobId)
       .flatMap {
-        case job if job.status == JobStatus.InProgress ⇒
+        case job if job.status == JobStatus.InProgress || job.status == JobStatus.Waiting ⇒
           val duration = Duration(atMost).asInstanceOf[FiniteDuration]
           implicit val timeout = Timeout(duration)
           (auditActor ? Register(jobId, duration))

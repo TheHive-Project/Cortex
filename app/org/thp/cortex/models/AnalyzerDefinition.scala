@@ -28,21 +28,16 @@ object AnalyzerConfigItemType extends Enumeration with HiveEnumeration {
   implicit val reads = enumFormat(this)
 }
 
-object AnalyzerConfigItemOption extends Enumeration with HiveEnumeration {
-  type Type = Value
-  val multi, required = Value
-  implicit val reads = enumFormat(this)
-}
-
 case class ConfigurationDefinitionItem(
     name: String,
     description: String,
     tpe: AnalyzerConfigItemType.Type,
-    options: Seq[AnalyzerConfigItemOption.Type],
+    multi: Boolean,
+    required: Boolean,
     defaultValue: Option[JsValue]) {
-  def isRequired: Boolean = options.contains(AnalyzerConfigItemOption.required)
+  def isRequired: Boolean = required
 
-  def isMulti: Boolean = options.contains(AnalyzerConfigItemOption.multi)
+  def isMulti: Boolean = multi
 
   private def check(v: JsValue): JsValue Or Every[AttributeError] = {
     import AnalyzerConfigItemType._
@@ -75,8 +70,10 @@ object ConfigurationDefinitionItem {
     (JsPath \ "name").read[String] and
     (JsPath \ "description").read[String] and
     (JsPath \ "type").read[AnalyzerConfigItemType.Type] and
-    (JsPath \ "options").read[Seq[AnalyzerConfigItemOption.Type]] and
+    (JsPath \ "multi").readWithDefault[Boolean](false) and
+    (JsPath \ "required").readWithDefault[Boolean](false) and
     (JsPath \ "defaultValue").readNullable[JsValue])(ConfigurationDefinitionItem.apply _)
+  implicit val writes: Writes[ConfigurationDefinitionItem] = Json.writes[ConfigurationDefinitionItem]
 }
 
 case class AnalyzerDefinition(
@@ -90,7 +87,7 @@ case class AnalyzerDefinition(
     baseDirectory: Path,
     command: String,
     configurationItems: Seq[ConfigurationDefinitionItem]) {
-  val id: ErrorMessage = (name + "_" + version).replaceAll("\\.", "_")
+  val id = (name + "_" + version).replaceAll("\\.", "_")
 
   def cmd: Path = baseDirectory.resolve(command)
 
@@ -107,7 +104,7 @@ object AnalyzerDefinition {
           logger.warn(s"Load of analyzer $definitionFile fails", error)
           Failure(error)
       }
-      .map(_.validate[AnalyzerDefinition])
+      .map(_.validate(AnalyzerDefinition.reads(definitionFile.getParent.getParent)))
       .flatMap {
         case JsSuccess(analyzerDefinition, _) ⇒ Success(analyzerDefinition)
         case JsError(errors)                  ⇒ sys.error(s"Json description file $definitionFile is invalid: $errors")
@@ -121,7 +118,7 @@ object AnalyzerDefinition {
     json
   }
 
-  implicit val reads: Reads[AnalyzerDefinition] = (
+  def reads(path: Path): Reads[AnalyzerDefinition] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "version").read[String] and
     (JsPath \ "description").read[String] and
@@ -129,9 +126,21 @@ object AnalyzerDefinition {
     (JsPath \ "author").read[String] and
     (JsPath \ "url").read[String] and
     (JsPath \ "license").read[String] and
-    Reads.pure(Paths.get("").toAbsolutePath) and
+    Reads.pure(path) and
     (JsPath \ "command").read[String] and
     (JsPath \ "configurationItems").read[Seq[ConfigurationDefinitionItem]].orElse(Reads.pure(Nil)))(AnalyzerDefinition.apply _)
+  implicit val writes: Writes[AnalyzerDefinition] = Writes[AnalyzerDefinition] { analyzerDefinition ⇒
+    Json.obj(
+      "id" -> analyzerDefinition.id,
+      "name" -> analyzerDefinition.name,
+      "version" -> analyzerDefinition.version,
+      "description" -> analyzerDefinition.description,
+      "dataTypeList" -> analyzerDefinition.dataTypeList,
+      "author" -> analyzerDefinition.author,
+      "url" -> analyzerDefinition.url,
+      "license" -> analyzerDefinition.license,
+      "configurationItems" -> analyzerDefinition.configurationItems)
+  }
 }
 
 //trait AnalyzerDefinitionAttributes {

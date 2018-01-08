@@ -1,6 +1,5 @@
 package org.thp.cortex.controllers
 
-//
 import javax.inject.{ Inject, Singleton }
 
 import scala.concurrent.ExecutionContext
@@ -13,7 +12,7 @@ import akka.stream.scaladsl.Sink
 import org.thp.cortex.models.{ Analyzer, AnalyzerDefinition, Roles }
 import org.thp.cortex.services.AnalyzerSrv
 
-import org.elastic4play.controllers.{ Authenticated, Renderer }
+import org.elastic4play.controllers.{ Authenticated, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.QueryDSL
 
@@ -21,6 +20,7 @@ import org.elastic4play.services.QueryDSL
 class AnalyzerCtrl @Inject() (
     analyzerSrv: AnalyzerSrv,
     authenticated: Authenticated,
+    fieldsBodyParser: FieldsBodyParser,
     renderer: Renderer,
     components: ControllerComponents,
     implicit val ec: ExecutionContext,
@@ -69,4 +69,17 @@ class AnalyzerCtrl @Inject() (
         renderer.toOutput(OK, analyzers)
       }
   }
+
+  def create(organizationId: String, analyzerDefinitionId: String) = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
+    analyzerSrv.create(organizationId, analyzerDefinitionId, request.body)
+      .map { analyzer ⇒
+        renderer.toOutput(CREATED, analyzer)
+      }
+  }
+
+  def listDefinitions = authenticated(Roles.admin).async { request ⇒
+    val (analyzerDefs, analyzerDefTotal) = analyzerSrv.listDefinitions
+    renderer.toOutput(OK, analyzerDefs, analyzerDefTotal)
+  }
+
 }

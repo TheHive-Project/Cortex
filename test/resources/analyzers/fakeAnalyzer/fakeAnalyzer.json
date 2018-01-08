@@ -1,0 +1,13 @@
+{
+    "name": "fakeAnalyzer",
+    "version": "1.0",
+    "author": "TheHive-Porject",
+    "url": "https://github.com/thehive-project/thehive",
+    "license": "AGPL-V3",
+    "baseconfig":"fakeAnalyzer",
+    "config": {
+    },
+    "description": "Fake analyzer used for functional tests",
+    "dataTypeList": ["ip"],
+    "command": "fakeAnalyzer.sh"
+}

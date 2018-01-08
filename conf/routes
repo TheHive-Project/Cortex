@@ -3,60 +3,63 @@
 # ~~~~
 
 
-GET           /                                        controllers.Default.redirect(to = "/index.html")
-GET           /api/health                              org.thp.cortex.controllers.StatusCtrl.health
-GET           /api/logout                              org.thp.cortex.controllers.AuthenticationCtrl.logout()
-POST          /api/login                               org.thp.cortex.controllers.AuthenticationCtrl.login()
+GET           /                                                             controllers.Default.redirect(to = "/index.html")
+GET           /api/health                                                   org.thp.cortex.controllers.StatusCtrl.health
+GET           /api/logout                                                   org.thp.cortex.controllers.AuthenticationCtrl.logout()
+POST          /api/login                                                    org.thp.cortex.controllers.AuthenticationCtrl.login()
 
 ###################
 # API used by TheHive
-GET           /api/status                              org.thp.cortex.controllers.StatusCtrl.get
-GET           /api/analyzer                            org.thp.cortex.controllers.AnalyzerCtrl.list
-GET           /api/analyzer/:id                        org.thp.cortex.controllers.AnalyzerCtrl.get(id)
-GET           /api/analyzer/type/:dataType             org.thp.cortex.controllers.AnalyzerCtrl.listForType(dataType)
-POST          /api/analyzer/:id/run                    org.thp.cortex.controllers.JobCtrl.create(id)
-GET           /api/job/:id/waitreport                  org.thp.cortex.controllers.JobCtrl.waitReport(id, atMost ?= "1m")
+GET           /api/status                                                   org.thp.cortex.controllers.StatusCtrl.get
+GET           /api/analyzer                                                 org.thp.cortex.controllers.AnalyzerCtrl.list
+GET           /api/analyzer/:id                                             org.thp.cortex.controllers.AnalyzerCtrl.get(id)
+GET           /api/analyzer/type/:dataType                                  org.thp.cortex.controllers.AnalyzerCtrl.listForType(dataType)
+POST          /api/analyzer/:id/run                                         org.thp.cortex.controllers.JobCtrl.create(id)
+GET           /api/job/:id/waitreport                                       org.thp.cortex.controllers.JobCtrl.waitReport(id, atMost ?= "1m")
 ####################
 
-GET           /api/job                                 org.thp.cortex.controllers.JobCtrl.list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])
-GET           /api/job/:id                             org.thp.cortex.controllers.JobCtrl.get(id)
-GET           /api/job/:id/report                      org.thp.cortex.controllers.JobCtrl.report(id)
+GET           /api/analyzerdefinition                                       org.thp.cortex.controllers.AnalyzerCtrl.listDefinitions
+POST          /api/organization/:organizationId/analyzer/:analyzerId        org.thp.cortex.controllers.AnalyzerCtrl.create(organizationId, analyzerId)
 
-GET           /api/organization                        org.thp.cortex.controllers.OrganizationCtrl.find
-GET           /api/organization/:id                    org.thp.cortex.controllers.OrganizationCtrl.get(id)
-POST          /api/organization                        org.thp.cortex.controllers.OrganizationCtrl.create
-PATCH         /api/organization/:id                    org.thp.cortex.controllers.OrganizationCtrl.update(id)
-DELETE        /api/organization/:id                    org.thp.cortex.controllers.OrganizationCtrl.delete(id)
+GET           /api/job                                                      org.thp.cortex.controllers.JobCtrl.list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])
+GET           /api/job/:id                                                  org.thp.cortex.controllers.JobCtrl.get(id)
+GET           /api/job/:id/report                                           org.thp.cortex.controllers.JobCtrl.report(id)
 
-POST          /api/stream                              org.thp.cortex.controllers.StreamCtrl.create()
-GET           /api/stream/status                       org.thp.cortex.controllers.StreamCtrl.status
-GET           /api/stream/:streamId                    org.thp.cortex.controllers.StreamCtrl.get(streamId)
+GET           /api/organization                                             org.thp.cortex.controllers.OrganizationCtrl.find
+GET           /api/organization/:id                                         org.thp.cortex.controllers.OrganizationCtrl.get(id)
+POST          /api/organization                                             org.thp.cortex.controllers.OrganizationCtrl.create
+PATCH         /api/organization/:id                                         org.thp.cortex.controllers.OrganizationCtrl.update(id)
+DELETE        /api/organization/:id                                         org.thp.cortex.controllers.OrganizationCtrl.delete(id)
+
+POST          /api/stream                                                   org.thp.cortex.controllers.StreamCtrl.create()
+GET           /api/stream/status                                            org.thp.cortex.controllers.StreamCtrl.status
+GET           /api/stream/:streamId                                         org.thp.cortex.controllers.StreamCtrl.get(streamId)
 
 
 #GET	 /modules			controllers.MispCtrl.modules
 #POST	 /query                         controllers.MispCtrl.query
 
-POST          /api/maintenance/migrate                 org.elastic4play.controllers.MigrationCtrl.migrate
-GET           /api/datastore/:hash                     org.thp.cortex.controllers.AttachmentCtrl.download(hash, name: Option[String])
-GET           /api/datastorezip/:hash                  org.thp.cortex.controllers.AttachmentCtrl.downloadZip(hash, name: Option[String])
+POST          /api/maintenance/migrate                                      org.elastic4play.controllers.MigrationCtrl.migrate
+GET           /api/datastore/:hash                                          org.thp.cortex.controllers.AttachmentCtrl.download(hash, name: Option[String])
+GET           /api/datastorezip/:hash                                       org.thp.cortex.controllers.AttachmentCtrl.downloadZip(hash, name: Option[String])
 
-GET           /api/list                                org.thp.cortex.controllers.DBListCtrl.list()
-DELETE        /api/list/:itemId                        org.thp.cortex.controllers.DBListCtrl.deleteItem(itemId)
-PATCH         /api/list/:itemId                        org.thp.cortex.controllers.DBListCtrl.updateItem(itemId)
-POST          /api/list/:listName                      org.thp.cortex.controllers.DBListCtrl.addItem(listName)
-GET           /api/list/:listName                      org.thp.cortex.controllers.DBListCtrl.listItems(listName)
-POST          /api/list/:listName/_exists              org.thp.cortex.controllers.DBListCtrl.itemExists(listName)
+GET           /api/list                                                     org.thp.cortex.controllers.DBListCtrl.list()
+DELETE        /api/list/:itemId                                             org.thp.cortex.controllers.DBListCtrl.deleteItem(itemId)
+PATCH         /api/list/:itemId                                             org.thp.cortex.controllers.DBListCtrl.updateItem(itemId)
+POST          /api/list/:listName                                           org.thp.cortex.controllers.DBListCtrl.addItem(listName)
+GET           /api/list/:listName                                           org.thp.cortex.controllers.DBListCtrl.listItems(listName)
+POST          /api/list/:listName/_exists                                   org.thp.cortex.controllers.DBListCtrl.itemExists(listName)
 
-GET           /api/user/current                        org.thp.cortex.controllers.UserCtrl.currentUser()
-POST          /api/user/_search                        org.thp.cortex.controllers.UserCtrl.find()
-POST          /api/user                                org.thp.cortex.controllers.UserCtrl.create()
-GET           /api/user/:userId                        org.thp.cortex.controllers.UserCtrl.get(userId)
-DELETE        /api/user/:userId                        org.thp.cortex.controllers.UserCtrl.delete(userId)
-PATCH         /api/user/:userId                        org.thp.cortex.controllers.UserCtrl.update(userId)
-POST          /api/user/:userId/password/set           org.thp.cortex.controllers.UserCtrl.setPassword(userId)
-POST          /api/user/:userId/password/change        org.thp.cortex.controllers.UserCtrl.changePassword(userId)
-GET           /api/user/:userId/key                    org.thp.cortex.controllers.UserCtrl.getKey(userId)
-DELETE        /api/user/:userId/key                    org.thp.cortex.controllers.UserCtrl.removeKey(userId)
-POST          /api/user/:userId/key/renew              org.thp.cortex.controllers.UserCtrl.renewKey(userId)
+GET           /api/user/current                                             org.thp.cortex.controllers.UserCtrl.currentUser()
+POST          /api/user/_search                                             org.thp.cortex.controllers.UserCtrl.find()
+POST          /api/user                                                     org.thp.cortex.controllers.UserCtrl.create()
+GET           /api/user/:userId                                             org.thp.cortex.controllers.UserCtrl.get(userId)
+DELETE        /api/user/:userId                                             org.thp.cortex.controllers.UserCtrl.delete(userId)
+PATCH         /api/user/:userId                                             org.thp.cortex.controllers.UserCtrl.update(userId)
+POST          /api/user/:userId/password/set                                org.thp.cortex.controllers.UserCtrl.setPassword(userId)
+POST          /api/user/:userId/password/change                             org.thp.cortex.controllers.UserCtrl.changePassword(userId)
+GET           /api/user/:userId/key                                         org.thp.cortex.controllers.UserCtrl.getKey(userId)
+DELETE        /api/user/:userId/key                                         org.thp.cortex.controllers.UserCtrl.removeKey(userId)
+POST          /api/user/:userId/key/renew                                   org.thp.cortex.controllers.UserCtrl.renewKey(userId)
 
-GET           /*file                                   org.thp.cortex.controllers.AssetCtrl.get(file)
+GET           /*file                                                        org.thp.cortex.controllers.AssetCtrl.get(file)

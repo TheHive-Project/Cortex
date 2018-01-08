@@ -20,8 +20,8 @@ trait AnalyzerAttributes { _: AttributeDef ⇒
   val analyzerDefinitionId = attribute("analyzerDefinitionId", F.stringFmt, "Analyzer definition id", O.readonly)
   val analyzerDefinitionName = attribute("analyzerDefinitionName", F.stringFmt, "Analyzer definition name", O.readonly)
   val configuration = attribute("configuration", F.textFmt, "Configuration of analyzer")
-  val rate = attribute("rate", F.numberFmt, "Number ")
-  val rateUnit = attribute("rateUnit", F.enumFmt(RateUnit), "")
+  val rate = optionalAttribute("rate", F.numberFmt, "Number ")
+  val rateUnit = optionalAttribute("rateUnit", F.enumFmt(RateUnit), "")
 }
 
 @Singleton

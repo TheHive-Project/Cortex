@@ -17,9 +17,9 @@ object JobStatus extends Enumeration with HiveEnumeration {
 
 trait JobAttributes { _: AttributeDef ⇒
   val analyzerDefinitionId = attribute("analyzerDefinitionId", F.stringFmt, "Analyzer definition id", O.readonly)
-  val analyzerId = attribute("analyzerConfigId", F.stringFmt, "Analyzer id", O.readonly)
-  val analyzerName = attribute("analyzerConfigName", F.stringFmt, "Analyzer name", O.readonly)
-  val status = attribute("status", F.enumFmt(JobStatus), "Status of the job", O.model)
+  val analyzerId = attribute("analyzerId", F.stringFmt, "Analyzer id", O.readonly)
+  val analyzerName = attribute("analyzerName", F.stringFmt, "Analyzer name", O.readonly)
+  val status = attribute("status", F.enumFmt(JobStatus), "Status of the job")
   val startDate = optionalAttribute("startDate", F.dateFmt, "Analysis start date")
   val endDate = optionalAttribute("endDate", F.dateFmt, "Analysis end date")
   val dataType = attribute("dataType", F.stringFmt, "Type of the artifact", O.readonly)

@@ -1,6 +1,5 @@
 package org.thp.cortex.services
 
-//
 import java.nio.file.{ Files, Path, Paths }
 import javax.inject.{ Inject, Singleton }
 
@@ -8,6 +7,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
+import play.api.libs.json.{ JsObject, Json }
 import play.api.{ Configuration, Logger }
 
 import akka.NotUsed
@@ -15,13 +15,17 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.{ Sink, Source }
 import org.thp.cortex.models._
 
-import org.elastic4play.NotFoundError
+import org.elastic4play.{ AttributeCheckingError, MultiError, NotFoundError }
+import org.elastic4play.controllers.Fields
 import org.elastic4play.services._
+import org.scalactic._
+import org.scalactic.Accumulation._
 
 @Singleton
 class AnalyzerSrv(
     analyzersPaths: Seq[Path],
     analyzerModel: AnalyzerModel,
+    organizationSrv: OrganizationSrv,
     userSrv: UserSrv,
     createSrv: CreateSrv,
     getSrv: GetSrv,
@@ -34,6 +38,7 @@ class AnalyzerSrv(
   @Inject() def this(
       config: Configuration,
       analyzerModel: AnalyzerModel,
+      organizationSrv: OrganizationSrv,
       userSrv: UserSrv,
       createSrv: CreateSrv,
       getSrv: GetSrv,
@@ -44,6 +49,7 @@ class AnalyzerSrv(
       mat: Materializer) = this(
     config.get[Seq[String]]("analyzer.path").map(p ⇒ Paths.get(p)),
     analyzerModel,
+    organizationSrv,
     userSrv,
     createSrv,
     getSrv,
@@ -55,13 +61,17 @@ class AnalyzerSrv(
 
   private lazy val logger = Logger(getClass)
   private var analyzerMap = Map.empty[String, AnalyzerDefinition]
+
   private object analyzerMapLock
+
   scan(analyzersPaths)
 
   def getDefinition(analyzerId: String): Future[AnalyzerDefinition] = analyzerMap.get(analyzerId) match {
     case Some(analyzer) ⇒ Future.successful(analyzer)
     case None           ⇒ Future.failed(NotFoundError(s"Analyzer $analyzerId not found"))
   }
+
+  def listDefinitions: (Source[AnalyzerDefinition, NotUsed], Future[Long]) = Source(analyzerMap.values.toList) -> Future.successful(analyzerMap.size.toLong)
 
   def get(analyzerId: String): Future[Analyzer] = getSrv[AnalyzerModel, Analyzer](analyzerModel, analyzerId)
 
@@ -131,6 +141,44 @@ class AnalyzerSrv(
       analyzerMap = analyzers
     }
     logger.info(s"New analyzer list:\n\n\t${analyzerMap.values.map(a ⇒ s"${a.name} ${a.version}").mkString("\n\t")}\n")
+  }
+
+  def create(organization: Organization, analyzerDefinition: AnalyzerDefinition, analyzerFields: Fields)(implicit authContext: AuthContext): Future[Analyzer] = {
+    val rawConfig = analyzerFields.getString("configuration").fold(JsObject.empty)(Json.parse(_).as[JsObject])
+    val configOrErrors = analyzerDefinition.configurationItems
+      .validatedBy { cdi ⇒
+        cdi.read(rawConfig)
+      }
+      .map(JsObject.apply)
+      .badMap(attributeErrors ⇒ AttributeCheckingError(s"analyzer(${analyzerDefinition.name}).configuration", attributeErrors))
+      .accumulating
+
+    val unknownConfigItems = (rawConfig.value.keySet -- analyzerDefinition.configurationItems.map(_.name))
+      .foldLeft[Unit Or Every[CortexError]](Good(())) {
+        case (Good(_), ci) ⇒ Bad(One(UnknownConfigurationItem(ci)))
+        case (Bad(e), ci)  ⇒ Bad(UnknownConfigurationItem(ci) +: e)
+      }
+
+    withGood(configOrErrors, unknownConfigItems)((c, _) ⇒ c)
+      .fold(cfg ⇒ {
+        createSrv[AnalyzerModel, Analyzer, Organization](analyzerModel, organization, analyzerFields
+          .set("analyzerDefinitionId", analyzerDefinition.id)
+          .set("analyzerDefinitionName", analyzerDefinition.name)
+          .set("configuration", cfg.toString))
+
+      }, {
+        case One(e)         ⇒ Future.failed(e)
+        case Every(es @ _*) ⇒ Future.failed(MultiError("Analyzer creation failure", es))
+      })
+  }
+
+  def create(organizationId: String, analyzerDefinitionId: String, analyzerFields: Fields)(implicit authContext: AuthContext): Future[Analyzer] = {
+    for {
+      organization ← organizationSrv.get(organizationId)
+      analyzerDefinition ← getDefinition(analyzerDefinitionId)
+      _ = println(s"Creating analyzer in organization $organizationId from $analyzerDefinitionId with attribtues $analyzerFields")
+      analyzer ← create(organization, analyzerDefinition, analyzerFields)
+    } yield analyzer
   }
 
   //  def listForType(dataType: String): Source[Analyzer with Entity, Future[Long]] = {

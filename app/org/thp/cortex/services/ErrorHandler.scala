@@ -44,9 +44,9 @@ class ErrorHandler extends HttpErrorHandler {
         Some(Status.MULTI_STATUS → Json.obj("type" → "MultiError", "error" → message, "suberrors" → suberrors))
       case JobNotFoundError(jobId)           ⇒ Some(Status.NOT_FOUND -> Json.obj("type" -> "JobNotFoundError", "message" -> s"Job $jobId not found"))
       case AnalyzerNotFoundError(analyzerId) ⇒ Some(Status.NOT_FOUND -> Json.obj("type" -> "AnalyzerNotFoundError", "message" -> s"analyzer $analyzerId not found"))
-      case _: IndexNotFoundException ⇒ Some(520 → JsNull)
-      case qse: QueryShardException  ⇒ Some(Status.BAD_REQUEST → Json.obj("type" → "Invalid search query", "message" → qse.getMessage))
-      case t: Throwable              ⇒ Option(t.getCause).flatMap(toErrorResult)
+      case _: IndexNotFoundException         ⇒ Some(520 → JsNull)
+      case qse: QueryShardException          ⇒ Some(Status.BAD_REQUEST → Json.obj("type" → "Invalid search query", "message" → qse.getMessage))
+      case t: Throwable                      ⇒ Option(t.getCause).flatMap(toErrorResult)
     }
   }
 

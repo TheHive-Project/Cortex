@@ -46,7 +46,7 @@ class JobSrv @Inject() (
     if (System.getProperty("os.name").toLowerCase.contains("win"))
       (c: Path) ⇒ s"""cmd /c $c"""
     else
-      (c: Path) ⇒ s"""sh -c "./$c" """
+      (c: Path) ⇒ s"""sh -c "$c" """
 
   def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): (Source[Job, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
@@ -113,7 +113,7 @@ class JobSrv @Inject() (
     }
     analyzerSrv.getDefinition(analyzer.analyzerDefinitionId()).flatMap { analyzerDefinition ⇒
       createSrv[JobModel, Job](jobModel, fieldWithData).andThen {
-        case Success(job) ⇒ run(analyzerDefinition, analyzer, job)
+        case Success(job) ⇒ run(analyzerDefinition, analyzer, job).onComplete(e ⇒ println(s"DEBUG: job run : $e"))
       }
     }
   }
@@ -212,7 +212,7 @@ class JobSrv @Inject() (
     val fields = Fields.empty
       .set("status", status.toString)
       .set("endDate", Json.toJson(new Date))
-    updateSrv(job, errorMessage.fold(fields)(fields.set("errorMessage", _)))
+    updateSrv(job, errorMessage.fold(fields)(fields.set("message", _)))
   }
 
   private def readStream(buffer: StringBuffer, stream: InputStream): Unit = {
