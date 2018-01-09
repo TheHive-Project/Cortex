@@ -19,6 +19,7 @@ trait JobAttributes { _: AttributeDef ⇒
   val analyzerDefinitionId = attribute("analyzerDefinitionId", F.stringFmt, "Analyzer definition id", O.readonly)
   val analyzerId = attribute("analyzerId", F.stringFmt, "Analyzer id", O.readonly)
   val analyzerName = attribute("analyzerName", F.stringFmt, "Analyzer name", O.readonly)
+  val organizationId = attribute("organizationId", F.stringFmt, "Organization ID", O.readonly)
   val status = attribute("status", F.enumFmt(JobStatus), "Status of the job")
   val startDate = optionalAttribute("startDate", F.dateFmt, "Analysis start date")
   val endDate = optionalAttribute("endDate", F.dateFmt, "Analysis end date")

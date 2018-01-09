@@ -15,10 +15,12 @@ GET           /api/analyzer                                                 org.
 GET           /api/analyzer/:id                                             org.thp.cortex.controllers.AnalyzerCtrl.get(id)
 GET           /api/analyzer/type/:dataType                                  org.thp.cortex.controllers.AnalyzerCtrl.listForType(dataType)
 POST          /api/analyzer/:id/run                                         org.thp.cortex.controllers.JobCtrl.create(id)
-GET           /api/job/:id/waitreport                                       org.thp.cortex.controllers.JobCtrl.waitReport(id, atMost ?= "1m")
+GET           /api/job/:id/waitreport                                       org.thp.cortex.controllers.JobCtrl.waitReport(id, atMost ?= "1minute")
 ####################
 
+GET           /api/job/:id/artifacts                                        org.thp.cortex.controllers.JobCtrl.listArtifacts(id)
 GET           /api/analyzerdefinition                                       org.thp.cortex.controllers.AnalyzerCtrl.listDefinitions
+POST          /api/analyzerdefinition/scan                                  org.thp.cortex.controllers.AnalyzerCtrl.scan
 POST          /api/organization/:organizationId/analyzer/:analyzerId        org.thp.cortex.controllers.AnalyzerCtrl.create(organizationId, analyzerId)
 
 GET           /api/job                                                      org.thp.cortex.controllers.JobCtrl.list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])

@@ -1,0 +1,36 @@
+{
+  "name": "echoAnalyzer",
+  "version": "1.0",
+  "author": "TheHive-Project",
+  "url": "https://github.com/thehive-project/thehive",
+  "license": "AGPL-V3",
+  "baseconfig": "echoAnalyzer",
+  "config": {
+
+  },
+  "configurationItems": [{
+    "name": "multiText",
+    "description": "config item with multiple text value",
+    "type": "string",
+    "multi": true,
+    "required": false,
+    "defaultValue": ["c1", "c2"]
+  },
+  {
+    "name": "num",
+    "description": "config item with single number value",
+    "type": "number",
+    "multi": false,
+    "required": false
+  },
+  {
+    "name": "bool",
+    "description": "config item with required boolean value",
+    "type": "boolean",
+    "multi": false,
+    "required": true
+  }],
+  "description": "Fake analyzer used for functional tests",
+  "dataTypeList": ["domain"],
+  "command": "echoAnalyzer/echoAnalyzer.sh"
+}

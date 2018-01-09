@@ -3,7 +3,9 @@ package org.thp.cortex.services
 import javax.inject.{ Inject, Provider, Singleton }
 
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.duration._
 
+import play.api.cache.AsyncCacheApi
 import play.api.mvc.RequestHeader
 
 import akka.NotUsed
@@ -27,6 +29,7 @@ class UserSrv @Inject() (
     eventSrv: EventSrv,
     authSrv: Provider[AuthSrv],
     dbIndex: DBIndex,
+    cache: AsyncCacheApi,
     implicit val ec: ExecutionContext) extends org.elastic4play.services.UserSrv {
 
   private case class AuthContextImpl(userId: String, userName: String, requestId: String, roles: Seq[Role]) extends AuthContext
@@ -68,6 +71,10 @@ class UserSrv @Inject() (
   }
 
   override def get(id: String): Future[User] = getSrv[UserModel, User](userModel, id)
+
+  def getOrganizationId(userId: String): Future[String] = cache.getOrElseUpdate(s"user-org-$userId", 5.minutes) {
+    get(userId).map(_.organization())
+  }
 
   def update(id: String, fields: Fields)(implicit Context: AuthContext): Future[User] = {
     updateSrv[UserModel, User](userModel, id, fields)

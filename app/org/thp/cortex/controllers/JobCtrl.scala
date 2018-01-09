@@ -18,6 +18,8 @@ import org.thp.cortex.services.JobSrv
 
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
+import org.elastic4play.services.JsonFormat.queryReads
+import org.elastic4play.services.{ AuthContext, QueryDSL, QueryDef }
 import org.elastic4play.utils.RichFuture
 
 @Singleton
@@ -31,7 +33,7 @@ class JobCtrl @Inject() (
     implicit val ec: ExecutionContext,
     implicit val actorSystem: ActorSystem) extends AbstractController(components) with Status {
 
-  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
+  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
     val (jobs, jobTotal) = jobSrv.list(dataTypeFilter, dataFilter, analyzerFilter, range)
     renderer.toOutput(OK, jobs, jobTotal)
   }
@@ -52,7 +54,7 @@ class JobCtrl @Inject() (
   //    jobSrv.remove(jobId).map(_ ⇒ Ok(""))
   //  }
 
-  private def getJobWithReport(jobId: String): Future[JsValue] = {
+  private def getJobWithReport(jobId: String)(implicit authContext: AuthContext): Future[JsValue] = {
     jobSrv.get(jobId).flatMap(getJobWithReport)
   }
 
@@ -75,16 +77,27 @@ class JobCtrl @Inject() (
   def waitReport(jobId: String, atMost: String): Action[AnyContent] = authenticated(Roles.read).async { implicit authContext ⇒
     jobSrv.get(jobId)
       .flatMap {
-        case job if job.status == JobStatus.InProgress || job.status == JobStatus.Waiting ⇒
+        case job if job.status() == JobStatus.InProgress || job.status() == JobStatus.Waiting ⇒
+          println(s"job status is ${job.status()} => wait")
           val duration = Duration(atMost).asInstanceOf[FiniteDuration]
-          implicit val timeout = Timeout(duration)
+          implicit val timeout: Timeout = Timeout(duration)
           (auditActor ? Register(jobId, duration))
             .mapTo[JobEnded]
             .map(_ ⇒ ())
             .withTimeout(duration, ())
             .flatMap(_ ⇒ getJobWithReport(jobId))
-        case job ⇒ getJobWithReport(job)
+        case job ⇒
+          println(s"job status is ${job.status()} => send it directly")
+          getJobWithReport(job)
       }
       .map(Ok(_))
+  }
+
+  def listArtifacts(jobId: String): Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
+    val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
+    val range = request.body.getString("range")
+    val sort = request.body.getStrings("sort").getOrElse(Nil)
+    val (artifacts, total) = jobSrv.findArtifacts(jobId, query, range, sort)
+    renderer.toOutput(OK, artifacts, total)
   }
 }

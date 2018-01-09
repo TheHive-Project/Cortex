@@ -39,7 +39,7 @@ class OrganizationCtrl @Inject() (
   }
 
   def update(id: String): Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
-    organizationSrv.update(id, request.body.unset("password").unset("key")).map { organization ⇒
+    organizationSrv.update(id, request.body).map { organization ⇒
       renderer.toOutput(OK, organization)
     }
   }

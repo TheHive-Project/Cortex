@@ -12,7 +12,7 @@ import akka.stream.scaladsl.Sink
 import org.thp.cortex.models.{ Analyzer, AnalyzerDefinition, Roles }
 import org.thp.cortex.services.AnalyzerSrv
 
-import org.elastic4play.controllers.{ Authenticated, FieldsBodyParser, Renderer }
+import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.QueryDSL
 
@@ -26,12 +26,12 @@ class AnalyzerCtrl @Inject() (
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer) extends AbstractController(components) {
 
-  def list = authenticated(Roles.read).async { request ⇒
+  def list: Action[AnyContent] = authenticated(Roles.read).async { request ⇒
     val (analyzers, analyzerTotal) = analyzerSrv.findForUser(request.userId, QueryDSL.any, Some("all"), Nil)
     renderer.toOutput(OK, analyzers, analyzerTotal)
   }
 
-  def get(analyzerId: String) = authenticated(Roles.read).async { request ⇒
+  def get(analyzerId: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
     analyzerSrv.get(analyzerId).map { analyzerConfig ⇒
       renderer.toOutput(OK, analyzerConfig)
     }
@@ -70,16 +70,21 @@ class AnalyzerCtrl @Inject() (
       }
   }
 
-  def create(organizationId: String, analyzerDefinitionId: String) = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
+  def create(organizationId: String, analyzerDefinitionId: String): Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
     analyzerSrv.create(organizationId, analyzerDefinitionId, request.body)
       .map { analyzer ⇒
         renderer.toOutput(CREATED, analyzer)
       }
   }
 
-  def listDefinitions = authenticated(Roles.admin).async { request ⇒
+  def listDefinitions: Action[AnyContent] = authenticated(Roles.admin).async { request ⇒
     val (analyzerDefs, analyzerDefTotal) = analyzerSrv.listDefinitions
     renderer.toOutput(OK, analyzerDefs, analyzerDefTotal)
+  }
+
+  def scan: Action[AnyContent] = authenticated(Roles.admin) { request ⇒
+    analyzerSrv.rescan
+    NoContent
   }
 
 }

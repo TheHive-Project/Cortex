@@ -89,7 +89,7 @@ case class AnalyzerDefinition(
     configurationItems: Seq[ConfigurationDefinitionItem]) {
   val id = (name + "_" + version).replaceAll("\\.", "_")
 
-  def cmd: Path = baseDirectory.resolve(command)
+  def cmd: Path = Paths.get(command) //baseDirectory.resolve(command)
 
   def canProcessDataType(dataType: String): Boolean = dataTypeList.contains(dataType)
 }

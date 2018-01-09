@@ -7,7 +7,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
-import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.json.JsObject
 import play.api.{ Configuration, Logger }
 
 import akka.NotUsed
@@ -64,7 +64,7 @@ class AnalyzerSrv(
 
   private object analyzerMapLock
 
-  scan(analyzersPaths)
+  rescan
 
   def getDefinition(analyzerId: String): Future[AnalyzerDefinition] = analyzerMap.get(analyzerId) match {
     case Some(analyzer) ⇒ Future.successful(analyzer)
@@ -119,6 +119,10 @@ class AnalyzerSrv(
     findSrv[AnalyzerModel, Analyzer](analyzerModel, queryDef, range, sortBy)
   }
 
+  def rescan: Unit = {
+    scan(analyzersPaths)
+  }
+
   def scan(analyzerPaths: Seq[Path]): Unit = {
     val analyzers = (for {
       analyzerPath ← analyzerPaths
@@ -144,7 +148,7 @@ class AnalyzerSrv(
   }
 
   def create(organization: Organization, analyzerDefinition: AnalyzerDefinition, analyzerFields: Fields)(implicit authContext: AuthContext): Future[Analyzer] = {
-    val rawConfig = analyzerFields.getString("configuration").fold(JsObject.empty)(Json.parse(_).as[JsObject])
+    val rawConfig = analyzerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
     val configOrErrors = analyzerDefinition.configurationItems
       .validatedBy { cdi ⇒
         cdi.read(rawConfig)
@@ -180,24 +184,4 @@ class AnalyzerSrv(
       analyzer ← create(organization, analyzerDefinition, analyzerFields)
     } yield analyzer
   }
-
-  //  def listForType(dataType: String): Source[Analyzer with Entity, Future[Long]] = {
-  //    import QueryDSL._
-  //    find()
-  //    //Seq[Analyzer] = list.filter(_.dataTypeList.contains(dataType))
-  //  }
-  //
-  //  def analyze(analyzerId: String, artifact: Artifact): Future[Job] = {
-  //    get(analyzerId)
-  //      .map { analyzer ⇒ analyze(analyzer, artifact) }
-  //      .getOrElse(throw AnalyzerNotFoundError(analyzerId))
-  //  }
-  //
-  //  def analyze(analyzer: Analyzer, artifact: Artifact): Future[Job] = {
-  //    val report = analyzer match {
-  //      case ea: ExternalAnalyzer ⇒ externalAnalyzerSrv.analyze(ea, artifact)
-  //      case mm: MispModule       ⇒ mispSrv.analyze(mm, artifact)
-  //    }
-  //    jobSrv.create(analyzer, artifact, report)
-  //  }
 }

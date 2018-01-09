@@ -11,7 +11,8 @@ import org.elastic4play.models.{ AttributeDef, ChildModelDef, EntityDef, HiveEnu
 
 object RateUnit extends Enumeration with HiveEnumeration {
   type Type = Value
-  val Day, Month = Value
+  val Day = Value(7 * 24 * 60 * 60)
+  val Month = Value(30 * 24 * 60 * 60)
   implicit val reads = enumFormat(this)
 }
 

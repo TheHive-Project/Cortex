@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -e
 LOG_FILE=$(mktemp)
 
 RED='\033[0;31m'
@@ -79,6 +80,27 @@ check 201 'http://127.0.0.1:9001/api/user' -H 'Content-Type: application/json' -
 log 'Checking admin user is correctly created'
 check 200 -u admin:admin 'http://127.0.0.1:9001/api/user/admin'
 
+log 'Create a organization "thp"'
+check 201 -u admin:admin 'http://127.0.0.1:9001/api/organization' -H 'Content-Type: application/json' -d '
+    {
+      "name": "thp",
+      "description": "test organization"
+    }'
+
+log 'Create a non-admin user'
+check 201 -u admin:admin 'http://127.0.0.1:9001/api/user' -H 'Content-Type: application/json' -d '
+		{
+		  "login" : "user",
+		  "name" : "user",
+		  "roles" : [
+			  "read",
+			  "write"
+		   ],
+		  "preferences" : "{}",
+		  "password" : "user",
+		  "organization": "thp"
+		}'
+
 log 'Get analyzer list'
 ANALYZERS=($(get 200 -u admin:admin 'http://127.0.0.1:9001/api/analyzerdefinition' | jq -r '.[] | .id'))
 for A in "${ANALYZERS[@]}"
@@ -87,39 +109,80 @@ do
 done
 
 log 'Analyzer MaxMind_GeoIP_3_0 should exist'
-case "${ANALYZERS[@]}" in  *"MaxMind_GeoIP_3_0"*) echo "OK" ;; esac
+case "${ANALYZERS[@]}" in  *"MaxMind_GeoIP_3_0"*) ok ;; *) ko ;; esac
 
-log 'Create an MaxMind analyzer in default organization'
-check 201 -u admin:admin 'http://127.0.0.1:9001/api/organization/default/analyzer/MaxMind_GeoIP_3_0' \
+log 'Create an MaxMind analyzer in thp organization'
+check 201 -u admin:admin 'http://127.0.0.1:9001/api/organization/thp/analyzer/MaxMind_GeoIP_3_0' \
 	-H 'Content-Type: application/json' -d '
 		{
 		  "name" : "GeoIP"
 		}'
 
 log 'Get ID of the created analyzer'
-GEOIP_ID=$(get 200 -u admin:admin 'http://127.0.0.1:9001/api/analyzer' | jq -r '.[] | .id')
+GEOIP_ID=$(get 200 -u user:user 'http://127.0.0.1:9001/api/analyzer' | jq -r '.[] | .id')
 echo "  ${GEOIP_ID}"
 
 log 'Get analyzer for IP data'
-IP_ANALYZERS=$(get 200 -u admin:admin 'http://127.0.0.1:9001/api/analyzer/type/ip')
+IP_ANALYZERS=$(get 200 -u user:user 'http://127.0.0.1:9001/api/analyzer/type/ip')
 
 log 'GeoIP analyzer should be available for IP data'
 echo ${IP_ANALYZERS} | jq -r '.[] | .id' | grep -q "^${GEOIP_ID}$" && ok || ko
 
 log 'Run an analyze'
-JOB_ID=$(get 200 -u admin:admin "http://127.0.0.1:9001/api/analyzer/${GEOIP_ID}/run" \
+JOB_ID=$(get 200 -u user:user "http://127.0.0.1:9001/api/analyzer/${GEOIP_ID}/run" \
 	-H 'Content-Type: application/json' -d '
 		{
 		  "data" : "82.225.219.43",
           "dataType" : "ip"
         }' | jq -r '.id')
-echo "  $(echo ${JOB_ID} )"
+echo "  $(echo ${JOB_ID})"
 
 log 'Wait report'
-REPORT=$(get 200 -u admin:admin "http://127.0.0.1:9001/api/job/${JOB_ID}/waitreport")
+REPORT=$(get 200 -u user:user "http://127.0.0.1:9001/api/job/${JOB_ID}/waitreport")
+
+log 'Status of the report should be success'
+echo ${REPORT} | jq -r '.status' | grep -q '^Success$' && ok || {
+  ko
+  echo ${REPORT} | jq .
+}
+
+log 'Analyzer echoAnalyzer_1_0 should exist'
+case "${ANALYZERS[@]}" in  *"echoAnalyzer_1_0"*) ok ;; *) ko ;; esac
+
+log 'Create an Echo analyzer in default organization'
+ECHO1_ID=$(get 201 -u admin:admin 'http://127.0.0.1:9001/api/organization/thp/analyzer/echoAnalyzer_1_0' \
+	-H 'Content-Type: application/json' -d '
+		{
+		  "name" : "echo1",
+      "configuration": {
+        "multiText": ["v1", "v2"],
+        "num": 42,
+        "bool": true
+      }
+		}' | jq -r '.id')
+
+log 'Get analyzer for domain data'
+DOMAIN_ANALYZERS=$(get 200 -u user:user 'http://127.0.0.1:9001/api/analyzer/type/domain')
+
+log 'echo1 analyzer should be available for domain data'
+echo ${DOMAIN_ANALYZERS} | jq -r '.[] | .id' | grep -q "^${ECHO1_ID}$" && ok || ko
+
+log 'Run an analyze'
+JOB_ID=$(get 200 -u user:user "http://127.0.0.1:9001/api/analyzer/${ECHO1_ID}/run" \
+	-H 'Content-Type: application/json' -d '
+		{
+		  "data" : "perdu.com",
+      "dataType" : "domain"
+    }' | jq -r '.id')
+echo "  $(echo ${JOB_ID})"
+
+log 'Wait report'
+REPORT=$(get 200 -u user:user "http://127.0.0.1:9001/api/job/${JOB_ID}/waitreport")
 
 log 'Status of the report should be success'
 echo ${REPORT} | jq -r '.status' | grep -q '^Success$' && ok || {
   ko
   jq . <<< ${REPORT}
 }
+echo ${REPORT} | jq -r .report.full | jq .
+

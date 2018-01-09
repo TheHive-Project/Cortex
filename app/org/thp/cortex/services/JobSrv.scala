@@ -1,16 +1,17 @@
 package org.thp.cortex.services
 
-import java.io.{ BufferedReader, InputStream, InputStreamReader }
+import java.io.{ ByteArrayOutputStream, InputStream }
 import java.nio.file.{ Files, Path }
 import java.util.Date
 import javax.inject.{ Inject, Singleton }
 
+import scala.concurrent.duration.{ Duration, FiniteDuration }
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.sys.process.{ BasicIO, Process, ProcessIO }
+import scala.sys.process.{ Process, ProcessIO }
 import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
 
-import play.api.Logger
+import play.api.{ Configuration, Logger }
 import play.api.libs.json.{ JsObject, JsString, Json }
 
 import akka.NotUsed
@@ -21,15 +22,19 @@ import org.scalactic.Accumulation._
 import org.scalactic.{ Bad, Good, One, Or }
 import org.thp.cortex.models._
 
-import org.elastic4play.controllers.{ AttachmentInputValue, Fields, FileInputValue }
-import org.elastic4play.services._
 import org.elastic4play._
+import org.elastic4play.controllers.{ AttachmentInputValue, Fields, FileInputValue }
+import org.elastic4play.models.{ AbstractModelDef, BaseEntity }
+import org.elastic4play.services._
 
 @Singleton
-class JobSrv @Inject() (
+class JobSrv(
+    jobCache: FiniteDuration,
     jobModel: JobModel,
     reportModel: ReportModel,
+    artifactModel: ArtifactModel,
     analyzerSrv: AnalyzerSrv,
+    userSrv: UserSrv,
     getSrv: GetSrv,
     createSrv: CreateSrv,
     updateSrv: UpdateSrv,
@@ -38,6 +43,35 @@ class JobSrv @Inject() (
     akkaSystem: ActorSystem,
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer) {
+
+  @Inject() def this(
+      configuration: Configuration,
+      jobModel: JobModel,
+      reportModel: ReportModel,
+      artifactModel: ArtifactModel,
+      analyzerSrv: AnalyzerSrv,
+      userSrv: UserSrv,
+      getSrv: GetSrv,
+      createSrv: CreateSrv,
+      updateSrv: UpdateSrv,
+      findSrv: FindSrv,
+      attachmentSrv: AttachmentSrv,
+      akkaSystem: ActorSystem,
+      ec: ExecutionContext,
+      mat: Materializer) = this(
+    configuration.getOptional[FiniteDuration]("job.cache").getOrElse(Duration.Zero),
+    jobModel,
+    reportModel,
+    artifactModel,
+    analyzerSrv,
+    userSrv,
+    getSrv,
+    createSrv,
+    updateSrv,
+    findSrv,
+    attachmentSrv,
+    akkaSystem,
+    ec, mat)
 
   private lazy val logger = Logger(getClass)
   private lazy val analyzeExecutionContext: ExecutionContext =
@@ -48,26 +82,46 @@ class JobSrv @Inject() (
     else
       (c: Path) ⇒ s"""sh -c "$c" """
 
-  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): (Source[Job, NotUsed], Future[Long]) = {
+  private def findWithUserFilter[M <: AbstractModelDef[M, E], E <: BaseEntity](m: M, queryDef: QueryDef ⇒ QueryDef, range: Option[String], sortBy: Seq[String])(implicit authContext: AuthContext): (Source[E, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
-    val filter = dataTypeFilter.map("dataType" like _).toList :::
-      dataFilter.map("data" like _).toList :::
-      analyzerFilter.map(af ⇒ or("analyzerId" like af, "analyzerName" like af)).toList
-    find(and(filter: _*), range, Nil)
-    //
-    //
-    //
-    //    (jobActor ? ListJobs(dataTypeFilter, dataFilter, analyzerFilter, start, limit)).map {
-    //      case JobList(total, jobs) ⇒ total → jobs
-    //      case m                    ⇒ throw UnexpectedError(s"JobActor.list replies with unexpected message: $m (${m.getClass})")
-    //    }
+    if (authContext.roles.contains(Roles.admin)) {
+      findSrv[M, E](m, queryDef(any), range, sortBy)
+    }
+    else {
+      val futureSource = userSrv.getOrganizationId(authContext.userId).map { organizationId ⇒
+        findSrv[M, E](m, queryDef("organizationId" ~= organizationId), range, sortBy)
+      }
+      val source = Source.fromFutureSource(futureSource.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+      source -> futureSource.flatMap(_._2)
+    }
+  }
+
+  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])(implicit authContext: AuthContext): (Source[Job, NotUsed], Future[Long]) = {
+    import org.elastic4play.services.QueryDSL._
+    findWithUserFilter[JobModel, Job](jobModel, userFilter ⇒
+      and(userFilter ::
+        dataTypeFilter.map("dataType" like _).toList :::
+        dataFilter.map("data" like _).toList :::
+        analyzerFilter.map(af ⇒ or("analyzerId" like af, "analyzerName" like af)).toList), range, Nil)
+  }
+
+  def findArtifacts(jobId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String])(implicit authContext: AuthContext): (Source[Artifact, NotUsed], Future[Long]) = {
+    import org.elastic4play.services.QueryDSL._
+    findWithUserFilter[ArtifactModel, Artifact](artifactModel, userFilter ⇒ and(queryDef, parent("report", parent("job", and(withId(jobId), userFilter)))), range, sortBy)
   }
 
   def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Job, NotUsed], Future[Long]) = {
     findSrv[JobModel, Job](jobModel, queryDef, range, sortBy)
   }
 
-  def get(jobId: String): Future[Job] = getSrv[JobModel, Job](jobModel, jobId)
+  def stats(queryDef: QueryDef, aggs: Seq[Agg]): Future[JsObject] = findSrv(jobModel, queryDef, aggs: _*)
+
+  def get(jobId: String)(implicit authContext: AuthContext): Future[Job] = {
+    import org.elastic4play.services.QueryDSL._
+    findWithUserFilter[JobModel, Job](jobModel, userFilter ⇒ and(userFilter, withId(jobId)), Some("0-1"), Nil)
+      ._1
+      .runWith(Sink.head)
+  }
 
   def create(analyzerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
     analyzerSrv.get(analyzerId).flatMap { analyzer ⇒
@@ -98,48 +152,109 @@ class JobSrv @Inject() (
   }
 
   def create(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject)(implicit authContext: AuthContext): Future[Job] = {
-    val fields = Fields(Json.obj(
-      "analyzerDefinitionId" -> analyzer.analyzerDefinitionId(),
-      "analyzerId" -> analyzer.id,
-      "analyzerName" -> analyzer.name(),
-      "status" -> JobStatus.Waiting,
-      "dataType" -> dataType,
-      "tlp" -> tlp,
-      "message" -> message,
-      "parameters" -> parameters.toString))
-    val fieldWithData = dataAttachment match {
-      case Left(data)        ⇒ fields.set("data", data)
-      case Right(attachment) ⇒ fields.set("attachment", AttachmentInputValue(attachment))
-    }
-    analyzerSrv.getDefinition(analyzer.analyzerDefinitionId()).flatMap { analyzerDefinition ⇒
-      createSrv[JobModel, Job](jobModel, fieldWithData).andThen {
-        case Success(job) ⇒ run(analyzerDefinition, analyzer, job).onComplete(e ⇒ println(s"DEBUG: job run : $e"))
+    findSimilarJob(analyzer, dataType, dataAttachment, parameters).flatMap {
+      case Some(job) ⇒ Future.successful(job)
+      case None ⇒ isUnderRateLimit(analyzer).flatMap {
+        case true ⇒
+          val fields = Fields(Json.obj(
+            "analyzerDefinitionId" -> analyzer.analyzerDefinitionId(),
+            "analyzerId" -> analyzer.id,
+            "analyzerName" -> analyzer.name(),
+            "organizationId" -> analyzer.parentId,
+            "status" -> JobStatus.Waiting,
+            "dataType" -> dataType,
+            "tlp" -> tlp,
+            "message" -> message,
+            "parameters" -> parameters.toString))
+          val fieldWithData = dataAttachment match {
+            case Left(data)        ⇒ fields.set("data", data)
+            case Right(attachment) ⇒ fields.set("attachment", AttachmentInputValue(attachment))
+          }
+          analyzerSrv.getDefinition(analyzer.analyzerDefinitionId()).flatMap { analyzerDefinition ⇒
+            createSrv[JobModel, Job](jobModel, fieldWithData).andThen {
+              case Success(job) ⇒ run(analyzerDefinition, analyzer, job).onComplete(e ⇒ println(s"DEBUG: job run : $e"))
+            }
+          }
+        case false ⇒
+          Future.failed(RateLimitExceeded(analyzer))
+
       }
     }
+  }
+
+  private def isUnderRateLimit(analyzer: Analyzer): Future[Boolean] = {
+    (for {
+      rate ← analyzer.rate()
+      rateUnit ← analyzer.rateUnit()
+    } yield {
+      import org.elastic4play.services.QueryDSL._
+      val now = new Date().getTime * 1000
+      stats(and("createdAt" ~>= (now - rateUnit.id), "analyzerId" ~= analyzer.id), Seq(selectCount)).map { stats ⇒
+        (stats \ "count").as[Long] < rate
+      }
+    })
+      .getOrElse(Future.successful(true))
+  }
+
+  def findSimilarJob(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], parameters: JsObject): Future[Option[Job]] = {
+    if (jobCache.length == 0) {
+      Future.successful(None)
+    }
+    else {
+      import org.elastic4play.services.QueryDSL._
+      val now = new Date().getTime * 1000
+      find(and(
+        "analyzerId" ~= analyzer.id,
+        "status" ~!= JobStatus.Failure,
+        "startDate" ~>= (now - jobCache.toSeconds),
+        "dataType" ~= dataType,
+        dataAttachment.fold(dataType ⇒ "dataType" ~= dataType, attachment ⇒ "attachment.id" ~= attachment.id),
+        "parameters" ~= parameters.toString), Some("0-1"), Seq("-createdAt"))
+        ._1
+        .runWith(Sink.headOption)
+    }
+  }
+
+  private def fixArtifact(artifact: Fields): Fields = {
+    def rename(oldName: String, newName: String): Fields ⇒ Fields = fields ⇒
+      fields.getValue(oldName).fold(fields)(v ⇒ fields.unset(oldName).set(newName, v))
+
+    println(s"Artifact before fix: $artifact")
+    val x = rename("value", "data").andThen(
+      rename("type", "dataType"))(artifact)
+    println(s"Artifact after fix: $x")
+    x
   }
 
   def run(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job)(implicit authContext: AuthContext): Future[Job] = {
     buildInput(analyzerDefinition, analyzer, job)
       .andThen { case _: Success[_] ⇒ startJob(job) }
       .flatMap { input ⇒
-        val output = new StringBuffer
-        val error = new StringBuffer
+        var output = ""
+        var error = ""
         try {
           logger.info(s"Execute ${osexec(analyzerDefinition.cmd)} in ${analyzerDefinition.baseDirectory}")
           Process(osexec(analyzerDefinition.cmd), analyzerDefinition.baseDirectory.toFile).run(
             new ProcessIO(
               { stdin ⇒ Try(stdin.write(input.toString.getBytes("UTF-8"))); stdin.close() },
-              { stdout ⇒ readStream(output, stdout) },
-              { stderr ⇒ readStream(error, stderr) }))
-          val report = Json.parse(output.toString).as[JsObject]
+              { stdout ⇒ output = readStream(stdout) },
+              { stderr ⇒ error = readStream(stderr) }))
+            .exitValue()
+          val report = Json.parse(output).as[JsObject]
           val success = (report \ "success").asOpt[Boolean].getOrElse(false)
           if (success) {
             val fullReport = (report \ "full").as[JsObject].toString
             val summaryReport = (report \ "summary").as[JsObject].toString
+            val artifacts = (report \ "artifacts").asOpt[Seq[JsObject]].getOrElse(Nil)
             val reportFields = Fields.empty
               .set("full", fullReport)
               .set("summary", summaryReport)
             createSrv[ReportModel, Report, Job](reportModel, job, reportFields)
+              .flatMap { report ⇒
+                Future.traverse(artifacts) { artifact ⇒
+                  createSrv[ArtifactModel, Artifact, Report](artifactModel, report, fixArtifact(Fields(artifact)))
+                }
+              }
               .transformWith {
                 case Failure(e) ⇒ endJob(job, JobStatus.Failure, Some(s"Report creation failure: $e"))
                 case _          ⇒ endJob(job, JobStatus.Success)
@@ -151,13 +266,13 @@ class JobSrv @Inject() (
         }
         catch {
           case NonFatal(_) ⇒
-            val errorMessage = error.append(output).toString.take(8192)
+            val errorMessage = (error + output).take(8192)
             endJob(job, JobStatus.Failure, Some(s"Invalid output\n$errorMessage"))
         }
       }(analyzeExecutionContext)
   }
 
-  def getReport(jobId: String): Future[Report] = get(jobId).flatMap(getReport)
+  def getReport(jobId: String)(implicit authContext: AuthContext): Future[Report] = get(jobId).flatMap(getReport)
 
   def getReport(job: Job): Future[Report] = {
     import QueryDSL._
@@ -166,7 +281,7 @@ class JobSrv @Inject() (
       .map(_.getOrElse(throw NotFoundError(s"Job ${job.id} has no report")))
   }
 
-  private def buildInput(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job) = {
+  private def buildInput(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job): Future[JsObject] = {
     job.attachment()
       .map { attachment ⇒
         val tempFile = Files.createTempDirectory(s"cortex-job-${job.id}-")
@@ -191,11 +306,11 @@ class JobSrv @Inject() (
         val configAndParam = analyzer.config.deepMerge(job.params)
         analyzerDefinition.configurationItems
           .validatedBy(_.read(configAndParam))
-          .map(JsObject)
+          .map(cfg ⇒ Json.obj("config" -> JsObject(cfg)))
           .map(_ deepMerge artifact +
             ("dataType" -> JsString(job.dataType())) +
             ("message" -> JsString(job.message().getOrElse(""))))
-          .badMap(e ⇒ AttributeCheckingError("", e.toSeq)) // FIXME model name
+          .badMap(e ⇒ AttributeCheckingError("job", e.toSeq))
           .toTry
       }
       .flatMap(Future.fromTry)
@@ -215,105 +330,12 @@ class JobSrv @Inject() (
     updateSrv(job, errorMessage.fold(fields)(fields.set("message", _)))
   }
 
-  private def readStream(buffer: StringBuffer, stream: InputStream): Unit = {
-    val reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"))
-    try BasicIO.processLinesFully { line ⇒
-      buffer.append(line).append(System.lineSeparator())
-      ()
-    }(() ⇒ reader.readLine())
-    finally reader.close()
+  private def readStream(stream: InputStream): String = {
+    val out = new ByteArrayOutputStream()
+    val buffer = Array.ofDim[Byte](4096)
+    Stream.continually(stream.read(buffer))
+      .takeWhile(_ != -1)
+      .foreach(out.write(buffer, 0, _))
+    out.toString("UTF-8")
   }
-
-  //
-  //  def waitReport(jobId: String, atMost: Duration): Future[Job] = {
-  //    get(jobId).flatMap { job ⇒
-  //      val finishedJob = job.report.map(_ ⇒ job)
-  //      atMost match {
-  //        case _: Infinite ⇒ finishedJob
-  //        case duration: FiniteDuration ⇒
-  //          val prom = Promise[Job]()
-  //          val timeout = system.scheduler.scheduleOnce(duration) {
-  //            prom.success(job)
-  //            ()
-  //          }
-  //          finishedJob.onComplete(_ ⇒ timeout.cancel())
-  //          Future.firstCompletedOf(List(finishedJob, prom.future))
-  //      }
-  //    }
-  //  }
 }
-
-//
-//object JobActor {
-//  case class ListJobs(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], start: Int, limit: Int)
-//  case class JobList(total: Int, jobs: Seq[Job])
-//  case class GetJob(jobId: String)
-//  case object JobNotFound
-//  case class CreateJob(artifact: Artifact, analyzer: Analyzer, report: Future[Report])
-//  case class RemoveJob(jobId: String)
-//  case object JobRemoved
-//  case object JobCleanup
-//}
-//
-//class JobActor(
-//    jobLifeTime: Duration,
-//    jobCleanupPeriod: Duration,
-//    analyzerSrv: AnalyzerSrv,
-//    implicit val ec: ExecutionContext) extends Actor {
-//
-//  import services.JobActor._
-//
-//  @Inject def this(
-//    configuration: Configuration,
-//    analyzerSrv: AnalyzerSrv,
-//    ec: ExecutionContext) =
-//    this(
-//      configuration.getString("job.lifetime").fold[Duration](Duration.Inf)(d ⇒ Duration(d)),
-//      configuration.getString("job.cleanupPeriod").fold[Duration](Duration.Inf)(d ⇒ Duration(d)),
-//      analyzerSrv,
-//      ec)
-//
-//  lazy val logger = Logger(getClass)
-//
-//  (jobLifeTime, jobCleanupPeriod) match {
-//    case (_: FiniteDuration, jcp: FiniteDuration) ⇒ context.system.scheduler.schedule(jcp, jcp, self, JobCleanup)
-//    case (_: Infinite, _: Infinite)               ⇒ // no cleanup
-//    case (_: FiniteDuration, _: Infinite)         ⇒ logger.warn("Job lifetime is configured but cleanup period is not set. Job will never be removed")
-//    case (_: Infinite, _: FiniteDuration)         ⇒ logger.warn("Job cleanup period is configured but job lifetime is not set. Job will never be removed")
-//  }
-//
-//  private[services] def removeJob(jobs: List[Job], jobId: String): Option[List[Job]] =
-//    jobs.headOption match {
-//      case Some(j) if j.id == jobId ⇒ Some(jobs.tail)
-//      case Some(j)                  ⇒ removeJob(jobs.tail, jobId).map(j :: _)
-//      case None                     ⇒ None
-//    }
-//
-//  def jobState(jobs: List[Job]): Receive = {
-//    case ListJobs(dataTypeFilter, dataFilter, analyzerFilter, start, limit) ⇒
-//      val filteredJobs = jobs.filter(j ⇒
-//        dataTypeFilter.fold(true)(j.artifact.dataTypeFilter) &&
-//          dataFilter.fold(true)(j.artifact.dataFilter) &&
-//          analyzerFilter.fold(true)(j.analyzer.id.contains))
-//      sender ! JobList(filteredJobs.size, filteredJobs.slice(start, start + limit))
-//    case GetJob(jobId) ⇒ sender ! jobs.find(_.id == jobId).getOrElse(JobNotFound)
-//    case RemoveJob(jobId) ⇒
-//      removeJob(jobs, jobId) match {
-//        case Some(j) ⇒
-//          sender ! JobRemoved
-//          context.become(jobState(j))
-//        case None ⇒ sender ! JobNotFound
-//      }
-//    case CreateJob(artifact, analyzer, report) ⇒
-//      val jobId = Random.alphanumeric.take(16).mkString
-//      val job = Job(jobId, analyzer, artifact, report)
-//      sender ! job
-//      context.become(jobState(job :: jobs))
-//    case JobCleanup if jobLifeTime.isInstanceOf[FiniteDuration] ⇒
-//      val now = (new Date).getTime
-//      val limitDate = new Date(now - jobLifeTime.toMillis)
-//      context.become(jobState(jobs.takeWhile(_.date after limitDate)))
-//  }
-//
-//  override def receive: Receive = jobState(Nil)
-//}
