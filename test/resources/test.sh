@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-LOG_FILE=$(mktemp --suffix CORTEX-DEBUG)
+LOG_FILE=$(mktemp)
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -81,7 +81,7 @@ check 200 -u admin:admin 'http://127.0.0.1:9001/api/user/admin'
 
 log 'Get analyzer list'
 ANALYZERS=($(get 200 -u admin:admin 'http://127.0.0.1:9001/api/analyzerdefinition' | jq -r '.[] | .id'))
-for A in "${ANALYZERS[@]}}"
+for A in "${ANALYZERS[@]}"
 do
 	echo "  - ${A}"
 done
