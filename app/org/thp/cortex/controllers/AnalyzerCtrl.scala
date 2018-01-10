@@ -2,9 +2,9 @@ package org.thp.cortex.controllers
 
 import javax.inject.{ Inject, Singleton }
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ ExecutionContext, Future }
 
-import play.api.libs.json.{ JsNull, Json }
+import play.api.libs.json.{ JsNull, JsObject, Json }
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
 import akka.stream.Materializer
@@ -28,13 +28,15 @@ class AnalyzerCtrl @Inject() (
 
   def list: Action[AnyContent] = authenticated(Roles.read).async { request ⇒
     val (analyzers, analyzerTotal) = analyzerSrv.findForUser(request.userId, QueryDSL.any, Some("all"), Nil)
-    renderer.toOutput(OK, analyzers, analyzerTotal)
+    val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson)
+    renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
   }
 
   def get(analyzerId: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
-    analyzerSrv.get(analyzerId).map { analyzerConfig ⇒
-      renderer.toOutput(OK, analyzerConfig)
-    }
+    analyzerSrv.get(analyzerId)
+      .flatMap(analyzerJson)
+      .map(analyzer ⇒ renderer.toOutput(OK, analyzer))
+
   }
 
   private val emptyAnalyzerDefinitionJson = Json.obj(
@@ -48,7 +50,6 @@ class AnalyzerCtrl @Inject() (
   private def analyzerJson(analyzer: Analyzer, analyzerDefinition: Option[AnalyzerDefinition]) = {
     analyzer.toJson ++ analyzerDefinition.fold(emptyAnalyzerDefinitionJson) { ad ⇒
       Json.obj(
-        "analyzerDefinitionName" -> ad.name,
         "version" -> ad.version,
         "description" -> ad.description,
         "dataTypeList" -> ad.dataTypeList,
@@ -58,15 +59,18 @@ class AnalyzerCtrl @Inject() (
     }
   }
 
+  private def analyzerJson(analyzer: Analyzer): Future[JsObject] = {
+    analyzerSrv.getDefinition(analyzer.analyzerDefinitionId())
+      .map(analyzerDefinition ⇒ analyzerJson(analyzer, Some(analyzerDefinition)))
+      .recover { case _ ⇒ analyzerJson(analyzer, None) }
+  }
+
   def listForType(dataType: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
-    val (analyzers, _) = analyzerSrv.listForUser(request.userId)
-    analyzers.mapAsyncUnordered(2)(a ⇒ analyzerSrv.getDefinition(a.analyzerDefinitionId()).map(a -> _))
-      .collect {
-        case (analyzer, analyzerDefinition) if analyzerDefinition.canProcessDataType(dataType) ⇒ analyzerJson(analyzer, Some(analyzerDefinition))
-      }
+    analyzerSrv.listForUser(request.userId)
+      ._1
+      .mapAsyncUnordered(2)(analyzerJson)
       .runWith(Sink.seq)
-      .map { analyzers ⇒
-        renderer.toOutput(OK, analyzers)
+      .map { analyzers ⇒ renderer.toOutput(OK, analyzers)
       }
   }
 

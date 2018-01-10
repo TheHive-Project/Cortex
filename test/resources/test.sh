@@ -80,6 +80,12 @@ check 201 'http://127.0.0.1:9001/api/user' -H 'Content-Type: application/json' -
 log 'Checking admin user is correctly created'
 check 200 -u admin:admin 'http://127.0.0.1:9001/api/user/admin'
 
+log 'Checking authentication type'
+AUTH_TYPE=($(get 200 'http://127.0.0.1:9001/api/status' | jq -r '.config.authType []' | sort))
+
+log 'Authentication type should be "local" and "key"'
+test "${AUTH_TYPE[0]}" = 'key' -a "${AUTH_TYPE[1]}" = 'local' && ok || ko
+
 log 'Create a organization "thp"'
 check 201 -u admin:admin 'http://127.0.0.1:9001/api/organization' -H 'Content-Type: application/json' -d '
     {
@@ -112,15 +118,15 @@ log 'Analyzer MaxMind_GeoIP_3_0 should exist'
 case "${ANALYZERS[@]}" in  *"MaxMind_GeoIP_3_0"*) ok ;; *) ko ;; esac
 
 log 'Create an MaxMind analyzer in thp organization'
-check 201 -u admin:admin 'http://127.0.0.1:9001/api/organization/thp/analyzer/MaxMind_GeoIP_3_0' \
+GEOIP_ID=$(get 201 -u admin:admin 'http://127.0.0.1:9001/api/organization/thp/analyzer/MaxMind_GeoIP_3_0' \
 	-H 'Content-Type: application/json' -d '
 		{
 		  "name" : "GeoIP"
-		}'
-
-log 'Get ID of the created analyzer'
-GEOIP_ID=$(get 200 -u user:user 'http://127.0.0.1:9001/api/analyzer' | jq -r '.[] | .id')
+		}' | jq -r '.id')
 echo "  ${GEOIP_ID}"
+
+log 'Get the created analyzer'
+check 200 -u user:user "http://127.0.0.1:9001/api/analyzer/${GEOIP_ID}"
 
 log 'Get analyzer for IP data'
 IP_ANALYZERS=$(get 200 -u user:user 'http://127.0.0.1:9001/api/analyzer/type/ip')
@@ -182,7 +188,14 @@ REPORT=$(get 200 -u user:user "http://127.0.0.1:9001/api/job/${JOB_ID}/waitrepor
 log 'Status of the report should be success'
 echo ${REPORT} | jq -r '.status' | grep -q '^Success$' && ok || {
   ko
-  jq . <<< ${REPORT}
+  echo ${REPORT} | jq .
 }
-echo ${REPORT} | jq -r .report.full | jq .
+#echo ${REPORT} | jq -r .report.full | jq .
 
+log 'Get job artifacts'
+ARTIFACT=$(get 200 -u user:user "http://127.0.0.1:9001/api/job/${JOB_ID}/artifacts" | jq -r '.[] | .data')
+test "${ARTIFACT}" = 'perdu.com' && ok || ko
+
+log 'Get analyer list'
+ANALYZERS=($(get 200 -u user:user "http://127.0.0.1:9001/api/analyzer" | jq '.[] | .id'))
+test "${#ANALYZERS[@]}" -eq 2 && ok || ko

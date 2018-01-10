@@ -219,11 +219,8 @@ class JobSrv(
     def rename(oldName: String, newName: String): Fields ⇒ Fields = fields ⇒
       fields.getValue(oldName).fold(fields)(v ⇒ fields.unset(oldName).set(newName, v))
 
-    println(s"Artifact before fix: $artifact")
-    val x = rename("value", "data").andThen(
+    rename("value", "data").andThen(
       rename("type", "dataType"))(artifact)
-    println(s"Artifact after fix: $x")
-    x
   }
 
   def run(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job)(implicit authContext: AuthContext): Future[Job] = {
