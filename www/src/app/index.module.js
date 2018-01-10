@@ -12,6 +12,7 @@ import indexRoutes from './index.routes';
 import mainModule from './pages/main/main.module';
 import loginModule from './pages/login/login.module';
 import analyzersModule from './pages/analyzers/analyzers.module';
+import jobsModule from './pages/jobs/jobs.module';
 
 import maintenanceModule from './pages/maintenance/maintenance.module';
 
@@ -28,6 +29,7 @@ const App = angular.module('cortex', [
   'ui.bootstrap',
   'ui-notification',
   'angularUtils.directives.dirPagination',
+  'angularMoment',
 
   // core
   coreModule.name,
@@ -42,7 +44,8 @@ const App = angular.module('cortex', [
   mainModule.name,
   loginModule.name,
   maintenanceModule.name,
-  analyzersModule.name
+  analyzersModule.name,
+  jobsModule.name
 ]);
 
 App.config(config).run(run);

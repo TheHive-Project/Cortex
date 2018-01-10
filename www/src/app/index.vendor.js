@@ -23,5 +23,9 @@ import 'angular-ui-notification';
 
 import 'angular-utils-pagination';
 
+import 'moment';
+
+import 'angular-moment';
+
 // local scripts
 //import "../assets/js/...";
