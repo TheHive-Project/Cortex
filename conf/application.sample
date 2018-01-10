@@ -47,14 +47,28 @@ analyzer {
 
   # Analyzer configuration
   config {
-  
     #global {
     #  proxy {
     #    http="http://PROXYIP:PORT",
     #    https="http://PROXYIP:PORT"
     #  }
     #}
-    
+
+    # C1fApp : an API key is required. It can be obtained on
+    # https://www.c1fapp.com/
+    C1fApp {
+      #service="query"
+      #key="..."
+      #url="https://www.c1fapp.com/cifapp/api/"
+    }
+
+    # Censys: an API ID and secret key are required. This can be
+    # retrieved on https://censys.io/
+    Censys {
+      #uid="MYUID"
+      #key="MYKEY"
+    }
+
     # CIRCLPassiveDNS: this analyzer requires credentials  that  may  be
     # obtained from https://www.circl.lu/contact/.
     CIRCLPassiveDNS {
@@ -139,6 +153,16 @@ analyzer {
       #name=["misp_server_name_1", "misp_server_name_2"]
     }
 
+    # MISP WarningLists: this analyzer need to clone the MISP
+    # WarningLists to a local directory. Use 'git' for that  purpose.
+    # We advise you to keep the lists fresh  by  adding  a  cron  entry
+    # to regularly download them for example. Then you need to specify
+    # the directory where the lists have been downloaded require the
+    # path or MISP WarningLists local repository.
+    MISPWarningLists {
+      #path = "/path/to/misp-warninglists/repository"
+    }
+
     # Nessus: this analyzer requires  the  URL  of  the  Tenable  Nessus
     # Professional scanner, a login and a password, the scan  policy  to
     # use, a CA bundle to validate the web app's X509 cert against.  You
@@ -155,6 +179,11 @@ analyzer {
       #allowed_networks=[ 'x.y.z.t/8', 'a.b.c.d/24', ... ]
     }
 
+    # Onyphe: this analyzer requires an  API key. You can get it from
+    # https://www.onyphe.io/.
+    Onyphe {
+      #key = "..."
+    }
     # OTXQuery: this  service  requires  an  API  key.  If  you  are  an
     # AlienVault USM/OSSIM user, you already have one. Depending on your
     # usage, you can use a free API key or a paid one.
@@ -171,6 +200,17 @@ analyzer {
       #key="..."
     }
 
+    # PayloadSecurity: this analyzer requires several information from
+    # your on premise PayloadSecurity sandbox service. This is a
+    # commercial service.
+    PayloadSecurity {
+        #url = "..."
+        #key="..."
+        #secret="..."
+        #environmentid="..."
+        #verifyssl=True
+    }
+
     # PhishingInitiative: this analyzer requires an API key.
     # See https://phishing-initiative.fr/contrib/
     PhishingInitiative {
@@ -183,12 +223,43 @@ analyzer {
       #key="..."
     }
 
+    # SinkDB: this analyzer requires an API key. It can be retrieved on
+    # https://sinkdb.abuse.ch/login/. Access to the SinkDB service is
+    # allowed to trusted partners only.
+    SinkDB {
+        #key="..."
+    }
+
     # Shodan: this analyzer requires an API key.
     # For best results, use a Membership level account otherwise a  free
     # one would work with limited results.
     # See https://www.shodan.io/
     Shodan {
       # key = "..."
+    }
+
+    # Tor Blumagie: local configuration is needed for this analyzer. It
+    # uses a caching mechanism in order to save some time when doing
+    # multiple queries, so the configuration includes parameter
+    # regarding the cache directory and the duration of caching.
+    TorBlutmagie {
+        #cache {
+            #duration=3600
+            #root=/tmp/cortex/tor_project
+        #}
+    }
+
+    # Tor Project: local configuration is needed for this analyzer. It
+    # uses a caching mechanism in order to save some time when doing
+    # multiple queries, so the configuration includes parameter
+    # regarding the cache directory, the duration of caching and  the
+    # threshold in seconds for exit nodes before they get discarded.
+    TorProject {
+        #cache {
+            #duration=3600
+            #root=/tmp/cortex/tor_project
+            #ttl=86400
+        #}
     }
 
     # Virusshare: this analyzer needs a local copy of Virusshare's  hash
