@@ -1,6 +1,6 @@
 'use strict';
-var CleanWebpackPlugin = require('clean-webpack-plugin');
-var webpack = require('webpack');
+let CleanWebpackPlugin = require('clean-webpack-plugin');
+let webpack = require('webpack');
 
 module.exports = function(_path) {
   return {
@@ -19,7 +19,7 @@ module.exports = function(_path) {
       new webpack.optimize.UglifyJsPlugin({
         minimize: true,
         warnings: false,
-        sourceMap: true,
+        sourceMap: true
       })
     ]
   };

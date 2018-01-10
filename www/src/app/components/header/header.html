@@ -10,10 +10,10 @@
 </nav>
 -->
 <nav class="navbar navbar-static-top">
-  <div class="container">
+  <div class="container-fluid">
     <div class="navbar-header">
       <!-- <a href class="navbar-brand"><b>Cortex</b></a> -->
-      <a class="navbar-brand" ui-sref="app.analyzers">
+      <a class="navbar-brand" ui-sref="main.analyzers">
         <img alt="Cortex" src="../../../assets/images/logo-small.svg">
       </a>
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
@@ -24,19 +24,41 @@
     <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav pull-right">
         <li>
-          <a href ng-click="nav.newAnalysis()">
+          <a href ng-click="$ctrl.newAnalysis()">
             <i class="fa fa-plus"></i> New Analysis</a>
         </li>
         <li ui-sref-active="active">
-          <a ui-sref="app.analyzers">
+          <a ui-sref="main.analyzers">
             <i class="fa fa-cogs"></i> Analyzers</a>
         </li>
         <li ui-sref-active="active">
-          <a ui-sref="app.jobs">
+          <a ui-sref="main.jobs">
             <i class="fa fa-hourglass"></i> Jobs</a>
         </li>
+        <li class="dropdown" uib-dropdown ng-if="$ctrl.isAdmin">
+          <a class="dropdown-toggle" uib-dropdown-toggle href>
+            <i class="fa fa-cog"></i>
+            <span class="hpad5">Admin</span>
+            <b class="caret"></b>
+          </a>
+          <ul class="dropdown-menu" uib-dropdown-menu>
+            <li>
+              <a ui-sref="app.admin.users">
+                <i class="fa fa-users"></i>
+                <span class="hpad5">Users</span>
+              </a>
+            </li>
+            <li class="divider"></li>
+            <li>
+              <a ui-sref="app.admin.orgs">
+                <i class="fa fa-file-text"></i>
+                <span class="hpad5">Organizations</span>
+              </a>
+            </li>            
+          </ul>
+        </li>
         <li ui-sref-active="active">
-          <a href ng-click="nav.logout()">
+          <a href ng-click="$ctrl.logout()">
             <i class="fa fa-sign-out"></i> Logout</a>
         </li>
       </ul>

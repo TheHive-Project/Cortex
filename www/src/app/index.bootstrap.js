@@ -4,12 +4,12 @@
 import '!!file-loader?name=[name].[ext]!../favicon.ico';
 
 // vendor files
-import "./index.vendor";
+import './index.vendor';
 
 // main App module
-import "./index.module";
+import './index.module';
 
-import "../assets/styles/sass/index.scss";
+import '../assets/styles/sass/index.scss';
 
 angular.element(document).ready(() => {
   angular.bootstrap(document, ['cortex'], {

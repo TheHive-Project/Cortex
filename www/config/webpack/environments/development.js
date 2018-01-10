@@ -1,5 +1,5 @@
 'use strict';
-var webpack = require('webpack');
+let webpack = require('webpack');
 
 module.exports = function(_path) {
   return {
@@ -8,10 +8,11 @@ module.exports = function(_path) {
     devServer: {
       contentBase: './dist',
       hot: true,
-      inline: true
+      inline: true,
+      proxy: {
+        '/api': 'http://localhost:9000'
+      }
     },
-    plugins: [
-      new webpack.HotModuleReplacementPlugin()
-    ]
+    plugins: [new webpack.HotModuleReplacementPlugin()]
   };
 };

@@ -1,24 +1,19 @@
 'use strict';
 
 export default class ContainerController {
-  constructor($log) {
+  constructor($log, VersionService) {
     'ngInject';
     this.$log = $log;
+    this.VersionService = VersionService;
+
+    this.config = {};
   }
 
   $onInit() {
+    this.VersionService.get().then(response => {
+      this.config = response.data;
+    });
+
     this.$log.log('Hello from the container component controller!');
   }
 }
-
-/*
-function(VersionSrv) {
-        var self = this;
-        self.config = {};
-
-        VersionSrv.get()
-            .then(function(response) {
-                self.config = response.data;
-            });
-    }
-    */

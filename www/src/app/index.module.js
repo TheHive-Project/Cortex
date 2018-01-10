@@ -8,9 +8,15 @@ import uiRouter from '@uirouter/angularjs';
 import coreModule from './core/core.module';
 import indexComponents from './index.components';
 import indexRoutes from './index.routes';
+
 import mainModule from './pages/main/main.module';
+import loginModule from './pages/login/login.module';
+import analyzersModule from './pages/analyzers/analyzers.module';
+
+import maintenanceModule from './pages/maintenance/maintenance.module';
 
 import 'font-awesome/css/font-awesome.css';
+import 'angular-ui-notification/dist/angular-ui-notification.css';
 
 const App = angular.module('cortex', [
   // plugins
@@ -19,6 +25,9 @@ const App = angular.module('cortex', [
   'ngMessages',
   'ngResource',
   'oc.lazyLoad',
+  'ui.bootstrap',
+  'ui-notification',
+  'angularUtils.directives.dirPagination',
 
   // core
   coreModule.name,
@@ -30,7 +39,10 @@ const App = angular.module('cortex', [
   indexRoutes.name,
 
   // pages
-  mainModule.name
+  mainModule.name,
+  loginModule.name,
+  maintenanceModule.name,
+  analyzersModule.name
 ]);
 
 App.config(config).run(run);

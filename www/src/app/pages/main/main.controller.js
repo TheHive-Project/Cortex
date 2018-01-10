@@ -1,22 +1,21 @@
 'use strict';
 
-import _ from 'lodash/core';
-
-import moment from 'moment';
-
-import angularLogo from '_images/angular.png';
-
 export default class MainController {
-  constructor($log) {
+  constructor($log, $state) {
     'ngInject';
     this.$log = $log;
+    this.$state = $state;
   }
 
   $onInit() {
-    this.lodash_version = _.VERSION;
+    if (this.currentUser === 520) {
+      this.$state.go('maintenance');
+      return;
+    } else if (!this.currentUser || !this.currentUser.id) {
+      this.$state.go('login');
+      return;
+    }
 
-    this.moment_version = moment.version;
-
-    this.angularLogo = angularLogo;
+    this.$log.log('Called from main controller', this.currentUser);
   }
 }

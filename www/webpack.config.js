@@ -1,8 +1,7 @@
 'use strict';
 
-var _ = require('lodash');
-var _configs = {
-
+let _ = require('lodash');
+let _configs = {
   // global section
   global: require(__dirname + '/config/webpack/global'),
 
@@ -11,17 +10,14 @@ var _configs = {
   development: require(__dirname + '/config/webpack/environments/development')
 };
 
-var _load = function() {
-  var ENV = process.env.NODE_ENV
-    ? process.env.NODE_ENV
-    : 'production';
+let _load = function() {
+  let ENV = process.env.NODE_ENV ? process.env.NODE_ENV : 'production';
 
-  console.log('Current Environment: ', ENV);
+  //console.log('Current Environment: ', ENV);
 
   // load config file by environment
-  return _configs && _.merge(
-    _configs.global(__dirname),
-    _configs[ENV](__dirname)
+  return (
+    _configs && _.merge(_configs.global(__dirname), _configs[ENV](__dirname))
   );
 };
 
