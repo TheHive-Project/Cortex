@@ -68,7 +68,12 @@ class AnalyzerCtrl @Inject() (
   def listForType(dataType: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
     analyzerSrv.listForUser(request.userId)
       ._1
-      .mapAsyncUnordered(2)(analyzerJson)
+      .mapAsyncUnordered(2) { analyzer ⇒
+        analyzerSrv.getDefinition(analyzer.analyzerDefinitionId()).map(analyzer -> _)
+      }
+      .collect {
+        case (analyzer, analyzerDefinition) if analyzerDefinition.canProcessDataType(dataType) ⇒ analyzerJson(analyzer, Some(analyzerDefinition))
+      }
       .runWith(Sink.seq)
       .map { analyzers ⇒ renderer.toOutput(OK, analyzers)
       }

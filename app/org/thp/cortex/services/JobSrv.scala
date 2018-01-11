@@ -123,36 +123,81 @@ class JobSrv(
       .runWith(Sink.head)
   }
 
+  def legacyCreate(analyzer: Analyzer, attributes: JsObject, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
+    val dataType = Or.from((attributes \ "dataType").asOpt[String], One(MissingAttributeError("dataType")))
+    val dataFiv = (fields.getString("data"), fields.get("attachment")) match {
+      case (Some(data), None)                ⇒ Good(Left(data))
+      case (None, Some(fiv: FileInputValue)) ⇒ Good(Right(fiv))
+      case (None, Some(other))               ⇒ Bad(One(InvalidFormatAttributeError("attachment", "attachment", other)))
+      case (_, Some(fiv))                    ⇒ Bad(One(InvalidFormatAttributeError("data/attachment", "string/attachment", fiv)))
+      case (None, None)                      ⇒ Bad(One(MissingAttributeError("data/attachment")))
+    }
+    val tlp = (attributes \ "tlp").asOpt[Long].getOrElse(2L)
+    val message = (attributes \ "message").asOpt[String].getOrElse("")
+    val parameters = (attributes \ "parameters").asOpt[JsObject].getOrElse(JsObject.empty)
+    withGood(dataType, dataFiv) {
+      case (dt, Right(fiv)) ⇒ dt -> attachmentSrv.save(fiv).map(Right.apply)
+      case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
+    }
+      .fold(
+        typeDataAttachment ⇒ typeDataAttachment._2.flatMap(
+          da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters)),
+        errors ⇒ Future.failed(AttributeCheckingError("job", errors)))
+  }
+
   def create(analyzerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
     analyzerSrv.get(analyzerId).flatMap { analyzer ⇒
-      val dataType = Or.from(fields.getString("dataType"), One(MissingAttributeError("dataType")))
-      val dataFiv = (fields.getString("data"), fields.get("attachment")) match {
-        case (Some(data), None)                ⇒ Good(Left(data))
-        case (None, Some(fiv: FileInputValue)) ⇒ Good(Right(fiv))
-        case (None, Some(other))               ⇒ Bad(One(InvalidFormatAttributeError("attachment", "attachment", other)))
-        case (_, Some(fiv))                    ⇒ Bad(One(InvalidFormatAttributeError("data/attachment", "string/attachment", fiv)))
-        case (None, None)                      ⇒ Bad(One(MissingAttributeError("data/attachment")))
+      /*
+      In Cortex 1, fields looks like:
+      {
+        "data": "127.0.0.1",
+        "attributes": {
+          "dataType": "ip",
+          "tlp": 2
+          "extra attributes": "value"
+        }
       }
 
-      val tlp = fields.getLong("tlp").getOrElse(2L)
-      val message = fields.getString("message").getOrElse("")
-      val parameters = fields.getValue("parameters").collect {
-        case obj: JsObject ⇒ obj
-      }
-        .getOrElse(JsObject.empty)
+      In Cortex 2, fields looks like:
+      {
+        "data": "127.0.0.1",
+        "dataType": "ip",
+        "tlp": 2,
+        "message": "optional message",
+        "parameters": {
+          "optional parameters": "value"
+        }
+       */
+      fields.getValue("attributes").map(attributes ⇒ legacyCreate(analyzer, attributes.as[JsObject], fields)).getOrElse {
+        val dataType = Or.from(fields.getString("dataType"), One(MissingAttributeError("dataType")))
+        val dataFiv = (fields.getString("data"), fields.get("attachment")) match {
+          case (Some(data), None)                ⇒ Good(Left(data))
+          case (None, Some(fiv: FileInputValue)) ⇒ Good(Right(fiv))
+          case (None, Some(other))               ⇒ Bad(One(InvalidFormatAttributeError("attachment", "attachment", other)))
+          case (_, Some(fiv))                    ⇒ Bad(One(InvalidFormatAttributeError("data/attachment", "string/attachment", fiv)))
+          case (None, None)                      ⇒ Bad(One(MissingAttributeError("data/attachment")))
+        }
 
-      withGood(dataType, dataFiv) {
-        case (dt, Right(fiv)) ⇒ dt -> attachmentSrv.save(fiv).map(Right.apply)
-        case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
+        val tlp = fields.getLong("tlp").getOrElse(2L)
+        val message = fields.getString("message").getOrElse("")
+        val parameters = fields.getValue("parameters").collect {
+          case obj: JsObject ⇒ obj
+        }
+          .getOrElse(JsObject.empty)
+
+        withGood(dataType, dataFiv) {
+          case (dt, Right(fiv)) ⇒ dt -> attachmentSrv.save(fiv).map(Right.apply)
+          case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
+        }
+          .fold(
+            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters)),
+            errors ⇒ Future.failed(AttributeCheckingError("job", errors)))
       }
-        .fold(
-          typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters)),
-          errors ⇒ Future.failed(AttributeCheckingError("job", errors)))
     }
   }
 
   def create(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject)(implicit authContext: AuthContext): Future[Job] = {
-    findSimilarJob(analyzer, dataType, dataAttachment, parameters).flatMap {
+    findSimilarJob(analyzer, dataType, dataAttachment, tlp, parameters).flatMap {
       case Some(job) ⇒ Future.successful(job)
       case None ⇒ isUnderRateLimit(analyzer).flatMap {
         case true ⇒
@@ -196,19 +241,22 @@ class JobSrv(
       .getOrElse(Future.successful(true))
   }
 
-  def findSimilarJob(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], parameters: JsObject): Future[Option[Job]] = {
+  def findSimilarJob(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, parameters: JsObject): Future[Option[Job]] = {
     if (jobCache.length == 0) {
+      logger.info("Job cache is disabled")
       Future.successful(None)
     }
     else {
       import org.elastic4play.services.QueryDSL._
-      val now = new Date().getTime * 1000
+      logger.info(s"Looking for similar job (analyzer=${analyzer.id}, dataType=$dataType, data=${dataAttachment}, tlp=$tlp, parameters=$parameters")
+      val now = new Date().getTime
       find(and(
         "analyzerId" ~= analyzer.id,
         "status" ~!= JobStatus.Failure,
-        "startDate" ~>= (now - jobCache.toSeconds),
+        "startDate" ~>= (now - jobCache.toMillis),
         "dataType" ~= dataType,
-        dataAttachment.fold(dataType ⇒ "dataType" ~= dataType, attachment ⇒ "attachment.id" ~= attachment.id),
+        "tlp" ~= tlp,
+        dataAttachment.fold(data ⇒ "data" ~= data, attachment ⇒ "attachment.id" ~= attachment.id),
         "parameters" ~= parameters.toString), Some("0-1"), Seq("-createdAt"))
         ._1
         .runWith(Sink.headOption)

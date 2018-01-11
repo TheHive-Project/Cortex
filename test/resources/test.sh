@@ -24,7 +24,7 @@ ko() {
 check() {
 	expected=$1
 	shift
-	status_code=$(curl -v "$@" -s -o /dev/stderr -w '%{http_code}' 2>>${LOG_FILE})
+	status_code=$(curl -v "$@" -s -o /dev/stderr -w '%{http_code}' 2>>${LOG_FILE}) || true
 	if [ "${status_code}" = "${expected}" ]
 	then
 	  ok
@@ -52,6 +52,9 @@ get() {
 	  exit 1
 	fi
 }
+
+if true
+then ####################################################################
 
 log 'Delete the index'
 check 200 -XDELETE 'http://127.0.0.1:9200/cortex_1'
@@ -141,7 +144,7 @@ JOB_ID=$(get 200 -u user:user "http://127.0.0.1:9001/api/analyzer/${GEOIP_ID}/ru
 		  "data" : "82.225.219.43",
           "dataType" : "ip"
         }' | jq -r '.id')
-echo "  $(echo ${JOB_ID})"
+echo "  ${JOB_ID}"
 
 log 'Wait report'
 REPORT=$(get 200 -u user:user "http://127.0.0.1:9001/api/job/${JOB_ID}/waitreport")
@@ -167,6 +170,12 @@ ECHO1_ID=$(get 201 -u admin:admin 'http://127.0.0.1:9001/api/organization/thp/an
       }
 		}' | jq -r '.id')
 
+else
+  log 'Get EchoAnalyer ID'
+  ECHO1_ID=$(get 200 -u user:user 'http://127.0.0.1:9001/api/analyzer/type/domain' | jq -r '.[] | .id')
+  echo "  ${ECHO1_ID}"
+fi ####################################################################
+
 log 'Get analyzer for domain data'
 DOMAIN_ANALYZERS=$(get 200 -u user:user 'http://127.0.0.1:9001/api/analyzer/type/domain')
 
@@ -178,9 +187,9 @@ JOB_ID=$(get 200 -u user:user "http://127.0.0.1:9001/api/analyzer/${ECHO1_ID}/ru
 	-H 'Content-Type: application/json' -d '
 		{
 		  "data" : "perdu.com",
-      "dataType" : "domain"
-    }' | jq -r '.id')
-echo "  $(echo ${JOB_ID})"
+		  "dataType" : "domain"
+		}' | jq -r '.id')
+echo "  ${JOB_ID}"
 
 log 'Wait report'
 REPORT=$(get 200 -u user:user "http://127.0.0.1:9001/api/job/${JOB_ID}/waitreport")
@@ -192,10 +201,47 @@ echo ${REPORT} | jq -r '.status' | grep -q '^Success$' && ok || {
 }
 #echo ${REPORT} | jq -r .report.full | jq .
 
+log 'Rerun the same analyze'
+NEW_JOB_ID=$(get 200 -u user:user "http://127.0.0.1:9001/api/analyzer/${ECHO1_ID}/run" \
+	-H 'Content-Type: application/json' -d '
+		{
+		  "data" : "perdu.com",
+		  "dataType" : "domain"
+		}' | jq -r '.id')²
+echo "  ${NEW_JOB_ID}"
+
+log 'It should return the previous job'
+test "${NEW_JOB_ID}" = "${JOB_ID}" && ok || ko
+
+log 'Run an analyze using Cortex1 format'
+JOB_ID=$(get 200 -u user:user "http://127.0.0.1:9001/api/analyzer/${ECHO1_ID}/run" \
+	-H 'Content-Type: application/json' -d '
+		{
+		  "data" : "perdu.com",
+		  "attributes" : {
+		  	"dataType" : "domain",
+		  	"tlp" : 1
+		  }
+		}' | jq -r '.id')
+echo "  ${JOB_ID}"
+
+log 'Wait report'
+REPORT=$(get 200 -u user:user "http://127.0.0.1:9001/api/job/${JOB_ID}/waitreport")
+
+log 'Status of the report should be success'
+echo ${REPORT} | jq -r '.status' | grep -q '^Success$' && ok || {
+  ko
+  echo ${REPORT} | jq .
+}
+
 log 'Get job artifacts'
 ARTIFACT=$(get 200 -u user:user "http://127.0.0.1:9001/api/job/${JOB_ID}/artifacts" | jq -r '.[] | .data')
+
+log 'Job artifacts should contain original artifact'
 test "${ARTIFACT}" = 'perdu.com' && ok || ko
 
 log 'Get analyer list'
 ANALYZERS=($(get 200 -u user:user "http://127.0.0.1:9001/api/analyzer" | jq '.[] | .id'))
+
+log 'Analyzer list should contain 2 analyzers'
 test "${#ANALYZERS[@]}" -eq 2 && ok || ko
