@@ -15,7 +15,5 @@ export default class MainController {
       this.$state.go('login');
       return;
     }
-
-    this.$log.log('Called from main controller', this.currentUser);
   }
 }

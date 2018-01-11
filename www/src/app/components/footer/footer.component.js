@@ -1,11 +1,20 @@
 'use strict';
 
 import footerTpl from './footer.html';
-import FooterController from './footer.controller';
+
+class FooterController {
+  constructor($log) {
+    'ngInject';
+    this.$log = $log;
+  }
+}
 
 export default class FooterComponent {
-    constructor() {
-        this.templateUrl = footerTpl;
-        this.controller = FooterController;
-    }
+  constructor() {
+    this.templateUrl = footerTpl;
+    this.controller = FooterController;
+    this.require = {
+      main: '^mainPage'
+    };
+  }
 }

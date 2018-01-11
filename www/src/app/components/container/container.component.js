@@ -1,9 +1,15 @@
 'use strict';
 
 import containerTpl from './container.html';
-import ContainerController from './container.controller';
 
 import './container.scss';
+
+class ContainerController {
+  constructor($log) {
+    'ngInject';
+    this.$log = $log;
+  }
+}
 
 export default class ContainerComponent {
   constructor() {

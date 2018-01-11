@@ -1,7 +1,7 @@
 'use strict';
 
 import AnalyzersController from './analyzers.controller';
-import tpl from './analyzers.html';
+import tpl from './analyzers.page.html';
 
 const analyzersModule = angular
   .module('analyzers-module', ['ui.router'])
@@ -10,14 +10,14 @@ const analyzersModule = angular
 
     $stateProvider.state('main.analyzers', {
       url: 'analyzers',
-      component: 'analyzersList',
+      component: 'analyzersPage',
       resolve: {
         analyzers: AnalyzerService => AnalyzerService.list(),
         definitions: AnalyzerService => AnalyzerService.definitions()
       }
     });
   })
-  .component('analyzersList', {
+  .component('analyzersPage', {
     controller: AnalyzersController,
     templateUrl: tpl,
     bindings: {

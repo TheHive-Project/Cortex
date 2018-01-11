@@ -3,7 +3,7 @@
 //import MainComponent from './main.component';
 
 import MainController from './main.controller';
-import mainTpl from './main.html';
+import mainTpl from './main.page.html';
 
 const mainPageModule = angular
   .module('main-module', ['ui.router'])
@@ -15,7 +15,7 @@ const mainPageModule = angular
     $stateProvider.state('main', {
       abstract: true,
       url: '/',
-      component: 'main',
+      component: 'mainPage',
       resolve: {
         currentUser: ($q, $state, AuthService) => {
           'ngInject';
@@ -24,22 +24,34 @@ const mainPageModule = angular
 
           AuthService.current()
             .then(userData => deferred.resolve(userData))
-            .catch(err =>
-              deferred.resolve(err.status === 520 ? err.status : null)
-            );
+            .catch(err => {
+              deferred.reject(err);
+              $state.go(err.status === 520 ? 'maintenance' : 'login');
+
+              //deferred.resolve(err.status === 520 ? err.status : null);
+            });
 
           return deferred.promise;
+        },
+        config: ($q, VersionService) => {
+          let defer = $q.defer();
+
+          VersionService.get().then(response => {
+            defer.resolve(response.data);
+          });
+
+          return defer.promise;
         }
       }
     });
   })
-  .component('main', {
+  .component('mainPage', {
     controller: MainController,
     templateUrl: mainTpl,
     bindings: {
-      currentUser: '<'
+      currentUser: '<',
+      config: '<'
     }
   });
-//.component('main', new MainComponent());
 
 export default mainPageModule;

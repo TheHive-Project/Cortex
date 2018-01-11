@@ -1,8 +1,10 @@
 'use strict';
 
 import angular from 'angular';
-import MaintenanceComponent from './maintenance.component';
 import MaintenanceService from './maintenance.service';
+import MaintenanceController from './maintenance.controller';
+
+import maintenanceTpl from './maintenance.page.html';
 
 const maintenanceModule = angular
   .module('thkit.maintenanceModule', [])
@@ -11,10 +13,13 @@ const maintenanceModule = angular
 
     $stateProvider.state('maintenance', {
       url: '/maintenance',
-      component: 'maintenance'
+      component: 'maintenancePage'
     });
   })
-  .component('maintenance', new MaintenanceComponent())
+  .component('maintenancePage', {
+    controller: MaintenanceController,
+    templateUrl: maintenanceTpl
+  })
   .provider('MaintenanceService', MaintenanceService);
 
 export default maintenanceModule;

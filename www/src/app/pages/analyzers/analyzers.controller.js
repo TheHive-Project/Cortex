@@ -26,9 +26,9 @@ export default class AnalyzersController {
     this.$log.debug('Called from analyzers controller');
 
     // TODO remove this once the analyzers start including all the props
-    this.analyzers.map(analyzer =>
-      _.extend(analyzer, this.definitions[analyzer.analyzerDefinitionId])
-    );
+    // this.analyzers.map(analyzer =>
+    //   _.extend(analyzer, this.definitions[analyzer.analyzerDefinitionId])
+    // );
   }
 
   filterByType(type) {

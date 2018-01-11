@@ -28,8 +28,6 @@ class HeaderController {
   }
 
   $onInit() {
-    this.$log.log('HeaderController.currentUser', this.main.currentUser);
-
     this.isAdmin = this.AuthService.isAdmin(this.main.currentUser);
   }
 }
@@ -42,7 +40,7 @@ export default class HeaderComponent {
       currentUser: '<'
     };
     this.require = {
-      main: '^main'
+      main: '^mainPage'
     };
   }
 }

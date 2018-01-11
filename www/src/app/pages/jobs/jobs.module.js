@@ -1,7 +1,7 @@
 'use strict';
 
 import JobsController from './jobs.controller';
-import tpl from './jobs.html';
+import tpl from './jobs.page.html';
 
 const jobsModule = angular
   .module('jobs-module', ['ui.router'])
@@ -10,13 +10,13 @@ const jobsModule = angular
 
     $stateProvider.state('main.jobs', {
       url: 'jobs',
-      component: 'jobsList',
+      component: 'jobsPage',
       resolve: {
         analyzers: AnalyzerService => AnalyzerService.list()
       }
     });
   })
-  .component('jobsList', {
+  .component('jobsPage', {
     controller: JobsController,
     templateUrl: tpl,
     bindings: {

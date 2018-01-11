@@ -1,7 +1,6 @@
 <div class="login-box">
   <div class="login-box-body">
     <p class="login-box-msg">Sign in to start your session</p>
-    <pre>{{$ctrl.params | json}}</pre>
     <form name="loginForm" ng-submit="$ctrl.login()">
       <div class="form-group has-feedback has-feedback-left">
         <input type="text" class="form-control" placeholder="Login" ng-model="$ctrl.params.username" autocomplete="off" required>

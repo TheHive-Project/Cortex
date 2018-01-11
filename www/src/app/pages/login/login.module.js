@@ -1,7 +1,7 @@
 'use strict';
 
 import LoginController from './login.controller';
-import tpl from './login.html';
+import tpl from './login.page.html';
 
 const loginPageModule = angular
   .module('login-module', ['ui.router'])
@@ -10,10 +10,10 @@ const loginPageModule = angular
 
     $stateProvider.state('login', {
       url: '/login',
-      component: 'login'
+      component: 'loginPage'
     });
   })
-  .component('login', {
+  .component('loginPage', {
     controller: LoginController,
     templateUrl: tpl
   });
