@@ -29,3 +29,7 @@ import 'angular-moment';
 
 // local scripts
 //import "../assets/js/...";
+
+import 'font-awesome/css/font-awesome.css';
+import 'angular-ui-notification/dist/angular-ui-notification.css';
+import 'css-spaces/dist/spaces.css';

@@ -1,0 +1,29 @@
+.organizations-list {
+  .organization-item {
+    padding: 5px;
+    &:nth-child(even) {
+      background: #f9f9f9;
+    }
+    &:nth-child(odd) {
+      background: #FFF;
+    }
+    .media-right {
+      vertical-align: middle;
+    }
+  }
+}
+
+// .analyzers-definitions {
+//   .item {
+//     padding: 5px;
+//     &:nth-child(even) {
+//       background: #f9f9f9;
+//     }
+//     &:nth-child(odd) {
+//       background: #FFF;
+//     }
+//     .media-right {
+//       vertical-align: middle;
+//     }
+//   }
+// }

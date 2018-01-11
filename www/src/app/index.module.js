@@ -14,10 +14,9 @@ import loginModule from './pages/login/login.module';
 import analyzersModule from './pages/analyzers/analyzers.module';
 import jobsModule from './pages/jobs/jobs.module';
 
-import maintenanceModule from './pages/maintenance/maintenance.module';
+import adminOrganizations from './pages/admin/organizations/organizations.module';
 
-import 'font-awesome/css/font-awesome.css';
-import 'angular-ui-notification/dist/angular-ui-notification.css';
+import maintenanceModule from './pages/maintenance/maintenance.module';
 
 const App = angular.module('cortex', [
   // plugins
@@ -45,7 +44,8 @@ const App = angular.module('cortex', [
   loginModule.name,
   maintenanceModule.name,
   analyzersModule.name,
-  jobsModule.name
+  jobsModule.name,
+  adminOrganizations.name
 ]);
 
 App.config(config).run(run);
