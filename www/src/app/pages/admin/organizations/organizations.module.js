@@ -30,7 +30,9 @@ const organizationsModule = angular
         resolve: {
           organization: ($stateParams, OrganizationService) =>
             OrganizationService.getById($stateParams.id),
-          analyzerDefinitions: AnalyzerService => AnalyzerService.definitions()
+          analyzerDefinitions: AnalyzerService => AnalyzerService.definitions(),
+          analyzers: ($stateParams, OrganizationService) =>
+            OrganizationService.analyzers($stateParams.id)
         }
       });
   })
@@ -46,7 +48,8 @@ const organizationsModule = angular
     templateUrl: organizationPageTpl,
     bindings: {
       organization: '<',
-      analyzerDefinitions: '<'
+      analyzerDefinitions: '<',
+      analyzers: '<'
     }
   })
   .service('OrganizationService', organizationService);

@@ -1,5 +1,64 @@
 <section class="content-header">
-  <h1>Organization {{$ctrl.organization.id}}</h1>
+  <h1>Organization: <strong>{{$ctrl.organization.id}}</strong></h1>
 </section>
-<pre>{{$ctrl.organization | json}}</pre>
-<pre>{{$ctrl.analyzerDefinitions | json}}</pre>
+
+<section class="mt-s">
+  <h4>Enabled analyzers</h4>
+
+  <div class="row mv-s" ng-if="$ctrl.analyzers.length === 0">
+    <div class="col-md-12">
+      <div class="empty-message">No analyzer enabled.</div>
+    </div>
+  </div>
+
+  <div class="row mv-s" ng-if="$ctrl.analyzers.length > 0">
+    <div class="col-sm-12 analyzers-list">
+      <div class="analyzer-item media" ng-repeat="analyzer in $ctrl.analyzers track by analyzer.id">
+        <!-- <div class="media-left">
+          <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
+        </div> -->
+        <div class="media-body">
+          <h4 class="media-heading">
+            {{analyzer.name}}
+          </h4>
+          <span class="text-muted">{{analyzer.description}}</span>
+        </div>        
+        <div class="media-right ph-xs text-center">
+          <a href class="text-danger" ng-click="$ctrl.disable(analyzer.id)">
+            <i class="fa fa-ban"></i>Disable</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mt-s">
+  <h4>Available analyzers <small>(Not enabled)</small></h4>
+
+  <div class="row mv-s" ng-if="$ctrl.definitionsIds.length === 0">
+    <div class="col-md-12">
+      <div class="empty-message">No analyzer enabled.</div>
+    </div>
+  </div>
+
+  <div class="row mv-s" ng-if="$ctrl.definitionsIds.length > 0">
+    <div class="col-sm-12 analyzers-list">
+      <div class="analyzer-item media" ng-repeat="def in $ctrl.definitionsIds">
+        <!-- <div class="media-left">
+          <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
+        </div> -->
+        <div class="media-body">
+          <h4 class="media-heading">
+            {{$ctrl.analyzerDefinitions[def].id}}
+          </h4>
+          <span class="text-muted">{{$ctrl.analyzerDefinitions[def].description}}</span>
+        </div>
+        <div class="media-right ph-xs text-center">
+          <a href class="text-success" ng-click="$ctrl.enable(def)">
+            <i class="fa fa-refresh"></i>Enable</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<pre>{{$ctrl.definitionsIds | json}}</pre>

@@ -13,17 +13,17 @@
   }
 }
 
-// .analyzers-definitions {
-//   .item {
-//     padding: 5px;
-//     &:nth-child(even) {
-//       background: #f9f9f9;
-//     }
-//     &:nth-child(odd) {
-//       background: #FFF;
-//     }
-//     .media-right {
-//       vertical-align: middle;
-//     }
-//   }
-// }
+.analyzers-list {
+  .analyzer-item {
+    padding: 5px;
+    &:nth-child(even) {
+      background: #f9f9f9;
+    }
+    &:nth-child(odd) {
+      background: #FFF;
+    }
+    .media-right {
+      vertical-align: middle;
+    }
+  }
+}
