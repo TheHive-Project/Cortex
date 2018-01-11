@@ -11,7 +11,8 @@ POST          /api/login                                                    org.
 ###################
 # API used by TheHive
 GET           /api/status                                                   org.thp.cortex.controllers.StatusCtrl.get
-GET           /api/analyzer                                                 org.thp.cortex.controllers.AnalyzerCtrl.list
+GET           /api/analyzer                                                 org.thp.cortex.controllers.AnalyzerCtrl.find
+POST          /api/analyzer/_search                                         org.thp.cortex.controllers.AnalyzerCtrl.find
 GET           /api/analyzer/:id                                             org.thp.cortex.controllers.AnalyzerCtrl.get(id)
 GET           /api/analyzer/type/:dataType                                  org.thp.cortex.controllers.AnalyzerCtrl.listForType(dataType)
 POST          /api/analyzer/:id/run                                         org.thp.cortex.controllers.JobCtrl.create(id)
@@ -22,6 +23,8 @@ GET           /api/job/:id/artifacts                                        org.
 GET           /api/analyzerdefinition                                       org.thp.cortex.controllers.AnalyzerCtrl.listDefinitions
 POST          /api/analyzerdefinition/scan                                  org.thp.cortex.controllers.AnalyzerCtrl.scan
 POST          /api/organization/:organizationId/analyzer/:analyzerId        org.thp.cortex.controllers.AnalyzerCtrl.create(organizationId, analyzerId)
+GET           /api/organization/:organizationId/analyzer                    org.thp.cortex.controllers.AnalyzerCtrl.findForOrganization(organizationId)
+POST          /api/organization/:organizationId/analyzer/_search            org.thp.cortex.controllers.AnalyzerCtrl.findForOrganization(organizationId)
 
 GET           /api/job                                                      org.thp.cortex.controllers.JobCtrl.list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])
 GET           /api/job/:id                                                  org.thp.cortex.controllers.JobCtrl.get(id)
@@ -53,7 +56,10 @@ GET           /api/list/:listName                                           org.
 POST          /api/list/:listName/_exists                                   org.thp.cortex.controllers.DBListCtrl.itemExists(listName)
 
 GET           /api/user/current                                             org.thp.cortex.controllers.UserCtrl.currentUser()
+GET           /api/user                                                     org.thp.cortex.controllers.UserCtrl.find()
 POST          /api/user/_search                                             org.thp.cortex.controllers.UserCtrl.find()
+GET           /api/organization/:organizationId/user                        org.thp.cortex.controllers.UserCtrl.findForOrganization(organizationId)
+POST          /api/organization/:organizationId/user/_search                org.thp.cortex.controllers.UserCtrl.findForOrganization(organizationId)
 POST          /api/user                                                     org.thp.cortex.controllers.UserCtrl.create()
 GET           /api/user/:userId                                             org.thp.cortex.controllers.UserCtrl.get(userId)
 DELETE        /api/user/:userId                                             org.thp.cortex.controllers.UserCtrl.delete(userId)

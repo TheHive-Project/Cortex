@@ -90,4 +90,19 @@ class UserSrv @Inject() (
   def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[User, NotUsed], Future[Long]) = {
     findSrv[UserModel, User](userModel, queryDef, range, sortBy)
   }
+
+  def findForOrganization(organizationId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[User, NotUsed], Future[Long]) = {
+    import org.elastic4play.services.QueryDSL._
+    find(and("organization" ~= organizationId, queryDef), range, sortBy)
+  }
+
+  def findForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[User, NotUsed], Future[Long]) = {
+    val users = for {
+      user ← get(userId)
+      organizationId = user.organization()
+    } yield findForOrganization(organizationId, queryDef, range, sortBy)
+    val userSource = Source.fromFutureSource(users.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val userTotal = users.flatMap(_._2)
+    userSource -> userTotal
+  }
 }

@@ -64,7 +64,7 @@ class AnalyzerSrv(
 
   private object analyzerMapLock
 
-  rescan
+  rescan()
 
   def getDefinition(analyzerId: String): Future[AnalyzerDefinition] = analyzerMap.get(analyzerId) match {
     case Some(analyzer) ⇒ Future.successful(analyzer)
@@ -100,14 +100,13 @@ class AnalyzerSrv(
   }
 
   def findForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Analyzer, NotUsed], Future[Long]) = {
-    val analyzerConfigs = for {
+    val analyzers = for {
       user ← userSrv.get(userId)
       organizationId = user.organization()
-      analyserConfigs = findForOrganization(organizationId, queryDef, range, sortBy)
-    } yield analyserConfigs
-    val analyserConfigSource = Source.fromFutureSource(analyzerConfigs.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
-    val analyserConfigTotal = analyzerConfigs.flatMap(_._2)
-    analyserConfigSource -> analyserConfigTotal
+    } yield findForOrganization(organizationId, queryDef, range, sortBy)
+    val analyserSource = Source.fromFutureSource(analyzers.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val analyserTotal = analyzers.flatMap(_._2)
+    analyserSource -> analyserTotal
   }
 
   def findForOrganization(organizationId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Analyzer, NotUsed], Future[Long]) = {
@@ -119,7 +118,7 @@ class AnalyzerSrv(
     findSrv[AnalyzerModel, Analyzer](analyzerModel, queryDef, range, sortBy)
   }
 
-  def rescan: Unit = {
+  def rescan(): Unit = {
     scan(analyzersPaths)
   }
 

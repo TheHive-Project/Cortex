@@ -14,7 +14,8 @@ import org.thp.cortex.services.AnalyzerSrv
 
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
-import org.elastic4play.services.QueryDSL
+import org.elastic4play.services.JsonFormat.queryReads
+import org.elastic4play.services.{ QueryDSL, QueryDef }
 
 @Singleton
 class AnalyzerCtrl @Inject() (
@@ -26,8 +27,11 @@ class AnalyzerCtrl @Inject() (
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer) extends AbstractController(components) {
 
-  def list: Action[AnyContent] = authenticated(Roles.read).async { request ⇒
-    val (analyzers, analyzerTotal) = analyzerSrv.findForUser(request.userId, QueryDSL.any, Some("all"), Nil)
+  def find: Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { request ⇒
+    val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
+    val range = request.body.getString("range")
+    val sort = request.body.getStrings("sort").getOrElse(Nil)
+    val (analyzers, analyzerTotal) = analyzerSrv.findForUser(request.userId, query, range, sort)
     val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson)
     renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
   }
@@ -96,4 +100,12 @@ class AnalyzerCtrl @Inject() (
     NoContent
   }
 
+  def findForOrganization(organizationId: String): Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { request ⇒
+    val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
+    val range = request.body.getString("range")
+    val sort = request.body.getStrings("sort").getOrElse(Nil)
+    val (analyzers, analyzerTotal) = analyzerSrv.findForOrganization(organizationId, query, range, sort)
+    val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson)
+    renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
+  }
 }
