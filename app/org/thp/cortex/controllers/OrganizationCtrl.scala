@@ -14,12 +14,13 @@ import org.thp.cortex.services.OrganizationSrv
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
-import org.elastic4play.services.{ AuthSrv, QueryDSL, QueryDef }
+import org.elastic4play.services.{ AuthSrv, AuxSrv, QueryDSL, QueryDef }
 
 @Singleton
 class OrganizationCtrl @Inject() (
     organizationSrv: OrganizationSrv,
     authSrv: AuthSrv,
+    auxSrv: AuxSrv,
     authenticated: Authenticated,
     renderer: Renderer,
     fieldsBodyParser: FieldsBodyParser,
@@ -33,9 +34,12 @@ class OrganizationCtrl @Inject() (
       .map(organization ⇒ renderer.toOutput(CREATED, organization))
   }
 
-  def get(id: String): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
-    organizationSrv.get(id)
-      .map { organization ⇒ renderer.toOutput(OK, organization) }
+  def get(id: String): Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
+    val withStats = request.body.getBoolean("nstats").getOrElse(false)
+    for {
+      organization ← organizationSrv.get(id)
+      organizationWithStats ← auxSrv(organization, 0, withStats, removeUnaudited = false)
+    } yield renderer.toOutput(OK, organizationWithStats)
   }
 
   def update(id: String): Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
@@ -53,7 +57,9 @@ class OrganizationCtrl @Inject() (
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
+    val withStats = request.body.getBoolean("nstats").getOrElse(false)
     val (organizations, total) = organizationSrv.find(query, range, sort)
-    renderer.toOutput(OK, organizations, total)
+    val organizationWithStats = auxSrv(organizations, 0, withStats, removeUnaudited = false)
+    renderer.toOutput(OK, organizationWithStats, total)
   }
 }
