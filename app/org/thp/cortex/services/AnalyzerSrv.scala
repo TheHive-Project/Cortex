@@ -183,4 +183,8 @@ class AnalyzerSrv(
       analyzer ← create(organization, analyzerDefinition, analyzerFields)
     } yield analyzer
   }
+
+  def delete(analyzerId: String)(implicit authContext: AuthContext) = {
+    deleteSrv.realDelete[AnalyzerModel, Analyzer](analyzerModel, analyzerId)
+  }
 }

@@ -114,4 +114,9 @@ class AnalyzerCtrl @Inject() (
     val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson(isAdmin))
     renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
   }
+
+  def delete(analyzerId: String): Action[AnyContent] = authenticated(Roles.admin).async { implicit request ⇒
+    analyzerSrv.delete(analyzerId)
+      .map(_ ⇒ NoContent)
+  }
 }
