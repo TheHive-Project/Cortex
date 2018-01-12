@@ -31,16 +31,17 @@ class AnalyzerCtrl @Inject() (
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
+    val isAdmin = request.roles.contains(Roles.admin)
     val (analyzers, analyzerTotal) = analyzerSrv.findForUser(request.userId, query, range, sort)
-    val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson)
+    val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson(isAdmin))
     renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
   }
 
   def get(analyzerId: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
+    val isAdmin = request.roles.contains(Roles.admin)
     analyzerSrv.get(analyzerId)
-      .flatMap(analyzerJson)
+      .flatMap(analyzerJson(isAdmin))
       .map(analyzer ⇒ renderer.toOutput(OK, analyzer))
-
   }
 
   private val emptyAnalyzerDefinitionJson = Json.obj(
@@ -63,10 +64,14 @@ class AnalyzerCtrl @Inject() (
     }
   }
 
-  private def analyzerJson(analyzer: Analyzer): Future[JsObject] = {
+  private def analyzerJson(isAdmin: Boolean)(analyzer: Analyzer): Future[JsObject] = {
     analyzerSrv.getDefinition(analyzer.analyzerDefinitionId())
       .map(analyzerDefinition ⇒ analyzerJson(analyzer, Some(analyzerDefinition)))
       .recover { case _ ⇒ analyzerJson(analyzer, None) }
+      .map {
+        case a if isAdmin ⇒ a + ("configuration" -> Json.parse(analyzer.configuration()))
+        case a            ⇒ a
+      }
   }
 
   def listForType(dataType: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
@@ -96,7 +101,7 @@ class AnalyzerCtrl @Inject() (
   }
 
   def scan: Action[AnyContent] = authenticated(Roles.admin) { request ⇒
-    analyzerSrv.rescan
+    analyzerSrv.rescan()
     NoContent
   }
 
@@ -104,8 +109,9 @@ class AnalyzerCtrl @Inject() (
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
+    val isAdmin = request.roles.contains(Roles.admin)
     val (analyzers, analyzerTotal) = analyzerSrv.findForOrganization(organizationId, query, range, sort)
-    val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson)
+    val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson(isAdmin))
     renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
   }
 }
