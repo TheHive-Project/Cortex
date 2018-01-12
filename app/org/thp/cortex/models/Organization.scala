@@ -90,4 +90,6 @@ class OrganizationModel @Inject() (
 
 }
 
-class Organization(model: OrganizationModel, attributes: JsObject) extends EntityDef[OrganizationModel, Organization](model, attributes) with OrganizationAttributes
+class Organization(model: OrganizationModel, attributes: JsObject) extends EntityDef[OrganizationModel, Organization](model, attributes) with OrganizationAttributes {
+  override def toJson: JsObject = super.toJson + ("name" -> JsString(id))
+}
