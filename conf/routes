@@ -19,6 +19,7 @@ POST          /api/analyzer/:id/run                                         org.
 GET           /api/job/:id/waitreport                                       org.thp.cortex.controllers.JobCtrl.waitReport(id, atMost ?= "1minute")
 ####################
 
+DELETE        /api/analyzer/:id                                             org.thp.cortex.controllers.AnalyzerCtrl.delete(id)
 GET           /api/job/:id/artifacts                                        org.thp.cortex.controllers.JobCtrl.listArtifacts(id)
 GET           /api/analyzerdefinition                                       org.thp.cortex.controllers.AnalyzerCtrl.listDefinitions
 POST          /api/analyzerdefinition/scan                                  org.thp.cortex.controllers.AnalyzerCtrl.scan
