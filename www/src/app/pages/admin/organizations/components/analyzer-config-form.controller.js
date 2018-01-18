@@ -26,7 +26,7 @@ export default class AnalyzerConfigFormController {
   }
 
   typeOf(config) {
-    return `${config.multi ? 'multi-' : ''}${config.tpe}`;
+    return `${config.multi ? 'multi-' : ''}${config.type}`;
   }
 
   addOption(config) {
@@ -35,6 +35,6 @@ export default class AnalyzerConfigFormController {
       number: 0,
       boolean: true
     };
-    this.analyzer.configuration[config.name].push(defaultValues[config.tpe]);
+    this.analyzer.configuration[config.name].push(defaultValues[config.type]);
   }
 }
