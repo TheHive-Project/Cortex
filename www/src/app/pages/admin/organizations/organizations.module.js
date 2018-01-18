@@ -8,6 +8,9 @@ import organizationsPageTpl from './list/organizations.page.html';
 import OrganizationPageController from './details/organization.page.controller';
 import organizationPageTpl from './details/organization.page.html';
 
+import AnalyzerConfigFormController from './components/analyzer-config-form.controller';
+import analyzerConfigFormTpl from './components/analyzer-config-form.html';
+
 import organizationService from './organizations.service.js';
 
 import './organizations.scss';
@@ -50,6 +53,14 @@ const organizationsModule = angular
       organization: '<',
       analyzerDefinitions: '<',
       analyzers: '<'
+    }
+  })
+  .component('analyzerConfigForm', {
+    controller: AnalyzerConfigFormController,
+    templateUrl: analyzerConfigFormTpl,
+    bindings: {
+      analyzer: '=',
+      definition: '='
     }
   })
   .service('OrganizationService', organizationService);

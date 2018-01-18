@@ -2,11 +2,15 @@
 
 import _ from 'lodash';
 
+import AnalyzerEditController from './analyzer.edit.controller';
+import editModalTpl from './analyzer.edit.modal.html';
+
 export default class OrganizationPageController {
-  constructor($log, OrganizationService) {
+  constructor($log, $uibModal, OrganizationService) {
     'ngInject';
 
     this.$log = $log;
+    this.$uibModal = $uibModal;
     this.OrganizationService = OrganizationService;
   }
 
@@ -17,19 +21,72 @@ export default class OrganizationPageController {
     ).sort();
   }
 
+  openModal(mode, definition, analyzer) {
+    let modal = this.$uibModal.open({
+      animation: true,
+      controller: AnalyzerEditController,
+      controllerAs: '$modal',
+      templateUrl: editModalTpl,
+      size: 'lg',
+      resolve: {
+        definition: () => definition,
+        analyzer: () => _.assign({}, analyzer),
+        mode: () => mode
+      }
+    });
+
+    modal.result
+      .then(response => {
+        this.$log.log(response);
+        if (mode === 'create') {
+          return this.OrganizationService.enableAnalyzer(
+            this.organization.id,
+            definition.id,
+            response
+          );
+        } else {
+          return this.OrganizationService.enableAnalyzer(
+            this.organization.id,
+            analyzer.id,
+            response
+          );
+        }
+      })
+      .then(() => this.reload())
+      .catch(rejection => this.$log.log(rejection));
+  }
+
   enable(analyzerId) {
-    this.OrganizationService.enableAnalyzer(this.organization.id, analyzerId, {
-      name: analyzerId
-    }).then(response => {
-      this.$log.log(`Analyzer ${analyzerId} enabled`, response);
+    let definition = this.analyzerDefinitions[analyzerId];
+
+    if (_.map(definition.configurationItems, 'required').indexOf(true) !== -1) {
+      // The analyzer requires some configurations
+      this.openModal('create', definition, {});
+    } else {
+      this.OrganizationService.enableAnalyzer(
+        this.organization.id,
+        analyzerId,
+        {
+          name: analyzerId
+        }
+      ).then(response => {
+        this.$log.log(`Analyzer ${analyzerId} enabled`, response);
+        this.reload();
+      });
+    }
+  }
+
+  disable(analyzerId) {
+    this.OrganizationService.disableAnalyzer(analyzerId).then(response => {
+      this.$log.log(`Analyzer ${analyzerId} disabled`, response);
       this.reload();
-      this.$onInit();
     });
   }
 
   reload() {
-    this.OrganizationService.analyzers(this.organization.id).then(
-      analyzers => (this.analyzers = analyzers)
-    );
+    this.OrganizationService.analyzers(this.organization.id).then(analyzers => {
+      this.analyzers = analyzers;
+      this.$onInit();
+    });
   }
 }

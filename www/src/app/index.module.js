@@ -18,6 +18,8 @@ import adminOrganizations from './pages/admin/organizations/organizations.module
 
 import maintenanceModule from './pages/maintenance/maintenance.module';
 
+import '../assets/images/logo-dark.svg'
+
 const App = angular.module('cortex', [
   // plugins
   uiRouter,

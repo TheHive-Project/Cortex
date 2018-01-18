@@ -3,7 +3,7 @@
 </section>
 
 <section class="mt-s">
-  <h4>Enabled analyzers</h4>
+  <h4>Enabled analyzers ({{$ctrl.analyzers.length}})</h4>
 
   <div class="row mv-s" ng-if="$ctrl.analyzers.length === 0">
     <div class="col-md-12">
@@ -17,12 +17,24 @@
         <!-- <div class="media-left">
           <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
         </div> -->
-        <div class="media-body">
+        <div class="media-body">          
           <h4 class="media-heading">
-            {{analyzer.name}}
+            <span class="mr-m">{{analyzer.name}}</span>
           </h4>
-          <span class="text-muted">{{analyzer.description}}</span>
+          <h4 class="media-heading">            
+            <small class="mr-xxs">
+              <strong>Version:</strong> {{analyzer.version}}</small>
+            <small class="mr-xxs" ng-if="analyzer.author">
+              <strong>Author:</strong> {{analyzer.author}}</small>
+            <small class="mr-xxs" ng-if="analyzer.license">
+              <strong>License:</strong> {{analyzer.license}}</small>
+          </h4>
+          <div class="mt-xs text-muted">{{analyzer.description}}</div>
         </div>        
+        <div class="media-right ph-xs text-center">
+          <a href class="text-primary" ng-click="$ctrl.openModal('edit', $ctrl.analyzerDefinitions[analyzer.analyzerDefinitionId], analyzer)">
+            <i class="fa fa-edit"></i>Edit</a>
+        </div>
         <div class="media-right ph-xs text-center">
           <a href class="text-danger" ng-click="$ctrl.disable(analyzer.id)">
             <i class="fa fa-ban"></i>Disable</a>
@@ -32,8 +44,8 @@
   </div>
 </section>
 
-<section class="mt-s">
-  <h4>Available analyzers <small>(Not enabled)</small></h4>
+<section class="mt-m">
+  <h4>Available analyzers ({{$ctrl.definitionsIds.length}})</h4>
 
   <div class="row mv-s" ng-if="$ctrl.definitionsIds.length === 0">
     <div class="col-md-12">
@@ -43,15 +55,23 @@
 
   <div class="row mv-s" ng-if="$ctrl.definitionsIds.length > 0">
     <div class="col-sm-12 analyzers-list">
-      <div class="analyzer-item media" ng-repeat="def in $ctrl.definitionsIds">
+      <div class="analyzer-item media" ng-repeat="def in $ctrl.definitionsIds" ng-init="definition = $ctrl.analyzerDefinitions[def]">
         <!-- <div class="media-left">
           <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
-        </div> -->
+        </div> -->        
         <div class="media-body">
           <h4 class="media-heading">
-            {{$ctrl.analyzerDefinitions[def].id}}
+            <span class="mr-m">{{definition.id}}</span>             
           </h4>
-          <span class="text-muted">{{$ctrl.analyzerDefinitions[def].description}}</span>
+          <h4 class="media-heading">
+            <small class="mr-xxs">
+              <strong>Version:</strong> {{definition.version}}</small>
+            <small class="mr-xxs" ng-if="definition.author">
+              <strong>Author:</strong> {{definition.author}}</small>
+            <small class="mr-xxs" ng-if="definition.license">
+              <strong>License:</strong> {{definition.license}}</small>
+          </h4>
+          <div class="mt-xs text-muted">{{definition.description}}</div>          
         </div>
         <div class="media-right ph-xs text-center">
           <a href class="text-success" ng-click="$ctrl.enable(def)">
@@ -61,4 +81,3 @@
     </div>
   </div>
 </section>
-<pre>{{$ctrl.definitionsIds | json}}</pre>

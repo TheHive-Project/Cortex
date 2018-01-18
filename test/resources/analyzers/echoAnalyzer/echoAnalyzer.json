@@ -29,7 +29,29 @@
     "type": "boolean",
     "multi": false,
     "required": true
-  }],
+  },
+  {
+    "name": "StringField",
+    "description": "config item with required string value",
+    "type": "string",
+    "multi": false,
+    "required": true
+  }, {
+    "name": "NumberArray",
+    "description": "config item with multiple number value",
+    "type": "number",
+    "multi": true,
+    "required": false,
+    "defaultValue": [10, 20]
+  }, {
+    "name": "BooleanArray",
+    "description": "config item with multiple boolean value",
+    "type": "boolean",
+    "multi": true,
+    "required": false,
+    "defaultValue": [true, true]
+  }
+],
   "description": "Fake analyzer used for functional tests",
   "dataTypeList": ["domain"],
   "command": "echoAnalyzer/echoAnalyzer.sh"

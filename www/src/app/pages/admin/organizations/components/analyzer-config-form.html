@@ -1,0 +1,84 @@
+<section>
+  <h4>Base details</h4>
+
+  <div class="form-group">
+    <label class="col-sm-offset-3 col-sm-9 control-label">
+      <small>
+        <strong>Version:</strong> {{$ctrl.definition.version}}</small>
+      <small class="mr-xxs" ng-if="definition.author">
+        <strong>Author:</strong> {{$ctrl.definition.author}}</small>
+      <small class="mr-xxs" ng-if="definition.license">
+        <strong>License:</strong> {{$ctrl.definition.license}}</small>
+    </label>    
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Name</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" name="name" ng-model="$ctrl.analyzer.name" />
+    </div>
+  </div>
+</section>
+
+<section ng-show="$ctrl.definition.configurationItems.length > 0">
+  <h4>Configuration</h4>
+  <div class="form-group" ng-repeat="config in $ctrl.definition.configurationItems">
+    <label class="col-sm-3 control-label">
+      <span>{{config.name}}</span>
+      <span class="ml-xxs text-danger" ng-show="config.required"><i class="fa fa-asterisk"></i></span>
+    </label>
+    <div class="col-sm-9" ng-switch="$ctrl.typeOf(config)">
+      <input ng-switch-when="string" class="form-control" type="text" ng-required="config.required" ng-model="$ctrl.analyzer.configuration[config.name]">
+      <input ng-switch-when="number" class="form-control" type="number" ng-required="config.required" ng-model="$ctrl.analyzer.configuration[config.name]">
+
+      <div ng-switch-when="multi-string" class="clearfix">
+        <div class="pull-right">
+          <a href ng-click="$ctrl.addOption(config)">Add option</a>
+        </div>
+        <input class="form-control mb-xxxs" type="text" ng-repeat="val in $ctrl.analyzer.configuration[config.name] track by $index" ng-model="val" ng-required="config.required">        
+      </div>
+
+      <div ng-switch-when="multi-number" class="clearfix">
+        <div class="pull-right">
+          <a href ng-click="$ctrl.addOption(config)">Add option</a>
+        </div>
+        <input class="form-control mb-xxxs" type="number" ng-repeat="val in $ctrl.analyzer.configuration[config.name] track by $index"
+          ng-model="$ctrl.analyzer.configuration[config.name][$index]" ng-required="config.required">
+      </div>      
+      
+      <div ng-switch-when="boolean">
+        <div class="btn-group">
+          <label uib-btn-radio="true" class="btn btn-default" ng-model="$ctrl.analyzer.configuration[config.name]">True</label>
+          <label uib-btn-radio="false" class="btn btn-default" ng-model="$ctrl.analyzer.configuration[config.name]">False</label>
+        </div>
+      </div>
+
+      <div ng-switch-when="multi-boolean" class="clearfix">
+        <div class="pull-right">
+          <a href ng-click="$ctrl.addOption(config)">Add option</a>
+        </div>
+        <div class="mb-xxxs" ng-repeat="val in $ctrl.analyzer.configuration[config.name] track by $index">
+          <div class="btn-group">
+            <label uib-btn-radio="true" class="btn btn-default" ng-model="$ctrl.analyzer.configuration[config.name][$index]">True</label>
+            <label uib-btn-radio="false" class="btn btn-default" ng-model="$ctrl.analyzer.configuration[config.name][$index]">False</label>
+          </div>
+        </div>        
+      </div>
+      <p class="help-block">{{config.description}}</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h4>Rate limiting</h4>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Rate</label>
+    <div class="col-sm-4">
+      <input class="form-control" type="number" ng-model="$ctrl.analyzer.rate">
+    </div>
+    <div class="col-sm-5">      
+      <select class="form-control" ng-model="$ctrl.analyzer.rateUnit" ng-options="unit for unit in $ctrl.rateUnits">
+        <option value="">-- choose unit --</option>
+      </select>
+    </div>    
+  </div>
+</section>
