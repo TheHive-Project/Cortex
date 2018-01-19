@@ -3,6 +3,9 @@
 import _ from 'lodash';
 import angular from 'angular';
 
+import AnalyzerRunController from './analyzer.run.controller';
+import runAnalyzerModalTpl from './analyzer.run.modal.html';
+
 export default class AnalyzersController {
   constructor($log, $state, $uibModal, AnalyzerService, NotificationService) {
     'ngInject';
@@ -24,11 +27,6 @@ export default class AnalyzersController {
 
   $onInit() {
     this.$log.debug('Called from analyzers controller');
-
-    // TODO remove this once the analyzers start including all the props
-    // this.analyzers.map(analyzer =>
-    //   _.extend(analyzer, this.definitions[analyzer.analyzerDefinitionId])
-    // );
   }
 
   filterByType(type) {
@@ -42,9 +40,9 @@ export default class AnalyzersController {
   run(analyzer, dataType) {
     let modalInstance = this.$uibModal.open({
       animation: true,
-      templateUrl: 'views/analyzers.form.html',
-      controller: 'AnalyzerFormCtrl',
-      controllerAs: 'vm',
+      templateUrl: runAnalyzerModalTpl,
+      controller: AnalyzerRunController,
+      controllerAs: '$modal',
       size: 'lg',
       resolve: {
         initialData: () => ({
@@ -57,10 +55,10 @@ export default class AnalyzersController {
     modalInstance.result
       .then(result => this.AnalyzerService.run(result.analyzer.id, result))
       .then(response => {
-        this.$state.go('app.jobs');
+        this.$state.go('main.jobs');
         this.NotificationService.success(
           `${response.data.analyzerId} started successfully on ${
-            response.data.artifact.data
+            response.data.data
           }`
         );
       })

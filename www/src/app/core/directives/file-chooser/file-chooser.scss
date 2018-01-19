@@ -1,0 +1,18 @@
+.dropzone {
+  height: auto;
+  min-height: 5em;
+  padding: 5px;
+  background-color: #fafafa;
+}
+
+.dropzone .dz-message {
+  margin: 0 !important;
+  border: 3px dashed #337ab7 !important;
+  line-height: 4em;
+  text-align: center;
+  cursor: pointer;
+}
+
+.dropzone .dz-message span {
+  position: inherit !important;
+}

@@ -13,7 +13,9 @@
         "no-var": "error"
     },
     "globals": {
-        "angular": false
+        "angular": false,
+        "Dropzone": false,
+        "$": false
     },
     "env": {
         "browser": true,

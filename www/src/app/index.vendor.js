@@ -27,6 +27,8 @@ import 'moment';
 
 import 'angular-moment';
 
+import 'dropzone';
+
 // local scripts
 //import "../assets/js/...";
 

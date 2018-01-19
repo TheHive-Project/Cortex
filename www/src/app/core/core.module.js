@@ -4,6 +4,7 @@ const shared = angular.module('core.shared', []);
 
 import validationTestDirective from './directives/validation-test/validation-test.directive';
 import fixedHeightDirective from './directives/fixed-height/fixed-height.directive';
+import fileChooserDirective from './directives/file-chooser/file-chooser.directive';
 
 import constants from './services/constants';
 import storeFactory from './services/store.factory';
@@ -24,6 +25,7 @@ import jobService from './services/JobService';
 
 validationTestDirective(shared);
 fixedHeightDirective(shared);
+fileChooserDirective(shared);
 
 /* Common services */
 authService(shared);
