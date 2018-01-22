@@ -2,12 +2,17 @@
 
 import _ from 'lodash';
 
-class AnalyzerService {
-  constructor($q, $http) {
+import AnalyzerRunController from './analyzer.run.controller';
+import runAnalyzerModalTpl from './analyzer.run.modal.html';
+
+export default class AnalyzerService {
+  constructor($log, $q, $http, $uibModal) {
     'ngInject';
 
+    this.$log = $log;
     this.$q = $q;
     this.$http = $http;
+    this.$uibModal = $uibModal;
 
     this.analyzerDefinitions = null;
     this.analyzers = null;
@@ -61,6 +66,28 @@ class AnalyzerService {
     return defered.promise;
   }
 
+  openRunModal(analyzers, observable) {
+    let modalInstance = this.$uibModal.open({
+      animation: true,
+      templateUrl: runAnalyzerModalTpl,
+      controller: AnalyzerRunController,
+      controllerAs: '$modal',
+      size: 'lg',
+      resolve: {
+        observable: () => angular.copy(observable),
+        analyzers: () => angular.copy(analyzers)
+      }
+    });
+
+    return modalInstance.result.then(result =>
+      this.$q.all(
+        result.analyzerIds.map(analyzerId =>
+          this.run(analyzerId, result.observable)
+        )
+      )
+    );
+  }
+
   run(id, artifact) {
     let postData;
 
@@ -112,8 +139,4 @@ class AnalyzerService {
       return this.$http.post('./api/analyzer/' + id + '/run', postData);
     }
   }
-}
-
-export default function(app) {
-  app.service('AnalyzerService', AnalyzerService);
 }

@@ -3,6 +3,8 @@
 import AnalyzersController from './analyzers.controller';
 import tpl from './analyzers.page.html';
 
+import analyzerService from './analyzers.service.js';
+
 const analyzersModule = angular
   .module('analyzers-module', ['ui.router'])
   .config($stateProvider => {
@@ -24,6 +26,7 @@ const analyzersModule = angular
       analyzers: '<',
       definitions: '<'
     }
-  });
+  })
+  .service('AnalyzerService', analyzerService);
 
 export default analyzersModule;

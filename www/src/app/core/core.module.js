@@ -20,7 +20,6 @@ import utilsService from './services/common/UtilsService';
 
 import fangFilter from './filters/fang';
 
-import analyzerService from './services/AnalyzerService';
 import jobService from './services/JobService';
 
 validationTestDirective(shared);
@@ -37,7 +36,6 @@ versionService(shared);
 utilsService(shared);
 
 /* App services */
-analyzerService(shared);
 jobService(shared);
 
 constants(shared);

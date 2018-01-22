@@ -1,10 +1,6 @@
 'use strict';
 
-import _ from 'lodash';
-import angular from 'angular';
-
-import AnalyzerRunController from './analyzer.run.controller';
-import runAnalyzerModalTpl from './analyzer.run.modal.html';
+import _ from 'lodash/core';
 
 export default class AnalyzersController {
   constructor($log, $state, $uibModal, AnalyzerService, NotificationService) {
@@ -38,32 +34,24 @@ export default class AnalyzersController {
   }
 
   run(analyzer, dataType) {
-    let modalInstance = this.$uibModal.open({
-      animation: true,
-      templateUrl: runAnalyzerModalTpl,
-      controller: AnalyzerRunController,
-      controllerAs: '$modal',
-      size: 'lg',
-      resolve: {
-        initialData: () => ({
-          analyzer: angular.copy(analyzer),
-          dataType: angular.copy(dataType)
-        })
-      }
-    });
+    analyzer.active = true;
 
-    modalInstance.result
-      .then(result => this.AnalyzerService.run(result.analyzer.id, result))
-      .then(response => {
+    this.AnalyzerService.openRunModal([analyzer], {
+      dataType: dataType
+    })
+      .then(responses => {
         this.$state.go('main.jobs');
-        this.NotificationService.success(
-          `${response.data.analyzerId} started successfully on ${
-            response.data.data
-          }`
-        );
+
+        responses.forEach(resp => {
+          this.NotificationService.success(
+            `${resp.data.analyzerName} started successfully on ${resp.data
+              .data || resp.data.attributes.filename}`
+          );
+        });
       })
       .catch(err => {
-        if (err !== 'cancel') {
+        this.$log.log(err);
+        if (!_.isString(err)) {
           this.NotificationService.error(
             'An error occurred: ' + err.statusText ||
               'An unexpected error occurred'
