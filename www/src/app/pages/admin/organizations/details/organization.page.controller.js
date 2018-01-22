@@ -30,7 +30,7 @@ export default class OrganizationPageController {
       size: 'lg',
       resolve: {
         definition: () => definition,
-        analyzer: () => _.assign({}, analyzer),
+        analyzer: () => angular.copy(analyzer),
         mode: () => mode
       }
     });
