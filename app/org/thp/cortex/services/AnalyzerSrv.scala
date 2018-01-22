@@ -181,7 +181,6 @@ class AnalyzerSrv(
     for {
       organization ← organizationSrv.get(organizationId)
       analyzerDefinition ← getDefinition(analyzerDefinitionId)
-      _ = println(s"Creating analyzer in organization $organizationId from $analyzerDefinitionId with attribtues $analyzerFields")
       analyzer ← create(organization, analyzerDefinition, analyzerFields)
     } yield analyzer
   }
@@ -190,7 +189,7 @@ class AnalyzerSrv(
     deleteSrv.realDelete[AnalyzerModel, Analyzer](analyzerModel, analyzerId)
 
   def update(analyzerId: String, fields: Fields, modifyConfig: ModifyConfig = ModifyConfig.default)(implicit authContext: AuthContext): Future[Analyzer] = {
-    val analyzerFields = fields.getValue("configuration").fold(fields)(cfg ⇒ fields.set("configuration", Json.toJson(cfg)))
+    val analyzerFields = fields.getValue("configuration").fold(fields)(cfg ⇒ fields.set("configuration", cfg.toString))
     updateSrv[AnalyzerModel, Analyzer](analyzerModel, analyzerId, analyzerFields, modifyConfig)
   }
 }
