@@ -7,7 +7,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
-import play.api.libs.json.JsObject
+import play.api.libs.json.{ JsObject, Json }
 import play.api.{ Configuration, Logger }
 
 import akka.NotUsed
@@ -189,6 +189,8 @@ class AnalyzerSrv(
   def delete(analyzerId: String)(implicit authContext: AuthContext): Future[Unit] =
     deleteSrv.realDelete[AnalyzerModel, Analyzer](analyzerModel, analyzerId)
 
-  def update(analyzerId: String, fields: Fields, modifyConfig: ModifyConfig = ModifyConfig.default)(implicit authContext: AuthContext): Future[Analyzer] =
-    updateSrv[AnalyzerModel, Analyzer](analyzerModel, analyzerId, fields, modifyConfig)
+  def update(analyzerId: String, fields: Fields, modifyConfig: ModifyConfig = ModifyConfig.default)(implicit authContext: AuthContext): Future[Analyzer] = {
+    val analyzerFields = fields.getValue("configuration").fold(fields)(cfg ⇒ fields.set("configuration", Json.toJson(cfg)))
+    updateSrv[AnalyzerModel, Analyzer](analyzerModel, analyzerId, analyzerFields, modifyConfig)
+  }
 }
