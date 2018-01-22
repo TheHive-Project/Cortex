@@ -116,4 +116,9 @@ class AnalyzerCtrl @Inject() (
     analyzerSrv.delete(analyzerId)
       .map(_ ⇒ NoContent)
   }
+
+  def update(analyzerId: String): Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request =>
+    analyzerSrv.update(analyzerId, request.body)
+      .map(analyzer => renderer.toOutput(OK, analyzer))
+  }
 }

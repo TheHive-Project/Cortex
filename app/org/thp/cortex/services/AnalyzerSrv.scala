@@ -21,6 +21,8 @@ import org.elastic4play.services._
 import org.scalactic._
 import org.scalactic.Accumulation._
 
+import org.elastic4play.database.ModifyConfig
+
 @Singleton
 class AnalyzerSrv(
     analyzersPaths: Seq[Path],
@@ -184,7 +186,9 @@ class AnalyzerSrv(
     } yield analyzer
   }
 
-  def delete(analyzerId: String)(implicit authContext: AuthContext): Future[Unit] = {
+  def delete(analyzerId: String)(implicit authContext: AuthContext): Future[Unit] =
     deleteSrv.realDelete[AnalyzerModel, Analyzer](analyzerModel, analyzerId)
-  }
+
+  def update(analyzerId: String, fields: Fields, modifyConfig: ModifyConfig = ModifyConfig.default)(implicit authContext: AuthContext): Future[Analyzer] =
+    updateSrv[AnalyzerModel, Analyzer](analyzerModel, analyzerId, fields, modifyConfig)
 }
