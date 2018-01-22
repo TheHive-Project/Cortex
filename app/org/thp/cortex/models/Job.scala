@@ -30,6 +30,7 @@ trait JobAttributes { _: AttributeDef ⇒
   val message = optionalAttribute("message", F.textFmt, "Message associated to the analysis")
   val errorMessage = optionalAttribute("message", F.textFmt, "Message returned by the analyzer when it fails")
   val parameters = attribute("parameters", F.stringFmt, "Parameters for this job", "{}")
+  val input = optionalAttribute("input", F.textFmt, "Data sent to analyzer")
 }
 
 @Singleton

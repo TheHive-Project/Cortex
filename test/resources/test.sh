@@ -163,12 +163,13 @@ ECHO1_ID=$(get 201 -u admin:admin 'http://127.0.0.1:9001/api/organization/thp/an
 	-H 'Content-Type: application/json' -d '
 		{
 		  "name" : "echo1",
-      "configuration": {
-        "multiText": ["v1", "v2"],
-        "num": 42,
-        "bool": true
-      }
-		}' | jq -r '.id')
+		  "configuration": {
+		  	"multiText": ["v1", "v2"],
+        	"num": 42,
+        	"bool": true,
+        	"StringField": "plop"
+      	}
+	}' | jq -r '.id')
 
 else
   log 'Get EchoAnalyer ID'
@@ -207,7 +208,7 @@ NEW_JOB_ID=$(get 200 -u user:user "http://127.0.0.1:9001/api/analyzer/${ECHO1_ID
 		{
 		  "data" : "perdu.com",
 		  "dataType" : "domain"
-		}' | jq -r '.id')²
+		}' | jq -r '.id')
 echo "  ${NEW_JOB_ID}"
 
 log 'It should return the previous job'

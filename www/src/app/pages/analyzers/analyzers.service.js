@@ -93,7 +93,7 @@ export default class AnalyzerService {
 
     if (artifact.dataType === 'file') {
       postData = {
-        data: artifact.attachment,
+        attachment: artifact.attachment,
         dataType: artifact.dataType,
         tlp: artifact.tlp.value
       };

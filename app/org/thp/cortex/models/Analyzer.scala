@@ -19,7 +19,7 @@ object RateUnit extends Enumeration with HiveEnumeration {
 trait AnalyzerAttributes { _: AttributeDef ⇒
   val name = attribute("name", F.stringFmt, "Analyzer name")
   val analyzerDefinitionId = attribute("analyzerDefinitionId", F.stringFmt, "Analyzer definition id", O.readonly)
-  val analyzerDefinitionName = attribute("analyzerDefinitionName", F.stringFmt, "Analyzer definition name", O.readonly)
+  val dataTypeList = multiAttribute("dataTypeList", F.stringFmt, "List of data type this analyzer can manage")
   val configuration = attribute("configuration", F.textFmt, "Configuration of analyzer", O.sensitive)
   val rate = optionalAttribute("rate", F.numberFmt, "Number ")
   val rateUnit = optionalAttribute("rateUnit", F.enumFmt(RateUnit), "")

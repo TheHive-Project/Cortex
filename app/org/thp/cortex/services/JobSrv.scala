@@ -23,7 +23,8 @@ import org.scalactic.{ Bad, Good, One, Or }
 import org.thp.cortex.models._
 
 import org.elastic4play._
-import org.elastic4play.controllers.{ AttachmentInputValue, Fields, FileInputValue }
+import org.elastic4play.controllers._
+import org.elastic4play.database.ModifyConfig
 import org.elastic4play.models.{ AbstractModelDef, BaseEntity }
 import org.elastic4play.services._
 
@@ -125,12 +126,12 @@ class JobSrv(
 
   def legacyCreate(analyzer: Analyzer, attributes: JsObject, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
     val dataType = Or.from((attributes \ "dataType").asOpt[String], One(MissingAttributeError("dataType")))
-    val dataFiv = (fields.getString("data"), fields.get("attachment")) match {
-      case (Some(data), None)                ⇒ Good(Left(data))
-      case (None, Some(fiv: FileInputValue)) ⇒ Good(Right(fiv))
-      case (None, Some(other))               ⇒ Bad(One(InvalidFormatAttributeError("attachment", "attachment", other)))
-      case (_, Some(fiv))                    ⇒ Bad(One(InvalidFormatAttributeError("data/attachment", "string/attachment", fiv)))
-      case (None, None)                      ⇒ Bad(One(MissingAttributeError("data/attachment")))
+    val dataFiv = fields.get("data") match {
+      case Some(fiv: FileInputValue)            ⇒ Good(Right(fiv))
+      case Some(StringInputValue(Seq(data)))    ⇒ Good(Left(data))
+      case Some(JsonInputValue(JsString(data))) ⇒ Good(Left(data))
+      case Some(iv)                             ⇒ Bad(One(InvalidFormatAttributeError("data", "string/attachment", iv)))
+      case None                                 ⇒ Bad(One(MissingAttributeError("data")))
     }
     val tlp = (attributes \ "tlp").asOpt[Long].getOrElse(2L)
     val message = (attributes \ "message").asOpt[String].getOrElse("")
@@ -142,7 +143,11 @@ class JobSrv(
       .fold(
         typeDataAttachment ⇒ typeDataAttachment._2.flatMap(
           da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters)),
-        errors ⇒ Future.failed(AttributeCheckingError("job", errors)))
+        errors ⇒ {
+          val attributeError = AttributeCheckingError("job", errors)
+          logger.error("legacy job create fails", attributeError)
+          Future.failed(attributeError)
+        })
   }
 
   def create(analyzerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
@@ -217,7 +222,12 @@ class JobSrv(
           }
           analyzerSrv.getDefinition(analyzer.analyzerDefinitionId()).flatMap { analyzerDefinition ⇒
             createSrv[JobModel, Job](jobModel, fieldWithData).andThen {
-              case Success(job) ⇒ run(analyzerDefinition, analyzer, job).onComplete(e ⇒ println(s"DEBUG: job run : $e"))
+              case Success(job) ⇒
+                run(analyzerDefinition, analyzer, job)
+                  .onComplete {
+                    case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
+                    case Failure(e) ⇒ logger.error(s"Job ${job.id} has failed", e)
+                  }
             }
           }
         case false ⇒
@@ -248,7 +258,7 @@ class JobSrv(
     }
     else {
       import org.elastic4play.services.QueryDSL._
-      logger.info(s"Looking for similar job (analyzer=${analyzer.id}, dataType=$dataType, data=${dataAttachment}, tlp=$tlp, parameters=$parameters")
+      logger.info(s"Looking for similar job (analyzer=${analyzer.id}, dataType=$dataType, data=$dataAttachment, tlp=$tlp, parameters=$parameters")
       val now = new Date().getTime
       find(and(
         "analyzerId" ~= analyzer.id,
@@ -306,7 +316,9 @@ class JobSrv(
               }
           }
           else {
-            endJob(job, JobStatus.Failure, Some((report \ "errorMessage").as[String]))
+            endJob(job, JobStatus.Failure,
+              (report \ "errorMessage").asOpt[String],
+              (report \ "input").asOpt[String])
           }
         }
         catch {
@@ -329,7 +341,7 @@ class JobSrv(
   private def buildInput(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job): Future[JsObject] = {
     job.attachment()
       .map { attachment ⇒
-        val tempFile = Files.createTempDirectory(s"cortex-job-${job.id}-")
+        val tempFile = Files.createTempFile(s"cortex-job-${job.id}-", "")
         attachmentSrv.source(attachment.id).runWith(FileIO.toPath(tempFile))
           .flatMap {
             case ioresult if ioresult.status.isSuccess ⇒ Future.successful(Some(tempFile))
@@ -351,7 +363,7 @@ class JobSrv(
         val configAndParam = analyzer.config.deepMerge(job.params)
         analyzerDefinition.configurationItems
           .validatedBy(_.read(configAndParam))
-          .map(cfg ⇒ Json.obj("config" -> JsObject(cfg)))
+          .map(cfg ⇒ Json.obj("config" -> JsObject(cfg).deepMerge(analyzerDefinition.configuration)))
           .map(_ deepMerge artifact +
             ("dataType" -> JsString(job.dataType())) +
             ("message" -> JsString(job.message().getOrElse(""))))
@@ -365,14 +377,16 @@ class JobSrv(
     val fields = Fields.empty
       .set("status", JobStatus.InProgress.toString)
       .set("startDate", Json.toJson(new Date))
-    updateSrv(job, fields)
+    updateSrv(job, fields, ModifyConfig(retryOnConflict = 0))
   }
 
-  private def endJob(job: Job, status: JobStatus.Type, errorMessage: Option[String] = None)(implicit authContext: AuthContext): Future[Job] = {
+  private def endJob(job: Job, status: JobStatus.Type, errorMessage: Option[String] = None, input: Option[String] = None)(implicit authContext: AuthContext): Future[Job] = {
     val fields = Fields.empty
       .set("status", status.toString)
       .set("endDate", Json.toJson(new Date))
-    updateSrv(job, errorMessage.fold(fields)(fields.set("message", _)))
+      .set("input", input.map(JsString.apply))
+      .set("message", errorMessage.map(JsString.apply))
+    updateSrv(job, fields, ModifyConfig.default)
   }
 
   private def readStream(stream: InputStream): String = {

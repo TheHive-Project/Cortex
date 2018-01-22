@@ -11,6 +11,8 @@ import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponen
 
 import akka.actor.{ ActorRef, ActorSystem }
 import akka.pattern.ask
+import akka.stream.Materializer
+import akka.stream.scaladsl.Sink
 import akka.util.Timeout
 import org.thp.cortex.models.{ Job, JobStatus, Roles }
 import org.thp.cortex.services.AuditActor.{ JobEnded, Register }
@@ -31,6 +33,7 @@ class JobCtrl @Inject() (
     renderer: Renderer,
     components: ControllerComponents,
     implicit val ec: ExecutionContext,
+    implicit val mat: Materializer,
     implicit val actorSystem: ActorSystem) extends AbstractController(components) with Status {
 
   def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
@@ -50,6 +53,7 @@ class JobCtrl @Inject() (
         renderer.toOutput(OK, job)
       }
   }
+
   //  def remove(jobId: String): Action[AnyContent] = Action.async { request ⇒
   //    jobSrv.remove(jobId).map(_ ⇒ Ok(""))
   //  }
@@ -58,12 +62,48 @@ class JobCtrl @Inject() (
     jobSrv.get(jobId).flatMap(getJobWithReport)
   }
 
-  private def getJobWithReport(job: Job): Future[JsValue] = {
+  private def getJobWithReport(job: Job)(implicit authContext: AuthContext): Future[JsValue] = {
     (job.status() match {
-      case JobStatus.Success    ⇒ jobSrv.getReport(job).map(Json.toJson(_))
+      case JobStatus.Success ⇒
+        for {
+          report ← jobSrv.getReport(job)
+          (artifactSource, _) = jobSrv.findArtifacts(job.id, QueryDSL.any, Some("all"), Nil)
+          artifacts ← artifactSource
+            .collect {
+              case artifact if artifact.data().isDefined ⇒
+                Json.obj(
+                  "data" -> artifact.data(),
+                  "message" -> artifact.message(),
+                  "tags" -> artifact.tags(),
+                  "tlp" -> artifact.tlp())
+              case artifact if artifact.attachment().isDefined ⇒
+                artifact.attachment().fold(JsObject.empty) { a ⇒
+                  Json.obj(
+                    "attachment" ->
+                      Json.obj(
+                        "contentType" -> a.contentType,
+                        "id" -> a.id,
+                        "name" -> a.name,
+                        "size" -> a.size),
+                    "message" -> artifact.message(),
+                    "tags" -> artifact.tags(),
+                    "tlp" -> artifact.tlp())
+                }
+            }
+            .runWith(Sink.seq)
+        } yield Json.obj(
+          "summary" -> Json.parse(report.summary()),
+          "full" -> Json.parse(report.full()),
+          "success" -> true,
+          "artifacts" -> artifacts)
       case JobStatus.InProgress ⇒ Future.successful(JsString("Running"))
-      case JobStatus.Failure    ⇒ Future.successful(JsString(job.errorMessage().getOrElse("error")))
-      case JobStatus.Waiting    ⇒ Future.successful(JsString("Waiting"))
+      case JobStatus.Failure ⇒
+        val errorMessage = job.errorMessage().getOrElse("")
+        Future.successful(Json.obj(
+          "errorMessage" → errorMessage,
+          "input" → job.input(),
+          "success" → false))
+      case JobStatus.Waiting ⇒ Future.successful(JsString("Waiting"))
     })
       .map { report ⇒
         Json.toJson(job).as[JsObject] + ("report" -> report)

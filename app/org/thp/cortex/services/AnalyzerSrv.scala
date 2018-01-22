@@ -16,7 +16,7 @@ import akka.stream.scaladsl.{ Sink, Source }
 import org.thp.cortex.models._
 
 import org.elastic4play.{ AttributeCheckingError, MultiError, NotFoundError }
-import org.elastic4play.controllers.Fields
+import org.elastic4play.controllers.{ Fields, StringInputValue }
 import org.elastic4play.services._
 import org.scalactic._
 import org.scalactic.Accumulation._
@@ -166,8 +166,8 @@ class AnalyzerSrv(
       .fold(cfg ⇒ {
         createSrv[AnalyzerModel, Analyzer, Organization](analyzerModel, organization, analyzerFields
           .set("analyzerDefinitionId", analyzerDefinition.id)
-          .set("analyzerDefinitionName", analyzerDefinition.name)
-          .set("configuration", cfg.toString))
+          .set("configuration", cfg.toString)
+          .addIfAbsent("dataTypeList", StringInputValue(analyzerDefinition.dataTypeList)))
 
       }, {
         case One(e)         ⇒ Future.failed(e)
@@ -184,7 +184,7 @@ class AnalyzerSrv(
     } yield analyzer
   }
 
-  def delete(analyzerId: String)(implicit authContext: AuthContext) = {
+  def delete(analyzerId: String)(implicit authContext: AuthContext): Future[Unit] = {
     deleteSrv.realDelete[AnalyzerModel, Analyzer](analyzerModel, analyzerId)
   }
 }

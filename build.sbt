@@ -11,7 +11,7 @@ libraryDependencies ++= Seq(
   ws,
   specs2 % Test,
   "net.codingwell" %% "scala-guice" % "4.1.0",
-  "org.cert-bdf" %% "elastic4play" % "1.4.2",
+  "org.cert-bdf" %% "elastic4play" % "1.5.0-SNAPSHOT",
   "org.reflections" % "reflections" % "0.9.11",
   "net.lingala.zip4j" % "zip4j" % "1.3.2",
   "com.typesafe.play" %% "play-guice" % play.core.PlayVersion.current
@@ -34,10 +34,6 @@ publishArtifact in packageDoc := false
 sources in (Compile,doc) := Seq.empty
 
 // Front-end //
-run := {
-  (run in Compile).evaluated
-  frontendDev.value
-}
 mappings in packageBin in Assets ++= frontendFiles.value
 
 // Install files //

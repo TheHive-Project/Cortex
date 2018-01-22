@@ -57,7 +57,6 @@ class AnalyzerCtrl @Inject() (
       Json.obj(
         "version" -> ad.version,
         "description" -> ad.description,
-        "dataTypeList" -> ad.dataTypeList,
         "author" -> ad.author,
         "url" -> ad.url,
         "license" -> ad.license)
@@ -75,17 +74,15 @@ class AnalyzerCtrl @Inject() (
   }
 
   def listForType(dataType: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
-    analyzerSrv.listForUser(request.userId)
+    import org.elastic4play.services.QueryDSL._
+    analyzerSrv.findForUser(request.userId, "dataTypeList" ~= dataType, Some("all"), Nil)
       ._1
       .mapAsyncUnordered(2) { analyzer ⇒
-        analyzerSrv.getDefinition(analyzer.analyzerDefinitionId()).map(analyzer -> _)
-      }
-      .collect {
-        case (analyzer, analyzerDefinition) if analyzerDefinition.canProcessDataType(dataType) ⇒ analyzerJson(analyzer, Some(analyzerDefinition))
+        analyzerSrv.getDefinition(analyzer.analyzerDefinitionId())
+          .map(ad ⇒ analyzerJson(analyzer, Some(ad)))
       }
       .runWith(Sink.seq)
-      .map { analyzers ⇒ renderer.toOutput(OK, analyzers)
-      }
+      .map(analyzers ⇒ renderer.toOutput(OK, analyzers))
   }
 
   def create(organizationId: String, analyzerDefinitionId: String): Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
@@ -95,12 +92,12 @@ class AnalyzerCtrl @Inject() (
       }
   }
 
-  def listDefinitions: Action[AnyContent] = authenticated(Roles.admin).async { request ⇒
+  def listDefinitions: Action[AnyContent] = authenticated(Roles.admin).async { implicit request ⇒
     val (analyzerDefs, analyzerDefTotal) = analyzerSrv.listDefinitions
     renderer.toOutput(OK, analyzerDefs, analyzerDefTotal)
   }
 
-  def scan: Action[AnyContent] = authenticated(Roles.admin) { request ⇒
+  def scan: Action[AnyContent] = authenticated(Roles.admin) { implicit request ⇒
     analyzerSrv.rescan()
     NoContent
   }
