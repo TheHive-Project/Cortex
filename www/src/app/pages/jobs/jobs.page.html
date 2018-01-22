@@ -74,7 +74,7 @@
                 <th width="200">Analyzer</th>
                 <th width="150">Date</th>
                 <th>Artifact</th>
-                <th width="80">Data Type</th>
+                <th width="150" class="text-center">Data Type</th>
                 <th width="60"></th>
               </tr>
             </thead>
@@ -82,7 +82,7 @@
               <tr dir-paginate="job in $ctrl.jobs | itemsPerPage: $ctrl.pagination.itemsPerPage" total-items="$ctrl.pagination.total" current-page="$ctrl.pagination.current"
                 ng-init="isFile = job.dataType ==='file'">
                 <td>
-                  <span class="label" ng-class="{
+                  <span class="label label-default" ng-class="{
                                             'Success': 'label-success',
                                             'InProgress': 'label-warning',
                                             'Failure': 'label-danger'}[job.status]">{{job.status}}</span>
@@ -94,8 +94,8 @@
                 <td class="wrap">
                   {{(isFile ? job.filename : job.data) | fang}}
                 </td>
-                <td>
-                  {{job.dataType}}
+                <td class="text-center">
+                  <span class="label label-default">{{job.dataType}}</span>
                 </td>
                 <td>
                   <a ui-sref="main.job-report({id: job.id})" tooltip="View Report">

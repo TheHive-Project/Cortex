@@ -68,6 +68,10 @@ export default class OrganizationService {
     );
   }
 
+  updateAnalyzer(analyzerId, config) {
+    return this.$http.patch(`./api/analyzer/${analyzerId}`, config);
+  }
+
   disableAnalyzer(analyzerId) {
     return this.$http.delete(`./api//analyzer/${analyzerId}`);
   }

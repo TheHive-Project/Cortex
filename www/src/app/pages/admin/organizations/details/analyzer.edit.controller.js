@@ -20,8 +20,8 @@ export default class AnalyzerEditController {
       let analyzer = {
         name: this.definition.id,
         configuration: {},
-        rate: null,
-        rateUnit: null
+        rate: undefined,
+        rateUnit: undefined
       };
 
       _.forEach(

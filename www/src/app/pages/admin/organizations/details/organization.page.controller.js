@@ -45,10 +45,9 @@ export default class OrganizationPageController {
             response
           );
         } else {
-          return this.OrganizationService.enableAnalyzer(
-            this.organization.id,
+          return this.OrganizationService.updateAnalyzer(
             analyzer.id,
-            response
+            _.pick(response, 'configuration', 'rate', 'rateUnit', 'name')
           );
         }
       })
