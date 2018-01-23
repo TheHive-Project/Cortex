@@ -16,7 +16,7 @@ export default class LoginController {
 
     this.AuthService.login(this.params.username, this.params.password)
       .then(() => {
-        this.$state.go('main.analyzers');
+        this.$state.go('main.jobs');
       })
       .catch(err => {
         if (err.status === 520) {

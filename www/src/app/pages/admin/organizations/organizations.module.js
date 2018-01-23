@@ -11,6 +11,12 @@ import organizationPageTpl from './details/organization.page.html';
 import AnalyzerConfigFormController from './components/analyzer-config-form.controller';
 import analyzerConfigFormTpl from './components/analyzer-config-form.html';
 
+import OrganizationAnalyzersController from './components/analyzers-list.controller';
+import organizationAnalyzersTpl from './components/analyzers-list.html';
+
+import OrganizationUsersController from './components/users-list.controller';
+import organizationUsersTpl from './components/users-list.html';
+
 import organizationService from './organizations.service.js';
 
 import './organizations.scss';
@@ -31,11 +37,13 @@ const organizationsModule = angular
         url: 'admin/organizations/{id}',
         component: 'organizationPage',
         resolve: {
+          analyzerDefinitions: AnalyzerService => AnalyzerService.definitions(),
           organization: ($stateParams, OrganizationService) =>
             OrganizationService.getById($stateParams.id),
-          analyzerDefinitions: AnalyzerService => AnalyzerService.definitions(),
           analyzers: ($stateParams, OrganizationService) =>
-            OrganizationService.analyzers($stateParams.id)
+            OrganizationService.analyzers($stateParams.id),
+          users: ($stateParams, OrganizationService) =>
+            OrganizationService.users($stateParams.id)
         }
       });
   })
@@ -52,7 +60,25 @@ const organizationsModule = angular
     bindings: {
       organization: '<',
       analyzerDefinitions: '<',
+      analyzers: '<',
+      users: '<'
+    }
+  })
+  .component('organizationAnalyzersList', {
+    controller: OrganizationAnalyzersController,
+    templateUrl: organizationAnalyzersTpl,
+    bindings: {
+      organization: '<',
+      analyzerDefinitions: '<',
       analyzers: '<'
+    }
+  })
+  .component('organizationUsersList', {
+    controller: OrganizationUsersController,
+    templateUrl: organizationUsersTpl,
+    bindings: {
+      organization: '<',
+      users: '<'
     }
   })
   .component('analyzerConfigForm', {

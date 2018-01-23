@@ -61,6 +61,17 @@ export default class OrganizationService {
     return defer.promise;
   }
 
+  users(id) {
+    let defer = this.$q.defer();
+
+    this.$http
+      .get(`./api/organization/${id}/user`)
+      .then(response => defer.resolve(response.data))
+      .catch(err => defer.reject(err));
+
+    return defer.promise;
+  }
+
   enableAnalyzer(organizationId, analyzerId, config) {
     return this.$http.post(
       `./api/organization/${organizationId}/analyzer/${analyzerId}`,

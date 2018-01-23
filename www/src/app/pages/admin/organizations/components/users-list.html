@@ -1,0 +1,32 @@
+<section class="mt-s">  
+  <div class="row mv-s" ng-if="$ctrl.users.length === 0">
+    <div class="col-md-12">
+      <div class="empty-message">No users defined.</div>
+    </div>
+  </div>
+
+  <div class="row mv-s" ng-if="$ctrl.users.length > 0">
+    <div class="col-sm-12 media-items">
+      <div class="media-item media" ng-repeat="user in $ctrl.users track by users.id">
+        <div class="media-left ph-s">{{user.id}}</div>
+        <div class="media-body">
+          <h4 class="media-heading">
+            <span class="mr-m text-primary">{{user.name}}</span>
+          </h4>
+          <h4 class="media-heading">
+            <small class="mr-xxs">
+              <strong>Roles:</strong> {{user.roles}}</small>                        
+          </h4>          
+        </div>        
+        <div class="media-right ph-xs text-center">
+          <a href class="text-primary" ng-click="$ctrl.openModal('edit', user)">
+            <i class="fa fa-edit"></i>Edit</a>
+        </div>
+        <div class="media-right ph-xs text-center">
+          <a href class="text-danger" ng-click="$ctrl.lock(user.id)">
+            <i class="fa fa-ban"></i>Lock</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

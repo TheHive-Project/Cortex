@@ -1,28 +1,16 @@
-.organizations-list {
-  .organization-item {
-    padding: 5px;
-    &:nth-child(even) {
-      background: #f9f9f9;
-    }
-    &:nth-child(odd) {
-      background: #FFF;
-    }
-    .media-right {
-      vertical-align: middle;
-    }
-  }
-}
+.media-items {
+  padding-left: 15px;
 
-.analyzers-list {
-  .analyzer-item {
+  .media-item {
     padding: 5px;
-    &:nth-child(even) {
+    &:nth-child(odd) {
       background: #f9f9f9;
     }
-    &:nth-child(odd) {
-      background: #FFF;
+    &:nth-child(even) {
+      background: #ecf0f5;
     }
-    .media-right {
+    .media-right,
+    .media-left {
       vertical-align: middle;
     }
   }

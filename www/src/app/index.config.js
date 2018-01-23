@@ -19,7 +19,7 @@ function config(
 
   $locationProvider.html5Mode(false);
 
-  MaintenanceServiceProvider.setSuccessState('main.analyzers');
+  MaintenanceServiceProvider.setSuccessState('main.jobs');
 
   NotificationProvider.setOptions({
     delay: 10000,

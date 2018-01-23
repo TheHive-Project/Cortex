@@ -1,8 +1,6 @@
 'use strict';
 
-import _ from 'lodash';
-
-export default class OrganizationPageController {
+export default class OrganizationUsersListController {
   constructor($log) {
     'ngInject';
 
