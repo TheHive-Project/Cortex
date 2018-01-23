@@ -4,6 +4,8 @@ import javax.inject.{ Inject, Singleton }
 
 import scala.concurrent.Future
 
+import play.api.libs.json.JsObject
+
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import org.thp.cortex.models.{ Organization, OrganizationModel }
@@ -45,4 +47,6 @@ class OrganizationSrv @Inject() (
   def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Organization, NotUsed], Future[Long]) = {
     findSrv[OrganizationModel, Organization](organizationModel, queryDef, range, sortBy)
   }
+
+  def stats(queryDef: QueryDef, aggs: Seq[Agg]): Future[JsObject] = findSrv(organizationModel, queryDef, aggs: _*)
 }

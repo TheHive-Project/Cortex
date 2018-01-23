@@ -33,6 +33,8 @@ GET           /api/job/:id                                                  org.
 GET           /api/job/:id/report                                           org.thp.cortex.controllers.JobCtrl.report(id)
 
 GET           /api/organization                                             org.thp.cortex.controllers.OrganizationCtrl.find
+POST          /api/organization/_search                                     org.thp.cortex.controllers.OrganizationCtrl.find
+POST          /api/organization/_stats                                      org.thp.cortex.controllers.OrganizationCtrl.stats
 GET           /api/organization/:id                                         org.thp.cortex.controllers.OrganizationCtrl.get(id)
 POST          /api/organization                                             org.thp.cortex.controllers.OrganizationCtrl.create
 PATCH         /api/organization/:id                                         org.thp.cortex.controllers.OrganizationCtrl.update(id)

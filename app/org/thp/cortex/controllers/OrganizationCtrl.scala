@@ -11,10 +11,11 @@ import play.api.mvc._
 import org.thp.cortex.models.Roles
 import org.thp.cortex.services.OrganizationSrv
 
+import org.elastic4play.BadRequestError
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
-import org.elastic4play.services.JsonFormat.queryReads
-import org.elastic4play.services.{ AuthSrv, AuxSrv, QueryDSL, QueryDef }
+import org.elastic4play.services.JsonFormat.{ aggReads, queryReads }
+import org.elastic4play.services._
 
 @Singleton
 class OrganizationCtrl @Inject() (
@@ -61,5 +62,11 @@ class OrganizationCtrl @Inject() (
     val (organizations, total) = organizationSrv.find(query, range, sort)
     val organizationWithStats = auxSrv(organizations, 0, withStats, removeUnaudited = false)
     renderer.toOutput(OK, organizationWithStats, total)
+  }
+
+  def stats(): Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
+    val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
+    val aggs = request.body.getValue("stats").getOrElse(throw BadRequestError("Parameter \"stats\" is missing")).as[Seq[Agg]]
+    organizationSrv.stats(query, aggs).map(s ⇒ Ok(s))
   }
 }
