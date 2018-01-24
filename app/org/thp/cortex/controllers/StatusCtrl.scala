@@ -35,7 +35,7 @@ class StatusCtrl @Inject() (
           case multiAuthSrv: MultiAuthSrv ⇒ multiAuthSrv.authProviders.map { a ⇒ JsString(a.name) }
           case _                          ⇒ JsString(authSrv.name)
         }),
-        "capabilities" → Json.arr())))
+        "capabilities" → authSrv.capabilities.map(c ⇒ JsString(c.toString)))))
   }
 
   def health = TODO
