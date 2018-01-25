@@ -1,18 +1,16 @@
 'use strict';
 
-const shared = angular.module('core.shared', []);
+const core = angular.module('cortex.core', []);
 
 import validationTestDirective from './directives/validation-test/validation-test.directive';
 import fixedHeightDirective from './directives/fixed-height/fixed-height.directive';
 import fileChooserDirective from './directives/file-chooser/file-chooser.directive';
+import requireRolesDirective from './directives/require-roles/require-roles.directive';
 
 import constants from './services/constants';
 import storeFactory from './services/store.factory';
 import resolverProvider from './services/resolver.provider';
 
-import authService from './services/common/AuthService';
-import userService from './services/common/UserService';
-import htmlSanitizer from './services/common/HtmlSanitizer';
 import notificationService from './services/common/NotificationService';
 import streamService from './services/common/StreamService';
 import versionService from './services/common/VersionService';
@@ -22,27 +20,35 @@ import fangFilter from './filters/fang';
 
 import jobService from './services/JobService';
 
-validationTestDirective(shared);
-fixedHeightDirective(shared);
-fileChooserDirective(shared);
+import AuthService from './services/common/AuthService';
+import HtmlSanitizer from './services/common/HtmlSanitizer';
+import UserService from './services/common/UserService';
+
+core
+  .service('AuthService', AuthService)
+  .service('HtmlSanitizer', HtmlSanitizer)
+  .service('UserService', UserService);
+
+validationTestDirective(core);
+fixedHeightDirective(core);
+fileChooserDirective(core);
+requireRolesDirective(core);
 
 /* Common services */
-authService(shared);
-userService(shared);
-htmlSanitizer(shared);
-notificationService(shared);
-streamService(shared);
-versionService(shared);
-utilsService(shared);
+
+notificationService(core);
+streamService(core);
+versionService(core);
+utilsService(core);
 
 /* App services */
-jobService(shared);
+jobService(core);
 
-constants(shared);
-storeFactory(shared);
-resolverProvider(shared);
+constants(core);
+storeFactory(core);
+resolverProvider(core);
 
 /* Filters */
-fangFilter(shared);
+fangFilter(core);
 
-export default shared;
+export default core;

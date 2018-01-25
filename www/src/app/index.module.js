@@ -29,6 +29,7 @@ const App = angular.module('cortex', [
   'ui-notification',
   'angularUtils.directives.dirPagination',
   'angularMoment',
+  'angular-clipboard',
 
   // core
   coreModule.name,

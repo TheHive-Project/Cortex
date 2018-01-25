@@ -8,13 +8,15 @@
 <section class="content">
   <uib-tabset class="nav-tabs-custom">
     <uib-tab index="0">
+      <uib-tab-heading>
+        <i class="fa fa-user"></i> Users</uib-tab-heading>
+      <organization-users-list organization="$ctrl.organization" users="$ctrl.users"></organization-users-list>
+    </uib-tab>
+    <uib-tab index="1">
       <uib-tab-heading><i class="fa fa-cog"></i> Analyzers</uib-tab-heading>
       <organization-analyzers-list organization="$ctrl.organization" analyzer-definitions="$ctrl.analyzerDefinitions" analyzers="$ctrl.analyzers"></organization-analyzers-list>
     </uib-tab>
-    <uib-tab index="1">
-      <uib-tab-heading><i class="fa fa-user"></i> Users</uib-tab-heading>
-      <organization-users-list organization="$ctrl.organization" users="$ctrl.users"></organization-users-list>
-    </uib-tab>
+    
   </uib-tabset>
 
 </section>

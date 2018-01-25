@@ -63,9 +63,10 @@ export default class JobsController {
 
     this.JobService.list(post).then(response => {
       this.jobs = response.data;
-      this.running = _.findIndex(this.jobs, {
-        status: 'InProgress'
-      });
+      this.running = _.findIndex(
+        this.jobs,
+        o => o.status === 'InProgress' || o.status === 'Waiting'
+      );
       this.pagination.total = parseInt(response.headers('x-total')) || 0;
       this.pagination.current = page;
     });

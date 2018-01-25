@@ -1,47 +1,59 @@
 'use strict';
 
-export default function(app) {
-  function AuthService($http, $log, $q) {
+import _ from 'lodash';
+
+export default class AuthService {
+  constructor($http, $log, $q) {
     'ngInject';
 
+    this.$log = $log;
+    this.$q = $q;
+    this.$http = $http;
+
     this.currentUser = null;
-
-    this.login = function(username, password) {
-      return $http.post('./api/login', {
-        user: username,
-        password: password
-      });
-    };
-
-    this.logout = function() {
-      return $http.get('./api/logout').then(
-        /*data*/ () => {
-          this.currentUser = null;
-        }
-      );
-    };
-
-    this.current = function() {
-      return $http
-        .get('./api/user/current')
-        .then(response => {
-          this.currentUser = response.data;
-
-          return $q.resolve(this.currentUser);
-        })
-        .catch(err => {
-          this.currentUser = null;
-
-          return $q.reject(err);
-        });
-    };
-
-    this.isAdmin = function(user) {
-      let re = /admin/i;
-
-      return re.test(user.roles);
-    };
   }
 
-  app.service('AuthService', AuthService);
+  login(username, password) {
+    return this.$http.post('./api/login', {
+      user: username,
+      password: password
+    });
+  }
+
+  logout() {
+    return this.$http.get('./api/logout').then(
+      /*data*/ () => {
+        this.currentUser = null;
+      }
+    );
+  }
+
+  current() {
+    return this.$http
+      .get('./api/user/current')
+      .then(response => {
+        this.currentUser = response.data;
+
+        return this.$q.resolve(this.currentUser);
+      })
+      .catch(err => {
+        this.currentUser = null;
+
+        return this.$q.reject(err);
+      });
+  }
+
+  isAdmin(user) {
+    let re = /admin/i;
+
+    return re.test(user.roles);
+  }
+
+  hasRole(roles) {
+    if (!this.currentUser) {
+      return false;
+    }
+
+    return !_.isEmpty(_.intersection(this.currentUser.roles, roles));
+  }
 }

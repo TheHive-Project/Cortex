@@ -55,6 +55,14 @@ body {
   border-top: 1px solid #e5e5e5;
 }
 
+.empty-message {
+  background-color: #f5f5f5;
+  color: #AAA;
+  font-size: 18px;
+  text-align: center;
+  padding: 40px;
+}
+
 .text-ellipsis {
   white-space: nowrap;
   overflow: hidden;

@@ -1,6 +1,13 @@
 .media-items {
   padding-left: 15px;
 
+  // .media-header {
+  //   padding: 5px;
+  //   font-weight: bold;    
+  //   .media-right {
+  //     width: 100px;
+  //   }
+  // }
   .media-item {
     padding: 5px;
     &:nth-child(odd) {
@@ -12,6 +19,11 @@
     .media-right,
     .media-left {
       vertical-align: middle;
+    }
+    .media-body {
+      &.vertical {
+        vertical-align: middle;
+      }
     }
   }
 }

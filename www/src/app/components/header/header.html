@@ -22,7 +22,7 @@
     </div>
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse">
-      <ul class="ml-l nav navbar-nav">
+      <ul class="ml-l nav navbar-nav" require-roles roles="['admin', 'write']">
         <li>
           <a href ng-click="$ctrl.newAnalysis()">
             <i class="fa fa-plus"></i> <strong>New Analysis</strong></a>
@@ -33,13 +33,13 @@
           <a ui-sref="main.jobs">
             <i class="fa fa-hourglass"></i> <strong>Jobs History</strong></a>
         </li>
-        <li ui-sref-active="active">
+        <li ui-sref-active="active" require-roles roles="['admin', 'write']">
           <a ui-sref="main.analyzers">
             <i class="fa fa-cogs"></i>
             <strong>Analyzers</strong>
           </a>
         </li>
-        <li class="dropdown" uib-dropdown ng-if="$ctrl.isAdmin">
+        <li class="dropdown" require-roles roles="['admin']" uib-dropdown>
           <a class="dropdown-toggle" uib-dropdown-toggle href>
             <i class="fa fa-cog"></i>
             <span class="hpad5"><strong>Admin</strong></span>
@@ -61,10 +61,24 @@
             </li>            
           </ul>
         </li>
-        <li ui-sref-active="active">
-          <a href ng-click="$ctrl.logout()">
-            <i class="fa fa-sign-out"></i> <strong>Logout</strong></a>
+        <li class="dropdown" uib-dropdown>
+          <a class="dropdown-toggle" uib-dropdown-toggle href>
+            <i class="fa fa-cog"></i>
+            <span class="hpad5">
+              <strong>{{$ctrl.main.currentUser.name}}</strong>
+            </span>
+            <b class="caret"></b>
+          </a>
+          <ul class="dropdown-menu" uib-dropdown-menu>
+            <li ui-sref-active="active">
+              <a href ng-click="$ctrl.logout()">
+                <i class="fa fa-sign-out"></i>
+                <strong>Logout</strong>
+              </a>
+            </li>
+          </ul>
         </li>
+        
       </ul>
     </div>
   </div>

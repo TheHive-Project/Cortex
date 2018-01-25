@@ -1,10 +1,11 @@
 'use strict';
 
-export default function(app) {
-  app.service('HtmlSanitizer', function($sanitize) {
+export default class HtmlSanitizer {
+  constructor($sanitize) {
     'ngInject';
 
-    let entityMap = {
+    this.$sanitize = $sanitize;
+    this.entityMap = {
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
@@ -12,13 +13,11 @@ export default function(app) {
       "'": '&#39;',
       '/': '&#x2F;'
     };
+  }
 
-    this.sanitize = function(str) {
-      return $sanitize(
-        String(str).replace(/[&<>"'\/]/g, function(s) {
-          return entityMap[s];
-        })
-      );
-    };
-  });
+  sanitize(str) {
+    return this.$sanitize(
+      String(str).replace(/[&<>"'\/]/g, s => this.entityMap[s])
+    );
+  }
 }

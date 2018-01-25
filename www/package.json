@@ -17,6 +17,7 @@
   "dependencies": {
     "@uirouter/angularjs": "^1.0.12",
     "angular": "1.6.8",
+    "angular-clipboard": "^1.6.2",
     "angular-messages": "1.6.8",
     "angular-moment": "^1.2.0",
     "angular-resource": "1.6.8",

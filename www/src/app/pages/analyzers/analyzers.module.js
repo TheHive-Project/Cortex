@@ -7,15 +7,17 @@ import analyzerService from './analyzers.service.js';
 
 const analyzersModule = angular
   .module('analyzers-module', ['ui.router'])
-  .config($stateProvider => {
+  .config(($stateProvider, Roles) => {
     'ngInject';
 
     $stateProvider.state('main.analyzers', {
       url: 'analyzers',
       component: 'analyzersPage',
       resolve: {
-        analyzers: AnalyzerService => AnalyzerService.list(),
-        definitions: AnalyzerService => AnalyzerService.definitions()
+        analyzers: AnalyzerService => AnalyzerService.list()
+      },
+      data: {
+        allow: [Roles.ADMIN, Roles.WRITE]
       }
     });
   })

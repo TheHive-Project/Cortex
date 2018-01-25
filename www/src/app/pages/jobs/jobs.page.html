@@ -101,7 +101,7 @@
                   <a ui-sref="main.job-report({id: job.id})" tooltip="View Report">
                     <i class="fa fa-search fa-lg text-primary"></i>
                   </a>
-                  <a href ng-click="$ctrl.remove(job.id)" tooltip="Remove">
+                  <a href ng-click="$ctrl.remove(job.id)" tooltip="Remove" require-roles roles="['admin', 'write']">
                     <i class="fa fa-times fa-lg text-danger"></i>
                   </a>
                 </td>

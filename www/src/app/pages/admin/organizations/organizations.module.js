@@ -23,7 +23,7 @@ import './organizations.scss';
 
 const organizationsModule = angular
   .module('organizations-module', ['ui.router'])
-  .config($stateProvider => {
+  .config(($stateProvider, Roles) => {
     'ngInject';
     $stateProvider
       .state('main.organizations', {
@@ -31,6 +31,9 @@ const organizationsModule = angular
         component: 'organizationsPage',
         resolve: {
           organizations: OrganizationService => OrganizationService.list()
+        },
+        data: {
+          allow: [Roles.ADMIN]
         }
       })
       .state('main.organization', {
@@ -44,6 +47,9 @@ const organizationsModule = angular
             OrganizationService.analyzers($stateParams.id),
           users: ($stateParams, OrganizationService) =>
             OrganizationService.users($stateParams.id)
+        },
+        data: {
+          allow: [Roles.ADMIN]
         }
       });
   })
@@ -79,6 +85,9 @@ const organizationsModule = angular
     bindings: {
       organization: '<',
       users: '<'
+    },
+    require: {
+      main: '^^mainPage'
     }
   })
   .component('analyzerConfigForm', {
