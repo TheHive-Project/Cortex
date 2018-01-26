@@ -119,8 +119,12 @@ class UserCtrl @Inject() (
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
-    val (users, total) = userSrv.findForUser(request.userId, query, range, sort)
+    val (users, total) = if (request.roles.contains(Roles.admin))
+      userSrv.find(query, range, sort)
+    else
+      userSrv.findForUser(request.userId, query, range, sort)
     renderer.toOutput(OK, users, total)
+
   }
 
   def findForOrganization(organizationId: String) = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
