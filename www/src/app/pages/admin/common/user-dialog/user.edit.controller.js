@@ -23,17 +23,20 @@ export default class UserEditController {
     this.user = user;
     this.mode = mode;
 
+    const orgId = (this.organization || {}).id;
+
     this.formData = _.defaults(
       _.pick(this.user, 'id', 'name', 'roles', 'organization'),
       {
         id: null,
         name: null,
         roles: [],
-        organization: this.organization.id
+        organization: orgId
       }
     );
 
     this.isEdit = this.mode === 'edit';
+    this.orgId = orgId;
   }
 
   onSuccess(data) {
@@ -71,13 +74,7 @@ export default class UserEditController {
       .then(response => this.onSuccess(response.data))
       .catch(rejection => {
         const { data: { type } } = rejection;
-
-        this.$log.log(type);
-
         if (type === 'ConflictError') {
-          // Handle user uniquness
-          this.$log.log('Conflict');
-
           form.login.$setValidity('exists', false);
         } else {
           this.onFailure(rejection.data);

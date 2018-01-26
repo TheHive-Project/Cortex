@@ -5,6 +5,8 @@ $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 @import './vendors/AdminLTE.scss';
 @import './vendors/AdminLTE-skin-blue.scss';
 
+@import './flex-table.scss';
+
 
 html { height: 100%; }
 body {

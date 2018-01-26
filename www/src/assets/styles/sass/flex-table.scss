@@ -1,0 +1,69 @@
+div.flex-table {
+
+}
+
+div.flex-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+
+  &:nth-child(odd) {
+    background: #f9f9f9;
+  }
+
+  &:nth-child(even) {
+    background: #ecf0f5;
+  }
+
+  > div.flex-col {
+    margin: 0 5px;
+    padding: 4px;
+
+    &.vertical {
+      display: flex;
+      align-items: center;
+    }
+
+    &:first-child {
+      margin-left: 0;
+    }
+    &:last-child {
+      margin-right: 0;
+    }
+    &.flex-1 {
+      flex: 1;
+    }
+    &.flex-2 {
+      flex: 2;
+    }
+    &.flex-3 {
+      flex: 3;
+    }
+    &.flex-4 {
+      flex: 4;
+    }
+    &.flex-5 {
+      flex: 5;
+    }
+    &.flex-w-80 {
+      width: 80px;
+    }
+    &.flex-w-100 {
+      width: 100px;
+    }
+    &.flex-w-150 {
+      width: 150px;
+    }
+    &.flex-icon {
+      padding-left: 10px;
+      padding-right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;      
+      
+      i {
+        margin-right: 5px;
+      }
+    }
+  }
+}

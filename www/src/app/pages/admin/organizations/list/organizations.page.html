@@ -34,29 +34,30 @@
       </form>
 
       <div class="row mv-s" ng-if="$ctrl.organizations.length > 0">
-        <div class="col-sm-12 media-items">
-          <div class="media-item media" ng-repeat="org in $ctrl.organizations track by org.id">
-            <div class="media-left">
+        <div class="col-sm-12 flex-table">
+          <div class="flex-row media" ng-repeat="org in $ctrl.organizations track by org.id">
+            <div class="flex-col flex-icon flex-w-100">
               <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
             </div>
-            <div class="media-body">
+            <div class="flex-col flex-1">
               <h4 class="media-heading">
                 <a href ui-sref="main.organization({id: org.id})">{{org.id}}</a>
               </h4>
               <span class="text-muted">{{org.description}}</span>
-            </div>
-            <div class="media-right ph-xs text-center">
+            </div>  
+            <div class="flex-col flex-icon">
               <a href ng-click="$ctrl.editDashboard(db)">
                 <i class="fa fa-pencil"></i>Edit</a>
             </div>
-            <div class="media-right ph-xs text-center" ng-show="org.status === 'Active'">
-              <a href class="text-danger" ng-click="$ctrl.disable(org.id)">
-                <i class="fa fa-ban"></i>Disable</a>
-            </div>
-            <div class="media-right ph-xs text-center" ng-show="org.status === 'Locked'">
+            <div class="flex-col flex-icon flex-w-100" ng-if="org.status === 'Locked'">
               <a href class="text-success" ng-click="$ctrl.enable(org.id)">
                 <i class="fa fa-refresh"></i>Enable</a>
             </div>
+            <div class="flex-col flex-icon flex-w-100" ng-if="org.status === 'Active'">
+              <a href class="text-danger" ng-click="$ctrl.disable(org.id)">
+                <i class="fa fa-ban"></i>Disable</a>
+            </div>
+
           </div>
         </div>
       </div>

@@ -11,17 +11,19 @@
   </div>
 
   <div class="row mv-s" ng-if="$ctrl.users.length > 0">
-    <div class="col-sm-12 media-items">
-      <!-- <div class="media-header media bg-primary">
-        <div class="media-body">Login</div>
-        <div class="media-body">Full name</div>
-        <div class="media-body">API Key</div>
-        <div class="media-right ph-xs"><i class="fa fa-ban"></i>Lock</a></div>
-        <div class="media-right ph-xs"><i class="fa fa-ban"></i>Lock</a></div>
-      </div> -->
-      <div class="media-item media" ng-repeat="user in $ctrl.users track by user.id">
-        <div class="media-body">{{user.id}}</div>
-        <div class="media-body">
+    <div class="col-sm-12 flex-table">      
+      <div class="flex-row media" ng-repeat="user in $ctrl.users track by user.id">
+        <div class="flex-col flex-1">          
+          <h4 class="media-heading">
+            <small class="mr-xxs">
+              <strong>Login:</strong> {{user.id}}</small>
+          </h4>
+          <h4 class="media-heading" ng-if="!$ctrl.orgId">
+            <small class="mr-xxs">
+              <strong>Organization:</strong> {{user.organization}}</small>
+          </h4>
+        </div>
+        <div class="flex-col flex-2">
           <h4 class="media-heading">
             <small class="mr-xxs">
               <strong>Full name:</strong> {{user.name}}</small>
@@ -29,10 +31,10 @@
           </h4>
           <h4 class="media-heading">
             <small class="mr-xxs">
-              <strong>Roles:</strong> {{user.roles}}</small>                        
+              <strong>Roles:</strong> {{user.roles.join(', ') || 'None'}}</small>                        
           </h4>          
         </div>      
-        <div class="media-body vertical">
+        <div class="flex-col flex-1 vertical">
           <!-- <span ng-if="canSetPass === true"> -->
           <span>
             <span class="btn btn-sm btn-default" ng-class="{ 'Locked':'disabled', 'Ok':''}[user.status]" ng-click="showPwdForm[user] = true"
@@ -49,7 +51,7 @@
             </form>
           </span>
         </div>
-        <div class="media-body vertical">
+        <div class="flex-col flex-2 vertical">
           <span ng-if="!user.hasKey">
             <span class="btn btn-sm btn-default" ng-class="{'Locked':'disabled'}[user.status]" ng-click="$ctrl.createKey(user)">Create API Key</span>
           </span>
@@ -70,11 +72,11 @@
           </span>
           </td>
         </div>
-        <div class="media-right ph-xs text-center">
+        <div class="flex-col flex-icon">
           <a href class="text-primary" ng-click="$ctrl.openModal('edit', user)">
             <i class="fa fa-edit"></i>Edit</a>
         </div>
-        <div class="media-right ph-xs text-center">
+        <div class="flex-col flex-icon">
           <a href class="text-danger" ng-click="$ctrl.lock(user.id)">
             <i class="fa fa-ban"></i>Lock</a>
         </div>

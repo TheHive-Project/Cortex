@@ -1,9 +1,9 @@
 'use strict';
 
-import UserEditController from './user.edit.controller';
-import editModalTpl from './user.edit.modal.html';
+import UserEditController from '../user-dialog/user.edit.controller';
+import editModalTpl from '../user-dialog/user.edit.modal.html';
 
-export default class OrganizationUsersListController {
+export default class UsersListController {
   constructor(
     $log,
     $uibModal,
@@ -30,10 +30,17 @@ export default class OrganizationUsersListController {
   }
 
   reload() {
-    this.OrganizationService.users(this.organization.id).then(users => {
-      this.$log.log(users);
-      this.users = users;
-    });
+    // if (this.organization) {
+    //   this.OrganizationService.users(this.organization.id).then(users => {
+    //     this.users = users;
+    //   });
+    // } else {
+    //   this.UserService.
+    // }
+
+    this.$log.log('Users list should be reloaded');
+
+    this.onReload();
   }
 
   getKey(user) {

@@ -8,12 +8,12 @@
   </div>
 
   <div class="row mv-s" ng-if="$ctrl.analyzers.length > 0">
-    <div class="col-sm-12 media-items">
-      <div class="media-item media" ng-repeat="analyzer in $ctrl.analyzers track by analyzer.id">
+    <div class="col-sm-12 flex-table">
+      <div class="flex-row media" ng-repeat="analyzer in $ctrl.analyzers track by analyzer.id">
         <!-- <div class="media-left">
                 <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
               </div> -->
-        <div class="media-body">
+        <div class="flex-col flex-1">
           <h4 class="media-heading">
             <span class="mr-m text-primary">{{analyzer.name}}</span>
           </h4>
@@ -27,11 +27,11 @@
           </h4>
           <div class="mt-xs text-muted">{{analyzer.description}}</div>
         </div>
-        <div class="media-right ph-xs text-center">
+        <div class="flex-col flex-icon text-center">
           <a href class="text-primary" ng-click="$ctrl.openModal('edit', $ctrl.analyzerDefinitions[analyzer.analyzerDefinitionId], analyzer)">
             <i class="fa fa-edit"></i>Edit</a>
         </div>
-        <div class="media-right ph-xs text-center">
+        <div class="flex-col flex-icon text-center">
           <a href class="text-danger" ng-click="$ctrl.disable(analyzer.id)">
             <i class="fa fa-ban"></i>Disable</a>
         </div>
@@ -50,12 +50,12 @@
   </div>
 
   <div class="row mv-s" ng-if="$ctrl.definitionsIds.length > 0">
-    <div class="col-sm-12 media-items">
-      <div class="media-item media" ng-repeat="def in $ctrl.definitionsIds" ng-init="definition = $ctrl.analyzerDefinitions[def]">
+    <div class="col-sm-12 flex-table">
+      <div class="flex-row media" ng-repeat="def in $ctrl.definitionsIds" ng-init="definition = $ctrl.analyzerDefinitions[def]">
         <!-- <div class="media-left">
                 <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
               </div> -->
-        <div class="media-body">
+        <div class="flex-col flex-1">
           <h4 class="media-heading">
             <span class="mr-m text-primary">{{definition.id}}</span>
           </h4>
@@ -69,7 +69,7 @@
           </h4>
           <div class="mt-xs text-muted">{{definition.description}}</div>
         </div>
-        <div class="media-right ph-xs text-center">
+        <div class="flex-col flex-icon">
           <a href class="text-success" ng-click="$ctrl.enable(def)">
             <i class="fa fa-plus"></i>Enable</a>
         </div>

@@ -1,8 +1,5 @@
 'use strict';
 
-// import angular from 'angular';
-// import 'angular-sanitize';
-
 export default function(app) {
   function NotificationServiceProvider() {
     let loginState = 'login';

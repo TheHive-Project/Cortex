@@ -14,7 +14,7 @@ import loginModule from './pages/login/login.module';
 import analyzersModule from './pages/analyzers/analyzers.module';
 import jobsModule from './pages/jobs/jobs.module';
 
-import adminOrganizations from './pages/admin/organizations/organizations.module';
+import adminModule from './pages/admin/admin.module';
 
 import maintenanceModule from './pages/maintenance/maintenance.module';
 
@@ -46,7 +46,7 @@ const App = angular.module('cortex', [
   maintenanceModule.name,
   analyzersModule.name,
   jobsModule.name,
-  adminOrganizations.name
+  adminModule.name
 ]);
 
 App.config(config).run(run);
