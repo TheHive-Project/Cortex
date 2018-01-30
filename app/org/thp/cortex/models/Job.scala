@@ -31,6 +31,7 @@ trait JobAttributes { _: AttributeDef ⇒
   val errorMessage = optionalAttribute("message", F.textFmt, "Message returned by the analyzer when it fails")
   val parameters = attribute("parameters", F.stringFmt, "Parameters for this job", "{}")
   val input = optionalAttribute("input", F.textFmt, "Data sent to analyzer")
+  val fromCache = optionalAttribute("fromCache", F.booleanFmt, "Indicates if cache is used", O.form)
 }
 
 @Singleton

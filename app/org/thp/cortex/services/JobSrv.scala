@@ -12,7 +12,7 @@ import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
 
 import play.api.{ Configuration, Logger }
-import play.api.libs.json.{ JsObject, JsString, Json }
+import play.api.libs.json.{ JsBoolean, JsObject, JsString, Json }
 
 import akka.NotUsed
 import akka.actor.ActorSystem
@@ -136,13 +136,14 @@ class JobSrv(
     val tlp = (attributes \ "tlp").asOpt[Long].getOrElse(2L)
     val message = (attributes \ "message").asOpt[String].getOrElse("")
     val parameters = (attributes \ "parameters").asOpt[JsObject].getOrElse(JsObject.empty)
+    val force = fields.getBoolean("force").getOrElse(false)
     withGood(dataType, dataFiv) {
       case (dt, Right(fiv)) ⇒ dt -> attachmentSrv.save(fiv).map(Right.apply)
       case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
     }
       .fold(
         typeDataAttachment ⇒ typeDataAttachment._2.flatMap(
-          da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters)),
+          da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters, force)),
         errors ⇒ {
           val attributeError = AttributeCheckingError("job", errors)
           logger.error("legacy job create fails", attributeError)
@@ -185,6 +186,7 @@ class JobSrv(
 
         val tlp = fields.getLong("tlp").getOrElse(2L)
         val message = fields.getString("message").getOrElse("")
+        val force = fields.getBoolean("force").getOrElse(false)
         val parameters = fields.getValue("parameters").collect {
           case obj: JsObject ⇒ obj
         }
@@ -195,14 +197,16 @@ class JobSrv(
           case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
         }
           .fold(
-            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters)),
+            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters, force)),
             errors ⇒ Future.failed(AttributeCheckingError("job", errors)))
       }
     }
   }
 
-  def create(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject)(implicit authContext: AuthContext): Future[Job] = {
-    findSimilarJob(analyzer, dataType, dataAttachment, tlp, parameters).flatMap {
+  def create(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject, force: Boolean)(implicit authContext: AuthContext): Future[Job] = {
+    val previousJob = if (force) Future.successful(None)
+    else findSimilarJob(analyzer, dataType, dataAttachment, tlp, parameters)
+    previousJob.flatMap {
       case Some(job) ⇒ Future.successful(job)
       case None ⇒ isUnderRateLimit(analyzer).flatMap {
         case true ⇒
@@ -272,6 +276,7 @@ class JobSrv(
         dataAttachment.fold(data ⇒ "data" ~= data, attachment ⇒ "attachment.id" ~= attachment.id),
         "parameters" ~= parameters.toString), Some("0-1"), Seq("-createdAt"))
         ._1
+        .map(j ⇒ new Job(jobModel, j.attributes + ("fromCache" -> JsBoolean(true))))
         .runWith(Sink.headOption)
     }
   }
