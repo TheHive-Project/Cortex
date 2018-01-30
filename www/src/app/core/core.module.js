@@ -23,10 +23,12 @@ import jobService from './services/JobService';
 import AuthService from './services/common/AuthService';
 import HtmlSanitizer from './services/common/HtmlSanitizer';
 import UserService from './services/common/UserService';
+import SearchService from './services/common/SearchService';
 
 core
   .service('AuthService', AuthService)
   .service('HtmlSanitizer', HtmlSanitizer)
+  .service('SearchService', SearchService)
   .service('UserService', UserService);
 
 validationTestDirective(core);

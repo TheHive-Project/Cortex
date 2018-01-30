@@ -10,6 +10,7 @@ export default class JobsController {
     $interval,
     AnalyzerService,
     JobService,
+    SearchService,
     NotificationService
   ) {
     'ngInject';
@@ -19,6 +20,7 @@ export default class JobsController {
     this.$state = $state;
     this.$interval = $interval;
     this.NotificationService = NotificationService;
+    this.SearchService = SearchService;
     this.JobService = JobService;
 
     this.datatypes = AnalyzerService.getTypes();
@@ -47,6 +49,15 @@ export default class JobsController {
     this.$scope.$on('$destroy', () => {
       this.$interval.cancel(this.timer);
     });
+
+    this.SearchService.configure({
+      objectType: 'analyzer',
+      filter: {
+        _field: 'dataTypeList',
+        _value: 'mail'
+      },
+      range: 'all'
+    }).search();
   }
 
   load(page) {
