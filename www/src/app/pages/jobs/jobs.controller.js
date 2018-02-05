@@ -23,7 +23,7 @@ export default class JobsController {
     this.SearchService = SearchService;
     this.JobService = JobService;
 
-    this.datatypes = AnalyzerService.getTypes();
+    this.datatypes = _.keys(AnalyzerService.getTypes());
     this.jobs = [];
     this.running = 0;
     this.pagination = {
@@ -37,11 +37,16 @@ export default class JobsController {
       data: '',
       dataType: ''
     };
+
+    this.filters = {
+      search: null,
+      status: [],
+      dataType: [],
+      analyzer: []
+    };
   }
 
   $onInit() {
-    this.$log.log(this.jobs);
-
     this.load(1);
 
     this.timer = this.$interval(this.checkJobs, 10000, 0, true, this);
@@ -50,14 +55,14 @@ export default class JobsController {
       this.$interval.cancel(this.timer);
     });
 
-    this.SearchService.configure({
-      objectType: 'analyzer',
-      filter: {
-        _field: 'dataTypeList',
-        _value: 'mail'
-      },
-      range: 'all'
-    }).search();
+    // this.SearchService.configure({
+    //   objectType: 'analyzer',
+    //   filter: {
+    //     _field: 'dataTypeList',
+    //     _value: 'mail'
+    //   },
+    //   range: 'all'
+    // }).search();
   }
 
   load(page) {

@@ -3,9 +3,29 @@
 </section>
 <!-- Main content -->
 <section class="content">
-  <div class="row">
+  <form ng-submit="$ctrl.search()">
+    <div class="row">
     <div class="col-md-3">
-      <div class="box box-solid">
+      <div class="box box-primary">
+        <div class="box-header with-border">
+          <h3 class="box-title">Search</h3>
+          <div class="box-tools">
+            <button type="button" class="btn btn-box-tool" ng-click="$ctrl.filterByType('')">
+              <i class="fa fa-eraser"></i>
+            </button>
+          </div>
+        </div>
+        <div class="box-body">
+          <div class="input-group form-group">
+            <input type="text" class="form-control" placeholder="Search for observable data" ng-model="$ctrl.filters.search">
+            <div class="input-group-btn">
+              <button class="btn btn-default" type="submit">Search</button>            
+            </div>
+          </div>
+        </div>
+      </div>      
+
+      <div class="box box-primary">
         <div class="box-header with-border">
           <h3 class="box-title">Data Types</h3>
           <div class="box-tools">
@@ -14,17 +34,18 @@
             </button>
           </div>
         </div>
-        <div class="box-body no-padding">
+        <div class="box-body">
+          <multiselect ng-model="$ctrl.filters.dataType" options="$ctrl.datatypes" placeholder="Salect data types"
+            classes-btn="'btn-primary btn-block'" show-select-all="true" show-unselect-all="true">
+          </multiselect>
           <ul class="nav nav-pills nav-stacked">
-            <li ng-repeat="(key, value) in $ctrl.datatypes">
-              <a ng-click="$ctrl.filterByType(key)" href>
-                <i class="fa fa-check text-success" ng-show="key === $ctrl.search.dataType"></i> {{key}}
-              </a>
+            <li ng-repeat="key in $ctrl.filters.dataType">
+              <a href>{{key}}</a>
             </li>
           </ul>
         </div>
       </div>
-      <div class="box box-solid">
+      <div class="box box-primary">
         <div class="box-header with-border">
           <h3 class="box-title">Analyzers</h3>
           <div class="box-tools">
@@ -33,21 +54,21 @@
             </button>
           </div>
         </div>
-        <div class="box-body no-padding">
+        <div class="box-body">
+          <multiselect ng-model="$ctrl.filters.analyzer" options="$ctrl.analyzers" id-prop="id" display-prop="name" placeholder="Salect analyzers"
+            classes-btn="'btn-primary btn-block'" show-select-all="true" show-unselect-all="true">
+          </multiselect>
           <ul class="nav nav-pills nav-stacked">
-            <li ng-repeat="analyzer in $ctrl.analyzers">
-              <a class="text-ellipsis" ng-click="$ctrl.filterByAnalyzer(analyzer.id)" href>
-                <i class="fa fa-check text-success" ng-show="analyzer.id === $ctrl.search.analyzerId"></i>
-                {{analyzer.name}}
-                <!--<span class="label label-success pull-right">{{value}}</span>-->
-              </a>
+            <li ng-repeat="analyzer in $ctrl.filters.analyzer">
+              <a class="text-ellipsis" href>{{analyzer.name}}</a>
             </li>
           </ul>
         </div>
       </div>
     </div>
+
     <div class="col-md-9">
-      <form ng-submit="$ctrl.load(1)">
+      <!-- <form ng-submit="$ctrl.load(1)">
         <div class="input-group form-group">
           <input type="text" class="form-control input-lg" placeholder="Search for observable data" ng-model="$ctrl.search.data">
           <div class="input-group-btn">
@@ -57,7 +78,7 @@
             </button>
           </div>
         </div>
-      </form>
+      </form> -->
 
       <div class="box box-primary">
         <div class="box-header">
@@ -112,5 +133,6 @@
       </div>
     </div>
   </div>
+  </form>
 </section>
 <!-- /.content -->

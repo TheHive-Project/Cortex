@@ -18,8 +18,6 @@ import utilsService from './services/common/UtilsService';
 
 import fangFilter from './filters/fang';
 
-import jobService from './services/JobService';
-
 import AuthService from './services/common/AuthService';
 import HtmlSanitizer from './services/common/HtmlSanitizer';
 import UserService from './services/common/UserService';
@@ -44,8 +42,6 @@ versionService(core);
 utilsService(core);
 
 /* App services */
-jobService(core);
-
 constants(core);
 storeFactory(core);
 resolverProvider(core);

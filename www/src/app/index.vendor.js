@@ -31,6 +31,8 @@ import 'dropzone';
 
 import 'angular-clipboard';
 
+import 'angular-bootstrap-multiselect';
+
 // local scripts
 //import "../assets/js/...";
 

@@ -34,45 +34,59 @@ export default class SearchService {
       this.config.url = `./api/${config.objectType.replace(/_/g, '/')}/_search`;
     }
 
+    return this;
+  }
+
+  buildQueryString() {
+    // Set the URL
+    if (
+      !_.isString(this.config.objectType) ||
+      this.config.objectType === 'any'
+    ) {
+      this.config.url = './api/_search';
+    } else {
+      this.config.url = `./api/${this.config.objectType.replace(
+        /_/g,
+        '/'
+      )}/_search`;
+    }
+
     let queryString = [];
 
     // Set the range for pagination
-    if (_.isString(config.range)) {
-      queryString.push('range=' + encodeURIComponent(config.range));
+    if (_.isString(this.config.range)) {
+      queryString.push('range=' + encodeURIComponent(this.config.range));
     }
 
     // Set the sort options
-    if (_.isString(config.sort)) {
-      queryString.push('sort=' + encodeURIComponent(config.sort));
-    } else if (_.isArray(config.sort)) {
-      _.forEach(config.sort, s => {
+    if (_.isString(this.config.sort)) {
+      queryString.push('sort=' + encodeURIComponent(this.config.sort));
+    } else if (_.isArray(this.config.sort)) {
+      _.forEach(this.config.sort, s => {
         queryString.push('sort=' + encodeURIComponent(s));
       });
     }
 
     // Set the parent option
-    if (_.isNumber(config.nparent)) {
-      queryString.push('nparent=' + config.nparent);
+    if (_.isNumber(this.config.nparent)) {
+      queryString.push('nparent=' + this.config.nparent);
     }
 
     // Set the stats option
-    if (config.nstats === true) {
-      queryString.push('nstats=' + config.nstats);
+    if (this.config.nstats === true) {
+      queryString.push('nstats=' + this.config.nstats);
     }
 
-    this.config.params = queryString.join('&');
-
-    return this;
+    return queryString.join('&');
   }
 
   search() {
+    const queryString = this.buildQueryString();
+
     this.$http
-      .post(
-        this.config.url + (this.config.params ? `?${this.config.params}` : ''),
-        {
-          query: this.config.filter
-        }
-      )
+      .post(this.config.url + (queryString ? `?${queryString}` : ''), {
+        query: this.config.filter
+      })
       .then(response => {
         response.total = parseInt(response.headers('X-Total'));
         return this.$q.resolve(response);

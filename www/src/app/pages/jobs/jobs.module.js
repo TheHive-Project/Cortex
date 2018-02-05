@@ -1,5 +1,7 @@
 'use strict';
 
+import _ from 'lodash/core';
+
 import JobsController from './jobs.controller';
 import tpl from './jobs.page.html';
 
@@ -8,6 +10,8 @@ import jobTpl from './job.page.html';
 
 import JobDetailsController from './components/job.details.controller';
 import jobDetailsTpl from './components/job.details.html';
+
+import JobService from './jobs.service';
 
 const jobsModule = angular
   .module('jobs-module', ['ui.router'])
@@ -19,7 +23,10 @@ const jobsModule = angular
         url: 'jobs',
         component: 'jobsPage',
         resolve: {
-          analyzers: AnalyzerService => AnalyzerService.list()
+          analyzers: AnalyzerService =>
+            AnalyzerService.list().then(analyzers =>
+              _.map(analyzers, a => _.pick(a, 'name', 'id', 'dataTypeList'))
+            )
         }
       })
       .state('main.job-report', {
@@ -65,6 +72,7 @@ const jobsModule = angular
     bindings: {
       job: '<'
     }
-  });
+  })
+  .service('JobService', JobService);
 
 export default jobsModule;

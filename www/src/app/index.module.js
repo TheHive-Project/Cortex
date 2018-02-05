@@ -30,6 +30,7 @@ const App = angular.module('cortex', [
   'angularUtils.directives.dirPagination',
   'angularMoment',
   'angular-clipboard',
+  'btorfs.multiselect',
 
   // core
   coreModule.name,
