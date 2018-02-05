@@ -115,6 +115,21 @@ class JobSrv(
     findSrv[JobModel, Job](jobModel, queryDef, range, sortBy)
   }
 
+  def findForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Job, NotUsed], Future[Long]) = {
+    val jobs = for {
+      user ← userSrv.get(userId)
+      organizationId = user.organization()
+    } yield findForOrganization(organizationId, queryDef, range, sortBy)
+    val jobSource = Source.fromFutureSource(jobs.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val jobTotal = jobs.flatMap(_._2)
+    jobSource -> jobTotal
+  }
+
+  def findForOrganization(organizationId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Job, NotUsed], Future[Long]) = {
+    import org.elastic4play.services.QueryDSL._
+    find(and("organizationId" ~= organizationId, queryDef), range, sortBy)
+  }
+
   def stats(queryDef: QueryDef, aggs: Seq[Agg]): Future[JsObject] = findSrv(jobModel, queryDef, aggs: _*)
 
   def get(jobId: String)(implicit authContext: AuthContext): Future[Job] = {

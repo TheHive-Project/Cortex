@@ -41,6 +41,18 @@ class JobCtrl @Inject() (
     renderer.toOutput(OK, jobs, jobTotal)
   }
 
+  def find: Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
+    val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
+    val range = request.body.getString("range")
+    val sort = request.body.getStrings("sort").getOrElse(Nil)
+    val (users, total) = if (request.roles.contains(Roles.admin))
+      jobSrv.find(query, range, sort)
+    else
+      jobSrv.findForUser(request.userId, query, range, sort)
+    renderer.toOutput(OK, users, total)
+
+  }
+
   def get(jobId: String): Action[AnyContent] = authenticated(Roles.read).async { implicit authContext ⇒
     jobSrv.get(jobId).map { job ⇒
       renderer.toOutput(OK, job)
