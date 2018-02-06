@@ -8,9 +8,7 @@ export default class JobService {
   }
 
   list(params) {
-    return this.$http.get('./api/job', {
-      params: params
-    });
+    return this.$http.post('./api/job/_search', params);
   }
 
   report(jobId) {

@@ -6,7 +6,8 @@ function config(
   $compileProvider,
   $locationProvider,
   MaintenanceServiceProvider,
-  NotificationProvider
+  NotificationProvider,
+  localStorageServiceProvider
 ) {
   'ngInject';
 
@@ -30,6 +31,9 @@ function config(
     positionX: 'left',
     positionY: 'bottom'
   });
+
+  // Configure local storage service
+  localStorageServiceProvider.setPrefix('cortex');
 }
 
 export default config;

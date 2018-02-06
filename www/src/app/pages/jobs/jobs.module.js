@@ -11,7 +11,13 @@ import jobTpl from './job.page.html';
 import JobDetailsController from './components/job.details.controller';
 import jobDetailsTpl from './components/job.details.html';
 
+// import JobFiltersController from './components/job.filters.controller';
+// import jobFiltersTpl from './components/job.filters.html';
+// import './components/job.filters.scss';
+
 import JobService from './jobs.service';
+
+import './jobs.page.scss';
 
 const jobsModule = angular
   .module('jobs-module', ['ui.router'])
@@ -59,6 +65,15 @@ const jobsModule = angular
       analyzers: '<'
     }
   })
+  // .component('jobFilters', {
+  //   controller: JobFiltersController,
+  //   templateUrl: jobFiltersTpl,
+  //   bindings: {
+  //     filters: '<',
+  //     datatypes: '<',
+  //     analyzers: '<'
+  //   }
+  // })
   .component('jobsDetailsPage', {
     controller: JobController,
     templateUrl: jobTpl,

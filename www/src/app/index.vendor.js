@@ -33,6 +33,10 @@ import 'angular-clipboard';
 
 import 'angular-bootstrap-multiselect';
 
+import 'angular-local-storage';
+
+import 'angular-utils-pagination';
+
 // local scripts
 //import "../assets/js/...";
 

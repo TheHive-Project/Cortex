@@ -31,6 +31,8 @@ const App = angular.module('cortex', [
   'angularMoment',
   'angular-clipboard',
   'btorfs.multiselect',
+  'LocalStorageModule',
+  'angularUtils.directives.dirPagination',
 
   // core
   coreModule.name,

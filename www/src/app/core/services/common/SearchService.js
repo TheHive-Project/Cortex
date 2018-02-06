@@ -83,7 +83,7 @@ export default class SearchService {
   search() {
     const queryString = this.buildQueryString();
 
-    this.$http
+    return this.$http
       .post(this.config.url + (queryString ? `?${queryString}` : ''), {
         query: this.config.filter
       })

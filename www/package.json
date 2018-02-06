@@ -19,6 +19,7 @@
     "angular": "1.6.8",
     "angular-bootstrap-multiselect": "git+https://github.com/bentorfs/angular-bootstrap-multiselect.git",
     "angular-clipboard": "^1.6.2",
+    "angular-local-storage": "^0.7.1",
     "angular-messages": "1.6.8",
     "angular-moment": "^1.2.0",
     "angular-resource": "1.6.8",
