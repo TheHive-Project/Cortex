@@ -4,4 +4,26 @@
       width: 100px;
     }
   }
+
+  .jobs-toolbar {
+    label.form-control {
+      border: 0;
+      width: auto;
+      padding-left: 0;
+      padding-right: 5px;
+    }
+    input.form-control {
+      width: 300px;
+    }
+    >select {
+      width: 100px;      
+    }
+    multiselect {
+      width: 150px
+    }
+
+    .pagination {
+      margin: 0;
+    }
+  }
 }

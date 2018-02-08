@@ -41,16 +41,21 @@ export default class JobsController {
       dataType: ''
     };
 
-    this.filters = this.localStorageService.get('job-filters') || {
-      search: null,
-      status: [],
-      dataType: [],
-      analyzer: []
+    this.state = this.localStorageService.get('jobs-page') || {
+      filters: {
+        search: null,
+        status: [],
+        dataType: [],
+        analyzer: []
+      },
+      pagination: {
+        pageSize: 50,
+        current: 1
+      }
     };
-    this.pagination = {
-      pageSize: 50,
-      current: 1
-    };
+
+    this.filters = this.state.filters;
+    this.pagination = this.state.pagination;
   }
 
   $onInit() {
@@ -66,6 +71,13 @@ export default class JobsController {
   buildQuery() {
     let criteria = [];
 
+    if (!_.isEmpty(this.filters.search)) {
+      criteria.push({
+        _field: 'data',
+        _value: this.filters.search
+      });
+    }
+
     if (!_.isEmpty(this.filters.dataType)) {
       criteria.push({
         _in: { _field: 'dataType', _values: this.filters.dataType }
@@ -75,8 +87,8 @@ export default class JobsController {
     if (!_.isEmpty(this.filters.analyzer)) {
       criteria.push({
         _in: {
-          _field: 'analyzerId',
-          _values: _.map(this.filters.analyzer, 'id')
+          _field: 'analyzerDefinitionId',
+          _values: _.map(this.filters.analyzer, 'analyzerDefinitionId')
         }
       });
     }
@@ -92,7 +104,8 @@ export default class JobsController {
   }
 
   applyFilters() {
-    this.localStorageService.set('job-filters', this.filters);
+    this.state.filters = this.filters;
+    this.localStorageService.set('jobs-page', this.state);
     this.load(1);
   }
 
@@ -103,20 +116,12 @@ export default class JobsController {
 
   load(page) {
     if (page) {
-      this.pagination.current = 1;
+      this.pagination.current = page;
     }
-    // let post = {
-    //   limit: this.pagination.itemsPerPage,
-    //   start: page - 1,
-    //   dataTypeFilter: this.search.dataType || null,
-    //   analyzerFilter: this.search.analyzerId || null,
-    //   dataFilter: this.search.data || null
-    // };
 
-    // const post = {
-    //   query: this.buildQuery(),
-    //   range: 'all'
-    // };
+    this.state.filters = this.filters;
+    this.state.pagination = { pageSize: this.pagination.pageSize };
+    this.localStorageService.set('jobs-page', this.state);
 
     this.SearchService.configure({
       objectType: 'job',
@@ -133,10 +138,6 @@ export default class JobsController {
         this.pagination.total = parseInt(response.headers('x-total')) || 0;
         //this.pagination.current = page;
       });
-  }
-
-  pageChanged() {
-    this.load(this.pagination.current);
   }
 
   filterJobs(element) {

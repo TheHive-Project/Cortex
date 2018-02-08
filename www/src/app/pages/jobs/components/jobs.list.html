@@ -1,0 +1,63 @@
+<section>
+  <!-- <p class="lead">
+    Defined users ({{$ctrl.jobs.length}})
+    <a class="btn btn-primary pull-right" href ng-click="$ctrl.openModal('create', {})">
+      <i class="fa fa-plus"></i> Add user</a>
+  </p> -->
+
+  <div class="row mv-s" ng-if="$ctrl.jobs.length === 0">
+    <div class="col-md-12">
+      <div class="empty-message">No jobs found.</div>
+    </div>
+  </div>
+
+  <div class="row mv-s" ng-if="$ctrl.jobs.length > 0">
+    <div class="col-sm-12 flex-table">
+      <div class="flex-row media" ng-repeat="job in $ctrl.jobs track by job.id" ng-init="isFile = job.dataType ==='file'">
+        <div class="flex-col flex-icon flex-w-100">
+          <span class="label label-lg label-default" ng-class="{
+            'Success': 'label-success',
+            'InProgress': 'label-warning',
+            'Failure': 'label-danger'}[job.status]">{{job.status}}</span>
+        </div>
+        <div class="flex-col flex-1">
+          <h4 class="media-heading text-primary">
+             <strong>[{{job.dataType}}]</strong> {{(isFile ? job.filename : job.data) | fang | limitTo:200}}
+          </h4>
+          <div class="mt-xs text-muted">
+            <span class="mr-s">
+              <i class="fa fa-cogs"></i>
+              <span>{{job.analyzerName}}</span>
+            </span>
+            <span class="mr-s">
+              <i class="fa fa-calendar"></i>
+              <span am-time-ago="job.createdAt"></span>
+            </span>
+            <span class="mr-s">
+              <i class="fa fa-user"></i>
+              <span>{{job.createdBy}}</span>
+            </span>
+            <span class="mr-s">
+              <i class="fa fa-file-text"></i>
+              <span>{{job.organizationId}}</span>
+            </span>
+            <div ng-if="job.status === 'Failure'" class="mt-xs text-danger wrap">
+              <i class="fa fa-exclamation-triangle"></i> {{job.message}}
+            </div>
+          </div>
+          <div>
+
+          </div>
+        </div>
+        <div class="flex-col flex-icon">
+          <a class="text-primary" ui-sref="main.job-report({id: job.id})">
+            <i class="fa fa-search"></i>View</a>
+        </div>
+        <div class="flex-col flex-icon" require-roles roles="['admin', 'write']">
+          <a href class="text-danger" ng-click="$ctrl.deleteJob(job.id)">
+            <i class="fa fa-ban"></i>Delete</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

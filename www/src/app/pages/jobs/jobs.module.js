@@ -11,9 +11,9 @@ import jobTpl from './job.page.html';
 import JobDetailsController from './components/job.details.controller';
 import jobDetailsTpl from './components/job.details.html';
 
-// import JobFiltersController from './components/job.filters.controller';
-// import jobFiltersTpl from './components/job.filters.html';
-// import './components/job.filters.scss';
+import JobsListController from './components/jobs.list.controller';
+import jobsListTpl from './components/jobs.list.html';
+import './components/jobs.list.scss';
 
 import JobService from './jobs.service';
 
@@ -31,7 +31,9 @@ const jobsModule = angular
         resolve: {
           analyzers: AnalyzerService =>
             AnalyzerService.list().then(analyzers =>
-              _.map(analyzers, a => _.pick(a, 'name', 'id', 'dataTypeList'))
+              _.map(analyzers, a =>
+                _.pick(a, 'name', 'id', 'dataTypeList', 'analyzerDefinitionId')
+              )
             )
         }
       })
@@ -65,15 +67,13 @@ const jobsModule = angular
       analyzers: '<'
     }
   })
-  // .component('jobFilters', {
-  //   controller: JobFiltersController,
-  //   templateUrl: jobFiltersTpl,
-  //   bindings: {
-  //     filters: '<',
-  //     datatypes: '<',
-  //     analyzers: '<'
-  //   }
-  // })
+  .component('jobsList', {
+    controller: JobsListController,
+    templateUrl: jobsListTpl,
+    bindings: {
+      jobs: '<'
+    }
+  })
   .component('jobsDetailsPage', {
     controller: JobController,
     templateUrl: jobTpl,
