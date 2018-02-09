@@ -16,8 +16,9 @@ import akka.stream.scaladsl.Sink
 import akka.util.Timeout
 import org.thp.cortex.models.{ Job, JobStatus, Roles }
 import org.thp.cortex.services.AuditActor.{ JobEnded, Register }
-import org.thp.cortex.services.JobSrv
+import org.thp.cortex.services.{ JobSrv, UserSrv }
 
+import org.elastic4play.NotFoundError
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
@@ -27,6 +28,7 @@ import org.elastic4play.utils.RichFuture
 @Singleton
 class JobCtrl @Inject() (
     jobSrv: JobSrv,
+    userSrv: UserSrv,
     @Named("audit") auditActor: ActorRef,
     fieldsBodyParser: FieldsBodyParser,
     authenticated: Authenticated,
@@ -53,10 +55,22 @@ class JobCtrl @Inject() (
 
   }
 
-  def get(jobId: String): Action[AnyContent] = authenticated(Roles.read).async { implicit authContext ⇒
+  def get(jobId: String): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
     jobSrv.get(jobId).map { job ⇒
       renderer.toOutput(OK, job)
     }
+  }
+
+  def delete(jobId: String): Action[AnyContent] = authenticated(Roles.write).async { implicit request ⇒
+    if (request.roles.contains(Roles.admin))
+      jobSrv.delete(jobId).map(_ ⇒ NoContent)
+    else
+      for {
+        job ← jobSrv.get(jobId)
+        organization ← userSrv.getOrganizationId(request.userId)
+        _ ← if (job.organizationId() == organization) jobSrv.delete(jobId)
+        else Future.failed(NotFoundError(s"job $jobId not found"))
+      } yield NoContent
   }
 
   def create(analyzerId: String): Action[Fields] = authenticated(Roles.write).async(fieldsBodyParser) { implicit request ⇒
@@ -65,10 +79,6 @@ class JobCtrl @Inject() (
         renderer.toOutput(OK, job)
       }
   }
-
-  //  def remove(jobId: String): Action[AnyContent] = Action.async { request ⇒
-  //    jobSrv.remove(jobId).map(_ ⇒ Ok(""))
-  //  }
 
   private def getJobWithReport(jobId: String)(implicit authContext: AuthContext): Future[JsValue] = {
     jobSrv.get(jobId).flatMap(getJobWithReport)
@@ -122,11 +132,11 @@ class JobCtrl @Inject() (
       }
   }
 
-  def report(jobId: String): Action[AnyContent] = authenticated(Roles.read).async { implicit authContext ⇒
+  def report(jobId: String): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
     getJobWithReport(jobId).map(Ok(_))
   }
 
-  def waitReport(jobId: String, atMost: String): Action[AnyContent] = authenticated(Roles.read).async { implicit authContext ⇒
+  def waitReport(jobId: String, atMost: String): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
     jobSrv.get(jobId)
       .flatMap {
         case job if job.status() == JobStatus.InProgress || job.status() == JobStatus.Waiting ⇒

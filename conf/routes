@@ -30,6 +30,7 @@ POST          /api/organization/:organizationId/analyzer/_search            org.
 
 GET           /api/job                                                      org.thp.cortex.controllers.JobCtrl.list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])
 POST          /api/job/_search                                              org.thp.cortex.controllers.JobCtrl.find
+DELETE        /api/job/:id                                                  org.thp.cortex.controllers.JobCtrl.delete(id)
 GET           /api/job/:id                                                  org.thp.cortex.controllers.JobCtrl.get(id)
 GET           /api/job/:id/report                                           org.thp.cortex.controllers.JobCtrl.report(id)
 

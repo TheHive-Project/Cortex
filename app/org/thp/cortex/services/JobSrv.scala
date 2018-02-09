@@ -40,6 +40,7 @@ class JobSrv(
     createSrv: CreateSrv,
     updateSrv: UpdateSrv,
     findSrv: FindSrv,
+    deleteSrv: DeleteSrv,
     attachmentSrv: AttachmentSrv,
     akkaSystem: ActorSystem,
     implicit val ec: ExecutionContext,
@@ -56,6 +57,7 @@ class JobSrv(
       createSrv: CreateSrv,
       updateSrv: UpdateSrv,
       findSrv: FindSrv,
+      deleteSrv: DeleteSrv,
       attachmentSrv: AttachmentSrv,
       akkaSystem: ActorSystem,
       ec: ExecutionContext,
@@ -70,6 +72,7 @@ class JobSrv(
     createSrv,
     updateSrv,
     findSrv,
+    deleteSrv,
     attachmentSrv,
     akkaSystem,
     ec, mat)
@@ -139,6 +142,8 @@ class JobSrv(
       .runWith(Sink.head)
   }
 
+  def delete(jobId: String)(implicit authContext: AuthContext): Future[Job] = deleteSrv[JobModel, Job](jobModel, jobId)
+
   def legacyCreate(analyzer: Analyzer, attributes: JsObject, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
     val dataType = Or.from((attributes \ "dataType").asOpt[String], One(MissingAttributeError("dataType")))
     val dataFiv = fields.get("data") match {
@@ -178,6 +183,15 @@ class JobSrv(
           "extra attributes": "value"
         }
       }
+      - or -
+      {
+        "dataType": "file",
+        "tlp": 2
+        "extra attributes": "value"
+        "attachment": {
+          "name / id / content-type / ..."
+        }
+      }
 
       In Cortex 2, fields looks like:
       {
@@ -191,12 +205,13 @@ class JobSrv(
        */
       fields.getValue("attributes").map(attributes ⇒ legacyCreate(analyzer, attributes.as[JsObject], fields)).getOrElse {
         val dataType = Or.from(fields.getString("dataType"), One(MissingAttributeError("dataType")))
-        val dataFiv = (fields.getString("data"), fields.get("attachment")) match {
-          case (Some(data), None)                ⇒ Good(Left(data))
-          case (None, Some(fiv: FileInputValue)) ⇒ Good(Right(fiv))
-          case (None, Some(other))               ⇒ Bad(One(InvalidFormatAttributeError("attachment", "attachment", other)))
-          case (_, Some(fiv))                    ⇒ Bad(One(InvalidFormatAttributeError("data/attachment", "string/attachment", fiv)))
-          case (None, None)                      ⇒ Bad(One(MissingAttributeError("data/attachment")))
+        val dataFiv = (fields.get("data"), fields.getString("data"), fields.get("attachment")) match {
+          case (_, Some(data), None)                ⇒ Good(Left(data))
+          case (_, None, Some(fiv: FileInputValue)) ⇒ Good(Right(fiv))
+          case (Some(fiv: FileInputValue), None, _) ⇒ Good(Right(fiv))
+          case (_, None, Some(other))               ⇒ Bad(One(InvalidFormatAttributeError("attachment", "attachment", other)))
+          case (_, _, Some(fiv))                    ⇒ Bad(One(InvalidFormatAttributeError("data/attachment", "string/attachment", fiv)))
+          case (_, None, None)                      ⇒ Bad(One(MissingAttributeError("data/attachment")))
         }
 
         val tlp = fields.getLong("tlp").getOrElse(2L)

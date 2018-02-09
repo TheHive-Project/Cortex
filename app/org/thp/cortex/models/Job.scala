@@ -11,7 +11,7 @@ import org.elastic4play.models.{ AttributeDef, EntityDef, HiveEnumeration, Model
 
 object JobStatus extends Enumeration with HiveEnumeration {
   type Type = Value
-  val Waiting, InProgress, Success, Failure = Value
+  val Waiting, InProgress, Success, Failure, Deleted = Value
   implicit val reads = enumFormat(this)
 }
 
@@ -37,6 +37,7 @@ trait JobAttributes { _: AttributeDef ⇒
 @Singleton
 class JobModel @Inject() () extends ModelDef[JobModel, Job]("job", "Job", "/job") with JobAttributes with AuditedModel {
 
+  override val removeAttribute: JsObject = Json.obj("status" -> JobStatus.Deleted)
 }
 
 class Job(model: JobModel, attributes: JsObject) extends EntityDef[JobModel, Job](model, attributes) with JobAttributes {
