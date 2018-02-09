@@ -32,7 +32,9 @@ class AnalyzerCtrl @Inject() (
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
     val isAdmin = request.roles.contains(Roles.admin)
-    val (analyzers, analyzerTotal) = analyzerSrv.findForUser(request.userId, query, range, sort)
+    val (analyzers, analyzerTotal) =
+      if (isAdmin) analyzerSrv.find(query, range, sort)
+      else analyzerSrv.findForUser(request.userId, query, range, sort)
     val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson(isAdmin))
     renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
   }
