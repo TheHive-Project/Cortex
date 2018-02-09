@@ -93,7 +93,7 @@ class JobSrv(
     }
     else {
       val futureSource = userSrv.getOrganizationId(authContext.userId).map { organizationId ⇒
-        findSrv[M, E](m, queryDef("organizationId" ~= organizationId), range, sortBy)
+        findSrv[M, E](m, queryDef("organization" ~= organizationId), range, sortBy)
       }
       val source = Source.fromFutureSource(futureSource.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
       source -> futureSource.flatMap(_._2)
@@ -130,7 +130,7 @@ class JobSrv(
 
   def findForOrganization(organizationId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Job, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
-    find(and("organizationId" ~= organizationId, queryDef), range, sortBy)
+    find(and("organization" ~= organizationId, queryDef), range, sortBy)
   }
 
   def stats(queryDef: QueryDef, aggs: Seq[Agg]): Future[JsObject] = findSrv(jobModel, queryDef, aggs: _*)
@@ -244,7 +244,7 @@ class JobSrv(
             "analyzerDefinitionId" -> analyzer.analyzerDefinitionId(),
             "analyzerId" -> analyzer.id,
             "analyzerName" -> analyzer.name(),
-            "organizationId" -> analyzer.parentId,
+            "organization" -> analyzer.parentId,
             "status" -> JobStatus.Waiting,
             "dataType" -> dataType,
             "tlp" -> tlp,

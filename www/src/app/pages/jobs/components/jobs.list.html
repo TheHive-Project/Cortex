@@ -24,7 +24,7 @@
           <h4 class="media-heading text-primary">
              <strong>[{{job.dataType}}]</strong> {{(isFile ? job.filename : job.data) | fang | limitTo:200}}
           </h4>
-          <div class="row mt-xs text-muted">            
+          <div class="row mt-xs text-muted">
             <div class="col-sm-3">
               <strong>Analyzer:</strong>
               <span>{{job.analyzerName}}</span>
@@ -39,14 +39,14 @@
             </div>
             <div class="col-sm-3">
               <strong>Organization:</strong>
-              <span>{{job.organizationId}}</span>
-            </div>            
+              <span>{{job.organization}}</span>
+            </div>
           </div>
           <div ng-if="job.status === 'Failure'" class="row mt-xs text-danger wrap">
             <div class="col-sm-12">
               <i class="fa fa-exclamation-triangle"></i> {{job.message}}
-            </div>            
-          </div>                    
+            </div>
+          </div>
         </div>
         <div class="flex-col flex-icon">
           <a class="text-primary" ui-sref="main.job-report({id: job.id})">

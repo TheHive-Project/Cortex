@@ -11,7 +11,7 @@ import play.api.libs.json.{ JsObject, Json }
 import play.api.mvc._
 
 import org.thp.cortex.models.Roles
-import org.thp.cortex.services.UserSrv
+import org.thp.cortex.services.{ OrganizationSrv, UserSrv }
 
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
@@ -23,6 +23,7 @@ import org.elastic4play.{ AuthorizationError, MissingAttributeError, Timed }
 class UserCtrl @Inject() (
     userSrv: UserSrv,
     authSrv: AuthSrv,
+    organizationSrv: OrganizationSrv,
     authenticated: Authenticated,
     renderer: Renderer,
     fieldsBodyParser: FieldsBodyParser,
@@ -33,7 +34,12 @@ class UserCtrl @Inject() (
 
   @Timed
   def create: Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
-    userSrv.create(request.body)
+    // Check if organization is valid
+    request.body.getString("organization")
+      .fold(Future.successful(())) { organizationId ⇒
+        organizationSrv.get(organizationId).map(_ ⇒ ())
+      }
+      .flatMap { _ ⇒ userSrv.create(request.body) }
       .map(user ⇒ renderer.toOutput(CREATED, user))
   }
 
@@ -58,10 +64,17 @@ class UserCtrl @Inject() (
       else if (request.body.contains("status") && !request.authContext.roles.contains(Roles.admin)) {
         Future.failed(AuthorizationError("You are not permitted to change user status"))
       }
+      else if (request.body.contains("organization") && !request.authContext.roles.contains(Roles.admin)) {
+        Future.failed(AuthorizationError("You are not permitted to change user organization"))
+      }
       else {
-        userSrv.update(id, request.body.unset("password").unset("key")).map { user ⇒
-          renderer.toOutput(OK, user)
-        }
+        // Check if organization is valid
+        request.body.getString("organization")
+          .fold(Future.successful(())) { organizationId ⇒
+            organizationSrv.get(organizationId).map(_ ⇒ ())
+          }
+          .flatMap { _ ⇒ userSrv.update(id, request.body.unset("password").unset("key")) }
+          .map { user ⇒ renderer.toOutput(OK, user) }
       }
     }
     else {

@@ -68,7 +68,7 @@ class JobCtrl @Inject() (
       for {
         job ← jobSrv.get(jobId)
         organization ← userSrv.getOrganizationId(request.userId)
-        _ ← if (job.organizationId() == organization) jobSrv.delete(jobId)
+        _ ← if (job.organization() == organization) jobSrv.delete(jobId)
         else Future.failed(NotFoundError(s"job $jobId not found"))
       } yield NoContent
   }

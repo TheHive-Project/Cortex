@@ -19,7 +19,7 @@ trait JobAttributes { _: AttributeDef ⇒
   val analyzerDefinitionId = attribute("analyzerDefinitionId", F.stringFmt, "Analyzer definition id", O.readonly)
   val analyzerId = attribute("analyzerId", F.stringFmt, "Analyzer id", O.readonly)
   val analyzerName = attribute("analyzerName", F.stringFmt, "Analyzer name", O.readonly)
-  val organizationId = attribute("organizationId", F.stringFmt, "Organization ID", O.readonly)
+  val organization = attribute("organization", F.stringFmt, "Organization ID", O.readonly)
   val status = attribute("status", F.enumFmt(JobStatus), "Status of the job")
   val startDate = optionalAttribute("startDate", F.dateFmt, "Analysis start date")
   val endDate = optionalAttribute("endDate", F.dateFmt, "Analysis end date")
@@ -38,6 +38,8 @@ trait JobAttributes { _: AttributeDef ⇒
 class JobModel @Inject() () extends ModelDef[JobModel, Job]("job", "Job", "/job") with JobAttributes with AuditedModel {
 
   override val removeAttribute: JsObject = Json.obj("status" -> JobStatus.Deleted)
+
+  override def defaultSortBy: Seq[String] = Seq("-createdAt")
 }
 
 class Job(model: JobModel, attributes: JsObject) extends EntityDef[JobModel, Job](model, attributes) with JobAttributes {
