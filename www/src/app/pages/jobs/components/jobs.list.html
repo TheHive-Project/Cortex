@@ -24,30 +24,29 @@
           <h4 class="media-heading text-primary">
              <strong>[{{job.dataType}}]</strong> {{(isFile ? job.filename : job.data) | fang | limitTo:200}}
           </h4>
-          <div class="mt-xs text-muted">
-            <span class="mr-s">
-              <i class="fa fa-cogs"></i>
+          <div class="row mt-xs text-muted">            
+            <div class="col-sm-3">
+              <strong>Analyzer:</strong>
               <span>{{job.analyzerName}}</span>
-            </span>
-            <span class="mr-s">
-              <i class="fa fa-calendar"></i>
-              <span am-time-ago="job.createdAt"></span>
-            </span>
-            <span class="mr-s">
-              <i class="fa fa-user"></i>
-              <span>{{job.createdBy}}</span>
-            </span>
-            <span class="mr-s">
-              <i class="fa fa-file-text"></i>
-              <span>{{job.organizationId}}</span>
-            </span>
-            <div ng-if="job.status === 'Failure'" class="mt-xs text-danger wrap">
-              <i class="fa fa-exclamation-triangle"></i> {{job.message}}
             </div>
+            <div class="col-sm-3">
+              <strong>Date:</strong>
+              <span am-time-ago="job.createdAt"></span>
+            </div>
+            <div class="col-sm-3">
+              <strong>User:</strong>
+              <span>{{job.createdBy}}</span>
+            </div>
+            <div class="col-sm-3">
+              <strong>Organization:</strong>
+              <span>{{job.organizationId}}</span>
+            </div>            
           </div>
-          <div>
-
-          </div>
+          <div ng-if="job.status === 'Failure'" class="row mt-xs text-danger wrap">
+            <div class="col-sm-12">
+              <i class="fa fa-exclamation-triangle"></i> {{job.message}}
+            </div>            
+          </div>                    
         </div>
         <div class="flex-col flex-icon">
           <a class="text-primary" ui-sref="main.job-report({id: job.id})">

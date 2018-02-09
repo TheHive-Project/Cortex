@@ -23,11 +23,14 @@ import HtmlSanitizer from './services/common/HtmlSanitizer';
 import UserService from './services/common/UserService';
 import SearchService from './services/common/SearchService';
 
+import ModalService from './services/common/ModalService';
+
 core
   .service('AuthService', AuthService)
   .service('HtmlSanitizer', HtmlSanitizer)
   .service('SearchService', SearchService)
-  .service('UserService', UserService);
+  .service('UserService', UserService)
+  .service('ModalService', ModalService);
 
 validationTestDirective(core);
 fixedHeightDirective(core);
