@@ -44,7 +44,9 @@ class JobCtrl @Inject() (
   }
 
   def find: Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
-    val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
+    import QueryDSL._
+    val deleteFilter = "status" ~!= "Deleted"
+    val query = request.body.getValue("query").fold[QueryDef](deleteFilter)(q ⇒ and(q.as[QueryDef], deleteFilter))
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
     val (users, total) = if (request.roles.contains(Roles.admin))
