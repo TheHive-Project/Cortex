@@ -10,6 +10,7 @@ export default class UsersListController {
     OrganizationService,
     UserService,
     NotificationService,
+    ModalService,
     clipboard
   ) {
     'ngInject';
@@ -19,6 +20,7 @@ export default class UsersListController {
     this.OrganizationService = OrganizationService;
     this.UserService = UserService;
     this.NotificationService = NotificationService;
+    this.ModalService = ModalService;
     this.clipboard = clipboard;
 
     this.userKeyCache = {};
@@ -30,14 +32,6 @@ export default class UsersListController {
   }
 
   reload() {
-    // if (this.organization) {
-    //   this.OrganizationService.users(this.organization.id).then(users => {
-    //     this.users = users;
-    //   });
-    // } else {
-    //   this.UserService.
-    // }
-
     this.$log.log('Users list should be reloaded');
 
     this.onReload();
@@ -127,5 +121,57 @@ export default class UsersListController {
       }
       this.$log.log(rejection);
     });
+  }
+
+  lockUser(id) {
+    let modalInstance = this.ModalService.confirm(
+      'Lock user',
+      'Are you sure you want to lock this user. He will no longer be able to have access to Cortex',
+      {
+        flavor: 'danger',
+        okText: 'Yes, lock the user'
+      }
+    );
+
+    modalInstance.result
+      .then(() => this.UserService.update(id, { status: 'Locked' }))
+      .then(
+        /*response*/
+        () => {
+          this.reload();
+          this.NotificationService.success('User locked successfully');
+        }
+      )
+      .catch(err => {
+        if (!_.isString(err)) {
+          this.NotificationService.error('Unable to lock the user.');
+        }
+      });
+  }
+
+  unlockUser(id) {
+    let modalInstance = this.ModalService.confirm(
+      'Unlock user',
+      'Are you sure you want to unlock this user. He will be able to have access to Cortex',
+      {
+        flavor: 'danger',
+        okText: 'Yes, unlock the user'
+      }
+    );
+
+    modalInstance.result
+      .then(() => this.UserService.update(id, { status: 'Ok' }))
+      .then(
+        /*response*/
+        () => {
+          this.reload();
+          this.NotificationService.success('User unlocked successfully');
+        }
+      )
+      .catch(err => {
+        if (!_.isString(err)) {
+          this.NotificationService.error('Unable to unlock the user.');
+        }
+      });
   }
 }

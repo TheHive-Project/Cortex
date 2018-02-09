@@ -4,12 +4,9 @@
   </div>
   <div class="modal-body">
     <analyzer-config-form definition="$modal.definition" analyzer="$modal.analyzer"></analyzer-config-form>
-
-    <div>Analyzer</div>
-    <pre>{{$modal.analyzer | json}}</pre>
   </div>
   <div class="modal-footer">
-    <button class="btn btn-warning pull-left" type="button" ng-click="$modal.cancel()">Cancel</button>
+    <button class="btn btn-default pull-left" type="button" ng-click="$modal.cancel()">Cancel</button>
     <button class="btn btn-primary pull-right" type="submit" ng-disabled="form.$invalid">Save</button>
   </div>
 </form>

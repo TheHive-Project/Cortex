@@ -14,8 +14,6 @@ export default class AnalyzerEditController {
   }
 
   $onInit() {
-    this.$log.log('onInit of AnalyzerEditController', this.analyzer);
-
     if (_.isEmpty(this.analyzer)) {
       let analyzer = {
         name: this.definition.id,
@@ -36,11 +34,9 @@ export default class AnalyzerEditController {
   }
 
   save() {
-    this.$log.log('Save clicked');
     this.$uibModalInstance.close(this.analyzer);
   }
   cancel() {
-    this.$log.log('Cancel clicked');
     this.$uibModalInstance.dismiss('cancel');
   }
 }

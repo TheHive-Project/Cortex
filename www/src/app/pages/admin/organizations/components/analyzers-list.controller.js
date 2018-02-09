@@ -6,12 +6,20 @@ import AnalyzerEditController from './analyzer.edit.controller';
 import editModalTpl from './analyzer.edit.modal.html';
 
 export default class OrganizationAnalyzersController {
-  constructor($log, $uibModal, OrganizationService) {
+  constructor(
+    $log,
+    $uibModal,
+    OrganizationService,
+    ModalService,
+    NotificationService
+  ) {
     'ngInject';
 
     this.$log = $log;
     this.$uibModal = $uibModal;
     this.OrganizationService = OrganizationService;
+    this.ModalService = ModalService;
+    this.NotificationService = NotificationService;
   }
 
   $onInit() {
@@ -35,9 +43,8 @@ export default class OrganizationAnalyzersController {
       }
     });
 
-    modal.result
+    return modal.result
       .then(response => {
-        this.$log.log(response);
         if (mode === 'create') {
           return this.OrganizationService.enableAnalyzer(
             this.organization.id,
@@ -60,7 +67,9 @@ export default class OrganizationAnalyzersController {
 
     if (_.map(definition.configurationItems, 'required').indexOf(true) !== -1) {
       // The analyzer requires some configurations
-      this.openModal('create', definition, {});
+      this.openModal('create', definition, {}).then(() => {
+        this.NotificationService.success('Analyzer enabled successfully');
+      });
     } else {
       this.OrganizationService.enableAnalyzer(
         this.organization.id,
@@ -68,18 +77,34 @@ export default class OrganizationAnalyzersController {
         {
           name: analyzerId
         }
-      ).then(response => {
-        this.$log.log(`Analyzer ${analyzerId} enabled`, response);
+      ).then(() => {
+        this.NotificationService.success('Analyzer enabled successfully');
         this.reload();
       });
     }
   }
 
   disable(analyzerId) {
-    this.OrganizationService.disableAnalyzer(analyzerId).then(response => {
-      this.$log.log(`Analyzer ${analyzerId} disabled`, response);
-      this.reload();
-    });
+    let modalInstance = this.ModalService.confirm(
+      'Disable analyzer',
+      'Are you sure you want to disable this analyzer? The corresponding configuration will be lost.',
+      {
+        flavor: 'danger',
+        okText: 'Yes, disable it'
+      }
+    );
+
+    modalInstance.result
+      .then(() => this.OrganizationService.disableAnalyzer(analyzerId))
+      .then(() => {
+        this.reload();
+        this.NotificationService.success('Analyzer disabled successfully');
+      })
+      .catch(err => {
+        if (!_.isString(err)) {
+          this.NotificationService.error('Unable to delete the Job.');
+        }
+      });
   }
 
   reload() {

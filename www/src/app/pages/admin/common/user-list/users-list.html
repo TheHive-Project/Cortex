@@ -1,4 +1,4 @@
-<section class="mt-s">  
+<section>  
   <p class="lead">
     Defined users ({{$ctrl.users.length}})
     <a class="btn btn-primary pull-right" href ng-click="$ctrl.openModal('create', {})"><i class="fa fa-plus"></i> Add user</a>
@@ -76,9 +76,13 @@
           <a href class="text-primary" ng-click="$ctrl.openModal('edit', user)">
             <i class="fa fa-edit"></i>Edit</a>
         </div>
-        <div class="flex-col flex-icon">
-          <a href class="text-danger" ng-click="$ctrl.lock(user.id)">
+        <div class="flex-col flex-icon flex-w-80" ng-if="user.status === 'Ok'">
+          <a href class="text-danger" ng-click="$ctrl.lockUser(user.id)">
             <i class="fa fa-ban"></i>Lock</a>
+        </div>
+        <div class="flex-col flex-icon flex-w-80" ng-if="user.status === 'Locked'">
+          <a href class="text-success" ng-click="$ctrl.unlockUser(user.id)">
+            <i class="fa fa-refresh"></i>Unlock</a>
         </div>
       </div>
     </div>
