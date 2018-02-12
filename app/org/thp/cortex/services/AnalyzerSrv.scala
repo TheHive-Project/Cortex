@@ -7,7 +7,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
-import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.json.JsObject
 import play.api.{ Configuration, Logger }
 
 import akka.NotUsed
@@ -168,6 +168,7 @@ class AnalyzerSrv(
       .fold(cfg ⇒ {
         createSrv[AnalyzerModel, Analyzer, Organization](analyzerModel, organization, analyzerFields
           .set("analyzerDefinitionId", analyzerDefinition.id)
+          .set("description", analyzerDefinition.description)
           .set("configuration", cfg.toString)
           .addIfAbsent("dataTypeList", StringInputValue(analyzerDefinition.dataTypeList)))
 
