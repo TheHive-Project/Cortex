@@ -10,6 +10,7 @@ export default class AnalyzerListController {
   }
 
   run(analyzer, dataType) {
+    analyzer.active = true;
     this.AnalyzerService.openRunModal([analyzer], {
       dataType: dataType
     })

@@ -13,7 +13,7 @@ export default class UserService {
   query(config) {
     let defer = this.$q.defer();
 
-    this.$http.post(`./api/user/_change`, config).then(response => {
+    this.$http.post(`./api/user/_search`, config).then(response => {
       defer.resolve(response.data);
     });
 

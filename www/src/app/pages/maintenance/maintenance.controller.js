@@ -60,19 +60,15 @@ export default class MaintenanceController {
   }
 
   createInitialUser() {
-    this.$log.log('createInitialUser');
-    this.UserService.save(
-      {
-        login: angular.lowercase(this.newUser.login),
-        name: this.newUser.name,
-        password: this.newUser.password,
-        roles: ['read', 'write', 'admin'],
-        organization: 'default'
-      },
-      () => {
-        this.$state.go(this.successState);
-      }
-    );
+    this.UserService.save({
+      login: angular.lowercase(this.newUser.login),
+      name: this.newUser.name,
+      password: this.newUser.password,
+      roles: ['read', 'write', 'admin'],
+      organization: 'default'
+    }).then(() => {
+      this.$state.go(this.successState);
+    });
   }
 
   $onInit() {
@@ -90,18 +86,17 @@ export default class MaintenanceController {
 
           if (tableName === 'end') {
             // check if there is at least one user registered
-            this.UserService.query(
-              users => {
+            this.UserService.query({})
+              .then(users => {
                 if (users.length === 0) {
                   this.showUserForm = true;
                 } else {
                   this.$state.go(this.successState);
                 }
-              },
-              () => {
+              })
+              .catch(() => {
                 this.$state.go(this.successState);
-              }
-            );
+              });
           }
           let current = 0;
 

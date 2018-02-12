@@ -20,7 +20,7 @@ object OrganizationStatus extends Enumeration with HiveEnumeration {
 trait OrganizationAttributes { _: AttributeDef ⇒
   val name = attribute("name", F.stringFmt, "Organization name", O.form)
   val _id = attribute("_id", F.stringFmt, "Organization name", O.model)
-  val description = attribute("description", F.stringFmt, "Organization description")
+  val description = attribute("description", F.textFmt, "Organization description")
   val status = attribute("status", F.enumFmt(OrganizationStatus), "Status of the organization", OrganizationStatus.Active)
 }
 
