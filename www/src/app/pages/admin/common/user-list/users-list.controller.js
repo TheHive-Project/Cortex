@@ -32,8 +32,6 @@ export default class UsersListController {
   }
 
   reload() {
-    this.$log.log('Users list should be reloaded');
-
     this.onReload();
   }
 
@@ -115,12 +113,19 @@ export default class UsersListController {
       }
     });
 
-    modal.result.then(/*response*/ () => this.reload()).catch(rejection => {
-      if (rejection && rejection.type === 'ConflictError') {
-        // Handle user uniquness
-      }
-      this.$log.log(rejection);
-    });
+    modal.result
+      .then(() => {
+        this.reload();
+        mode;
+        this.NotificationService.success(
+          `User ${mode === 'edit' ? 'updated' : 'created'} successfully`
+        );
+      })
+      .catch(rejection => {
+        if (rejection && rejection.type === 'ConflictError') {
+          // Handle user uniquness
+        }
+      });
   }
 
   lockUser(id) {

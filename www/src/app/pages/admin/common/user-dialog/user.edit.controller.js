@@ -7,6 +7,7 @@ export default class UserEditController {
     $log,
     $uibModalInstance,
     UserService,
+    OrganizationService,
     NotificationService,
     organization,
     user,
@@ -19,6 +20,7 @@ export default class UserEditController {
 
     this.UserService = UserService;
     this.NotificationService = NotificationService;
+    this.OrganizationService = OrganizationService;
     this.organization = organization;
     this.user = user;
     this.mode = mode;
@@ -37,6 +39,13 @@ export default class UserEditController {
 
     this.isEdit = this.mode === 'edit';
     this.orgId = orgId;
+    this.organizations = this.organization ? [this.organization] : [];
+  }
+
+  $onInit() {
+    if (_.isEmpty(this.organizations)) {
+      this.OrganizationService.list().then(orgs => (this.organizations = orgs));
+    }
   }
 
   onSuccess(data) {

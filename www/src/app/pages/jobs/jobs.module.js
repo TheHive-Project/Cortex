@@ -15,7 +15,7 @@ import JobsListController from './components/jobs.list.controller';
 import jobsListTpl from './components/jobs.list.html';
 import './components/jobs.list.scss';
 
-import JobService from './jobs.service';
+import jobService from './jobs.service';
 
 import './jobs.page.scss';
 
@@ -71,7 +71,8 @@ const jobsModule = angular
     controller: JobsListController,
     templateUrl: jobsListTpl,
     bindings: {
-      jobs: '<'
+      jobs: '<',
+      onDelete: '&'
     }
   })
   .component('jobsDetailsPage', {
@@ -88,6 +89,6 @@ const jobsModule = angular
       job: '<'
     }
   })
-  .service('JobService', JobService);
+  .service('JobService', jobService);
 
 export default jobsModule;

@@ -56,14 +56,15 @@
         <i class="fa fa-asterisk text-danger"></i>
       </label>
       <div class="col-sm-9">
-        <input class="form-control" name="organization" placeholder="User's organization" ng-disabled="$modal.orgId" ng-model="$modal.formData.organization" required type="text">
+        <!-- <input class="form-control" ng-if="$modal.orgId" name="organization" placeholder="User's organization" ng-disabled="$modal.orgId" ng-model="$modal.formData.organization" required type="text"> -->
+        <select class="form-control" name="organization" ng-model="$modal.formData.organization" ng-options="org.id as org.name for org in $modal.organizations"></select>
         <p class="help-block" ng-show="userForm.organization.$invalid && !userForm.organization.$pristine">This field is required.</p>
       </div>
     </div>
 
   </div>
   <div class="modal-footer text-left">
-    <button class="btn btn-default" ng-click="$modal.cancel()" type="button">Cancel</button>
+    <button class="btn btn-default pull-left" ng-click="$modal.cancel()" type="button">Cancel</button>
     <button class="btn btn-primary pull-right" ng-disabled="userForm.$invalid" type="submit">Save user</button>
   </div>
 </form>

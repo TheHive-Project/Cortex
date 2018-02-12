@@ -27,7 +27,7 @@ export default class JobsListController {
       .then(
         /*response*/
         () => {
-          this.load(1);
+          this.onDelete();
           this.NotificationService.success('Job removed successfully');
         }
       )

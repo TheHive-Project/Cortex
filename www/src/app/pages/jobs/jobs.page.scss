@@ -19,7 +19,11 @@
       width: 100px;      
     }
     multiselect {
-      width: 150px
+      width: 150px;
+
+      .dropdown-menu {
+        width: 300px !important;
+      }
     }
 
     .pagination {
