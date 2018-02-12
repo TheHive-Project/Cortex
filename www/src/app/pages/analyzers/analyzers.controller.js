@@ -3,60 +3,115 @@
 import _ from 'lodash/core';
 
 export default class AnalyzersController {
-  constructor($log, $state, $uibModal, AnalyzerService, NotificationService) {
+  constructor(
+    $log,
+    SearchService,
+    AnalyzerService,
+    NotificationService,
+    localStorageService
+  ) {
     'ngInject';
     this.$log = $log;
-    this.$state = $state;
-    this.$uibModal = $uibModal;
     this.AnalyzerService = AnalyzerService;
     this.NotificationService = NotificationService;
+    this.localStorageService = localStorageService;
+    this.SearchService = SearchService;
 
-    this.search = {
-      description: '',
-      dataTypeList: ''
+    this.pagination = {
+      current: 1,
+      total: 0
     };
 
-    this.datatypes = AnalyzerService.getTypes();
+    this.search = {
+      data: '',
+      dataType: ''
+    };
 
-    this.$log.log(this.datatypes);
+    this.state = this.localStorageService.get('analyzers-page') || {
+      filters: {
+        search: null,
+        dataType: []
+      },
+      pagination: {
+        pageSize: 50,
+        current: 1
+      }
+    };
+
+    this.filters = this.state.filters;
+    this.pagination = this.state.pagination;
   }
 
   $onInit() {
-    this.$log.debug('Called from analyzers controller');
+    this.load(1);
   }
 
-  filterByType(type) {
-    if (this.search.dataTypeList === type) {
-      this.search.dataTypeList = '';
-    } else {
-      this.search.dataTypeList = type;
-    }
-  }
+  buildQuery() {
+    let criteria = [];
 
-  run(analyzer, dataType) {
-    analyzer.active = true;
-
-    this.AnalyzerService.openRunModal([analyzer], {
-      dataType: dataType
-    })
-      .then(responses => {
-        this.$state.go('main.jobs');
-
-        responses.forEach(resp => {
-          this.NotificationService.success(
-            `${resp.data.analyzerName} started successfully on ${resp.data
-              .data || resp.data.attributes.filename}`
-          );
-        });
-      })
-      .catch(err => {
-        this.$log.log(err);
-        if (!_.isString(err)) {
-          this.NotificationService.error(
-            'An error occurred: ' + err.statusText ||
-              'An unexpected error occurred'
-          );
+    if (!_.isEmpty(this.filters.search)) {
+      criteria.push({
+        _like: {
+          _field: 'description',
+          _value: this.filters.search
         }
+      });
+    }
+
+    if (!_.isEmpty(this.filters.dataType)) {
+      criteria.push({
+        _in: {
+          _field: 'dataTypeList',
+          _values: this.filters.dataType
+        }
+      });
+    }
+
+    return _.isEmpty(criteria)
+      ? {}
+      : {
+          _and: criteria
+        };
+  }
+
+  buildRange() {
+    let page = this.pagination.current,
+      size = this.pagination.pageSize;
+
+    return `${(page - 1) * size}-${(page - 1) * size + size}`;
+  }
+
+  applyFilters() {
+    this.state.filters = this.filters;
+    this.localStorageService.set('analyzers-page', this.state);
+    this.load(1);
+  }
+
+  clearFilter(filterName) {
+    this.filters[filterName] = _.isArray(this.filters[filterName]) ? [] : null;
+    this.applyFilters();
+  }
+
+  load(page) {
+    if (page) {
+      this.pagination.current = page;
+    }
+
+    this.state.filters = this.filters;
+    this.state.pagination = {
+      pageSize: this.pagination.pageSize
+    };
+    this.localStorageService.set('jobs-page', this.state);
+
+    this.SearchService.configure({
+      objectType: 'analyzer',
+      filter: this.buildQuery(),
+      range: this.buildRange()
+    })
+      .search()
+      .then(response => {
+        this.analyzers = response.data;
+        this.pagination.total = parseInt(response.headers('x-total')) || 0;
       });
   }
 }

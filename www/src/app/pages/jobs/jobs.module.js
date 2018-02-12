@@ -29,6 +29,15 @@ const jobsModule = angular
         url: 'jobs',
         component: 'jobsPage',
         resolve: {
+          datatypes: ($q, AnalyzerService) => {
+            let defer = $q.defer();
+
+            AnalyzerService.list().then(() => {
+              defer.resolve(AnalyzerService.getTypes());
+            });
+
+            return defer.promise;
+          },
           analyzers: AnalyzerService =>
             AnalyzerService.list().then(analyzers =>
               _.map(analyzers, a =>
@@ -64,6 +73,7 @@ const jobsModule = angular
     controller: JobsController,
     templateUrl: tpl,
     bindings: {
+      datatypes: '<',
       analyzers: '<'
     }
   })

@@ -50,10 +50,8 @@ export default class AnalyzerService {
     this.$http.get('./api/analyzer').then(
       response => {
         this.analyzers = response.data;
-
-        this.dataTypes = _.mapValues(
-          _.groupBy(_.flatten(_.map(response.data, 'dataTypeList'))),
-          value => value.length
+        this.dataTypes = _.uniq(
+          _.flatten(_.map(response.data, 'dataTypeList'))
         );
 
         defered.resolve(response.data);

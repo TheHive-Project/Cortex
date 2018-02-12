@@ -3,7 +3,12 @@
 import AnalyzersController from './analyzers.controller';
 import tpl from './analyzers.page.html';
 
+import AnalyzersListController from './components/analyzers.list.controller';
+import analyzersListTpl from './components/analyzers.list.html';
+
 import analyzerService from './analyzers.service.js';
+
+import './analyzers.page.scss';
 
 const analyzersModule = angular
   .module('analyzers-module', ['ui.router'])
@@ -14,7 +19,15 @@ const analyzersModule = angular
       url: 'analyzers',
       component: 'analyzersPage',
       resolve: {
-        analyzers: AnalyzerService => AnalyzerService.list()
+        datatypes: ($q, AnalyzerService) => {
+          let defer = $q.defer();
+
+          AnalyzerService.list().then(() => {
+            defer.resolve(AnalyzerService.getTypes());
+          });
+
+          return defer.promise;
+        }
       },
       data: {
         allow: [Roles.ADMIN, Roles.WRITE]
@@ -25,8 +38,16 @@ const analyzersModule = angular
     controller: AnalyzersController,
     templateUrl: tpl,
     bindings: {
-      analyzers: '<',
-      definitions: '<'
+      datatypes: '<'
+      //analyzers: '<',
+      //definitions: '<'
+    }
+  })
+  .component('analyzersList', {
+    controller: AnalyzersListController,
+    templateUrl: analyzersListTpl,
+    bindings: {
+      analyzers: '<'
     }
   })
   .service('AnalyzerService', analyzerService);

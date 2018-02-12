@@ -1,0 +1,30 @@
+.analyzers-page {
+  .box-tools {
+    >select {
+      width: 100px;
+    }
+  }
+  .analyzers-toolbar {
+    label.form-control {
+      border: 0;
+      width: auto;
+      padding-left: 0;
+      padding-right: 5px;
+    }
+    input.form-control {
+      width: 300px;
+    }
+    >select {
+      width: 100px;
+    }
+    multiselect {
+      width: 150px;
+      .dropdown-menu {
+        width: 300px !important;
+      }
+    }
+    .pagination {
+      margin: 0;
+    }
+  }
+}

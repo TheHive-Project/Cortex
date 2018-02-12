@@ -27,7 +27,6 @@ export default class JobsController {
     this.SearchService = SearchService;
     this.JobService = JobService;
 
-    this.datatypes = _.keys(AnalyzerService.getTypes());
     this.jobs = [];
     this.running = 0;
     this.pagination = {
@@ -145,7 +144,6 @@ export default class JobsController {
           o => o.status === 'InProgress' || o.status === 'Waiting'
         );
         this.pagination.total = parseInt(response.headers('x-total')) || 0;
-        //this.pagination.current = page;
       });
   }
 
