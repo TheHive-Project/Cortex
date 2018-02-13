@@ -2,11 +2,21 @@
 
 import _ from 'lodash/core';
 
+import OrganizationModalController from '../components/organization.modal.controller';
+import organizationModalTpl from '../components/organization.modal.html';
+
 export default class OrganizationsPageController {
-  constructor($log, OrganizationService, NotificationService, ModalService) {
+  constructor(
+    $log,
+    $uibModal,
+    OrganizationService,
+    NotificationService,
+    ModalService
+  ) {
     'ngInject';
 
     this.$log = $log;
+    this.$uibModal = $uibModal;
     this.OrganizationService = OrganizationService;
     this.NotificationService = NotificationService;
     this.ModalService = ModalService;
@@ -19,11 +29,43 @@ export default class OrganizationsPageController {
     };
   }
 
-  create() {
-    this.OrganizationService.create(
-      _.pick(this.state.formData, ['name', 'description'])
-    ).then(response => {
-      this.$log.log('Organization created', response);
+  openModal(mode, organization) {
+    let modal = this.$uibModal.open({
+      controller: OrganizationModalController,
+      controllerAs: '$modal',
+      templateUrl: organizationModalTpl,
+      size: 'lg',
+      resolve: {
+        organization: () => organization,
+        mode: () => mode
+      }
+    });
+
+    modal.result
+      .then(org => {
+        if (mode === 'edit') {
+          this.update(org.id, org);
+        } else {
+          this.create(org);
+        }
+      })
+      .catch(err => {
+        if (!_.isString(err)) {
+          this.NotificationService.error('Unable to save the organization.');
+        }
+      });
+  }
+
+  create(organization) {
+    this.OrganizationService.create(organization).then(() => {
+      this.NotificationService.error('Organization created successfully');
+      this.reload();
+      this.$onInit();
+    });
+  }
+  update(id, organization) {
+    this.OrganizationService.update(organization).then(() => {
+      this.NotificationService.error('Organization updated successfully');
       this.reload();
       this.$onInit();
     });

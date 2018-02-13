@@ -1,5 +1,7 @@
 'use strict';
 
+import _ from 'lodash/core';
+
 export default class OrganizationService {
   constructor($log, $q, $http) {
     'ngInject';
@@ -36,6 +38,20 @@ export default class OrganizationService {
 
     this.$http
       .post('./api/organization', org)
+      .then(response => defer.resolve(response.data))
+      .catch(err => defer.reject(err));
+
+    return defer.promise;
+  }
+
+  update(id, org) {
+    let defer = this.$q.defer();
+
+    this.$http
+      .patch(
+        `./api/organization/${id}`,
+        _.pick(org, 'name', 'description', 'status')
+      )
       .then(response => defer.resolve(response.data))
       .catch(err => defer.reject(err));
 

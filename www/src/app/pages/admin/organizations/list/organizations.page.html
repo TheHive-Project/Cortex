@@ -5,7 +5,7 @@
 <section class="content">
   <div class="box">
     <div class="box-header">
-      <button class="btn btn-primary" type="button" ng-click="$ctrl.state.showForm = true">Create</button>
+      <button class="btn btn-primary" type="button" ng-click="$ctrl.openModal('add')">Create</button>
     </div>
     <div class="box-body">
       <div class="row mv-s" ng-if="$ctrl.organizations.length === 0">
@@ -14,30 +14,11 @@
         </div>
       </div>
 
-      <form name="organizationForm" ng-submit="$ctrl.create()">
-        <div class="row mv-s" ng-show="$ctrl.state.showForm">
-          <div class="form-group col-md-3">
-            <label>Name</label>
-            <input class="form-control" ng-model="$ctrl.state.formData.name" required type="text">
-          </div>
-          <div class="form-group col-md-5">
-            <label>Description</label>
-            <input class="form-control" ng-model="$ctrl.state.formData.description" required type="text">
-          </div>
-          <div class="form-group col-md-1">
-            <label>&nbsp;</label>
-            <br>
-            <button class="btn btn-sm btn-default" type="button" ng-click="$ctrl.state.showForm = false">Cancel</button>
-            <button class="btn btn-sm btn-primary" type="submit" ng-disabled="organizationForm.$invalid">Save</button>
-          </div>
-        </div>
-      </form>
-
-      <div class="row mv-s" ng-if="$ctrl.organizations.length > 0">
+      <div class="row" ng-if="$ctrl.organizations.length > 0">
         <div class="col-sm-12 flex-table">
           <div class="flex-row media" ng-repeat="org in $ctrl.organizations track by org.id">
             <div class="flex-col flex-icon flex-w-100">
-              <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
+              <span class="label label-default label-lg" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
             </div>
             <div class="flex-col flex-1">
               <h4 class="media-heading">
@@ -46,7 +27,7 @@
               <span class="text-muted">{{org.description}}</span>
             </div>  
             <div class="flex-col flex-icon">
-              <a href ng-click="$ctrl.editDashboard(db)">
+              <a href ng-click="$ctrl.openModal('edit', org)">
                 <i class="fa fa-pencil"></i>Edit</a>
             </div>
             <div class="flex-col flex-icon flex-w-100" ng-if="org.status === 'Locked'">
