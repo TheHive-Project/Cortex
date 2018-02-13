@@ -26,9 +26,6 @@ const organizationsModule = angular
       .state('main.organizations', {
         url: 'admin/organizations',
         component: 'organizationsPage',
-        resolve: {
-          organizations: OrganizationService => OrganizationService.list()
-        },
         data: {
           allow: [Roles.ADMIN]
         }
@@ -52,10 +49,7 @@ const organizationsModule = angular
   })
   .component('organizationsPage', {
     controller: OrganizationsPageController,
-    templateUrl: organizationsPageTpl,
-    bindings: {
-      organizations: '<'
-    }
+    templateUrl: organizationsPageTpl
   })
   .component('organizationPage', {
     controller: OrganizationPageController,

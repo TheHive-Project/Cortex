@@ -22,11 +22,6 @@ export default class AnalyzersController {
       total: 0
     };
 
-    this.search = {
-      data: '',
-      dataType: ''
-    };
-
     this.state = this.localStorageService.get('analyzers-page') || {
       filters: {
         search: null,

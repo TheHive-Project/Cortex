@@ -48,10 +48,7 @@ export default class OrganizationService {
     let defer = this.$q.defer();
 
     this.$http
-      .patch(
-        `./api/organization/${id}`,
-        _.pick(org, 'name', 'description', 'status')
-      )
+      .patch(`./api/organization/${id}`, _.pick(org, 'description', 'status'))
       .then(response => defer.resolve(response.data))
       .catch(err => defer.reject(err));
 

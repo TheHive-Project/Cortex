@@ -9,9 +9,11 @@ export default class OrganizationsPageController {
   constructor(
     $log,
     $uibModal,
+    SearchService,
     OrganizationService,
     NotificationService,
-    ModalService
+    ModalService,
+    localStorageService
   ) {
     'ngInject';
 
@@ -20,13 +22,78 @@ export default class OrganizationsPageController {
     this.OrganizationService = OrganizationService;
     this.NotificationService = NotificationService;
     this.ModalService = ModalService;
+    this.SearchService = SearchService;
+    this.localStorageService = localStorageService;
+
+    this.pagination = {
+      current: 1,
+      total: 0
+    };
+
+    this.state = this.localStorageService.get('organizations-page') || {
+      filters: {
+        search: null,
+        status: []
+      },
+      pagination: {
+        pageSize: 50,
+        current: 1
+      }
+    };
+
+    this.filters = this.state.filters;
+    this.pagination = this.state.pagination;
+    this.statuses = ['Active', 'Locked'];
   }
 
   $onInit() {
-    this.state = {
-      showForm: false,
-      formData: {}
-    };
+    this.load(1);
+  }
+
+  buildQuery() {
+    let criteria = [];
+
+    if (!_.isEmpty(this.filters.search)) {
+      criteria.push({
+        _like: {
+          _field: 'description',
+          _value: this.filters.search
+        }
+      });
+    }
+
+    if (!_.isEmpty(this.filters.status)) {
+      criteria.push({
+        _in: {
+          _field: 'status',
+          _values: this.filters.status
+        }
+      });
+    }
+
+    return _.isEmpty(criteria)
+      ? {}
+      : {
+          _and: criteria
+        };
+  }
+
+  buildRange() {
+    let page = this.pagination.current,
+      size = this.pagination.pageSize;
+
+    return `${(page - 1) * size}-${(page - 1) * size + size}`;
+  }
+
+  applyFilters() {
+    this.state.filters = this.filters;
+    this.localStorageService.set('organizations-page', this.state);
+    this.load(1);
+  }
+
+  clearFilter(filterName) {
+    this.filters[filterName] = _.isArray(this.filters[filterName]) ? [] : null;
+    this.applyFilters();
   }
 
   openModal(mode, organization) {
@@ -58,15 +125,15 @@ export default class OrganizationsPageController {
 
   create(organization) {
     this.OrganizationService.create(organization).then(() => {
-      this.NotificationService.error('Organization created successfully');
-      this.reload();
+      this.NotificationService.success('Organization created successfully');
+      this.load();
       this.$onInit();
     });
   }
   update(id, organization) {
-    this.OrganizationService.update(organization).then(() => {
-      this.NotificationService.error('Organization updated successfully');
-      this.reload();
+    this.OrganizationService.update(id, organization).then(() => {
+      this.NotificationService.success('Organization updated successfully');
+      this.load();
       this.$onInit();
     });
   }
@@ -84,7 +151,7 @@ export default class OrganizationsPageController {
     modalInstance.result
       .then(() => this.OrganizationService.disable(id))
       .then(() => {
-        this.reload();
+        this.load(1);
         this.NotificationService.success('The organization has been disabled');
       })
       .catch(err => {
@@ -107,7 +174,7 @@ export default class OrganizationsPageController {
     modalInstance.result
       .then(() => this.OrganizationService.enable(id))
       .then(() => {
-        this.reload();
+        this.load(1);
         this.NotificationService.success('The organization has been enabled');
       })
       .catch(err => {
@@ -117,9 +184,26 @@ export default class OrganizationsPageController {
       });
   }
 
-  reload() {
-    this.OrganizationService.list().then(
-      organizations => (this.organizations = organizations)
-    );
+  load(page) {
+    if (page) {
+      this.pagination.current = page;
+    }
+
+    this.state.filters = this.filters;
+    this.state.pagination = {
+      pageSize: this.pagination.pageSize
+    };
+    this.localStorageService.set('organizations-page', this.state);
+
+    this.SearchService.configure({
+      objectType: 'organization',
+      filter: this.buildQuery(),
+      range: this.buildRange()
+    })
+      .search()
+      .then(response => {
+        this.organizations = response.data;
+        this.pagination.total = parseInt(response.headers('x-total')) || 0;
+      });
   }
 }
