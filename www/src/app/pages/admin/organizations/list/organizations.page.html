@@ -1,12 +1,9 @@
 <section class="content-header">
-  <h1>Organizations</h1>
+  <h1>Organizations ({{$ctrl.pagination.total}})</h1>
 </section>
 
 <section class="content">
   <div class="box paginable-page">
-    <!-- <div class="box-header">
-      <button class="btn btn-primary" type="button" ng-click="$ctrl.openModal('add')">Create</button>
-    </div> -->
     <div class="box-header">
       <form ng-submit="$ctrl.applyFilters()">
         <div class="table-toolbar">         
