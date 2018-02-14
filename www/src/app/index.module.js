@@ -13,6 +13,7 @@ import mainModule from './pages/main/main.module';
 import loginModule from './pages/login/login.module';
 import analyzersModule from './pages/analyzers/analyzers.module';
 import jobsModule from './pages/jobs/jobs.module';
+import settingsModule from './pages/settings/settings.module';
 
 import adminModule from './pages/admin/admin.module';
 
@@ -49,7 +50,8 @@ const App = angular.module('cortex', [
   maintenanceModule.name,
   analyzersModule.name,
   jobsModule.name,
-  adminModule.name
+  adminModule.name,
+  settingsModule.name
 ]);
 
 App.config(config).run(run);

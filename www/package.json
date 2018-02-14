@@ -17,8 +17,10 @@
   "dependencies": {
     "@uirouter/angularjs": "^1.0.12",
     "angular": "1.6.8",
+    "angular-base64-upload": "^0.1.23",
     "angular-bootstrap-multiselect": "git+https://github.com/bentorfs/angular-bootstrap-multiselect.git",
     "angular-clipboard": "^1.6.2",
+    "angular-images-resizer": "^2.0.2",
     "angular-local-storage": "^0.7.1",
     "angular-messages": "1.6.8",
     "angular-moment": "^1.2.0",

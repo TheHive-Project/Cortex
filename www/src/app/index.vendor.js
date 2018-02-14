@@ -37,6 +37,10 @@ import 'angular-local-storage';
 
 import 'angular-utils-pagination';
 
+import 'angular-images-resizer';
+
+import 'angular-base64-upload';
+
 // local scripts
 //import "../assets/js/...";
 

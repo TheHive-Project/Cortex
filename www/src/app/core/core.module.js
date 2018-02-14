@@ -6,6 +6,7 @@ import validationTestDirective from './directives/validation-test/validation-tes
 import fixedHeightDirective from './directives/fixed-height/fixed-height.directive';
 import fileChooserDirective from './directives/file-chooser/file-chooser.directive';
 import requireRolesDirective from './directives/require-roles/require-roles.directive';
+import compareToDirective from './directives/compare-to/compare-to.directive';
 
 import constants from './services/constants';
 import storeFactory from './services/store.factory';
@@ -36,6 +37,7 @@ validationTestDirective(core);
 fixedHeightDirective(core);
 fileChooserDirective(core);
 requireRolesDirective(core);
+compareToDirective(core);
 
 /* Common services */
 
