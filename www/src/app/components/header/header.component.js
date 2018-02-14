@@ -3,7 +3,6 @@
 import _ from 'lodash/core';
 
 import headerTpl from './header.html';
-//import HeaderController from './header.controller';
 
 import './header.scss';
 

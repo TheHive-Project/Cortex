@@ -7,6 +7,7 @@ import fixedHeightDirective from './directives/fixed-height/fixed-height.directi
 import fileChooserDirective from './directives/file-chooser/file-chooser.directive';
 import requireRolesDirective from './directives/require-roles/require-roles.directive';
 import compareToDirective from './directives/compare-to/compare-to.directive';
+import userAvatarDirective from './directives/user-avatar/user-avatar.directive';
 
 import constants from './services/constants';
 import storeFactory from './services/store.factory';
@@ -38,6 +39,7 @@ fixedHeightDirective(core);
 fileChooserDirective(core);
 requireRolesDirective(core);
 compareToDirective(core);
+userAvatarDirective(core);
 
 /* Common services */
 

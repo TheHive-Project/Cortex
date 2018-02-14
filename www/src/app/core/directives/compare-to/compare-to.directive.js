@@ -1,9 +1,9 @@
 'use strict';
 
 export default function(app) {
-  app.directive('compareTo', requireRoles);
+  app.directive('compareTo', compareTo);
 
-  function requireRoles($log, AuthService) {
+  function compareTo() {
     'ngInject';
 
     return {

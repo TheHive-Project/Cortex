@@ -8,6 +8,8 @@ export default class UserService {
 
     this.$q = $q;
     this.$http = $http;
+
+    this.userCache = {};
   }
 
   query(config) {
@@ -18,6 +20,12 @@ export default class UserService {
     });
 
     return defer.promise;
+  }
+
+  get(user) {
+    return this.$http
+      .get(`./api/user/${user}`)
+      .then(response => this.$q.resolve(response.data));
   }
 
   save(user) {
@@ -72,18 +80,14 @@ export default class UserService {
         name: 'System'
       });
     } else {
-      this.get(
-        {
-          userId: login
-        },
-        user => {
+      this.get(login)
+        .then(user => {
           defer.resolve(user);
-        },
-        (data, status) => {
-          data.name = '***unknown***';
-          defer.reject(data, status);
-        }
-      );
+        })
+        .catch(err => {
+          err.data.name = '***unknown***';
+          defer.reject(err);
+        });
     }
 
     return defer.promise;
@@ -127,5 +131,34 @@ export default class UserService {
           return regex.test(user.label);
         })
       );
+  }
+
+  getCache(userId) {
+    if (angular.isDefined(this.userCache[userId])) {
+      return this.$q.resolve(this.userCache[userId]);
+    } else {
+      let defer = this.$q.defer();
+
+      this.getUserInfo(userId)
+        .then(userInfo => {
+          this.userCache[userId] = userInfo;
+          defer.resolve(userInfo);
+        })
+        .catch(() => defer.resolve(undefined));
+
+      return defer.promise;
+    }
+  }
+
+  clearCache() {
+    this.userCache = {};
+  }
+
+  removeCache(userId) {
+    delete this.userCache[userId];
+  }
+
+  updateCache(userId, userData) {
+    this.userCache[userId] = userData;
   }
 }
