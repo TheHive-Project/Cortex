@@ -4,6 +4,9 @@ import _ from 'lodash/core';
 
 import headerTpl from './header.html';
 
+import AboutController from '../about/about.controller';
+import aboutTpl from '../about/about.html';
+
 import './header.scss';
 
 class HeaderController {
@@ -69,6 +72,17 @@ class HeaderController {
           );
         }
       });
+  }
+
+  about() {
+    this.$uibModal.open({
+      controller: AboutController,
+      controllerAs: '$modal',
+      templateUrl: aboutTpl,
+      resolve: {
+        config: () => this.main.config
+      }
+    });
   }
 }
 

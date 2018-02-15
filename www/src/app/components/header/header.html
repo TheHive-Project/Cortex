@@ -42,7 +42,7 @@
         <li class="dropdown" require-roles roles="['admin']" uib-dropdown>
           <a class="dropdown-toggle" uib-dropdown-toggle href>
             <i class="fa fa-cog"></i>
-            <span class="hpad5"><strong>Admin</strong></span>
+            <span class="hpad5"><strong>Administration</strong></span>
             <b class="caret"></b>
           </a>
           <ul class="dropdown-menu" uib-dropdown-menu>
@@ -62,13 +62,8 @@
           </ul>
         </li>
         <li class="dropdown" uib-dropdown>
-          <a class="dropdown-toggle" uib-dropdown-toggle href>
-            <!-- <i class="fa fa-user"></i> -->            
+          <a class="dropdown-toggle" uib-dropdown-toggle href>            
             <user-avatar user-id="$ctrl.main.currentUser.id"></user-avatar>
-            <!-- <span class="hpad5">
-              <strong>{{$ctrl.main.currentUser.name}}</strong>
-            </span> -->
-            <!-- <b class="caret"></b> -->
           </a>
           <ul class="dropdown-menu" uib-dropdown-menu>
             <li ui-sref-active="active">
@@ -77,6 +72,14 @@
                 <strong>Settings</strong>
               </a>
             </li>
+            <li class="divider"></li>
+            <li ui-sref-active="active">
+              <a href ng-click="$ctrl.about()">
+                <i class="fa fa-question-circle"></i>
+                <strong>About</strong>
+              </a>
+            </li>
+            <li class="divider"></li>
             <li ui-sref-active="active">
               <a href ng-click="$ctrl.logout()">
                 <i class="fa fa-sign-out"></i>
