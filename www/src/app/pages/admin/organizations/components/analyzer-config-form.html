@@ -1,22 +1,22 @@
 <section>
   <h4>Base details</h4>
-
-  <div class="form-group">
-    <label class="col-sm-offset-3 col-sm-9 control-label">
-      <small>
-        <strong>Version:</strong> {{$ctrl.definition.version}}</small>
-      <small class="mr-xxs" ng-if="definition.author">
-        <strong>Author:</strong> {{$ctrl.definition.author}}</small>
-      <small class="mr-xxs" ng-if="definition.license">
-        <strong>License:</strong> {{$ctrl.definition.license}}</small>
-    </label>    
-  </div>
+  
   <div class="form-group">
     <label class="col-sm-3 control-label">Name</label>
     <div class="col-sm-9">
-      <input class="form-control" type="text" name="name" ng-model="$ctrl.analyzer.name" />
+      <input class="form-control" type="text" name="name" ng-disabled="true" ng-model="$ctrl.analyzer.name" />
     </div>
   </div>
+  <!-- <div class="form-group">
+    <label class="col-sm-offset-3 col-sm-9 control-label">
+      <small class="mr-xs">
+        <strong>Version:</strong> {{$ctrl.definition.version}}</small>
+      <small class="mr-xs" ng-if="$ctrl.definition.author">
+        <strong>Author:</strong> {{$ctrl.definition.author}}</small>
+      <small ng-if="$ctrl.definition.license">
+        <strong>License:</strong> {{$ctrl.definition.license}}</small>
+    </label>
+  </div> -->
 </section>
 
 <section ng-show="$ctrl.definition.configurationItems.length > 0">
