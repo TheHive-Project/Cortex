@@ -10,7 +10,7 @@ import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponen
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import org.thp.cortex.models.{ Analyzer, AnalyzerDefinition, Roles }
-import org.thp.cortex.services.AnalyzerSrv
+import org.thp.cortex.services.{ AnalyzerSrv, UserSrv }
 
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
@@ -20,6 +20,7 @@ import org.elastic4play.services.{ QueryDSL, QueryDef }
 @Singleton
 class AnalyzerCtrl @Inject() (
     analyzerSrv: AnalyzerSrv,
+    userSrv: UserSrv,
     authenticated: Authenticated,
     fieldsBodyParser: FieldsBodyParser,
     renderer: Renderer,
@@ -31,19 +32,17 @@ class AnalyzerCtrl @Inject() (
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
-    val isAdmin = request.roles.contains(Roles.admin)
-    val (analyzers, analyzerTotal) =
-      if (isAdmin) analyzerSrv.find(query, range, sort)
-      else analyzerSrv.findForUser(request.userId, query, range, sort)
+    val isAdmin = request.roles.contains(Roles.orgAdmin)
+    val (analyzers, analyzerTotal) = analyzerSrv.findForUser(request.userId, query, range, sort)
     val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson(isAdmin))
     renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
   }
 
   def get(analyzerId: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
-    val isAdmin = request.roles.contains(Roles.admin)
-    analyzerSrv.get(analyzerId)
+    val isAdmin = request.roles.contains(Roles.orgAdmin)
+    analyzerSrv.getForUser(request.userId, analyzerId)
       .flatMap(analyzerJson(isAdmin))
-      .map(analyzer ⇒ renderer.toOutput(OK, analyzer))
+      .map(renderer.toOutput(OK, _))
   }
 
   private val emptyAnalyzerDefinitionJson = Json.obj(
@@ -87,40 +86,32 @@ class AnalyzerCtrl @Inject() (
       .map(analyzers ⇒ renderer.toOutput(OK, analyzers))
   }
 
-  def create(organizationId: String, analyzerDefinitionId: String): Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
-    analyzerSrv.create(organizationId, analyzerDefinitionId, request.body)
-      .map { analyzer ⇒
-        renderer.toOutput(CREATED, analyzer)
-      }
+  def create(analyzerDefinitionId: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
+    for {
+      userOrganization ← userSrv.getOrganizationId(request.userId)
+      analyzer ← analyzerSrv.create(userOrganization, analyzerDefinitionId, request.body)
+    } yield renderer.toOutput(CREATED, analyzer)
   }
 
-  def listDefinitions: Action[AnyContent] = authenticated(Roles.admin).async { implicit request ⇒
-    val (analyzerDefs, analyzerDefTotal) = analyzerSrv.listDefinitions
-    renderer.toOutput(OK, analyzerDefs, analyzerDefTotal)
+  def listDefinitions: Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
+    val (analyzers, analyzerTotal) = analyzerSrv.listDefinitions
+    renderer.toOutput(OK, analyzers, analyzerTotal)
   }
 
-  def scan: Action[AnyContent] = authenticated(Roles.admin) { implicit request ⇒
+  def scan: Action[AnyContent] = authenticated(Roles.superAdmin) { implicit request ⇒
     analyzerSrv.rescan()
     NoContent
   }
 
-  def findForOrganization(organizationId: String): Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { request ⇒
-    val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
-    val range = request.body.getString("range")
-    val sort = request.body.getStrings("sort").getOrElse(Nil)
-    val isAdmin = request.roles.contains(Roles.admin)
-    val (analyzers, analyzerTotal) = analyzerSrv.findForOrganization(organizationId, query, range, sort)
-    val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson(isAdmin))
-    renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
-  }
-
-  def delete(analyzerId: String): Action[AnyContent] = authenticated(Roles.admin).async { implicit request ⇒
-    analyzerSrv.delete(analyzerId)
+  def delete(analyzerId: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
+    analyzerSrv.getForUser(request.userId, analyzerId)
+      .flatMap(analyzerSrv.delete)
       .map(_ ⇒ NoContent)
   }
 
-  def update(analyzerId: String): Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
-    analyzerSrv.update(analyzerId, request.body)
+  def update(analyzerId: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
+    analyzerSrv.getForUser(request.userId, analyzerId)
+      .flatMap(analyzer ⇒ analyzerSrv.update(analyzer, request.body))
       .map(analyzer ⇒ renderer.toOutput(OK, analyzer))
   }
 }

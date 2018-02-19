@@ -15,9 +15,10 @@ import org.thp.cortex.models.JsonFormat.roleFormat
 
 object Roles {
   object read extends Role("read")
-  object write extends Role("write")
-  object admin extends Role("admin")
-  val roles: List[Role] = read :: write :: admin :: Nil
+  object analyze extends Role("analyze")
+  object orgAdmin extends Role("orgadmin")
+  object superAdmin extends Role("superadmin")
+  val roles: List[Role] = read :: analyze :: orgAdmin :: superAdmin :: Nil
 
   val roleNames: List[String] = roles.map(_.name)
   def isValid(roleName: String): Boolean = roleNames.contains(roleName.toLowerCase())

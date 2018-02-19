@@ -78,17 +78,17 @@ class AnalyzerSrv(
   def get(analyzerId: String): Future[Analyzer] = getSrv[AnalyzerModel, Analyzer](analyzerModel, analyzerId)
 
   def getForUser(userId: String, analyzerId: String): Future[Analyzer] = {
-    userSrv.get(userId)
-      .flatMap(user ⇒ getForOrganization(user.organization(), analyzerId))
+    userSrv.getOrganizationId(userId)
+      .flatMap(organization ⇒ getForOrganization(organization, analyzerId))
   }
 
   def getForOrganization(organizationId: String, analyzerId: String): Future[Analyzer] = {
     import org.elastic4play.services.QueryDSL._
     find(
-      and(withParent("organization", organizationId), "analyzerId" ~= analyzerId),
+      and(withParent("organization", organizationId), withId(analyzerId)),
       Some("0-1"), Nil)._1
       .runWith(Sink.headOption)
-      .map(_.getOrElse(throw NotFoundError(s"Configuration for analyzer $analyzerId not found for organization $organizationId")))
+      .map(_.getOrElse(throw NotFoundError(s"analyzer $analyzerId not found")))
   }
 
   def listForOrganization(organizationId: String): (Source[Analyzer, NotUsed], Future[Long]) = {
@@ -186,11 +186,11 @@ class AnalyzerSrv(
     } yield analyzer
   }
 
-  def delete(analyzerId: String)(implicit authContext: AuthContext): Future[Unit] =
-    deleteSrv.realDelete[AnalyzerModel, Analyzer](analyzerModel, analyzerId)
+  def delete(analyzer: Analyzer)(implicit authContext: AuthContext): Future[Unit] =
+    deleteSrv.realDelete(analyzerModel, analyzer)
 
-  def update(analyzerId: String, fields: Fields, modifyConfig: ModifyConfig = ModifyConfig.default)(implicit authContext: AuthContext): Future[Analyzer] = {
+  def update(analyzer: Analyzer, fields: Fields, modifyConfig: ModifyConfig = ModifyConfig.default)(implicit authContext: AuthContext): Future[Analyzer] = {
     val analyzerFields = fields.getValue("configuration").fold(fields)(cfg ⇒ fields.set("configuration", cfg.toString))
-    updateSrv[AnalyzerModel, Analyzer](analyzerModel, analyzerId, analyzerFields, modifyConfig)
+    updateSrv(analyzer, analyzerFields, modifyConfig)
   }
 }

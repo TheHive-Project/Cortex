@@ -1,32 +1,29 @@
 package org.thp.cortex.services
 
-import java.io.{ ByteArrayOutputStream, InputStream }
-import java.nio.file.{ Files, Path }
+import java.io.{ByteArrayOutputStream, InputStream}
+import java.nio.file.{Files, Path}
 import java.util.Date
-import javax.inject.{ Inject, Singleton }
-
-import scala.concurrent.duration.{ Duration, FiniteDuration }
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.sys.process.{ Process, ProcessIO }
-import scala.util.control.NonFatal
-import scala.util.{ Failure, Success, Try }
-
-import play.api.{ Configuration, Logger }
-import play.api.libs.json.{ JsBoolean, JsObject, JsString, Json }
+import javax.inject.{Inject, Singleton}
 
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ FileIO, Sink, Source }
-import org.scalactic.Accumulation._
-import org.scalactic.{ Bad, Good, One, Or }
-import org.thp.cortex.models._
-
+import akka.stream.scaladsl.{FileIO, Sink, Source}
 import org.elastic4play._
 import org.elastic4play.controllers._
 import org.elastic4play.database.ModifyConfig
-import org.elastic4play.models.{ AbstractModelDef, BaseEntity }
 import org.elastic4play.services._
+import org.scalactic.Accumulation._
+import org.scalactic.{Bad, Good, One, Or}
+import org.thp.cortex.models._
+import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
+import play.api.{Configuration, Logger}
+
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.sys.process.{Process, ProcessIO}
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 @Singleton
 class JobSrv(
@@ -86,32 +83,40 @@ class JobSrv(
     else
       (c: Path) ⇒ s"""sh -c "$c" """
 
-  private def findWithUserFilter[M <: AbstractModelDef[M, E], E <: BaseEntity](m: M, queryDef: QueryDef ⇒ QueryDef, range: Option[String], sortBy: Seq[String])(implicit authContext: AuthContext): (Source[E, NotUsed], Future[Long]) = {
-    import org.elastic4play.services.QueryDSL._
-    if (authContext.roles.contains(Roles.admin)) {
-      findSrv[M, E](m, queryDef(any), range, sortBy)
-    }
-    else {
-      val futureSource = userSrv.getOrganizationId(authContext.userId).map { organizationId ⇒
-        findSrv[M, E](m, queryDef("organization" ~= organizationId), range, sortBy)
-      }
-      val source = Source.fromFutureSource(futureSource.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
-      source -> futureSource.flatMap(_._2)
-    }
+//  private def findWithUserFilter[M <: AbstractModelDef[M, E], E <: BaseEntity](m: M, queryDef: QueryDef ⇒ QueryDef, range: Option[String], sortBy: Seq[String])(implicit authContext: AuthContext): (Source[E, NotUsed], Future[Long]) = {
+//    import org.elastic4play.services.QueryDSL._
+//    if (authContext.roles.contains(Roles.orgAdmin)) {
+//      findSrv[M, E](m, queryDef(any), range, sortBy)
+//    }
+//    else {
+//      val futureSource = userSrv.getOrganizationId(authContext.userId).map { organizationId ⇒
+//        findSrv[M, E](m, queryDef("organization" ~= organizationId), range, sortBy)
+//      }
+//      val source = Source.fromFutureSource(futureSource.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+//      source -> futureSource.flatMap(_._2)
+//    }
+//  }
+
+  def withUserFilter[A](userId: String)(x: String => (Source[A, NotUsed], Future[Long])): (Source[A, NotUsed], Future[Long]) = {
+    val a = userSrv.getOrganizationId(userId).map(x)
+    val aSource = Source.fromFutureSource(a.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val aTotal = a.flatMap(_._2)
+    aSource -> aTotal
   }
 
-  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])(implicit authContext: AuthContext): (Source[Job, NotUsed], Future[Long]) = {
+  def listForUser(userId: String, dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): (Source[Job, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
-    findWithUserFilter[JobModel, Job](jobModel, userFilter ⇒
-      and(userFilter ::
-        dataTypeFilter.map("dataType" like _).toList :::
-        dataFilter.map("data" like _).toList :::
-        analyzerFilter.map(af ⇒ or("analyzerId" like af, "analyzerName" like af)).toList), range, Nil)
+    findForUser(userId, and(
+      dataTypeFilter.map("dataType" like _).toList :::
+      dataFilter.map("data" like _).toList :::
+      analyzerFilter.map(af ⇒ or("analyzerId" like af, "analyzerName" like af)).toList), range, Nil)
   }
 
-  def findArtifacts(jobId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String])(implicit authContext: AuthContext): (Source[Artifact, NotUsed], Future[Long]) = {
+  def findArtifacts(userId: String, jobId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Artifact, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
-    findWithUserFilter[ArtifactModel, Artifact](artifactModel, userFilter ⇒ and(queryDef, parent("report", parent("job", and(withId(jobId), userFilter)))), range, sortBy)
+    withUserFilter(userId) { organizationId =>
+      findSrv[ArtifactModel, Artifact](artifactModel, and(queryDef, parent("report", parent("job", and(withId(jobId), "organization" ~= organizationId)))), range, sortBy)
+    }
   }
 
   def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Job, NotUsed], Future[Long]) = {
@@ -119,13 +124,9 @@ class JobSrv(
   }
 
   def findForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Job, NotUsed], Future[Long]) = {
-    val jobs = for {
-      user ← userSrv.get(userId)
-      organizationId = user.organization()
-    } yield findForOrganization(organizationId, queryDef, range, sortBy)
-    val jobSource = Source.fromFutureSource(jobs.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
-    val jobTotal = jobs.flatMap(_._2)
-    jobSource -> jobTotal
+    withUserFilter(userId) { organizationId =>
+      findForOrganization(organizationId, queryDef, range, sortBy)
+    }
   }
 
   def findForOrganization(organizationId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Job, NotUsed], Future[Long]) = {
@@ -135,14 +136,16 @@ class JobSrv(
 
   def stats(queryDef: QueryDef, aggs: Seq[Agg]): Future[JsObject] = findSrv(jobModel, queryDef, aggs: _*)
 
-  def get(jobId: String)(implicit authContext: AuthContext): Future[Job] = {
+  def getForUser(userId: String, jobId: String): Future[Job] = {
     import org.elastic4play.services.QueryDSL._
-    findWithUserFilter[JobModel, Job](jobModel, userFilter ⇒ and(userFilter, withId(jobId)), Some("0-1"), Nil)
+    withUserFilter(userId) { organizationId =>
+      findForOrganization(organizationId, withId(jobId), Some("0-1"), Nil)
+    }
       ._1
       .runWith(Sink.head)
   }
 
-  def delete(jobId: String)(implicit authContext: AuthContext): Future[Job] = deleteSrv[JobModel, Job](jobModel, jobId)
+  def delete(job: Job)(implicit authContext: AuthContext): Future[Job] = deleteSrv(job)
 
   def legacyCreate(analyzer: Analyzer, attributes: JsObject, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
     val dataType = Or.from((attributes \ "dataType").asOpt[String], One(MissingAttributeError("dataType")))
@@ -172,7 +175,7 @@ class JobSrv(
   }
 
   def create(analyzerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
-    analyzerSrv.get(analyzerId).flatMap { analyzer ⇒
+    analyzerSrv.getForUser(authContext.userId, analyzerId).flatMap { analyzer ⇒
       /*
       In Cortex 1, fields looks like:
       {
@@ -300,6 +303,7 @@ class JobSrv(
       find(and(
         "analyzerId" ~= analyzer.id,
         "status" ~!= JobStatus.Failure,
+        "status" ~!= JobStatus.Deleted,
         "startDate" ~>= (now - jobCache.toMillis),
         "dataType" ~= dataType,
         "tlp" ~= tlp,
@@ -367,7 +371,7 @@ class JobSrv(
       }(analyzeExecutionContext)
   }
 
-  def getReport(jobId: String)(implicit authContext: AuthContext): Future[Report] = get(jobId).flatMap(getReport)
+  def getReport(jobId: String)(implicit authContext: AuthContext): Future[Report] = getForUser(authContext.userId, jobId).flatMap(getReport)
 
   def getReport(job: Job): Future[Report] = {
     import QueryDSL._

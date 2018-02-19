@@ -10,11 +10,11 @@ import play.api.mvc.RequestHeader
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source
-import org.thp.cortex.models.{ Roles, User, UserModel, UserStatus }
+import org.thp.cortex.models._
 
 import org.elastic4play.controllers.Fields
 import org.elastic4play.database.{ DBIndex, ModifyConfig }
-import org.elastic4play.services._
+import org.elastic4play.services.{ User ⇒ _, _ }
 import org.elastic4play.utils.Instance
 import org.elastic4play.{ AuthenticationError, AuthorizationError }
 
@@ -28,6 +28,7 @@ class UserSrv @Inject() (
     findSrv: FindSrv,
     eventSrv: EventSrv,
     authSrv: Provider[AuthSrv],
+    organizationSrv: OrganizationSrv,
     dbIndex: DBIndex,
     cache: AsyncCacheApi,
     implicit val ec: ExecutionContext) extends org.elastic4play.services.UserSrv {
@@ -41,8 +42,12 @@ class UserSrv @Inject() (
 
   override def getFromUser(request: RequestHeader, user: org.elastic4play.services.User): Future[AuthContext] = {
     user match {
-      case u: User if u.status() == UserStatus.Ok ⇒ Future.successful(AuthContextImpl(user.id, user.getUserName, Instance.getRequestId(request), user.getRoles))
-      case _                                      ⇒ Future.failed(AuthorizationError("Your account is locked"))
+      case u: User if u.status() == UserStatus.Ok ⇒
+        organizationSrv.get(u.organization()).flatMap {
+          case o if o.status() == OrganizationStatus.Active ⇒ Future.successful(AuthContextImpl(user.id, user.getUserName, Instance.getRequestId(request), user.getRoles))
+          case _                                            ⇒ Future.failed(AuthorizationError("Your account is locked"))
+        }
+      case _ ⇒ Future.failed(AuthorizationError("Your account is locked"))
     }
 
   }
@@ -50,11 +55,11 @@ class UserSrv @Inject() (
   override def getInitialUser(request: RequestHeader): Future[AuthContext] =
     dbIndex.getSize(userModel.modelName).map {
       case size if size > 0 ⇒ throw AuthenticationError(s"Use of initial user is forbidden because users exist in database")
-      case _                ⇒ AuthContextImpl("init", "", Instance.getRequestId(request), Seq(Roles.admin, Roles.read))
+      case _                ⇒ AuthContextImpl("init", "", Instance.getRequestId(request), Seq(Roles.orgAdmin, Roles.read))
     }
 
   override def inInitAuthContext[A](block: AuthContext ⇒ Future[A]): Future[A] = {
-    val authContext = AuthContextImpl("init", "", Instance.getInternalId, Seq(Roles.admin, Roles.read))
+    val authContext = AuthContextImpl("init", "", Instance.getInternalId, Seq(Roles.orgAdmin, Roles.read))
     eventSrv.publish(StreamActor.Initialize(authContext.requestId))
     block(authContext).andThen {
       case _ ⇒ eventSrv.publish(StreamActor.Commit(authContext.requestId))

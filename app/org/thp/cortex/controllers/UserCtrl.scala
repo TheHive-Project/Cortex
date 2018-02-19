@@ -10,14 +10,14 @@ import play.api.http.Status
 import play.api.libs.json.{ JsObject, Json }
 import play.api.mvc._
 
-import org.thp.cortex.models.Roles
+import org.thp.cortex.models.{ OrganizationStatus, Roles }
 import org.thp.cortex.services.{ OrganizationSrv, UserSrv }
 
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.services.{ AuthSrv, QueryDSL, QueryDef }
-import org.elastic4play.{ AuthorizationError, MissingAttributeError, Timed }
+import org.elastic4play._
 
 @Singleton
 class UserCtrl @Inject() (
@@ -33,14 +33,18 @@ class UserCtrl @Inject() (
   private[UserCtrl] lazy val logger = Logger(getClass)
 
   @Timed
-  def create: Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
-    // Check if organization is valid
-    request.body.getString("organization")
-      .fold(Future.successful(())) { organizationId ⇒
-        organizationSrv.get(organizationId).map(_ ⇒ ())
-      }
-      .flatMap { _ ⇒ userSrv.create(request.body) }
-      .map(user ⇒ renderer.toOutput(CREATED, user))
+  def create: Action[Fields] = authenticated(Roles.orgAdmin, Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
+    for {
+      userOrganizationId <- userSrv.getOrganizationId(request.userId)
+      organizationId = request.body.getString("organization").getOrElse(userOrganizationId)
+      // Check if organization is valid
+      organization <- organizationSrv.get(organizationId)
+      if organization.status() == OrganizationStatus.Active &&
+        (request.roles.contains(Roles.superAdmin) ||
+          (userOrganizationId == organizationId &&
+            !request.body.getStrings("roles").getOrElse(Nil).contains(Roles.superAdmin.toString)))
+      user <- userSrv.create(request.body.set("organization", organizationId))
+    } yield renderer.toOutput(CREATED, user)
   }
 
   @Timed
@@ -50,65 +54,76 @@ class UserCtrl @Inject() (
   }
 
   @Timed
-  def update(id: String): Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
-    if (id == request.authContext.userId || request.authContext.roles.contains(Roles.admin)) {
-      if (request.body.contains("password")) {
-        Future.failed(AuthorizationError("You must use dedicated API (setPassword, changePassword) to update password"))
-      }
-      else if (request.body.contains("key")) {
-        Future.failed(AuthorizationError("You must use dedicated API (renewKey, removeKey) to update key"))
-      }
-      else if (request.body.contains("role") && !request.authContext.roles.contains(Roles.admin)) {
-        Future.failed(AuthorizationError("You are not permitted to change user role"))
-      }
-      else if (request.body.contains("status") && !request.authContext.roles.contains(Roles.admin)) {
-        Future.failed(AuthorizationError("You are not permitted to change user status"))
-      }
-      else if (request.body.contains("organization") && !request.authContext.roles.contains(Roles.admin)) {
-        Future.failed(AuthorizationError("You are not permitted to change user organization"))
-      }
-      else {
-        // Check if organization is valid
-        request.body.getString("organization")
-          .fold(Future.successful(())) { organizationId ⇒
-            organizationSrv.get(organizationId).map(_ ⇒ ())
-          }
-          .flatMap { _ ⇒ userSrv.update(id, request.body.unset("password").unset("key")) }
-          .map { user ⇒ renderer.toOutput(OK, user) }
-      }
-    }
-    else {
+  def update(id: String): Action[Fields] = authenticated().async(fieldsBodyParser) { implicit request ⇒
+    val isOrgAdmin = request.authContext.roles.contains(Roles.orgAdmin)
+    val isSuperAdmin = request.authContext.roles.contains(Roles.superAdmin)
+    val validRoles = if (isSuperAdmin) Roles.roleNames
+    else if (isOrgAdmin) Roles.roleNames.filterNot(_ == Roles.superAdmin.toString)
+    else Nil
+    if (id != request.authContext.userId && !isOrgAdmin && !isSuperAdmin) {
       Future.failed(AuthorizationError("You are not permitted to change user settings"))
     }
-  }
-
-  @Timed
-  def setPassword(login: String): Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
-    request.body.getString("password")
-      .fold(Future.failed[Result](MissingAttributeError("password"))) { password ⇒
-        authSrv.setPassword(login, password).map(_ ⇒ NoContent)
+    else if (request.body.contains("password")) {
+      Future.failed(AuthorizationError("You must use dedicated API (setPassword, changePassword) to update password"))
+    }
+    else if (request.body.contains("key")) {
+      Future.failed(AuthorizationError("You must use dedicated API (renewKey, removeKey) to update key"))
+    }
+    else if (request.body.getStrings("role").getOrElse(Nil).exists(!validRoles.contains(_)) {
+      Future.failed(AuthorizationError("You are not permitted to change user role"))
+    }
+    else if (request.body.contains("status") && !isOrgAdmin) {
+      Future.failed(AuthorizationError("You are not permitted to change user status"))
+    }
+    else {
+      // Check if organization is valid
+      request.body.getString("organization")
+        .fold(Future.successful(())) {
+        case organizationId if request.authContext.roles.contains(Roles.superAdmin) => organizationSrv.get(organizationId).map(_ ⇒ ())
+        case _ => Future.failed(AuthorizationError("You are not permitted to change user organization"))
+      }
+        .flatMap { _ ⇒ userSrv.update(id, request.body) }
+          .map { user ⇒ renderer.toOutput(OK, user) }
       }
   }
 
   @Timed
-  def changePassword(login: String): Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
-    if (login == request.authContext.userId) {
-      val fields = request.body
-      fields.getString("password").fold(Future.failed[Result](MissingAttributeError("password"))) { password ⇒
-        fields.getString("currentPassword").fold(Future.failed[Result](MissingAttributeError("currentPassword"))) { currentPassword ⇒
-          authSrv.changePassword(request.authContext.userId, currentPassword, password)
-            .map(_ ⇒ NoContent)
-        }
-      }
+  def setPassword(userId: String): Action[Fields] = authenticated(Roles.orgAdmin, Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
+    val isSuperAdmin = request.authContext.roles.contains(Roles.superAdmin)
+    request.body.getString("password").fold(Future.failed[Result](MissingAttributeError("password"))) { password =>
+      for {
+        targetOrganization <- userSrv.getOrganizationId(userId)
+        userOrganization <- userSrv.getOrganizationId(request.userId)
+        if targetOrganization == userOrganization || isSuperAdmin
+        _ <- authSrv.setPassword(userId, password)
+      } yield NoContent
+    }
+      .recoverWith { case _: NoSuchElementException => Future.failed(NotFoundError(s"user $userId not found"))}
+  }
+
+  @Timed
+  def changePassword(userId: String): Action[Fields] = authenticated().async(fieldsBodyParser) { implicit request ⇒
+    if (userId == request.authContext.userId) {
+      for {
+        password <- request.body.getString("password").fold(Future.failed[String](MissingAttributeError("password")))(Future.successful)
+        currentPassword <- request.body.getString("currentPassword").fold(Future.failed[String](MissingAttributeError("currentPassword")))(Future.successful)
+        _ <- authSrv.changePassword(userId, currentPassword, password)
+      } yield NoContent
     }
     else
       Future.failed(AuthorizationError("You can't change password of another user"))
   }
 
   @Timed
-  def delete(id: String): Action[AnyContent] = authenticated(Roles.admin).async { implicit request ⇒
-    userSrv.delete(id)
-      .map(_ ⇒ NoContent)
+  def delete(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
+    val isSuperAdmin = request.authContext.roles.contains(Roles.superAdmin)
+    (for {
+      targetOrganization <- userSrv.getOrganizationId(userId)
+      userOrganization <- userSrv.getOrganizationId(request.userId)
+      if targetOrganization == userOrganization || isSuperAdmin
+      _ <- userSrv.delete(userId)
+    } yield NoContent)
+      .recoverWith { case _: NoSuchElementException => Future.failed(NotFoundError(s"user $userId not found"))}
   }
 
   @Timed
@@ -117,12 +132,10 @@ class UserCtrl @Inject() (
       authContext ← authenticated.getContext(request)
       user ← userSrv.get(authContext.userId)
       preferences = Try(Json.parse(user.preferences()))
-        .recover {
-          case _ ⇒
+          .getOrElse {
             logger.warn(s"User ${authContext.userId} has invalid preference format: ${user.preferences()}")
             JsObject.empty
         }
-        .get
       json = user.toJson + ("preferences" → preferences)
     } yield renderer.toOutput(OK, json)
   }
@@ -132,15 +145,12 @@ class UserCtrl @Inject() (
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
-    val (users, total) = if (request.roles.contains(Roles.admin))
-      userSrv.find(query, range, sort)
-    else
-      userSrv.findForUser(request.userId, query, range, sort)
+    val (users, total) = userSrv.findForUser(request.userId, query, range, sort)
     renderer.toOutput(OK, users, total)
 
   }
 
-  def findForOrganization(organizationId: String) = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
+  def findForOrganization(organizationId: String): Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
@@ -149,17 +159,17 @@ class UserCtrl @Inject() (
   }
 
   @Timed
-  def getKey(id: String): Action[AnyContent] = authenticated(Roles.admin).async { implicit request ⇒
+  def getKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
     authSrv.getKey(id).map(Ok(_))
   }
 
   @Timed
-  def removeKey(id: String): Action[AnyContent] = authenticated(Roles.admin).async { implicit request ⇒
+  def removeKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
     authSrv.removeKey(id).map(_ ⇒ Ok)
   }
 
   @Timed
-  def renewKey(id: String): Action[AnyContent] = authenticated(Roles.admin).async { implicit request ⇒
+  def renewKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
     authSrv.renewKey(id).map(Ok(_))
   }
 }

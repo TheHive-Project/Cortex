@@ -24,9 +24,10 @@ PATCH         /api/analyzer/:id                                             org.
 GET           /api/job/:id/artifacts                                        org.thp.cortex.controllers.JobCtrl.listArtifacts(id)
 GET           /api/analyzerdefinition                                       org.thp.cortex.controllers.AnalyzerCtrl.listDefinitions
 POST          /api/analyzerdefinition/scan                                  org.thp.cortex.controllers.AnalyzerCtrl.scan
-POST          /api/organization/:organizationId/analyzer/:analyzerId        org.thp.cortex.controllers.AnalyzerCtrl.create(organizationId, analyzerId)
-GET           /api/organization/:organizationId/analyzer                    org.thp.cortex.controllers.AnalyzerCtrl.findForOrganization(organizationId)
-POST          /api/organization/:organizationId/analyzer/_search            org.thp.cortex.controllers.AnalyzerCtrl.findForOrganization(organizationId)
+POST          /api/organization/analyzer/:analyzerId                        org.thp.cortex.controllers.AnalyzerCtrl.create(analyzerId)
+#POST          /api/organization/:organizationId/analyzer/:analyzerId        org.thp.cortex.controllers.AnalyzerCtrl.create(organizationId, analyzerId)
+#GET           /api/organization/:organizationId/analyzer                    org.thp.cortex.controllers.AnalyzerCtrl.findForOrganization(organizationId)
+#POST          /api/organization/:organizationId/analyzer/_search            org.thp.cortex.controllers.AnalyzerCtrl.findForOrganization(organizationId)
 
 GET           /api/job                                                      org.thp.cortex.controllers.JobCtrl.list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])
 POST          /api/job/_search                                              org.thp.cortex.controllers.JobCtrl.find
@@ -76,5 +77,3 @@ POST          /api/user/:userId/password/change                             org.
 GET           /api/user/:userId/key                                         org.thp.cortex.controllers.UserCtrl.getKey(userId)
 DELETE        /api/user/:userId/key                                         org.thp.cortex.controllers.UserCtrl.removeKey(userId)
 POST          /api/user/:userId/key/renew                                   org.thp.cortex.controllers.UserCtrl.renewKey(userId)
-
-GET           /*file                                                        org.thp.cortex.controllers.AssetCtrl.get(file)

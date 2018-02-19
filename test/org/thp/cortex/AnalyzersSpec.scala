@@ -27,7 +27,7 @@ class AnalyzersSpec extends PlaySpecification with Mockito {
       this({
         val UserSrv = mock[UserSrv].verbose
         val adminUser = mock[AuthContext].verbose
-        adminUser.roles returns Seq(Roles.read, Roles.write, Roles.admin)
+        adminUser.roles returns Seq(Roles.read, Roles.analyze, Roles.orgAdmin)
         adminUser.userId returns "admin"
         UserSrv.getFromId(Matchers.any[RequestHeader], Matchers.eq("admin")) returns Future.successful(adminUser)
 
@@ -63,7 +63,7 @@ class AnalyzersSpec extends PlaySpecification with Mockito {
     }) {
 
       private val analyzerCtrl = inject[AnalyzerCtrl]
-      private val result = analyzerCtrl.create("fakeOrganization", "fakeAnalyzer_1_0")(FakeRequest()
+      private val result = analyzerCtrl.create("fakeAnalyzer_1_0")(FakeRequest()
         .withSession("username" -> "admin")
         .withHeaders("Content-Type" -> "application/json")
         .withJsonBody(Json.obj("name" -> "myFakeAnalyzerInstance")))

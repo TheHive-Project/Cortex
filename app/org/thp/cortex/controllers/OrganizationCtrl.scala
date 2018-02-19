@@ -2,26 +2,27 @@ package org.thp.cortex.controllers
 
 import javax.inject.{ Inject, Singleton }
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ ExecutionContext, Future }
 
 import play.api.Logger
 import play.api.http.Status
 import play.api.mvc._
 
 import org.thp.cortex.models.Roles
-import org.thp.cortex.services.OrganizationSrv
+import org.thp.cortex.services.{ OrganizationSrv, UserSrv }
 
-import org.elastic4play.BadRequestError
+import org.elastic4play.{ BadRequestError, NotFoundError }
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.{ aggReads, queryReads }
-import org.elastic4play.services._
+import org.elastic4play.services.{ UserSrv => _, _ }
 
 @Singleton
 class OrganizationCtrl @Inject() (
     organizationSrv: OrganizationSrv,
     authSrv: AuthSrv,
     auxSrv: AuxSrv,
+    userSrv: UserSrv,
     authenticated: Authenticated,
     renderer: Renderer,
     fieldsBodyParser: FieldsBodyParser,
@@ -30,31 +31,35 @@ class OrganizationCtrl @Inject() (
 
   private[OrganizationCtrl] lazy val logger = Logger(getClass)
 
-  def create: Action[Fields] = authenticated(Roles.admin).async(fieldsBodyParser) { implicit request ⇒
+  def create: Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
     organizationSrv.create(request.body)
       .map(organization ⇒ renderer.toOutput(CREATED, organization))
   }
 
-  def get(id: String): Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
+  def get(organizationId: String): Action[Fields] = authenticated(Roles.superAdmin, Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
     val withStats = request.body.getBoolean("nstats").getOrElse(false)
-    for {
-      organization ← organizationSrv.get(id)
+    (for {
+      userOrganizationId <- if (!request.roles.contains(Roles.superAdmin)) Future.successful(organizationId)
+      else userSrv.getOrganizationId(request.userId)
+      if userOrganizationId == organizationId
+      organization ← organizationSrv.get(organizationId)
       organizationWithStats ← auxSrv(organization, 0, withStats, removeUnaudited = false)
-    } yield renderer.toOutput(OK, organizationWithStats)
+    } yield renderer.toOutput(OK, organizationWithStats))
+      .recoverWith { case _: NoSuchElementException => Future.failed(NotFoundError(s"organization $organizationId not found"))}
   }
 
-  def update(id: String): Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
+  def update(id: String): Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     organizationSrv.update(id, request.body).map { organization ⇒
       renderer.toOutput(OK, organization)
     }
   }
 
-  def delete(id: String): Action[AnyContent] = authenticated(Roles.admin).async { implicit request ⇒
+  def delete(id: String): Action[AnyContent] = authenticated(Roles.superAdmin).async { implicit request ⇒
     organizationSrv.delete(id)
       .map(_ ⇒ NoContent)
   }
 
-  def find: Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
+  def find: Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
@@ -64,7 +69,7 @@ class OrganizationCtrl @Inject() (
     renderer.toOutput(OK, organizationWithStats, total)
   }
 
-  def stats(): Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
+  def stats(): Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val aggs = request.body.getValue("stats").getOrElse(throw BadRequestError("Parameter \"stats\" is missing")).as[Seq[Agg]]
     organizationSrv.stats(query, aggs).map(s ⇒ Ok(s))

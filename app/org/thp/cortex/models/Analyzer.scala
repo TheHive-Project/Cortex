@@ -33,4 +33,5 @@ class AnalyzerModel @Inject() (
 
 class Analyzer(model: AnalyzerModel, attributes: JsObject) extends EntityDef[AnalyzerModel, Analyzer](model, attributes) with AnalyzerAttributes {
   def config: JsObject = Try(Json.parse(configuration()).as[JsObject]).getOrElse(JsObject.empty)
+  def organization = parentId.get
 }
