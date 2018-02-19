@@ -2,6 +2,8 @@ package org.thp.cortex.controllers
 
 import javax.inject.{ Inject, Singleton }
 
+import scala.concurrent.ExecutionContext
+
 import play.api.Configuration
 import play.api.http.Status
 import play.api.libs.json.{ JsString, Json }
@@ -20,7 +22,8 @@ class StatusCtrl @Inject() (
     configuration: Configuration,
     authSrv: AuthSrv,
     dbIndex: DBIndex,
-    components: ControllerComponents) extends AbstractController(components) with Status {
+    components: ControllerComponents,
+                           implicit val ec: ExecutionContext) extends AbstractController(components) with Status {
 
   private[controllers] def getVersion(c: Class[_]) = Option(c.getPackage.getImplementationVersion).getOrElse("SNAPSHOT")
 
