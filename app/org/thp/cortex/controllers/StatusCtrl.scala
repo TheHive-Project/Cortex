@@ -28,7 +28,7 @@ class StatusCtrl @Inject() (
   private[controllers] def getVersion(c: Class[_]) = Option(c.getPackage.getImplementationVersion).getOrElse("SNAPSHOT")
 
   def get: Action[AnyContent] = Action.async { _ ⇒
-    dbIndex.clusterVersion.map { versions =>
+    dbIndex.clusterVersions.map { versions =>
       Ok(Json.obj(
         "versions" → Json.obj(
           "Cortex" → getVersion(classOf[Analyzer]),
