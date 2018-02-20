@@ -6,11 +6,11 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 
 import play.api.cache.AsyncCacheApi
+import play.api.libs.json.Json
 import play.api.mvc.RequestHeader
 
 import akka.NotUsed
-import akka.stream.Materializer
-import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.scaladsl.Source
 import org.thp.cortex.models._
 
 import org.elastic4play.controllers.Fields
@@ -56,11 +56,11 @@ class UserSrv @Inject() (
   override def getInitialUser(request: RequestHeader): Future[AuthContext] =
     dbIndex.getSize(userModel.modelName).map {
       case size if size > 0 ⇒ throw AuthenticationError(s"Use of initial user is forbidden because users exist in database")
-      case _                ⇒ AuthContextImpl("init", "", Instance.getRequestId(request), Seq(Roles.orgAdmin, Roles.read))
+      case _                ⇒ AuthContextImpl("init", "", Instance.getRequestId(request), Roles.roles)
     }
 
   override def inInitAuthContext[A](block: AuthContext ⇒ Future[A]): Future[A] = {
-    val authContext = AuthContextImpl("init", "", Instance.getInternalId, Seq(Roles.orgAdmin, Roles.read))
+    val authContext = AuthContextImpl("init", "", Instance.getInternalId, Roles.roles)
     eventSrv.publish(StreamActor.Initialize(authContext.requestId))
     block(authContext).andThen {
       case _ ⇒ eventSrv.publish(StreamActor.Commit(authContext.requestId))
@@ -76,7 +76,17 @@ class UserSrv @Inject() (
     }
   }
 
-  override def get(id: String): Future[User] = getSrv[UserModel, User](userModel, id)
+  private lazy val initUser = new User(userModel, Json.obj(
+    "_id" -> "init",
+    "name" -> "init",
+    "roles" -> Roles.roleNames,
+    "status" -> UserStatus.Ok,
+    "preferences" -> "{}",
+    "organization" -> "default",
+    "_routing" -> "init",
+    "_version" -> 0))
+  override def get(id: String): Future[User] = if (id == "init") Future.successful(initUser)
+  else getSrv[UserModel, User](userModel, id)
 
   def getOrganizationId(userId: String): Future[String] = cache.getOrElseUpdate(s"user-org-$userId", 5.minutes) {
     get(userId).map(_.organization())
