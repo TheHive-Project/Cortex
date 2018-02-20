@@ -16,10 +16,12 @@ object FrontEnd extends AutoPlugin {
   override def projectSettings = Seq[Setting[_]](
     frontendFiles := {
       val s = streams.value
-      s.log.info("Preparing front-end for prod ...")
+      s.log.info("Building front-end ...")
+      s.log.info("npm install")
+      Process("npm" :: "install" :: Nil, baseDirectory.value / "www") ! s.log
       s.log.info("npm run build")
-      Process("npm" :: "run" :: "install" :: Nil, baseDirectory.value / "www") ! s.log
+      Process("npm" :: "run" :: "build" :: Nil, baseDirectory.value / "www") ! s.log
       val dir = baseDirectory.value / "www" / "dist"
-      (dir.**(AllPassFilter) pair rebase(dir, "www"))
+      dir.**(AllPassFilter) pair rebase(dir, "www")
     })
 }
