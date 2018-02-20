@@ -23,12 +23,12 @@ class StatusCtrl @Inject() (
     authSrv: AuthSrv,
     dbIndex: DBIndex,
     components: ControllerComponents,
-                           implicit val ec: ExecutionContext) extends AbstractController(components) with Status {
+    implicit val ec: ExecutionContext) extends AbstractController(components) with Status {
 
   private[controllers] def getVersion(c: Class[_]) = Option(c.getPackage.getImplementationVersion).getOrElse("SNAPSHOT")
 
   def get: Action[AnyContent] = Action.async { _ ⇒
-    dbIndex.clusterVersions.map { versions =>
+    dbIndex.clusterVersions.map { versions ⇒
       Ok(Json.obj(
         "versions" → Json.obj(
           "Cortex" → getVersion(classOf[Analyzer]),
@@ -40,7 +40,7 @@ class StatusCtrl @Inject() (
         "config" → Json.obj(
           "authType" → (authSrv match {
             case multiAuthSrv: MultiAuthSrv ⇒ multiAuthSrv.authProviders.map { a ⇒ JsString(a.name) }
-            case _ ⇒ JsString(authSrv.name)
+            case _                          ⇒ JsString(authSrv.name)
           }),
           "capabilities" → authSrv.capabilities.map(c ⇒ JsString(c.toString)))))
     }

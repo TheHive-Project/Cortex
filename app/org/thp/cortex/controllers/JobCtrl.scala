@@ -1,26 +1,26 @@
 package org.thp.cortex.controllers
 
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{ Inject, Named, Singleton }
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ ActorRef, ActorSystem }
 import akka.pattern.ask
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import akka.util.Timeout
-import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
+import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
-import org.elastic4play.services.{QueryDSL, QueryDef}
+import org.elastic4play.services.{ QueryDSL, QueryDef }
 import org.elastic4play.utils.RichFuture
-import org.thp.cortex.models.{Job, JobStatus, Roles}
-import org.thp.cortex.services.AuditActor.{JobEnded, Register}
-import org.thp.cortex.services.{JobSrv, UserSrv}
+import org.thp.cortex.models.{ Job, JobStatus, Roles }
+import org.thp.cortex.services.AuditActor.{ JobEnded, Register }
+import org.thp.cortex.services.{ JobSrv, UserSrv }
 import play.api.http.Status
-import play.api.libs.json.{JsObject, JsString, JsValue, Json}
-import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
+import play.api.libs.json.{ JsObject, JsString, JsValue, Json }
+import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
 class JobCtrl @Inject() (
@@ -59,8 +59,8 @@ class JobCtrl @Inject() (
 
   def delete(jobId: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
     jobSrv.getForUser(request.userId, jobId)
-      .flatMap(job => jobSrv.delete(job))
-      .map(_ => NoContent)
+      .flatMap(job ⇒ jobSrv.delete(job))
+      .map(_ ⇒ NoContent)
   }
 
   def create(analyzerId: String): Action[Fields] = authenticated(Roles.analyze).async(fieldsBodyParser) { implicit request ⇒

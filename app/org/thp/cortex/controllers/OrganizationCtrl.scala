@@ -15,7 +15,7 @@ import org.elastic4play.{ BadRequestError, NotFoundError }
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.{ aggReads, queryReads }
-import org.elastic4play.services.{ UserSrv => _, _ }
+import org.elastic4play.services.{ UserSrv ⇒ _, _ }
 
 @Singleton
 class OrganizationCtrl @Inject() (
@@ -39,13 +39,13 @@ class OrganizationCtrl @Inject() (
   def get(organizationId: String): Action[Fields] = authenticated(Roles.superAdmin, Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
     val withStats = request.body.getBoolean("nstats").getOrElse(false)
     (for {
-      userOrganizationId <- if (!request.roles.contains(Roles.superAdmin)) Future.successful(organizationId)
+      userOrganizationId ← if (!request.roles.contains(Roles.superAdmin)) Future.successful(organizationId)
       else userSrv.getOrganizationId(request.userId)
       if userOrganizationId == organizationId
       organization ← organizationSrv.get(organizationId)
       organizationWithStats ← auxSrv(organization, 0, withStats, removeUnaudited = false)
     } yield renderer.toOutput(OK, organizationWithStats))
-      .recoverWith { case _: NoSuchElementException => Future.failed(NotFoundError(s"organization $organizationId not found"))}
+      .recoverWith { case _: NoSuchElementException ⇒ Future.failed(NotFoundError(s"organization $organizationId not found")) }
   }
 
   def update(id: String): Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒

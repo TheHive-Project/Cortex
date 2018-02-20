@@ -9,14 +9,15 @@ import play.api.cache.AsyncCacheApi
 import play.api.mvc.RequestHeader
 
 import akka.NotUsed
-import akka.stream.scaladsl.Source
+import akka.stream.Materializer
+import akka.stream.scaladsl.{ Sink, Source }
 import org.thp.cortex.models._
 
 import org.elastic4play.controllers.Fields
 import org.elastic4play.database.{ DBIndex, ModifyConfig }
 import org.elastic4play.services.{ User ⇒ _, _ }
 import org.elastic4play.utils.Instance
-import org.elastic4play.{ AuthenticationError, AuthorizationError }
+import org.elastic4play.{ AuthenticationError, AuthorizationError, NotFoundError }
 
 @Singleton
 class UserSrv @Inject() (
@@ -106,10 +107,12 @@ class UserSrv @Inject() (
   }
 
   def findForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[User, NotUsed], Future[Long]) = {
-    val users = for {
+    val users = (for {
       user ← get(userId)
       organizationId = user.organization()
-    } yield findForOrganization(organizationId, queryDef, range, sortBy)
+    } yield findForOrganization(organizationId, queryDef, range, sortBy))
+      .recover { case NotFoundError("user init not found") ⇒ Source.empty -> Future.successful(0L) }
+
     val userSource = Source.fromFutureSource(users.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val userTotal = users.flatMap(_._2)
     userSource -> userTotal

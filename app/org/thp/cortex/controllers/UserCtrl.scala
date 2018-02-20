@@ -35,15 +35,15 @@ class UserCtrl @Inject() (
   @Timed
   def create: Action[Fields] = authenticated(Roles.orgAdmin, Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     for {
-      userOrganizationId <- userSrv.getOrganizationId(request.userId)
+      userOrganizationId ← userSrv.getOrganizationId(request.userId)
       organizationId = request.body.getString("organization").getOrElse(userOrganizationId)
       // Check if organization is valid
-      organization <- organizationSrv.get(organizationId)
+      organization ← organizationSrv.get(organizationId)
       if organization.status() == OrganizationStatus.Active &&
         (request.roles.contains(Roles.superAdmin) ||
           (userOrganizationId == organizationId &&
             !request.body.getStrings("roles").getOrElse(Nil).contains(Roles.superAdmin.toString)))
-      user <- userSrv.create(request.body.set("organization", organizationId))
+      user ← userSrv.create(request.body.set("organization", organizationId))
     } yield renderer.toOutput(CREATED, user)
   }
 
@@ -79,35 +79,35 @@ class UserCtrl @Inject() (
       // Check if organization is valid
       request.body.getString("organization")
         .fold(Future.successful(())) {
-        case organizationId if request.authContext.roles.contains(Roles.superAdmin) => organizationSrv.get(organizationId).map(_ ⇒ ())
-        case _ => Future.failed(AuthorizationError("You are not permitted to change user organization"))
-      }
+          case organizationId if request.authContext.roles.contains(Roles.superAdmin) ⇒ organizationSrv.get(organizationId).map(_ ⇒ ())
+          case _ ⇒ Future.failed(AuthorizationError("You are not permitted to change user organization"))
+        }
         .flatMap { _ ⇒ userSrv.update(id, request.body) }
-          .map { user ⇒ renderer.toOutput(OK, user) }
-      }
+        .map { user ⇒ renderer.toOutput(OK, user) }
+    }
   }
 
   @Timed
   def setPassword(userId: String): Action[Fields] = authenticated(Roles.orgAdmin, Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     val isSuperAdmin = request.authContext.roles.contains(Roles.superAdmin)
-    request.body.getString("password").fold(Future.failed[Result](MissingAttributeError("password"))) { password =>
+    request.body.getString("password").fold(Future.failed[Result](MissingAttributeError("password"))) { password ⇒
       for {
-        targetOrganization <- userSrv.getOrganizationId(userId)
-        userOrganization <- userSrv.getOrganizationId(request.userId)
+        targetOrganization ← userSrv.getOrganizationId(userId)
+        userOrganization ← userSrv.getOrganizationId(request.userId)
         if targetOrganization == userOrganization || isSuperAdmin
-        _ <- authSrv.setPassword(userId, password)
+        _ ← authSrv.setPassword(userId, password)
       } yield NoContent
     }
-      .recoverWith { case _: NoSuchElementException => Future.failed(NotFoundError(s"user $userId not found"))}
+      .recoverWith { case _: NoSuchElementException ⇒ Future.failed(NotFoundError(s"user $userId not found")) }
   }
 
   @Timed
   def changePassword(userId: String): Action[Fields] = authenticated().async(fieldsBodyParser) { implicit request ⇒
     if (userId == request.authContext.userId) {
       for {
-        password <- request.body.getString("password").fold(Future.failed[String](MissingAttributeError("password")))(Future.successful)
-        currentPassword <- request.body.getString("currentPassword").fold(Future.failed[String](MissingAttributeError("currentPassword")))(Future.successful)
-        _ <- authSrv.changePassword(userId, currentPassword, password)
+        password ← request.body.getString("password").fold(Future.failed[String](MissingAttributeError("password")))(Future.successful)
+        currentPassword ← request.body.getString("currentPassword").fold(Future.failed[String](MissingAttributeError("currentPassword")))(Future.successful)
+        _ ← authSrv.changePassword(userId, currentPassword, password)
       } yield NoContent
     }
     else
@@ -118,12 +118,12 @@ class UserCtrl @Inject() (
   def delete(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
     val isSuperAdmin = request.authContext.roles.contains(Roles.superAdmin)
     (for {
-      targetOrganization <- userSrv.getOrganizationId(userId)
-      userOrganization <- userSrv.getOrganizationId(request.userId)
+      targetOrganization ← userSrv.getOrganizationId(userId)
+      userOrganization ← userSrv.getOrganizationId(request.userId)
       if targetOrganization == userOrganization || isSuperAdmin
-      _ <- userSrv.delete(userId)
+      _ ← userSrv.delete(userId)
     } yield NoContent)
-      .recoverWith { case _: NoSuchElementException => Future.failed(NotFoundError(s"user $userId not found"))}
+      .recoverWith { case _: NoSuchElementException ⇒ Future.failed(NotFoundError(s"user $userId not found")) }
   }
 
   @Timed
@@ -132,9 +132,9 @@ class UserCtrl @Inject() (
       authContext ← authenticated.getContext(request)
       user ← userSrv.get(authContext.userId)
       preferences = Try(Json.parse(user.preferences()))
-          .getOrElse {
-            logger.warn(s"User ${authContext.userId} has invalid preference format: ${user.preferences()}")
-            JsObject.empty
+        .getOrElse {
+          logger.warn(s"User ${authContext.userId} has invalid preference format: ${user.preferences()}")
+          JsObject.empty
         }
       json = user.toJson + ("preferences" → preferences)
     } yield renderer.toOutput(OK, json)
