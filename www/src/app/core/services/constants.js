@@ -6,8 +6,9 @@ export default function(app) {
       auth: 'Authorization has been denied.'
     })
     .constant('Roles', {
-      ADMIN: 'admin',
-      WRITE: 'write',
+      SUPERADMIN: 'superadmin',
+      ORGADMIN: 'orgadmin',
+      ANALYZE: 'analyze',
       READ: 'read'
     })
     .value('Tlps', [

@@ -16,7 +16,7 @@ const usersModule = angular
         users: UserService => UserService.list()
       },
       data: {
-        allow: [Roles.ADMIN]
+        allow: [Roles.SUPERADMIN, Roles.ORGADMIN]
       }
     });
   })

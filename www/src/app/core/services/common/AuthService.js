@@ -43,8 +43,14 @@ export default class AuthService {
       });
   }
 
-  isAdmin(user) {
-    let re = /admin/i;
+  isOrgAdmin(user) {
+    let re = /orgadmin/i;
+
+    return re.test(user.roles);
+  }
+
+  isSuperAdmin(user) {
+    let re = /superadmin/i;
 
     return re.test(user.roles);
   }

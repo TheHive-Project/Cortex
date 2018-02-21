@@ -30,7 +30,7 @@ const analyzersModule = angular
         }
       },
       data: {
-        allow: [Roles.ADMIN, Roles.WRITE]
+        allow: [Roles.SUPERADMIN, Roles.ORGADMIN, Roles.ANALYZE]
       }
     });
   })

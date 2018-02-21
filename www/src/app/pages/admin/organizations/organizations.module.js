@@ -27,7 +27,7 @@ const organizationsModule = angular
         url: 'admin/organizations',
         component: 'organizationsPage',
         data: {
-          allow: [Roles.ADMIN]
+          allow: [Roles.SUPERADMIN]
         }
       })
       .state('main.organization', {
@@ -43,7 +43,7 @@ const organizationsModule = angular
             OrganizationService.users($stateParams.id)
         },
         data: {
-          allow: [Roles.ADMIN]
+          allow: [Roles.SUPERADMIN]
         }
       });
   })

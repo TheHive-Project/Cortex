@@ -43,7 +43,8 @@ class HeaderController {
   }
 
   $onInit() {
-    this.isAdmin = this.AuthService.isAdmin(this.main.currentUser);
+    this.isOrgAdmin = this.AuthService.isOrgAdmin(this.main.currentUser);
+    this.isSuperAdmin = this.AuthService.isSuperAdmin(this.main.currentUser);
   }
 
   newAnalysis() {
