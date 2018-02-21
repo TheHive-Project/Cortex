@@ -31,7 +31,7 @@ class OrganizationCtrl @Inject() (
 
   private[OrganizationCtrl] lazy val logger = Logger(getClass)
 
-  def create: Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
+  def create: Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     organizationSrv.create(request.body)
       .map(organization ⇒ renderer.toOutput(CREATED, organization))
   }
@@ -39,7 +39,7 @@ class OrganizationCtrl @Inject() (
   def get(organizationId: String): Action[Fields] = authenticated(Roles.superAdmin, Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
     val withStats = request.body.getBoolean("nstats").getOrElse(false)
     (for {
-      userOrganizationId ← if (!request.roles.contains(Roles.superAdmin)) Future.successful(organizationId)
+      userOrganizationId ← if (request.roles.contains(Roles.superAdmin)) Future.successful(organizationId)
       else userSrv.getOrganizationId(request.userId)
       if userOrganizationId == organizationId
       organization ← organizationSrv.get(organizationId)

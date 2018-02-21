@@ -48,9 +48,16 @@ class UserCtrl @Inject() (
   }
 
   @Timed
-  def get(id: String): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
-    userSrv.get(id)
-      .map { user ⇒ renderer.toOutput(OK, user) }
+  def get(userId: String): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
+    val isSuperAdmin = request.authContext.roles.contains(Roles.superAdmin)
+    (for {
+      user ← userSrv.get(userId)
+      organizationId ← userSrv.getOrganizationId(request.userId)
+      if isSuperAdmin || organizationId == user.organization()
+    } yield renderer.toOutput(OK, user))
+      .recoverWith {
+        case _: NoSuchElementException ⇒ Future.failed(NotFoundError(s"user $userId not found"))
+      }
   }
 
   @Timed

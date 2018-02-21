@@ -42,14 +42,16 @@
             <li>
               <a ng-click="$modal.formData.roles = []">none</a>
               <a ng-click="$modal.formData.roles = ['read']">read</a>
-              <a ng-click="$modal.formData.roles = ['read','write']">read, write</a>
-              <a ng-click="$modal.formData.roles = ['read','write','admin']">read, write, admin</a>
+              <a ng-click="$modal.formData.roles = ['read','analyze']">read, analyze</a>
+              <a ng-click="$modal.formData.roles = ['read','analyze','orgadmin']">read, analyze, org-admin</a>
+              <!-- TODO make it available only on default/root organization -->
+              <a ng-click="$modal.formData.roles = ['read','analyze','superadmin']">read, analyze, super-admin</a>
             </li>
           </ul>
         </div>
       </div>
     </div>
-    
+
     <div class="form-group" ng-class="{ 'has-error' : userForm.organization.$invalid && !userForm.organization.$pristine }">
       <label class="col-sm-3 control-label">
         Organization

@@ -189,8 +189,16 @@ class AnalyzerSrv(
   def delete(analyzer: Analyzer)(implicit authContext: AuthContext): Future[Unit] =
     deleteSrv.realDelete(analyzerModel, analyzer)
 
-  def update(analyzer: Analyzer, fields: Fields, modifyConfig: ModifyConfig = ModifyConfig.default)(implicit authContext: AuthContext): Future[Analyzer] = {
+  def update(analyzer: Analyzer, fields: Fields)(implicit authContext: AuthContext): Future[Analyzer] = update(analyzer, fields, ModifyConfig.default)
+
+  def update(analyzer: Analyzer, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Analyzer] = {
     val analyzerFields = fields.getValue("configuration").fold(fields)(cfg ⇒ fields.set("configuration", cfg.toString))
     updateSrv(analyzer, analyzerFields, modifyConfig)
+  }
+
+  def update(analyzerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Analyzer] = update(analyzerId, fields, ModifyConfig.default)
+
+  def update(analyzerId: String, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Analyzer] = {
+    get(analyzerId).flatMap(analyzer ⇒ update(analyzer, fields, modifyConfig))
   }
 }
