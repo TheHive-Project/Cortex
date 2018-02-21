@@ -189,6 +189,9 @@ class AnalyzerSrv(
   def delete(analyzer: Analyzer)(implicit authContext: AuthContext): Future[Unit] =
     deleteSrv.realDelete(analyzerModel, analyzer)
 
+  def delete(analyzerId: String)(implicit authContext: AuthContext): Future[Unit] =
+    deleteSrv.realDelete[AnalyzerModel, Analyzer](analyzerModel, analyzerId)
+
   def update(analyzer: Analyzer, fields: Fields)(implicit authContext: AuthContext): Future[Analyzer] = update(analyzer, fields, ModifyConfig.default)
 
   def update(analyzer: Analyzer, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Analyzer] = {

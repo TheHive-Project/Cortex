@@ -111,8 +111,7 @@ class AnalyzerCtrl @Inject() (
   }
 
   def delete(analyzerId: String): Action[AnyContent] = authenticated(Roles.superAdmin).async { implicit request ⇒
-    analyzerSrv.getForUser(request.userId, analyzerId)
-      .flatMap(analyzerSrv.delete)
+    analyzerSrv.delete(analyzerId)
       .map(_ ⇒ NoContent)
   }
 
