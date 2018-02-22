@@ -166,17 +166,17 @@ class UserCtrl @Inject() (
   }
 
   @Timed
-  def getKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
+  def getKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
     authSrv.getKey(id).map(Ok(_))
   }
 
   @Timed
-  def removeKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
+  def removeKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
     authSrv.removeKey(id).map(_ ⇒ Ok)
   }
 
   @Timed
-  def renewKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
+  def renewKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
     authSrv.renewKey(id).map(Ok(_))
   }
 }

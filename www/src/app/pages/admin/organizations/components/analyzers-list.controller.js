@@ -102,7 +102,7 @@ export default class OrganizationAnalyzersController {
       })
       .catch(err => {
         if (!_.isString(err)) {
-          this.NotificationService.error('Unable to delete the Job.');
+          this.NotificationService.error('Unable to delete the analyzer.');
         }
       });
   }
