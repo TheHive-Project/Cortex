@@ -165,18 +165,42 @@ class UserCtrl @Inject() (
     renderer.toOutput(OK, users, total)
   }
 
+  private def checkUserOrganization(userId1: String, userId2: String) = {
+    for {
+      userOrganization1 ← userSrv.getOrganizationId(userId1)
+      userOrganization2 ← userSrv.getOrganizationId(userId2)
+    } yield userOrganization1 == userOrganization2
+  }
   @Timed
-  def getKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
-    authSrv.getKey(id).map(Ok(_))
+  def getKey(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
+    (if (request.roles.contains(Roles.superAdmin)) Future.successful(true)
+    else checkUserOrganization(userId, request.userId))
+      .flatMap {
+        case true  ⇒ authSrv.getKey(userId)
+        case false ⇒ Future.failed(AuthorizationError("Insufficient rights to perform this action"))
+      }
+      .map(Ok(_))
   }
 
   @Timed
-  def removeKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
-    authSrv.removeKey(id).map(_ ⇒ Ok)
+  def removeKey(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
+    (if (request.roles.contains(Roles.superAdmin)) Future.successful(true)
+    else checkUserOrganization(userId, request.userId))
+      .flatMap {
+        case true  ⇒ authSrv.removeKey(userId)
+        case false ⇒ Future.failed(AuthorizationError("Insufficient rights to perform this action"))
+      }
+      .map(_ ⇒ Ok)
   }
 
   @Timed
-  def renewKey(id: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
-    authSrv.renewKey(id).map(Ok(_))
+  def renewKey(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
+    (if (request.roles.contains(Roles.superAdmin)) Future.successful(true)
+    else checkUserOrganization(userId, request.userId))
+      .flatMap {
+        case true  ⇒ authSrv.renewKey(userId)
+        case false ⇒ Future.failed(AuthorizationError("Insufficient rights to perform this action"))
+      }
+      .map(Ok(_))
   }
 }
