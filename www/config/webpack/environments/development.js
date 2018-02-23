@@ -10,7 +10,7 @@ module.exports = function(_path) {
       hot: true,
       inline: true,
       proxy: {
-        '/api': 'http://localhost:9000'
+        '/api': 'http://localhost:9001'
       }
     },
     plugins: [new webpack.HotModuleReplacementPlugin()]
