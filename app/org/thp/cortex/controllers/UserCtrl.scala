@@ -18,6 +18,7 @@ import org.elastic4play.services.JsonFormat.queryReads
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.services.{ AuthSrv, QueryDSL, QueryDef }
 import org.elastic4play._
+import org.elastic4play.services.QueryDSL.and
 
 @Singleton
 class UserCtrl @Inject() (
@@ -157,11 +158,14 @@ class UserCtrl @Inject() (
 
   }
 
-  def findForOrganization(organizationId: String): Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
+  def findForOrganization(organizationId: String): Action[Fields] = authenticated(Roles.orgAdmin, Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
+    import org.elastic4play.services.QueryDSL._
+    val isSuperAdmin = request.roles.contains(Roles.superAdmin)
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
-    val (users, total) = userSrv.findForOrganization(organizationId, query, range, sort)
+    val (users, total) = if (isSuperAdmin) userSrv.findForOrganization(organizationId, query, range, sort)
+    else userSrv.findForUser(request.userId, and("organization" ~= organizationId, query), range, sort)
     renderer.toOutput(OK, users, total)
   }
 
