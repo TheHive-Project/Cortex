@@ -52,7 +52,7 @@
           <a class="text-primary" ui-sref="main.job-report({id: job.id})">
             <i class="fa fa-search"></i>View</a>
         </div>
-        <div class="flex-col flex-icon" require-roles roles="['orgadmin', 'analyze']">
+        <div class="flex-col flex-icon" require-roles="orgadmin,analyze">
           <a href class="text-danger" ng-click="$ctrl.deleteJob(job.id)">
             <i class="fa fa-ban"></i>Delete</a>
         </div>

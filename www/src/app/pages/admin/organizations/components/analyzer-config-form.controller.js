@@ -11,12 +11,6 @@ export default class AnalyzerConfigFormController {
   }
 
   $onInit() {
-    this.$log.log(
-      'onInit of AnalyzerConfigFormController',
-      this.definition,
-      this.analyzer
-    );
-
     const { name, configuration } = this.analyzer;
 
     this.formData = {

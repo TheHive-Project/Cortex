@@ -47,7 +47,6 @@ export default class OrganizationAnalyzersController {
       .then(response => {
         if (mode === 'create') {
           return this.OrganizationService.enableAnalyzer(
-            this.organization.id,
             definition.id,
             response
           );
@@ -58,30 +57,43 @@ export default class OrganizationAnalyzersController {
           );
         }
       })
-      .then(() => this.reload())
-      .catch(rejection => this.$log.log(rejection));
+      .then(() => this.reload());
+  }
+
+  edit(mode, definition, analyzer) {
+    this.openModal(mode, definition, analyzer)
+      .then(() => {
+        this.NotificationService.success('Analyzer updated successfully');
+      })
+      .catch(err => {
+        if (!_.isString(err)) {
+          this.NotificationService.error('Failed to edit the analyzer.');
+        }
+      });
   }
 
   enable(analyzerId) {
     let definition = this.analyzerDefinitions[analyzerId];
+    let promise;
 
     if (_.map(definition.configurationItems, 'required').indexOf(true) !== -1) {
       // The analyzer requires some configurations
-      this.openModal('create', definition, {}).then(() => {
-        this.NotificationService.success('Analyzer enabled successfully');
-      });
+      promise = this.openModal('create', definition, {});
     } else {
-      this.OrganizationService.enableAnalyzer(
-        this.organization.id,
-        analyzerId,
-        {
-          name: analyzerId
-        }
-      ).then(() => {
-        this.NotificationService.success('Analyzer enabled successfully');
-        this.reload();
+      promise = this.OrganizationService.enableAnalyzer(analyzerId, {
+        name: analyzerId
       });
     }
+
+    promise
+      .then(() => {
+        this.NotificationService.success('Analyzer enabled successfully');
+      })
+      .catch(err => {
+        if (!_.isString(err)) {
+          this.NotificationService.error('Failed to enable the analyzer.');
+        }
+      });
   }
 
   disable(analyzerId) {

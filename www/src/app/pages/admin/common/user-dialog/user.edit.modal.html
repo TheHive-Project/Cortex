@@ -43,9 +43,9 @@
               <a ng-click="$modal.formData.roles = []">none</a>
               <a ng-click="$modal.formData.roles = ['read']">read</a>
               <a ng-click="$modal.formData.roles = ['read','analyze']">read, analyze</a>
-              <a ng-click="$modal.formData.roles = ['read','analyze','orgadmin']">read, analyze, org-admin</a>
+              <a ng-click="$modal.formData.roles = ['read','analyze','orgadmin']">read, analyze, orgadmin</a>
               <!-- TODO make it available only on default/root organization -->
-              <a ng-click="$modal.formData.roles = ['read','analyze','superadmin']">read, analyze, super-admin</a>
+              <a ng-click="$modal.formData.roles = ['read','analyze','superadmin']" require-role="['']">read, analyze, superadmin</a>
             </li>
           </ul>
         </div>

@@ -34,16 +34,27 @@ const organizationsModule = angular
         url: 'admin/organizations/{id}',
         component: 'organizationPage',
         resolve: {
-          analyzerDefinitions: AnalyzerService => AnalyzerService.definitions(),
           organization: ($stateParams, OrganizationService) =>
             OrganizationService.getById($stateParams.id),
-          analyzers: ($stateParams, OrganizationService) =>
-            OrganizationService.analyzers($stateParams.id),
           users: ($stateParams, OrganizationService) =>
-            OrganizationService.users($stateParams.id)
+            OrganizationService.users($stateParams.id),
+          analyzerDefinitions: (AuthService, AnalyzerService, $q) => {
+            if (AuthService.hasRole([Roles.ORGADMIN])) {
+              return AnalyzerService.definitions();
+            } else {
+              return $q.resolve({});
+            }
+          },
+          analyzers: (AuthService, OrganizationService, $q) => {
+            if (AuthService.hasRole([Roles.ORGADMIN])) {
+              return OrganizationService.analyzers();
+            } else {
+              return $q.resolve([]);
+            }
+          }
         },
         data: {
-          allow: [Roles.SUPERADMIN]
+          allow: [Roles.SUPERADMIN, Roles.ORGADMIN]
         }
       });
   })

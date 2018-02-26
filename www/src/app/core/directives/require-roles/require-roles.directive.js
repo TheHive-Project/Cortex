@@ -8,14 +8,14 @@ export default function(app) {
 
     return {
       restrict: 'A',
-      scope: {
-        roles: '='
-      },
+      scope: false,
       link: linkFn
     };
 
-    function linkFn(scope, elem) {
-      if (!AuthService.hasRole(scope.roles || [])) {
+    function linkFn(scope, elem, attrs) {
+      let roles = (attrs['requireRoles'] || '').split(',');
+
+      if (!AuthService.hasRole(roles || [])) {
         elem.remove();
       }
     }

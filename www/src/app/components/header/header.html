@@ -22,7 +22,7 @@
     </div>
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse">
-      <ul class="ml-l nav navbar-nav" require-roles roles="['orgadmin', 'analyze']">
+      <ul class="ml-l nav navbar-nav" require-roles="orgadmin,analyze">
         <li>
           <a href ng-click="$ctrl.newAnalysis()">
             <i class="fa fa-plus"></i> <strong>New Analysis</strong></a>
@@ -33,25 +33,31 @@
           <a ui-sref="main.jobs">
             <i class="fa fa-hourglass"></i> <strong>Jobs History</strong></a>
         </li>
-        <li ui-sref-active="active" require-roles roles="['orgadmin', 'analyze']">
+        <li ui-sref-active="active" require-roles="orgadmin,analyze">
           <a ui-sref="main.analyzers">
             <i class="fa fa-cogs"></i>
             <strong>Analyzers</strong>
           </a>
         </li>
-        <li class="dropdown" require-roles roles="['orgadmin', 'superadmin']" uib-dropdown>
+        <li ui-sref-active="active" require-roles="orgadmin">
+          <a ui-sref="main.organization({id: $ctrl.main.currentUser.organization})">
+            <i class="fa fa-file-text"></i>
+            <strong>Organization</strong>
+          </a>
+        </li>
+        <li class="dropdown" require-roles="superadmin" uib-dropdown>
           <a class="dropdown-toggle" uib-dropdown-toggle href>
             <i class="fa fa-cog"></i>
             <span class="hpad5"><strong>Administration</strong></span>
             <b class="caret"></b>
           </a>
-          <ul class="dropdown-menu" uib-dropdown-menu>
+          <ul class="dropdown-menu" uib-dropdown-menu>            
             <li>
               <a ui-sref="main.users">
                 <i class="fa fa-users"></i>
                 <span class="hpad5">Users</span>
               </a>
-            </li>
+            </li>     
             <li class="divider"></li>
             <li>
               <a ui-sref="main.organizations">
