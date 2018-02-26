@@ -35,7 +35,7 @@ class DBListCtrl @Inject() (
     Ok.chunked(items).as("application/json")
   }
 
-  def addItem(listName: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
+  def addItem(listName: String): Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     request.body.getValue("value").fold(Future.successful(NoContent)) { value ⇒
       dblists(listName).addItem(value).map { item ⇒
         renderer.toOutput(OK, item.id)
@@ -43,13 +43,13 @@ class DBListCtrl @Inject() (
     }
   }
 
-  def deleteItem(itemId: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
+  def deleteItem(itemId: String): Action[AnyContent] = authenticated(Roles.superAdmin).async { implicit request ⇒
     dblists.deleteItem(itemId).map { _ ⇒
       NoContent
     }
   }
 
-  def updateItem(itemId: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
+  def updateItem(itemId: String): Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     request.body.getValue("value")
       .map { value ⇒
         for {
