@@ -4,13 +4,12 @@ import javax.inject.{ Inject, Singleton }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-import play.api.libs.json.{ JsNull, JsObject }
+import play.api.libs.json.{ JsNull, JsObject, Json, Writes }
 
 import akka.NotUsed
 import akka.stream.Materializer
 import akka.stream.scaladsl.{ Sink, Source }
 import org.thp.cortex.models._
-import org.scalactic._
 import org.scalactic.Accumulation._
 
 import org.elastic4play.{ AttributeCheckingError, NotFoundError }
@@ -18,6 +17,19 @@ import org.elastic4play.controllers.Fields
 import org.elastic4play.database.ModifyConfig
 import org.elastic4play.services._
 import org.elastic4play.utils.Collection.distinctBy
+
+case class BaseConfig(name: String, analyzerNames: Seq[String], items: Seq[ConfigurationDefinitionItem], config: Option[AnalyzerConfig]) {
+  def +(other: BaseConfig) = BaseConfig(name, analyzerNames ++ other.analyzerNames, distinctBy(items ++ other.items)(_.name), config.orElse(other.config))
+}
+object BaseConfig {
+  implicit val writes: Writes[BaseConfig] = Writes[BaseConfig] { baseConfig ⇒
+    Json.obj(
+      "name" -> baseConfig.name,
+      "analyzers" -> baseConfig.analyzerNames,
+      "configurationItems" -> baseConfig.items,
+      "config" -> baseConfig.config.fold(JsObject.empty)(_.jsonConfig))
+  }
+}
 
 @Singleton
 class AnalyzerConfigSrv @Inject() (
@@ -31,44 +43,42 @@ class AnalyzerConfigSrv @Inject() (
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer) {
 
-  private val proxyConfigurationItem = Seq(
+  private val globalConfig = BaseConfig("global", Nil, Seq(
     ConfigurationDefinitionItem("proxy_http", "url of http proxy", AnalyzerConfigItemType.string, multi = false, required = false, None),
-    ConfigurationDefinitionItem("proxy_https", "url of https proxy", AnalyzerConfigItemType.string, multi = false, required = false, None))
+    ConfigurationDefinitionItem("proxy_https", "url of https proxy", AnalyzerConfigItemType.string, multi = false, required = false, None)),
+    None)
 
-  def definitions: Future[Map[String, Seq[ConfigurationDefinitionItem]]] =
+  def definitions: Future[Map[String, BaseConfig]] =
     analyzerSrv.listDefinitions._1
       .filter(_.baseConfiguration.isDefined)
       .map(ad ⇒ ad.copy(configurationItems = ad.configurationItems.map(_.copy(required = false))))
       .groupBy(100, _.baseConfiguration.get)
-      .map(ad ⇒ ad.baseConfiguration.get -> ad.configurationItems)
-      .reduce((ad1, ad2) ⇒ ad1._1 -> distinctBy(ad1._2 ++ ad2._2)(_.name))
+      .map(ad ⇒ BaseConfig(ad.baseConfiguration.get, Seq(ad.name), ad.configurationItems, None))
+      .reduce(_ + _)
+      .filterNot(_.items.isEmpty)
       .mergeSubstreams
       .mapMaterializedValue(_ ⇒ NotUsed)
       .runWith(Sink.seq)
-      .map(_.toMap + ("global" -> proxyConfigurationItem))
+      .map { baseConfigs ⇒
+        (globalConfig +: baseConfigs)
+          .map(c ⇒ c.name -> c)
+          .toMap
+      }
 
-  def definitionsWithEmptyConfig: Future[Map[String, (Seq[ConfigurationDefinitionItem], Option[AnalyzerConfig])]] = definitions.map(_.mapValues(_ -> None))
-
-  def getDefinition(analyzerConfigName: String): Future[Seq[ConfigurationDefinitionItem]] = {
-    definitions.flatMap { configList ⇒
-      configList.get(analyzerConfigName)
-        .fold[Future[Seq[ConfigurationDefinitionItem]]](Future.failed(NotFoundError(s"analyzerConfig $analyzerConfigName not found")))(Future.successful)
-    }
-  }
-
-  def getForUser(userId: String, analyzerConfigName: String): Future[(Seq[ConfigurationDefinitionItem], Option[AnalyzerConfig])] = {
+  def getForUser(userId: String, analyzerConfigName: String): Future[BaseConfig] = {
     userSrv.getOrganizationId(userId)
       .flatMap(organizationId ⇒ getForOrganization(organizationId, analyzerConfigName))
   }
 
-  def getForOrganization(organizationId: String, analyzerConfigName: String): Future[(Seq[ConfigurationDefinitionItem], Option[AnalyzerConfig])] = {
+  def getForOrganization(organizationId: String, analyzerConfigName: String): Future[BaseConfig] = {
     import org.elastic4play.services.QueryDSL._
     for {
       analyzerConfig ← findForOrganization(organizationId, "name" ~= analyzerConfigName, Some("0-1"), Nil)
         ._1
         .runWith(Sink.headOption)
-      configDefinition ← getDefinition(analyzerConfigName)
-    } yield configDefinition -> analyzerConfig
+      d ← definitions
+      baseConfig ← d.get(analyzerConfigName).fold[Future[BaseConfig]](Future.failed(NotFoundError(s"analyzerConfig $analyzerConfigName not found")))(Future.successful)
+    } yield baseConfig.copy(config = analyzerConfig)
   }
 
   def create(organization: Organization, fields: Fields)(implicit authContext: AuthContext): Future[AnalyzerConfig] = {
@@ -79,29 +89,29 @@ class AnalyzerConfigSrv @Inject() (
     updateSrv(analyzerConfig, fields, ModifyConfig.default)
   }
 
-  def updateOrCreate(userId: String, analyzerConfigName: String, config: JsObject)(implicit authContext: AuthContext): Future[(Seq[ConfigurationDefinitionItem], AnalyzerConfig)] = {
+  def updateOrCreate(userId: String, analyzerConfigName: String, config: JsObject)(implicit authContext: AuthContext): Future[BaseConfig] = {
     for {
       organizationId ← userSrv.getOrganizationId(userId)
       organization ← organizationSrv.get(organizationId)
-      (configurationItems, maybeAnalyzerConfig) ← getForOrganization(organizationId, analyzerConfigName)
-      validatedConfig ← configurationItems.validatedBy(_.read(config))
+      baseConfig ← getForOrganization(organizationId, analyzerConfigName)
+      validatedConfig ← baseConfig.items.validatedBy(_.read(config))
         .map(_.filterNot(_._2 == JsNull))
         .fold(c ⇒ Future.successful(Fields.empty.set("config", JsObject(c).toString).set("name", analyzerConfigName)), errors ⇒ Future.failed(AttributeCheckingError("analyzerConfig", errors.toSeq)))
-      newAnalyzerConfig ← maybeAnalyzerConfig.fold(create(organization, validatedConfig))(analyzerConfig ⇒ update(analyzerConfig, validatedConfig))
-    } yield configurationItems -> newAnalyzerConfig
+      newAnalyzerConfig ← baseConfig.config.fold(create(organization, validatedConfig))(analyzerConfig ⇒ update(analyzerConfig, validatedConfig))
+    } yield baseConfig.copy(config = Some(newAnalyzerConfig))
   }
 
-  def updateDefinitionConfig(definitionConfig: Map[String, (Seq[ConfigurationDefinitionItem], Option[AnalyzerConfig])], analyzerConfig: AnalyzerConfig): Map[String, (Seq[ConfigurationDefinitionItem], Option[AnalyzerConfig])] = {
+  def updateDefinitionConfig(definitionConfig: Map[String, BaseConfig], analyzerConfig: AnalyzerConfig): Map[String, BaseConfig] = {
     definitionConfig.get(analyzerConfig.name())
-      .fold(definitionConfig) {
-        case (definition, _) ⇒ definitionConfig + (analyzerConfig.name() -> (definition -> Some(analyzerConfig)))
+      .fold(definitionConfig) { baseConfig ⇒
+        definitionConfig + (analyzerConfig.name() -> baseConfig.copy(config = Some(analyzerConfig)))
       }
   }
 
-  def listForUser(userId: String): Future[Map[String, (Seq[ConfigurationDefinitionItem], Option[AnalyzerConfig])]] = {
+  def listForUser(userId: String): Future[Map[String, BaseConfig]] = {
     import org.elastic4play.services.QueryDSL._
     for {
-      analyzerConfigItems ← definitionsWithEmptyConfig
+      analyzerConfigItems ← definitions
       analyzerConfigs ← findForUser(userId, any, Some("all"), Nil)
         ._1
         .runFold(analyzerConfigItems) { (definitionConfig, analyzerConfig) ⇒ updateDefinitionConfig(definitionConfig, analyzerConfig) }
@@ -124,5 +134,4 @@ class AnalyzerConfigSrv @Inject() (
   def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[AnalyzerConfig, NotUsed], Future[Long]) = {
     findSrv[AnalyzerConfigModel, AnalyzerConfig](analyzerConfigModel, queryDef, range, sortBy)
   }
-
 }
