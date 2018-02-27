@@ -10,9 +10,6 @@
   <div class="row mv-s" ng-if="$ctrl.analyzers.length > 0">
     <div class="col-sm-12 flex-table">
       <div class="flex-row media" ng-repeat="analyzer in $ctrl.analyzers track by analyzer.id">
-        <!-- <div class="media-left">
-                <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
-              </div> -->
         <div class="flex-col flex-1">
           <h4 class="media-heading">
             <span class="mr-m text-primary">{{analyzer.name}}</span>
@@ -26,6 +23,21 @@
               <strong>License:</strong> {{analyzer.license}}</small>
           </h4>
           <div class="mt-xs text-muted">{{analyzer.description}}</div>
+        </div>
+        <div class="flex-col flex-w-200 text-center text-muted vertical">
+          <div ng-show="analyzer.rate && analyzer.rateUnit" class="text-primary">
+            <div>{{analyzer.rate}}</div>
+            <div>per {{analyzer.rateUnit}}</div>
+          </div>
+          <div ng-show="!analyzer.rate || !analyzer.rateUnit">
+            <div>N/A</div>
+          </div>
+        </div>
+        <div class="flex-col flex-w-200 text-center text-muted vertical">
+          <div class="text-primary">
+            <div>Check TLP: {{analyzer.configuration.check_tlp}}</div>
+            <div ng-show="analyzer.configuration.check_tlp">Max TLP: {{analyzer.configuration.max_tlp}}</div>
+          </div>          
         </div>
         <div class="flex-col flex-icon text-center">
           <a href class="text-primary" ng-click="$ctrl.edit('edit', $ctrl.analyzerDefinitions[analyzer.analyzerDefinitionId], analyzer)">

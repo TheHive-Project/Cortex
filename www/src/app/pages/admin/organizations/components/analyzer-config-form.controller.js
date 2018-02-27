@@ -1,10 +1,11 @@
 'use strict';
 
 export default class AnalyzerConfigFormController {
-  constructor($log) {
+  constructor($log, Tlps) {
     'ngInject';
 
     this.$log = $log;
+    this.Tlps = Tlps;
 
     this.rateUnits = ['Day', 'Month'];
     this.formData = {};
