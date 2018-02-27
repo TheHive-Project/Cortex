@@ -31,6 +31,11 @@ POST          /api/organization/analyzer/:analyzerId                org.thp.cort
 #GET           /api/organization/:organizationId/analyzer                    org.thp.cortex.controllers.AnalyzerCtrl.findForOrganization(organizationId)
 #POST          /api/organization/:organizationId/analyzer/_search            org.thp.cortex.controllers.AnalyzerCtrl.findForOrganization(organizationId)
 
+
+GET           /api/analyzerconfig/:analyzerConfigName               org.thp.cortex.controllers.AnalyzerConfigCtrl.get(analyzerConfigName)
+GET           /api/analyzerconfig                                   org.thp.cortex.controllers.AnalyzerConfigCtrl.list
+PATCH         /api/analyzerconfig/:analyzerConfigName               org.thp.cortex.controllers.AnalyzerConfigCtrl.update(analyzerConfigName)
+
 GET           /api/job                                              org.thp.cortex.controllers.JobCtrl.list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])
 POST          /api/job/_search                                      org.thp.cortex.controllers.JobCtrl.find
 DELETE        /api/job/:id                                          org.thp.cortex.controllers.JobCtrl.delete(id)

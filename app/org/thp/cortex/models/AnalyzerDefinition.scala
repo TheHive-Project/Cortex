@@ -86,6 +86,7 @@ case class AnalyzerDefinition(
     license: String,
     baseDirectory: Path,
     command: String,
+    baseConfiguration: Option[String],
     configurationItems: Seq[ConfigurationDefinitionItem],
     configuration: JsObject) {
   val id = (name + "_" + version).replaceAll("\\.", "_")
@@ -129,6 +130,7 @@ object AnalyzerDefinition {
     (JsPath \ "license").read[String] and
     Reads.pure(path) and
     (JsPath \ "command").read[String] and
+    (JsPath \ "baseConfig").readNullable[String] and
     (JsPath \ "configurationItems").read[Seq[ConfigurationDefinitionItem]].orElse(Reads.pure(Nil)) and
     (JsPath \ "config").read[JsObject].orElse(Reads.pure(JsObject.empty)))(AnalyzerDefinition.apply _)
   implicit val writes: Writes[AnalyzerDefinition] = Writes[AnalyzerDefinition] { analyzerDefinition ⇒
