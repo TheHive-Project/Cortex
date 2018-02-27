@@ -1,0 +1,49 @@
+
+<div class="form-group" ng-repeat="config in $ctrl.items">
+  <label class="col-sm-3 control-label">
+    <span>{{config.name}}</span>
+    <span class="ml-xxs text-danger" ng-show="config.required">
+      <i class="fa fa-asterisk"></i>
+    </span>
+  </label>
+  <div class="col-sm-9" ng-switch="$ctrl.typeOf(config)">
+    <input ng-switch-when="string" class="form-control" type="text" ng-required="config.required" ng-model="$ctrl.configuration[config.name]">
+    <input ng-switch-when="number" class="form-control" type="number" ng-required="config.required" ng-model="$ctrl.configuration[config.name]">
+
+    <div ng-switch-when="multi-string" class="clearfix">
+      <div class="pull-right">
+        <a href ng-click="$ctrl.addOption(config)">Add option</a>
+      </div>
+      <input class="form-control mb-xxxs" type="text" ng-repeat="val in $ctrl.configuration[config.name] track by $index"
+        ng-model="val" ng-required="config.required">
+    </div>
+
+    <div ng-switch-when="multi-number" class="clearfix">
+      <div class="pull-right">
+        <a href ng-click="$ctrl.addOption(config)">Add option</a>
+      </div>
+      <input class="form-control mb-xxxs" type="number" ng-repeat="val in $ctrl.configuration[config.name] track by $index"
+        ng-model="$ctrl.configuration[config.name][$index]" ng-required="config.required">
+    </div>
+
+    <div ng-switch-when="boolean">
+      <div class="btn-group">
+        <label uib-btn-radio="true" class="btn btn-default" ng-model="$ctrl.configuration[config.name]">True</label>
+        <label uib-btn-radio="false" class="btn btn-default" ng-model="$ctrl.configuration[config.name]">False</label>
+      </div>
+    </div>
+
+    <div ng-switch-when="multi-boolean" class="clearfix">
+      <div class="pull-right">
+        <a href ng-click="$ctrl.addOption(config)">Add option</a>
+      </div>
+      <div class="mb-xxxs" ng-repeat="val in $ctrl.configuration[config.name] track by $index">
+        <div class="btn-group">
+          <label uib-btn-radio="true" class="btn btn-default" ng-model="$ctrl.configuration[config.name][$index]">True</label>
+          <label uib-btn-radio="false" class="btn btn-default" ng-model="$ctrl.configuration[config.name][$index]">False</label>
+        </div>
+      </div>
+    </div>
+    <p class="help-block">{{config.description}}</p>
+  </div>
+</div>

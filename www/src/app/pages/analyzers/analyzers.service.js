@@ -64,6 +64,29 @@ export default class AnalyzerService {
     return defered.promise;
   }
 
+  configurations() {
+    let defer = this.$q.defer();
+
+    this.$http
+      .get('./api/analyzerconfig')
+      .then(
+        response => defer.resolve(_.sortBy(response.data, 'name')),
+        err => defer.reject(err)
+      );
+
+    return defer.promise;
+  }
+
+  saveConfiguration(name, values) {
+    let defer = this.$q.defer();
+
+    this.$http
+      .patch(`./api/analyzerconfig/${name}`, values)
+      .then(response => defer.resolve(response.data), err => defer.reject(err));
+
+    return defer.promise;
+  }
+
   openRunModal(analyzers, observable) {
     let modalInstance = this.$uibModal.open({
       animation: true,

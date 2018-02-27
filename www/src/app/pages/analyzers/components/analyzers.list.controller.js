@@ -20,7 +20,7 @@ export default class AnalyzerListController {
         responses.forEach(resp => {
           this.NotificationService.success(
             `${resp.data.analyzerName} started successfully on ${resp.data
-              .data || resp.data.attributes.filename}`
+              .data || resp.data.attachment.name}`
           );
         });
       })

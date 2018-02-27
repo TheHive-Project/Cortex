@@ -1,0 +1,39 @@
+<!-- <pre>{{$ctrl.configurations | json}}</pre> -->
+
+<section>
+  <p class="lead">Available analyzer configurations ({{$ctrl.configurations.length || 0}})</p>
+
+  <div class="row mv-s" ng-if="$ctrl.configurations.length === 0">
+    <div class="col-md-12">
+      <div class="empty-message">No configurations found.</div>
+    </div>
+  </div>
+
+  <div class="row mv-s" ng-if="$ctrl.configurations.length > 0">
+    <div class="col-sm-12 flex-table">
+      <div class="flex-row media" ng-repeat="config in $ctrl.configurations track by config.name">
+        <div class="flex-col flex-w-100 text-center vertical">
+          <div>
+            <h4 class="media-heading">{{config.configurationItems.length}}</h4>
+            <ng-pluralize count="config.configurationItems.length" when="{'0': 'Options', '1': 'Option', 'other': 'Options'}">Options</ng-pluralize>
+          </div>
+        </div>
+        <div class="flex-col flex-1">
+          <h4 class="media-heading">
+            <span class="mr-m text-primary">{{config.name}}</span>
+          </h4>
+          <h4 class="media-heading">
+            <div ng-repeat="item in config.configurationItems">
+              <small class="mr-xxs">
+                <strong>{{item.name}}:</strong> {{item.description}}</small>
+            </div>            
+          </h4>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center">
+          <a href class="text-primary" ng-click="$ctrl.edit(config)">
+            <i class="fa fa-edit"></i>Edit</a>
+        </div>        
+      </div>
+    </div>
+  </div>
+</section>

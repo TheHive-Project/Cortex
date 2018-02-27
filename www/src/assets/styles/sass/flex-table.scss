@@ -19,6 +19,10 @@ div.flex-row {
     margin: 0 5px;
     padding: 4px;
 
+    > * {
+      flex: 1;
+    }
+
     &.vertical {
       display: flex;
       align-items: center;
