@@ -93,7 +93,7 @@ export default class AnalyzerService {
       postData = {
         attachment: artifact.attachment,
         dataType: artifact.dataType,
-        tlp: artifact.tlp.value
+        tlp: artifact.tlp
       };
 
       return this.$http({
@@ -130,7 +130,7 @@ export default class AnalyzerService {
         data: artifact.data,
         attributes: {
           dataType: artifact.dataType,
-          tlp: artifact.tlp.value
+          tlp: artifact.tlp
         }
       };
 

@@ -7,7 +7,7 @@
 
     <strong>Artifact</strong>
     <p>
-      [{{$ctrl.job.dataType | uppercase}}] {{(($ctrl.job.dataType === 'file') ? $ctrl.job.filename
+      [{{$ctrl.job.dataType | uppercase}}] {{(($ctrl.job.dataType === 'file') ? $ctrl.job.attachment.name
       : $ctrl.job.data) | fang}}
     </p>
     <hr>

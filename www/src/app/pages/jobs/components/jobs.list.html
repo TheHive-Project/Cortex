@@ -22,7 +22,7 @@
         </div>
         <div class="flex-col flex-1">
           <h4 class="media-heading text-primary">
-             <strong>[{{job.dataType}}]</strong> {{(isFile ? job.filename : job.data) | fang | limitTo:200}}
+             <strong>[{{job.dataType}}]</strong> {{(isFile ? job.attachment.name : job.data) | fang | limitTo:200}}
           </h4>
           <div class="row mt-xs text-muted">
             <div class="col-sm-3">
