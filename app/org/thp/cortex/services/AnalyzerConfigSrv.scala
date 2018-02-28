@@ -29,6 +29,11 @@ object BaseConfig {
       "configurationItems" -> baseConfig.items,
       "config" -> baseConfig.config.fold(JsObject.empty)(_.jsonConfig))
   }
+  val global = BaseConfig("global", Nil, Seq(
+    ConfigurationDefinitionItem("proxy_http", "url of http proxy", AnalyzerConfigItemType.string, multi = false, required = false, None),
+    ConfigurationDefinitionItem("proxy_https", "url of https proxy", AnalyzerConfigItemType.string, multi = false, required = false, None)),
+    None)
+
 }
 
 @Singleton
@@ -43,11 +48,6 @@ class AnalyzerConfigSrv @Inject() (
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer) {
 
-  private val globalConfig = BaseConfig("global", Nil, Seq(
-    ConfigurationDefinitionItem("proxy_http", "url of http proxy", AnalyzerConfigItemType.string, multi = false, required = false, None),
-    ConfigurationDefinitionItem("proxy_https", "url of https proxy", AnalyzerConfigItemType.string, multi = false, required = false, None)),
-    None)
-
   def definitions: Future[Map[String, BaseConfig]] =
     analyzerSrv.listDefinitions._1
       .filter(_.baseConfiguration.isDefined)
@@ -60,7 +60,7 @@ class AnalyzerConfigSrv @Inject() (
       .mapMaterializedValue(_ ⇒ NotUsed)
       .runWith(Sink.seq)
       .map { baseConfigs ⇒
-        (globalConfig +: baseConfigs)
+        (BaseConfig.global +: baseConfigs)
           .map(c ⇒ c.name -> c)
           .toMap
       }

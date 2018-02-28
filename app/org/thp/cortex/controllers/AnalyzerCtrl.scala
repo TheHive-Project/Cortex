@@ -60,7 +60,8 @@ class AnalyzerCtrl @Inject() (
         "description" -> ad.description,
         "author" -> ad.author,
         "url" -> ad.url,
-        "license" -> ad.license)
+        "license" -> ad.license,
+        "baseConfig" -> ad.baseConfiguration)
     }
   }
 

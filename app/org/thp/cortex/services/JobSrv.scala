@@ -75,8 +75,7 @@ class JobSrv(
     ec, mat)
 
   private lazy val logger = Logger(getClass)
-  private lazy val analyzeExecutionContext: ExecutionContext =
-    akkaSystem.dispatchers.lookup("analyzer")
+  private lazy val analyzeExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("analyzer")
   private val osexec =
     if (System.getProperty("os.name").toLowerCase.contains("win"))
       (c: Path) ⇒ s"""cmd /c $c"""
@@ -403,7 +402,7 @@ class JobSrv(
       }
       .map { artifact ⇒
         val configAndParam = analyzer.config.deepMerge(job.params)
-        analyzerDefinition.configurationItems
+        (BaseConfig.global.items ++ analyzerDefinition.configurationItems)
           .validatedBy(_.read(configAndParam))
           .map(cfg ⇒ Json.obj("config" -> JsObject(cfg).deepMerge(analyzerDefinition.configuration)))
           .map(_ deepMerge artifact +
