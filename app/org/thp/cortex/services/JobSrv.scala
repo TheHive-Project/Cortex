@@ -86,19 +86,21 @@ class JobSrv(
 
   private def runPreviousJobs(): Unit = {
     import org.elastic4play.services.QueryDSL._
-    find("status" ~= JobStatus.Waiting, Some("all"), Nil)
-      ._1
-      .runForeach { job ⇒
-        (for {
-          analyzer <- analyzerSrv.get(job.analyzerId())
-          analyzerDefinition <- analyzerSrv.getDefinition(job.analyzerId())
-          updatedJob <- run(analyzerDefinition, analyzer, job)
-        } yield updatedJob)
-          .onComplete {
-            case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
-            case Failure(e) ⇒ logger.error(s"Job ${job.id} has failed", e)
-          }
-      }
+    userSrv.inInitAuthContext { implicit authContext ⇒
+      find("status" ~= JobStatus.Waiting, Some("all"), Nil)
+        ._1
+        .runForeach { job ⇒
+          (for {
+            analyzer ← analyzerSrv.get(job.analyzerId())
+            analyzerDefinition ← analyzerSrv.getDefinition(job.analyzerId())
+            updatedJob ← run(analyzerDefinition, analyzer, job)
+          } yield updatedJob)
+            .onComplete {
+              case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
+              case Failure(e) ⇒ logger.error(s"Job ${job.id} has failed", e)
+            }
+        }
+    }
   }
 
   private def withUserFilter[A](userId: String)(x: String ⇒ (Source[A, NotUsed], Future[Long])): (Source[A, NotUsed], Future[Long]) = {
