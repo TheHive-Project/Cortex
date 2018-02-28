@@ -26,11 +26,7 @@ class Migration @Inject() (
         "name" -> "default",
         "description" -> "Default organization",
         "status" -> "Active")))
-        .transform {
-          case x ⇒
-            println(s"XXXXXXXXXXXXXXXXXxxx: $x")
-            Success(())
-        } // ignore errors (already exist)
+        .transform { case _ ⇒ Success(()) } // ignore errors (already exist)
     }
   }
 

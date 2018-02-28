@@ -3,7 +3,6 @@ package org.thp.cortex.services
 import javax.inject.{ Inject, Provider, Singleton }
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.concurrent.duration._
 
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Json
@@ -36,9 +35,13 @@ class UserSrv @Inject() (
 
   private case class AuthContextImpl(userId: String, userName: String, requestId: String, roles: Seq[Role]) extends AuthContext
 
+  private def invalidateCache(userId: String) = {
+    cache.remove(s"user-$userId")
+    cache.remove(s"user-org-$userId")
+  }
+
   override def getFromId(request: RequestHeader, userId: String): Future[AuthContext] = {
-    getSrv[UserModel, User](userModel, userId)
-      .flatMap { user ⇒ getFromUser(request, user) }
+    get(userId).flatMap { user ⇒ getFromUser(request, user) }
   }
 
   override def getFromUser(request: RequestHeader, user: org.elastic4play.services.User): Future[AuthContext] = {
@@ -85,27 +88,36 @@ class UserSrv @Inject() (
     "organization" -> "default",
     "_routing" -> "init",
     "_version" -> 0))
-  override def get(id: String): Future[User] = if (id == "init") Future.successful(initUser)
-  else getSrv[UserModel, User](userModel, id)
 
-  def getOrganizationId(userId: String): Future[String] = cache.getOrElseUpdate(s"user-org-$userId", 5.minutes) {
+  override def get(userId: String): Future[User] = cache.getOrElseUpdate(s"user-$userId") {
+    if (userId == "init") Future.successful(initUser)
+    else getSrv[UserModel, User](userModel, userId)
+  }
+
+  def getOrganizationId(userId: String): Future[String] = cache.getOrElseUpdate(s"user-org-$userId") {
     get(userId).map(_.organization())
   }
 
-  def update(id: String, fields: Fields)(implicit Context: AuthContext): Future[User] =
-    update(id, fields, ModifyConfig.default)
+  def update(userId: String, fields: Fields)(implicit Context: AuthContext): Future[User] =
+    update(userId, fields, ModifyConfig.default)
 
-  def update(id: String, fields: Fields, modifyConfig: ModifyConfig)(implicit Context: AuthContext): Future[User] =
-    updateSrv[UserModel, User](userModel, id, fields, modifyConfig)
+  def update(userId: String, fields: Fields, modifyConfig: ModifyConfig)(implicit Context: AuthContext): Future[User] = {
+    invalidateCache(userId)
+    updateSrv[UserModel, User](userModel, userId, fields, modifyConfig)
+  }
 
   def update(user: User, fields: Fields)(implicit Context: AuthContext): Future[User] =
     update(user, fields, ModifyConfig.default)
 
-  def update(user: User, fields: Fields, modifyConfig: ModifyConfig)(implicit Context: AuthContext): Future[User] =
+  def update(user: User, fields: Fields, modifyConfig: ModifyConfig)(implicit Context: AuthContext): Future[User] = {
+    invalidateCache(user.id)
     updateSrv(user, fields, modifyConfig)
+  }
 
-  def delete(id: String)(implicit Context: AuthContext): Future[User] =
-    deleteSrv[UserModel, User](userModel, id)
+  def delete(userId: String)(implicit Context: AuthContext): Future[User] = {
+    invalidateCache(userId)
+    deleteSrv[UserModel, User](userModel, userId)
+  }
 
   def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[User, NotUsed], Future[Long]) = {
     findSrv[UserModel, User](userModel, queryDef, range, sortBy)

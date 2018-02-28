@@ -52,7 +52,7 @@ class AnalyzerConfigSrv @Inject() (
     analyzerSrv.listDefinitions._1
       .filter(_.baseConfiguration.isDefined)
       .map(ad ⇒ ad.copy(configurationItems = ad.configurationItems.map(_.copy(required = false))))
-      .groupBy(100, _.baseConfiguration.get)
+      .groupBy(200, _.baseConfiguration.get)
       .map(ad ⇒ BaseConfig(ad.baseConfiguration.get, Seq(ad.name), ad.configurationItems, None))
       .reduce(_ + _)
       .filterNot(_.items.isEmpty)

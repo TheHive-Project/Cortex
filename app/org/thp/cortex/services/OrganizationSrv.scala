@@ -4,6 +4,7 @@ import javax.inject.{ Inject, Singleton }
 
 import scala.concurrent.Future
 
+import play.api.cache.AsyncCacheApi
 import play.api.libs.json.JsObject
 
 import akka.NotUsed
@@ -21,28 +22,37 @@ class OrganizationSrv @Inject() (
     updateSrv: UpdateSrv,
     findSrv: FindSrv,
     deleteSrv: DeleteSrv,
-    createSrv: CreateSrv) {
+    createSrv: CreateSrv,
+    cache: AsyncCacheApi) {
 
   def create(fields: Fields)(implicit authContext: AuthContext): Future[Organization] = {
     createSrv[OrganizationModel, Organization](organizationModel, fields)
   }
 
-  def get(id: String): Future[Organization] = getSrv[OrganizationModel, Organization](organizationModel, id)
+  def get(orgId: String): Future[Organization] = cache.getOrElseUpdate(s"org-$orgId") {
+    getSrv[OrganizationModel, Organization](organizationModel, orgId)
+  }
 
-  def update(id: String, fields: Fields)(implicit Context: AuthContext): Future[Organization] =
-    update(id, fields, ModifyConfig.default)
+  def update(orgId: String, fields: Fields)(implicit Context: AuthContext): Future[Organization] =
+    update(orgId, fields, ModifyConfig.default)
 
-  def update(id: String, fields: Fields, modifyConfig: ModifyConfig)(implicit Context: AuthContext): Future[Organization] =
-    updateSrv[OrganizationModel, Organization](organizationModel, id, fields, modifyConfig)
+  def update(orgId: String, fields: Fields, modifyConfig: ModifyConfig)(implicit Context: AuthContext): Future[Organization] = {
+    cache.remove(s"org-$orgId")
+    updateSrv[OrganizationModel, Organization](organizationModel, orgId, fields, modifyConfig)
+  }
 
   def update(organization: Organization, fields: Fields)(implicit Context: AuthContext): Future[Organization] =
     update(organization, fields, ModifyConfig.default)
 
-  def update(organization: Organization, fields: Fields, modifyConfig: ModifyConfig)(implicit Context: AuthContext): Future[Organization] =
+  def update(organization: Organization, fields: Fields, modifyConfig: ModifyConfig)(implicit Context: AuthContext): Future[Organization] = {
+    cache.remove(s"org-${organization.id}")
     updateSrv(organization, fields, modifyConfig)
+  }
 
-  def delete(id: String)(implicit Context: AuthContext): Future[Organization] =
-    deleteSrv[OrganizationModel, Organization](organizationModel, id)
+  def delete(orgId: String)(implicit Context: AuthContext): Future[Organization] = {
+    cache.remove(s"org-$orgId")
+    deleteSrv[OrganizationModel, Organization](organizationModel, orgId)
+  }
 
   def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Organization, NotUsed], Future[Long]) = {
     findSrv[OrganizationModel, Organization](organizationModel, queryDef, range, sortBy)
