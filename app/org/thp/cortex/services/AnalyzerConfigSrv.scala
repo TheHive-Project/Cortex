@@ -33,7 +33,10 @@ object BaseConfig {
     ConfigurationDefinitionItem("proxy_http", "url of http proxy", AnalyzerConfigItemType.string, multi = false, required = false, None),
     ConfigurationDefinitionItem("proxy_https", "url of https proxy", AnalyzerConfigItemType.string, multi = false, required = false, None)),
     None)
-
+  val tlp = BaseConfig("tlp", Nil, Seq(
+    ConfigurationDefinitionItem("check_tlp", "", AnalyzerConfigItemType.boolean, multi = false, required = false, None),
+    ConfigurationDefinitionItem("max_tlp", "", AnalyzerConfigItemType.number, multi = false, required = false, None)),
+    None)
 }
 
 @Singleton

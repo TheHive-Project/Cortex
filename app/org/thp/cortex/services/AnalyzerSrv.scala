@@ -7,7 +7,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
-import play.api.libs.json.JsObject
+import play.api.libs.json.{ JsObject, JsString }
 import play.api.{ Configuration, Logger }
 
 import akka.NotUsed
@@ -15,7 +15,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.{ Sink, Source }
 import org.thp.cortex.models._
 
-import org.elastic4play.{ AttributeCheckingError, MultiError, NotFoundError }
+import org.elastic4play._
 import org.elastic4play.controllers.{ Fields, StringInputValue }
 import org.elastic4play.services._
 import org.scalactic._
@@ -150,18 +150,14 @@ class AnalyzerSrv(
 
   def create(organization: Organization, analyzerDefinition: AnalyzerDefinition, analyzerFields: Fields)(implicit authContext: AuthContext): Future[Analyzer] = {
     val rawConfig = analyzerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
-    val configOrErrors = analyzerDefinition.configurationItems
-      .validatedBy { cdi ⇒
-        cdi.read(rawConfig)
-      }
+    val configOrErrors = (analyzerDefinition.configurationItems ++ BaseConfig.global.items ++ BaseConfig.tlp.items)
+      .validatedBy(_.read(rawConfig))
       .map(JsObject.apply)
-      .badMap(attributeErrors ⇒ AttributeCheckingError(s"analyzer(${analyzerDefinition.name}).configuration", attributeErrors))
-      .accumulating
 
     val unknownConfigItems = (rawConfig.value.keySet -- analyzerDefinition.configurationItems.map(_.name))
-      .foldLeft[Unit Or Every[CortexError]](Good(())) {
-        case (Good(_), ci) ⇒ Bad(One(UnknownConfigurationItem(ci)))
-        case (Bad(e), ci)  ⇒ Bad(UnknownConfigurationItem(ci) +: e)
+      .foldLeft[Unit Or Every[AttributeError]](Good(())) {
+        case (Good(_), ci) ⇒ Bad(One(UnknownAttributeError("analyzer.config", JsString(ci))))
+        case (Bad(e), ci)  ⇒ Bad(UnknownAttributeError("analyzer.config", JsString(ci)) +: e)
       }
 
     withGood(configOrErrors, unknownConfigItems)((c, _) ⇒ c)
@@ -174,7 +170,7 @@ class AnalyzerSrv(
 
       }, {
         case One(e)         ⇒ Future.failed(e)
-        case Every(es @ _*) ⇒ Future.failed(MultiError("Analyzer creation failure", es))
+        case Every(es @ _*) ⇒ Future.failed(AttributeCheckingError(s"analyzer(${analyzerDefinition.name}).configuration", es))
       })
   }
 

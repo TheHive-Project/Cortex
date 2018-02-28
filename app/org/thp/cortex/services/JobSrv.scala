@@ -409,7 +409,7 @@ class JobSrv(
       }
       .map { artifact ⇒
         val configAndParam = analyzer.config.deepMerge(job.params)
-        (BaseConfig.global.items ++ analyzerDefinition.configurationItems)
+        (BaseConfig.global.items ++ BaseConfig.tlp.items ++ analyzerDefinition.configurationItems)
           .validatedBy(_.read(configAndParam))
           .map(cfg ⇒ Json.obj("config" -> JsObject(cfg).deepMerge(analyzerDefinition.configuration)))
           .map(_ deepMerge artifact +
