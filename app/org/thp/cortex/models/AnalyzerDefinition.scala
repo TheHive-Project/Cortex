@@ -143,6 +143,7 @@ object AnalyzerDefinition {
       "author" -> analyzerDefinition.author,
       "url" -> analyzerDefinition.url,
       "license" -> analyzerDefinition.license,
+      "baseConfig" -> analyzerDefinition.baseConfiguration,
       "configurationItems" -> analyzerDefinition.configurationItems)
   }
 }
