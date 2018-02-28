@@ -82,21 +82,26 @@ class JobSrv(
     else
       (c: Path) ⇒ s"""sh -c "$c" """
 
-  //  private def findWithUserFilter[M <: AbstractModelDef[M, E], E <: BaseEntity](m: M, queryDef: QueryDef ⇒ QueryDef, range: Option[String], sortBy: Seq[String])(implicit authContext: AuthContext): (Source[E, NotUsed], Future[Long]) = {
-  //    import org.elastic4play.services.QueryDSL._
-  //    if (authContext.roles.contains(Roles.orgAdmin)) {
-  //      findSrv[M, E](m, queryDef(any), range, sortBy)
-  //    }
-  //    else {
-  //      val futureSource = userSrv.getOrganizationId(authContext.userId).map { organizationId ⇒
-  //        findSrv[M, E](m, queryDef("organization" ~= organizationId), range, sortBy)
-  //      }
-  //      val source = Source.fromFutureSource(futureSource.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
-  //      source -> futureSource.flatMap(_._2)
-  //    }
-  //  }
+  runPreviousJobs()
 
-  def withUserFilter[A](userId: String)(x: String ⇒ (Source[A, NotUsed], Future[Long])): (Source[A, NotUsed], Future[Long]) = {
+  private def runPreviousJobs(): Unit = {
+    import org.elastic4play.services.QueryDSL._
+    find("status" ~= JobStatus.Waiting, Some("all"), Nil)
+      ._1
+      .runForeach { job ⇒
+        (for {
+          analyzer <- analyzerSrv.get(job.analyzerId())
+          analyzerDefinition <- analyzerSrv.getDefinition(job.analyzerId())
+          updatedJob <- run(analyzerDefinition, analyzer, job)
+        } yield updatedJob)
+          .onComplete {
+            case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
+            case Failure(e) ⇒ logger.error(s"Job ${job.id} has failed", e)
+          }
+      }
+  }
+
+  private def withUserFilter[A](userId: String)(x: String ⇒ (Source[A, NotUsed], Future[Long])): (Source[A, NotUsed], Future[Long]) = {
     val a = userSrv.getOrganizationId(userId).map(x)
     val aSource = Source.fromFutureSource(a.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val aTotal = a.flatMap(_._2)
@@ -324,8 +329,8 @@ class JobSrv(
 
   def run(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job)(implicit authContext: AuthContext): Future[Job] = {
     buildInput(analyzerDefinition, analyzer, job)
-      .andThen { case _: Success[_] ⇒ startJob(job) }
       .flatMap { input ⇒
+        startJob(job)
         var output = ""
         var error = ""
         try {
@@ -373,7 +378,7 @@ class JobSrv(
   def getReport(jobId: String)(implicit authContext: AuthContext): Future[Report] = getForUser(authContext.userId, jobId).flatMap(getReport)
 
   def getReport(job: Job): Future[Report] = {
-    import QueryDSL._
+    import org.elastic4play.services.QueryDSL._
     findSrv[ReportModel, Report](reportModel, withParent(job), Some("0-1"), Nil)._1
       .runWith(Sink.headOption)
       .map(_.getOrElse(throw NotFoundError(s"Job ${job.id} has no report")))
