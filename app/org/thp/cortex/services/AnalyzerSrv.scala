@@ -150,11 +150,12 @@ class AnalyzerSrv(
 
   def create(organization: Organization, analyzerDefinition: AnalyzerDefinition, analyzerFields: Fields)(implicit authContext: AuthContext): Future[Analyzer] = {
     val rawConfig = analyzerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
-    val configOrErrors = (analyzerDefinition.configurationItems ++ BaseConfig.global.items ++ BaseConfig.tlp.items)
+    val configItems = analyzerDefinition.configurationItems ++ BaseConfig.global.items ++ BaseConfig.tlp.items
+    val configOrErrors = configItems
       .validatedBy(_.read(rawConfig))
       .map(JsObject.apply)
 
-    val unknownConfigItems = (rawConfig.value.keySet -- analyzerDefinition.configurationItems.map(_.name))
+    val unknownConfigItems = (rawConfig.value.keySet -- configItems.map(_.name))
       .foldLeft[Unit Or Every[AttributeError]](Good(())) {
         case (Good(_), ci) ⇒ Bad(One(UnknownAttributeError("analyzer.config", JsString(ci))))
         case (Bad(e), ci)  ⇒ Bad(UnknownAttributeError("analyzer.config", JsString(ci)) +: e)
