@@ -8,8 +8,14 @@
   </div>
 
   <div class="row mv-s" ng-if="$ctrl.analyzers.length > 0">
+    <div class="col-sm-12 mb-s">      
+      <div class="input-group">
+        <span class="input-group-addon"><i class="fa fa-search"></i></span>
+        <input type="text" class="form-control input-lg" ng-model="$ctrl.state.filterEnabled" placeholder="Filter enabled analyzers">
+      </div>
+    </div>
     <div class="col-sm-12 flex-table">
-      <div class="flex-row media" ng-repeat="analyzer in $ctrl.analyzers track by analyzer.id">
+      <div class="flex-row media" ng-repeat="analyzer in $ctrl.analyzers | filter:$ctrl.state.filterEnabled:name">
         <div class="flex-col flex-1">
           <h4 class="media-heading">
             <span class="mr-m text-primary">{{analyzer.name}}</span>
@@ -62,8 +68,16 @@
   </div>
 
   <div class="row mv-s" ng-if="$ctrl.definitionsIds.length > 0">
+    <div class="col-sm-12 mb-s">
+      <div class="input-group">
+        <span class="input-group-addon">
+          <i class="fa fa-search"></i>
+        </span>        
+        <input type="text" class="form-control input-lg" ng-model="$ctrl.state.filterAvailable" placeholder="Filter available analyzers">
+      </div>
+    </div>
     <div class="col-sm-12 flex-table">
-      <div class="flex-row media" ng-repeat="def in $ctrl.definitionsIds" ng-init="definition = $ctrl.analyzerDefinitions[def]">
+      <div class="flex-row media" ng-repeat="def in $ctrl.definitionsIds | filter:$ctrl.state.filterAvailable" ng-init="definition = $ctrl.analyzerDefinitions[def]">
         <!-- <div class="media-left">
                 <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
               </div> -->

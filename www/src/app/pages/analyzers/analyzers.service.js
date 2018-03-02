@@ -77,6 +77,16 @@ export default class AnalyzerService {
     return defer.promise;
   }
 
+  getConfiguration(name) {
+    let defer = this.$q.defer();
+
+    this.$http
+      .get(`./api/analyzerconfig/${name}`)
+      .then(response => defer.resolve(response.data), err => defer.reject(err));
+
+    return defer.promise;
+  }
+
   saveConfiguration(name, values) {
     let defer = this.$q.defer();
 

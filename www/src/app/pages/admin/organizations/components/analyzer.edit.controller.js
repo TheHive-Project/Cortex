@@ -3,14 +3,21 @@
 import _ from 'lodash/core';
 
 export default class AnalyzerEditController {
-  constructor($log, $uibModalInstance, definition, analyzer, mode) {
+  constructor(
+    $log,
+    $uibModalInstance,
+    definition,
+    configuration,
+    analyzer,
+    mode
+  ) {
     'ngInject';
 
     this.$log = $log;
     this.$uibModalInstance = $uibModalInstance;
     this.mode = mode;
     this.definition = definition;
-    this.analyzer = analyzer;
+    this.configuration = configuration;
   }
 
   $onInit() {
@@ -26,10 +33,14 @@ export default class AnalyzerEditController {
         this.definition.configurationItems,
         item =>
           (analyzer.configuration[item.name] =
-            item.defaultValue || (item.multi ? [] : undefined))
+            item.defaultValue ||
+            (item.multi ? [undefined] : undefined) ||
+            (this.configuration.config || {})[item.name])
       );
 
       this.analyzer = analyzer;
+
+      this.$log.log('Inial analyzer config', this.analyzer);
     }
   }
 

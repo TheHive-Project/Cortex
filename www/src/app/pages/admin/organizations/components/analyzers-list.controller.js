@@ -9,6 +9,9 @@ export default class OrganizationAnalyzersController {
   constructor(
     $log,
     $uibModal,
+    $scope,
+    $filter,
+    AnalyzerService,
     OrganizationService,
     ModalService,
     NotificationService
@@ -17,9 +20,17 @@ export default class OrganizationAnalyzersController {
 
     this.$log = $log;
     this.$uibModal = $uibModal;
+    //this.$scope = $scope;
+    //this.$filter = $filter;
+    this.AnalyzerService = AnalyzerService;
     this.OrganizationService = OrganizationService;
     this.ModalService = ModalService;
     this.NotificationService = NotificationService;
+
+    this.state = {
+      filterAvailable: '',
+      filterEnabled: ''
+    };
   }
 
   $onInit() {
@@ -30,20 +41,32 @@ export default class OrganizationAnalyzersController {
   }
 
   openModal(mode, definition, analyzer) {
-    let modal = this.$uibModal.open({
-      animation: true,
-      controller: AnalyzerEditController,
-      controllerAs: '$modal',
-      templateUrl: editModalTpl,
-      size: 'lg',
-      resolve: {
-        definition: () => definition,
-        analyzer: () => angular.copy(analyzer),
-        mode: () => mode
-      }
-    });
+    return this.AnalyzerService.getConfiguration(definition.baseConfig)
+      .then(
+        analyzerConfig => analyzerConfig,
+        err => {
+          if (err.status === 404) {
+            return {};
+          }
+        }
+      )
+      .then(analyzerConfig => {
+        let modal = this.$uibModal.open({
+          animation: true,
+          controller: AnalyzerEditController,
+          controllerAs: '$modal',
+          templateUrl: editModalTpl,
+          size: 'lg',
+          resolve: {
+            definition: () => definition,
+            configuration: () => analyzerConfig,
+            analyzer: () => angular.copy(analyzer),
+            mode: () => mode
+          }
+        });
 
-    return modal.result
+        return modal.result;
+      })
       .then(response => {
         if (mode === 'create') {
           return this.OrganizationService.enableAnalyzer(
