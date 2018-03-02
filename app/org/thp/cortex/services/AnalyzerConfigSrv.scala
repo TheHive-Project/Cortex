@@ -4,7 +4,7 @@ import javax.inject.{ Inject, Singleton }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-import play.api.libs.json.{ JsNull, JsObject, Json, Writes }
+import play.api.libs.json._
 
 import akka.NotUsed
 import akka.stream.Materializer
@@ -31,7 +31,8 @@ object BaseConfig {
   }
   val global = BaseConfig("global", Nil, Seq(
     ConfigurationDefinitionItem("proxy_http", "url of http proxy", AnalyzerConfigItemType.string, multi = false, required = false, None),
-    ConfigurationDefinitionItem("proxy_https", "url of https proxy", AnalyzerConfigItemType.string, multi = false, required = false, None)),
+    ConfigurationDefinitionItem("proxy_https", "url of https proxy", AnalyzerConfigItemType.string, multi = false, required = false, None),
+    ConfigurationDefinitionItem("auto_extract_artifacts", "extract artifacts from full report automatically", AnalyzerConfigItemType.boolean, multi = false, required = false, Some(JsFalse))),
     None)
   val tlp = BaseConfig("tlp", Nil, Seq(
     ConfigurationDefinitionItem("check_tlp", "", AnalyzerConfigItemType.boolean, multi = false, required = false, None),
