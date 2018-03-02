@@ -12,6 +12,10 @@ export default class OrganizationConfigsController {
     this.$uibModal = $uibModal;
     this.AnalyzerService = AnalyzerService;
     this.NotificationService = NotificationService;
+
+    this.state = {
+      filter: ''
+    };
   }
 
   edit(config) {

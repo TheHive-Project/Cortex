@@ -13,6 +13,11 @@ export default class ConfigurationForm {
       number: 0,
       boolean: true
     };
-    this.items[config.name].push(defaultValues[config.type]);
+
+    if (!this.configuration[config.name]) {
+      this.configuration[config.name] = [];
+    }
+
+    this.configuration[config.name].push(defaultValues[config.type]);
   }
 }

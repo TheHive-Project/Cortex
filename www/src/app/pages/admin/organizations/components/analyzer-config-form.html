@@ -7,71 +7,11 @@
       <input class="form-control" type="text" name="name" ng-disabled="true" ng-model="$ctrl.analyzer.name" />
     </div>
   </div>
-  <!-- <div class="form-group">
-    <label class="col-sm-offset-3 col-sm-9 control-label">
-      <small class="mr-xs">
-        <strong>Version:</strong> {{$ctrl.definition.version}}</small>
-      <small class="mr-xs" ng-if="$ctrl.definition.author">
-        <strong>Author:</strong> {{$ctrl.definition.author}}</small>
-      <small ng-if="$ctrl.definition.license">
-        <strong>License:</strong> {{$ctrl.definition.license}}</small>
-    </label>
-  </div> -->
 </section>
 
 <section ng-show="$ctrl.definition.configurationItems.length > 0">
-  <h4>Configuration</h4>
-  <pre>{{$ctrl.analyzer.configuration | json}}</pre>
-  <div class="form-group" ng-repeat="config in $ctrl.definition.configurationItems">
-    <label class="col-sm-3 control-label">
-      <span>{{config.name}}</span>
-      <span class="ml-xxs text-danger" ng-show="config.required"><i class="fa fa-asterisk"></i></span>
-    </label>
-    <div class="col-sm-9" ng-switch="$ctrl.typeOf(config)">
-      <input ng-switch-when="string" class="form-control" type="text" ng-required="config.required" ng-model="$ctrl.analyzer.configuration[config.name]">
-      <input ng-switch-when="number" class="form-control" type="number" ng-required="config.required" ng-model="$ctrl.analyzer.configuration[config.name]">
-      <div ng-switch-when="boolean">
-        <div class="btn-group">
-          <label uib-btn-radio="true" class="btn btn-default" ng-model="$ctrl.analyzer.configuration[config.name]">True</label>
-          <label uib-btn-radio="false" class="btn btn-default" ng-model="$ctrl.analyzer.configuration[config.name]">False</label>
-        </div>
-      </div>
-
-      <div ng-switch-when="multi-string" class="clearfix">        
-        <div class="clearfix">
-          <a class="pull-right" href ng-click="$ctrl.addOption(config)">Add option</a>
-        </div>
-        
-        <div class="input-group mb-xxxs" ng-repeat="val in $ctrl.analyzer.configuration[config.name] track by $index">
-          <span class="input-group-addon">{{$index+1}}.</span>
-          <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration[config.name][$index]" ng-required="config.required">
-        </div>
-      </div>
-
-      <div ng-switch-when="multi-number" class="clearfix">
-        <div class="clearfix">
-          <a class="pull-right" href ng-click="$ctrl.addOption(config)">Add option</a>
-        </div>
-        <div class="input-group mb-xxxs" ng-repeat="val in $ctrl.analyzer.configuration[config.name] track by $index">
-          <span class="input-group-addon">{{$index+1}}.</span>
-          <input class="form-control" type="number" ng-model="$ctrl.analyzer.configuration[config.name][$index]" ng-required="config.required">
-        </div>        
-      </div>      
-      
-      <div ng-switch-when="multi-boolean" class="clearfix">
-        <div class="pull-right">
-          <a href ng-click="$ctrl.addOption(config)">Add option</a>
-        </div>
-        <div class="mb-xxxs" ng-repeat="val in $ctrl.analyzer.configuration[config.name] track by $index">
-          <div class="btn-group">
-            <label uib-btn-radio="true" class="btn btn-default" ng-model="$ctrl.analyzer.configuration[config.name][$index]">True</label>
-            <label uib-btn-radio="false" class="btn btn-default" ng-model="$ctrl.analyzer.configuration[config.name][$index]">False</label>
-          </div>
-        </div>        
-      </div>
-      <p class="help-block">{{config.description}}</p>
-    </div>
-  </div>
+  <h4>Configuration</h4>  
+  <configuration-form items="$ctrl.definition.configurationItems" configuration="$ctrl.analyzer.configuration"></configuration-form>
 </section>
 
 <section>
@@ -91,6 +31,24 @@
       <select class="form-control" ng-model="$ctrl.analyzer.configuration.max_tlp" ng-options="tlp.value as tlp.key for tlp in $ctrl.Tlps"
         ng-required="$ctrl.analyzer.configuration.check_tlp"></select>
     </div>
+  </div>
+</section>
+
+<section>
+  <h4>Proxies</h4>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">HTTP</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_http">
+      <p class="help-block">HTTP proxy</p>
+    </div>    
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">HTTPS</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_https">
+      <p class="help-block">HTTPS proxy</p>
+    </div>    
   </div>
 </section>
 

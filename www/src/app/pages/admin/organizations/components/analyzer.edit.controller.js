@@ -18,6 +18,7 @@ export default class AnalyzerEditController {
     this.mode = mode;
     this.definition = definition;
     this.configuration = configuration;
+    this.analyzer = analyzer;
   }
 
   $onInit() {

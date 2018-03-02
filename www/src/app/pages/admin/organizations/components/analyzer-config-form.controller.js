@@ -8,28 +8,15 @@ export default class AnalyzerConfigFormController {
     this.Tlps = Tlps;
 
     this.rateUnits = ['Day', 'Month'];
-    this.formData = {};
+    // this.formData = {};
   }
 
-  $onInit() {
-    const { name, configuration } = this.analyzer;
+  // $onInit() {
+  //   const { name, configuration } = this.analyzer;
 
-    this.formData = {
-      name,
-      configuration
-    };
-  }
-
-  typeOf(config) {
-    return `${config.multi ? 'multi-' : ''}${config.type}`;
-  }
-
-  addOption(config) {
-    let defaultValues = {
-      string: null,
-      number: 0,
-      boolean: true
-    };
-    this.analyzer.configuration[config.name].push(defaultValues[config.type]);
-  }
+  //   this.formData = {
+  //     name,
+  //     configuration
+  //   };
+  // }
 }

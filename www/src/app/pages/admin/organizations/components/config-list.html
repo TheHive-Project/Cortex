@@ -10,15 +10,23 @@
   </div>
 
   <div class="row mv-s" ng-if="$ctrl.configurations.length > 0">
+    <div class="col-sm-12 mb-s">
+      <div class="input-group">
+        <span class="input-group-addon">
+          <i class="fa fa-search"></i>
+        </span>
+        <input type="text" class="form-control input-lg" ng-model="$ctrl.state.filter" placeholder="Filter configurations">
+      </div>
+    </div>
     <div class="col-sm-12 flex-table">
-      <div class="flex-row media" ng-repeat="config in $ctrl.configurations track by config.name">
+      <div class="flex-row media" ng-repeat="config in $ctrl.configurations | filter:$ctrl.state.filter:name">
         <div class="flex-col flex-w-100 text-center vertical">
           <div>
             <h4 class="media-heading">{{config.configurationItems.length}}</h4>
-            <ng-pluralize count="config.configurationItems.length" when="{'0': 'Options', '1': 'Option', 'other': 'Options'}">Options</ng-pluralize>
+            <ng-pluralize count="config.configurationItems.length" when="{'0': 'Options', '1': 'Option', 'other': 'Options'}"></ng-pluralize>
           </div>
         </div>
-        <div class="flex-col flex-1">
+        <div class="flex-col flex-3">
           <h4 class="media-heading">
             <span class="mr-m text-primary">{{config.name}}</span>
           </h4>
@@ -27,6 +35,16 @@
               <small class="mr-xxs">
                 <strong>{{item.name}}:</strong> {{item.description}}</small>
             </div>            
+          </h4>
+        </div>
+        <div class="flex-col flex-1">
+          <h4 class="media-heading">            
+            <span class="mr-m text-primary"><ng-pluralize count="config.analyzers.length" when="{'0': '0 Analyzers', '1': '1 Analyzer', 'other': '{} Analyzers'}"></ng-pluralize></span>
+          </h4>
+          <h4 class="media-heading">
+            <div ng-repeat="item in config.analyzers">
+              <small>{{item}}</small>
+            </div>
           </h4>
         </div>
         <div class="flex-col flex-icon flex-w-100 text-center">
