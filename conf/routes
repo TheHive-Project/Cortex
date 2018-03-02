@@ -82,3 +82,5 @@ GET           /api/organization/:id                                 org.thp.cort
 POST          /api/organization                                     org.thp.cortex.controllers.OrganizationCtrl.create
 PATCH         /api/organization/:id                                 org.thp.cortex.controllers.OrganizationCtrl.update(id)
 DELETE        /api/organization/:id                                 org.thp.cortex.controllers.OrganizationCtrl.delete(id)
+
+GET           /*file                                                org.thp.cortex.controllers.AssetCtrl.get(file)
