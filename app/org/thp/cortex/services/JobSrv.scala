@@ -97,7 +97,9 @@ class JobSrv(
           } yield updatedJob)
             .onComplete {
               case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
-              case Failure(e) ⇒ logger.error(s"Job ${job.id} has failed", e)
+              case Failure(e) ⇒
+                endJob(job, JobStatus.Failure, Some(e.getMessage), None)
+                logger.error(s"Job ${job.id} has failed", e)
             }
         }
     }

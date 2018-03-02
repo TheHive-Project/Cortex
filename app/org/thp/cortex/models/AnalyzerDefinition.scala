@@ -45,6 +45,7 @@ case class ConfigurationDefinitionItem(
       case _: JsString if `type` == string   ⇒ Good(v)
       case _: JsNumber if `type` == number   ⇒ Good(v)
       case _: JsBoolean if `type` == boolean ⇒ Good(v)
+      case JsNull if !isRequired             ⇒ Good(v)
       case _                                 ⇒ Bad(One(InvalidFormatAttributeError(s"$name[]", `type`.toString, JsonInputValue(v))))
     }
   }
