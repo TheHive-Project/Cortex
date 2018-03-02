@@ -8,9 +8,8 @@ import editModalTpl from './analyzer.edit.modal.html';
 export default class OrganizationAnalyzersController {
   constructor(
     $log,
+    $q,
     $uibModal,
-    $scope,
-    $filter,
     AnalyzerService,
     OrganizationService,
     ModalService,
@@ -19,9 +18,8 @@ export default class OrganizationAnalyzersController {
     'ngInject';
 
     this.$log = $log;
+    this.$q = $q;
     this.$uibModal = $uibModal;
-    //this.$scope = $scope;
-    //this.$filter = $filter;
     this.AnalyzerService = AnalyzerService;
     this.OrganizationService = OrganizationService;
     this.ModalService = ModalService;
@@ -41,7 +39,14 @@ export default class OrganizationAnalyzersController {
   }
 
   openModal(mode, definition, analyzer) {
-    return this.AnalyzerService.getConfiguration(definition.baseConfig)
+    let promise;
+
+    if (definition && definition.baseConfig) {
+      promise = this.AnalyzerService.getConfiguration(definition.baseConfig);
+    } else {
+      promise = this.$q.resolve({});
+    }
+    return promise
       .then(
         analyzerConfig => analyzerConfig,
         err => {

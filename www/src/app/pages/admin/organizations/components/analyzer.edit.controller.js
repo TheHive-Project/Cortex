@@ -39,6 +39,15 @@ export default class AnalyzerEditController {
             (this.configuration.config || {})[item.name])
       );
 
+      // Handle TLP default config
+      if (analyzer.configuration.check_tlp === undefined) {
+        analyzer.configuration.check_tlp = true;
+      }
+
+      if (analyzer.configuration.max_tlp === undefined) {
+        analyzer.configuration.max_tlp = 1;
+      }
+
       this.analyzer = analyzer;
 
       this.$log.log('Inial analyzer config', this.analyzer);
