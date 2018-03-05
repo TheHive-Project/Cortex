@@ -35,7 +35,7 @@ class UserCtrl @Inject() (
   @Timed
   def create: Action[Fields] = authenticated(Roles.orgAdmin, Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     (for {
-      userOrganizationId ← userSrv.getOrganizationId(request.userId)
+      userOrganizationId ← if (request.userId == "init") Future.successful("cortex") else userSrv.getOrganizationId(request.userId)
       organizationId = request.body.getString("organization").getOrElse(userOrganizationId)
       // Check if organization is valid
       organization ← organizationSrv.get(organizationId)

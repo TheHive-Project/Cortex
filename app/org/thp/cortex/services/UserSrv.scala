@@ -121,8 +121,7 @@ class UserSrv(
     "_version" -> 0))
 
   override def get(userId: String): Future[User] = cache.getOrElseUpdate(s"user-$userId", cacheExpiration) {
-    if (userId == "init") Future.successful(initUser)
-    else getSrv[UserModel, User](userModel, userId)
+    getSrv[UserModel, User](userModel, userId)
   }
 
   def getOrganizationId(userId: String): Future[String] = cache.getOrElseUpdate(s"user-org-$userId", cacheExpiration) {
