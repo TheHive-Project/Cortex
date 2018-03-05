@@ -29,7 +29,7 @@
         </li>
       </ul>
       <ul class="nav navbar-nav pull-right">
-        <li ui-sref-active="active">
+        <li ui-sref-active="active" require-roles="orgadmin,analyze">
           <a ui-sref="main.jobs">
             <i class="fa fa-hourglass"></i> <strong>Jobs History</strong></a>
         </li>
@@ -45,7 +45,13 @@
             <strong>Organization</strong>
           </a>
         </li>
-        <li class="dropdown" require-roles="superadmin" uib-dropdown>
+        <li ui-sref-active="active" require-roles="superadmin">
+          <a ui-sref="main.organizations">
+            <i class="fa fa-file-text"></i>
+            <strong>Organizations</strong>
+          </a>
+        </li>
+        <!-- <li class="dropdown" require-roles="superadmin" uib-dropdown>
           <a class="dropdown-toggle" uib-dropdown-toggle href>
             <i class="fa fa-cog"></i>
             <span class="hpad5"><strong>Administration</strong></span>
@@ -66,7 +72,7 @@
               </a>
             </li>
           </ul>
-        </li>
+        </li> -->
         <li class="dropdown" uib-dropdown>
           <a class="dropdown-toggle" uib-dropdown-toggle href>
             <user-avatar user-id="$ctrl.main.currentUser.id" prefix="true"></user-avatar>

@@ -2,7 +2,7 @@
 
 import _ from 'lodash/core';
 
-function runBlock($log, $transitions, $state) {
+function runBlock($log, $q, $transitions, $state, AuthService, Roles) {
   'ngInject';
 
   $transitions.onSuccess({}, transition => {
@@ -10,6 +10,20 @@ function runBlock($log, $transitions, $state) {
       .injector()
       .get('$window')
       .scrollTo(0, 0);
+  });
+
+  $transitions.onBefore({ to: 'index' }, transition => {
+    const stateService = transition.router.stateService;
+
+    return AuthService.current()
+      .then(user => {
+        if (user.roles.indexOf(Roles.SUPERADMIN) !== -1) {
+          return stateService.target('main.organizations');
+        } else {
+          return stateService.target('main.jobs');
+        }
+      })
+      .catch(err => $q.reject(err));
   });
 
   $transitions.onBefore({}, transition => {
@@ -26,6 +40,10 @@ function runBlock($log, $transitions, $state) {
   });
 
   $transitions.onError({}, transition => {
+    if (!transition.error().detail) {
+      return;
+    }
+
     if (transition.error().detail.status === 520) {
       $state.go('maintenance');
     } else if (transition.error().detail.status === 401) {

@@ -10,7 +10,11 @@ const mainPageModule = angular
   .config(($stateProvider, $urlRouterProvider) => {
     'ngInject';
 
-    $urlRouterProvider.otherwise('/jobs');
+    $urlRouterProvider.otherwise('/index');
+
+    $stateProvider.state('index', {
+      url: '/index'
+    });
 
     $stateProvider.state('main', {
       abstract: true,
