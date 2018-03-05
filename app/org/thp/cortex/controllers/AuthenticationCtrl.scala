@@ -12,6 +12,7 @@ import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, R
 import org.elastic4play.database.DBIndex
 import org.elastic4play.services.AuthSrv
 import org.elastic4play.{ MissingAttributeError, Timed }
+import org.elastic4play.services.JsonFormat.authContextWrites
 
 @Singleton
 class AuthenticationCtrl @Inject() (
@@ -33,7 +34,7 @@ class AuthenticationCtrl @Inject() (
           user ← request.body.getString("user").fold[Future[String]](Future.failed(MissingAttributeError("user")))(Future.successful)
           password ← request.body.getString("password").fold[Future[String]](Future.failed(MissingAttributeError("password")))(Future.successful)
           authContext ← authSrv.authenticate(user, password)
-        } yield authenticated.setSessingUser(Ok(authContext), authContext)
+        } yield authenticated.setSessingUser(renderer.toOutput(OK, authContext), authContext)
     }
   }
 

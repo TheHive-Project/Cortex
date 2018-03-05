@@ -7,7 +7,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 import play.api.Configuration
 import play.api.cache.AsyncCacheApi
-import play.api.libs.json.Json
 import play.api.mvc.RequestHeader
 
 import akka.NotUsed
@@ -109,16 +108,6 @@ class UserSrv(
       }
     }
   }
-
-  private lazy val initUser = new User(userModel, Json.obj(
-    "_id" -> "init",
-    "name" -> "init",
-    "roles" -> Roles.roleNames,
-    "status" -> UserStatus.Ok,
-    "preferences" -> "{}",
-    "organization" -> "cortex",
-    "_routing" -> "init",
-    "_version" -> 0))
 
   override def get(userId: String): Future[User] = cache.getOrElseUpdate(s"user-$userId", cacheExpiration) {
     getSrv[UserModel, User](userModel, userId)
