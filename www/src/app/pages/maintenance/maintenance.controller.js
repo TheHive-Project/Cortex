@@ -64,7 +64,7 @@ export default class MaintenanceController {
       login: angular.lowercase(this.newUser.login),
       name: this.newUser.name,
       password: this.newUser.password,
-      roles: ['read', 'analyze', 'superadmin'],
+      roles: ['read', 'superadmin'],
       organization: 'cortex'
     }).then(() => {
       this.$state.go(this.successState);
