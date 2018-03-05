@@ -51,7 +51,7 @@ class UserCtrl @Inject() (
   }
 
   @Timed
-  def get(userId: String): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
+  def get(userId: String): Action[AnyContent] = authenticated(Roles.read, Roles.superAdmin).async { implicit request ⇒
     val isSuperAdmin = request.authContext.roles.contains(Roles.superAdmin)
     (for {
       user ← userSrv.get(userId)
