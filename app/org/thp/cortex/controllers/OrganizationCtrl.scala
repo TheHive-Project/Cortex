@@ -48,15 +48,21 @@ class OrganizationCtrl @Inject() (
       .recoverWith { case _: NoSuchElementException ⇒ Future.failed(NotFoundError(s"organization $organizationId not found")) }
   }
 
-  def update(id: String): Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
-    organizationSrv.update(id, request.body).map { organization ⇒
-      renderer.toOutput(OK, organization)
-    }
+  def update(organizationId: String): Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
+    if (organizationId == "cortex")
+      Future.failed(BadRequestError("Cortex organization can't be updated"))
+    else
+      organizationSrv.update(organizationId, request.body).map { organization ⇒
+        renderer.toOutput(OK, organization)
+      }
   }
 
-  def delete(id: String): Action[AnyContent] = authenticated(Roles.superAdmin).async { implicit request ⇒
-    organizationSrv.delete(id)
-      .map(_ ⇒ NoContent)
+  def delete(organizationId: String): Action[AnyContent] = authenticated(Roles.superAdmin).async { implicit request ⇒
+    if (organizationId == "cortex")
+      Future.failed(BadRequestError("Cortex organization can't be removed"))
+    else
+      organizationSrv.delete(organizationId)
+        .map(_ ⇒ NoContent)
   }
 
   def find: Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
