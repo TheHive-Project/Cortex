@@ -77,11 +77,11 @@
             <i class="fa fa-edit"></i>Edit</a>
         </div>
         <div class="flex-col flex-icon flex-w-80" ng-if="user.status === 'Ok'">
-          <a href class="text-danger" ng-click="$ctrl.lockUser(user.id)">
+          <a href class="text-danger" ng-click="$ctrl.lockUser(user.id)" ng-if="user.id !== $ctrl.main.currentUser.id">
             <i class="fa fa-ban"></i>Lock</a>
         </div>
         <div class="flex-col flex-icon flex-w-80" ng-if="user.status === 'Locked'">
-          <a href class="text-success" ng-click="$ctrl.unlockUser(user.id)">
+          <a href class="text-success" ng-click="$ctrl.unlockUser(user.id)" ng-if="user.id !== $ctrl.main.currentUser.id">
             <i class="fa fa-refresh"></i>Unlock</a>
         </div>
       </div>
