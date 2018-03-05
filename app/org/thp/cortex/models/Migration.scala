@@ -23,7 +23,7 @@ class Migration @Inject() (
   def endMigration(version: Int): Future[Unit] = {
     userSrv.inInitAuthContext { implicit authContext ⇒
       organizationSrv.create(Fields(Json.obj(
-        "name" -> "default",
+        "name" -> "cortex",
         "description" -> "Default organization",
         "status" -> "Active")))
         .transform { case _ ⇒ Success(()) } // ignore errors (already exist)

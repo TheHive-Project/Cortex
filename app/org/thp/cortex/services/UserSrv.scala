@@ -116,7 +116,7 @@ class UserSrv(
     "roles" -> Roles.roleNames,
     "status" -> UserStatus.Ok,
     "preferences" -> "{}",
-    "organization" -> "default",
+    "organization" -> "cortex",
     "_routing" -> "init",
     "_version" -> 0))
 

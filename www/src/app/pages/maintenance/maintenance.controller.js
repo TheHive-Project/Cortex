@@ -65,7 +65,7 @@ export default class MaintenanceController {
       name: this.newUser.name,
       password: this.newUser.password,
       roles: ['read', 'analyze', 'superadmin'],
-      organization: 'default'
+      organization: 'cortex'
     }).then(() => {
       this.$state.go(this.successState);
     });
