@@ -13,6 +13,7 @@ export default function(app) {
       templateUrl: tpl,
       scope: {
         user: '=userId',
+        prefix: '=',
         iconOnly: '=',
         iconSize: '@'
       },
