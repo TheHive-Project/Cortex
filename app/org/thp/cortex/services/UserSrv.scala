@@ -21,7 +21,7 @@ import org.elastic4play.utils.Instance
 import org.elastic4play.{ AuthenticationError, AuthorizationError, NotFoundError }
 
 @Singleton
-class UserSrv @Inject() (
+class UserSrv(
     cacheExpiration: Duration,
     userModel: UserModel,
     createSrv: CreateSrv,
