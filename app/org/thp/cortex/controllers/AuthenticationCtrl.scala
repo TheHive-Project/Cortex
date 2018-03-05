@@ -33,7 +33,7 @@ class AuthenticationCtrl @Inject() (
           user ← request.body.getString("user").fold[Future[String]](Future.failed(MissingAttributeError("user")))(Future.successful)
           password ← request.body.getString("password").fold[Future[String]](Future.failed(MissingAttributeError("password")))(Future.successful)
           authContext ← authSrv.authenticate(user, password)
-        } yield authenticated.setSessingUser(Ok, authContext)
+        } yield authenticated.setSessingUser(Ok(authContext), authContext)
     }
   }
 
