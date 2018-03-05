@@ -18,7 +18,6 @@ import org.elastic4play.services.JsonFormat.queryReads
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.services.{ AuthSrv, QueryDSL, QueryDef }
 import org.elastic4play._
-import org.elastic4play.services.QueryDSL.and
 
 @Singleton
 class UserCtrl @Inject() (
@@ -35,7 +34,7 @@ class UserCtrl @Inject() (
 
   @Timed
   def create: Action[Fields] = authenticated(Roles.orgAdmin, Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
-    for {
+    (for {
       userOrganizationId ← userSrv.getOrganizationId(request.userId)
       organizationId = request.body.getString("organization").getOrElse(userOrganizationId)
       // Check if organization is valid
@@ -45,7 +44,10 @@ class UserCtrl @Inject() (
           (userOrganizationId == organizationId &&
             !request.body.getStrings("roles").getOrElse(Nil).contains(Roles.superAdmin.toString)))
       user ← userSrv.create(request.body.set("organization", organizationId))
-    } yield renderer.toOutput(CREATED, user)
+    } yield renderer.toOutput(CREATED, user))
+      .recoverWith {
+        case _: NoSuchElementException ⇒ Future.failed(AuthorizationError("You are not authorized to perform this action"))
+      }
   }
 
   @Timed

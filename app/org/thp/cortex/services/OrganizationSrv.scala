@@ -3,7 +3,9 @@ package org.thp.cortex.services
 import javax.inject.{ Inject, Singleton }
 
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 
+import play.api.Configuration
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.JsObject
 
@@ -16,7 +18,8 @@ import org.elastic4play.database.ModifyConfig
 import org.elastic4play.services._
 
 @Singleton
-class OrganizationSrv @Inject() (
+class OrganizationSrv(
+    cacheExpiration: Duration,
     organizationModel: OrganizationModel,
     getSrv: GetSrv,
     updateSrv: UpdateSrv,
@@ -25,11 +28,29 @@ class OrganizationSrv @Inject() (
     createSrv: CreateSrv,
     cache: AsyncCacheApi) {
 
+  @Inject() def this(
+      config: Configuration,
+      organizationModel: OrganizationModel,
+      getSrv: GetSrv,
+      updateSrv: UpdateSrv,
+      findSrv: FindSrv,
+      deleteSrv: DeleteSrv,
+      createSrv: CreateSrv,
+      cache: AsyncCacheApi) = this(
+    config.get[Duration]("cache.organization"),
+    organizationModel,
+    getSrv,
+    updateSrv,
+    findSrv,
+    deleteSrv,
+    createSrv,
+    cache)
+
   def create(fields: Fields)(implicit authContext: AuthContext): Future[Organization] = {
     createSrv[OrganizationModel, Organization](organizationModel, fields)
   }
 
-  def get(orgId: String): Future[Organization] = cache.getOrElseUpdate(s"org-$orgId") {
+  def get(orgId: String): Future[Organization] = cache.getOrElseUpdate(s"org-$orgId", cacheExpiration) {
     getSrv[OrganizationModel, Organization](organizationModel, orgId)
   }
 

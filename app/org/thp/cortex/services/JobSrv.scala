@@ -19,7 +19,7 @@ import org.thp.cortex.models._
 import play.api.libs.json.{ JsBoolean, JsObject, JsString, Json }
 import play.api.{ Configuration, Logger }
 
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.sys.process.{ Process, ProcessIO }
 import scala.util.control.NonFatal
@@ -27,7 +27,7 @@ import scala.util.{ Failure, Success, Try }
 
 @Singleton
 class JobSrv(
-    jobCache: FiniteDuration,
+    jobCache: Duration,
     jobModel: JobModel,
     reportModel: ReportModel,
     artifactModel: ArtifactModel,
@@ -59,7 +59,7 @@ class JobSrv(
       akkaSystem: ActorSystem,
       ec: ExecutionContext,
       mat: Materializer) = this(
-    configuration.getOptional[FiniteDuration]("job.cache").getOrElse(Duration.Zero),
+    configuration.getOptional[Duration]("cache.job").getOrElse(Duration.Zero),
     jobModel,
     reportModel,
     artifactModel,

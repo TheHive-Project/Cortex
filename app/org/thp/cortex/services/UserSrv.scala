@@ -2,8 +2,10 @@ package org.thp.cortex.services
 
 import javax.inject.{ Inject, Provider, Singleton }
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
 
+import play.api.Configuration
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Json
 import play.api.mvc.RequestHeader
@@ -20,6 +22,7 @@ import org.elastic4play.{ AuthenticationError, AuthorizationError, NotFoundError
 
 @Singleton
 class UserSrv @Inject() (
+    cacheExpiration: Duration,
     userModel: UserModel,
     createSrv: CreateSrv,
     getSrv: GetSrv,
@@ -32,6 +35,34 @@ class UserSrv @Inject() (
     dbIndex: DBIndex,
     cache: AsyncCacheApi,
     implicit val ec: ExecutionContext) extends org.elastic4play.services.UserSrv {
+
+  @Inject() def this(
+      config: Configuration,
+      userModel: UserModel,
+      createSrv: CreateSrv,
+      getSrv: GetSrv,
+      updateSrv: UpdateSrv,
+      deleteSrv: DeleteSrv,
+      findSrv: FindSrv,
+      eventSrv: EventSrv,
+      authSrv: Provider[AuthSrv],
+      organizationSrv: OrganizationSrv,
+      dbIndex: DBIndex,
+      cache: AsyncCacheApi,
+      ec: ExecutionContext) = this(
+    config.get[Duration]("cache.user"),
+    userModel,
+    createSrv,
+    getSrv,
+    updateSrv,
+    deleteSrv,
+    findSrv,
+    eventSrv,
+    authSrv,
+    organizationSrv,
+    dbIndex,
+    cache,
+    ec)
 
   private case class AuthContextImpl(userId: String, userName: String, requestId: String, roles: Seq[Role]) extends AuthContext
 
@@ -89,12 +120,12 @@ class UserSrv @Inject() (
     "_routing" -> "init",
     "_version" -> 0))
 
-  override def get(userId: String): Future[User] = cache.getOrElseUpdate(s"user-$userId") {
+  override def get(userId: String): Future[User] = cache.getOrElseUpdate(s"user-$userId", cacheExpiration) {
     if (userId == "init") Future.successful(initUser)
     else getSrv[UserModel, User](userModel, userId)
   }
 
-  def getOrganizationId(userId: String): Future[String] = cache.getOrElseUpdate(s"user-org-$userId") {
+  def getOrganizationId(userId: String): Future[String] = cache.getOrElseUpdate(s"user-org-$userId", cacheExpiration) {
     get(userId).map(_.organization())
   }
 
