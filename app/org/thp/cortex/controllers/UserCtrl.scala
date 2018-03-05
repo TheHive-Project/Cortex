@@ -16,7 +16,7 @@ import org.thp.cortex.services.{ OrganizationSrv, UserSrv }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
-import org.elastic4play.services.{ AuthSrv, QueryDSL, QueryDef }
+import org.elastic4play.services.{ AuthContext, AuthSrv, QueryDSL, QueryDef }
 import org.elastic4play._
 
 @Singleton
@@ -64,37 +64,65 @@ class UserCtrl @Inject() (
   }
 
   @Timed
-  def update(id: String): Action[Fields] = authenticated().async(fieldsBodyParser) { implicit request ⇒
-    val isOrgAdmin = request.authContext.roles.contains(Roles.orgAdmin)
-    val isSuperAdmin = request.authContext.roles.contains(Roles.superAdmin)
-    val validRoles = if (isSuperAdmin) Roles.roleNames
-    else if (isOrgAdmin) Roles.roleNames.filterNot(_ == Roles.superAdmin.toString)
-    else Nil
-    if (id != request.authContext.userId && !isOrgAdmin && !isSuperAdmin) {
-      Future.failed(AuthorizationError("You are not permitted to change user settings"))
-    }
-    else if (request.body.contains("password")) {
-      Future.failed(AuthorizationError("You must use dedicated API (setPassword, changePassword) to update password"))
-    }
-    else if (request.body.contains("key")) {
-      Future.failed(AuthorizationError("You must use dedicated API (renewKey, removeKey) to update key"))
-    }
-    else if (request.body.getStrings("role").getOrElse(Nil).exists(!validRoles.contains(_))) {
-      Future.failed(AuthorizationError("You are not permitted to change user role"))
-    }
-    else if (request.body.contains("status") && !isOrgAdmin) {
-      Future.failed(AuthorizationError("You are not permitted to change user status"))
-    }
-    else {
-      // Check if organization is valid
-      request.body.getString("organization")
-        .fold(Future.successful(())) {
-          case organizationId if request.authContext.roles.contains(Roles.superAdmin) ⇒ organizationSrv.get(organizationId).map(_ ⇒ ())
-          case _ ⇒ Future.failed(AuthorizationError("You are not permitted to change user organization"))
+  def update(userId: String): Action[Fields] = authenticated().async(fieldsBodyParser) { implicit request ⇒
+    val fields = request.body
+
+    def superAdminChecks: Future[Unit] = {
+      for {
+        userOrganizationId ← fields.getString("organization").fold(userSrv.getOrganizationId(userId))(Future.successful)
+        organization ← organizationSrv.get(userOrganizationId)
+        _ ← if (organization.status() == OrganizationStatus.Active) Future.successful(()) else Future.failed(BadRequestError(s"Organization $userOrganizationId is locked"))
+        // check roles and organization
+        _ ← fields.getStrings("roles").map(_.flatMap(Roles.withName)).fold(Future.successful(())) {
+          case roles if userOrganizationId == "cortex" && roles == Seq(Roles.superAdmin) ⇒ Future.successful(())
+          case roles if userOrganizationId != "cortex" && !roles.contains(Roles.superAdmin) ⇒ Future.successful(())
+          case _ if userOrganizationId == "cortex" ⇒ Future.failed(BadRequestError("The organization \"cortex\" can contain only superadmin users"))
+          case _ ⇒ Future.failed(BadRequestError("The organization \"cortex\" alone can contain superadmin users"))
         }
-        .flatMap { _ ⇒ userSrv.update(id, request.body) }
-        .map { user ⇒ renderer.toOutput(OK, user) }
+        // check status
+        _ ← fields.getString("status").fold(Future.successful(())) {
+          case _ if userId != request.userId ⇒ Future.successful(())
+          case _                             ⇒ Future.failed(BadRequestError("You can't modify your status"))
+        }
+      } yield ()
     }
+
+    def orgAdminChecks: Future[Unit] = {
+      for {
+        subjectUserOrganization ← userSrv.getOrganizationId(request.userId)
+        targetUserOrganization ← userSrv.getOrganizationId(userId)
+        _ ← if (subjectUserOrganization == targetUserOrganization) Future.successful(()) else Future.failed(NotFoundError(s"user $userId not found"))
+        // check roles
+        _ ← fields.getStrings("roles").map(_.flatMap(Roles.withName)).fold(Future.successful(())) {
+          case roles if !roles.contains(Roles.superAdmin) ⇒ Future.successful(())
+          case _                                          ⇒ Future.failed(AuthorizationError("You can't give superadmin right to an user"))
+        }
+        // check organization
+        _ ← if (!fields.contains("organization")) Future.successful(()) else Future.failed(AuthorizationError("You can't move an user to another organization"))
+      } yield ()
+    }
+
+    def userChecks: Future[Unit] = {
+      if (fields.contains("organization")) Future.failed(AuthorizationError("You can't change your organization"))
+      else if (fields.contains("roles")) Future.failed(AuthorizationError("You can't change your role"))
+      else if (fields.contains("status")) Future.failed(AuthorizationError("You can't change your status"))
+      else Future.successful(())
+    }
+
+    def authChecks: Future[Unit] = {
+      if (request.body.contains("password")) Future.failed(AuthorizationError("You must use dedicated API (setPassword, changePassword) to update password"))
+      else if (request.body.contains("key")) Future.failed(AuthorizationError("You must use dedicated API (renewKey, removeKey) to update key"))
+      else Future.successful(())
+    }
+
+    for {
+      _ ← if (userId == request.authContext.userId) userChecks
+      else if (request.authContext.roles.contains(Roles.superAdmin)) superAdminChecks
+      else if (request.authContext.roles.contains(Roles.orgAdmin)) orgAdminChecks
+      else Future.failed(AuthorizationError("You are not permitted to change user settings"))
+      _ ← authChecks
+      user ← userSrv.update(userId, request.body)
+    } yield renderer.toOutput(OK, user)
   }
 
   @Timed
@@ -127,13 +155,13 @@ class UserCtrl @Inject() (
   @Timed
   def delete(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
     val isSuperAdmin = request.authContext.roles.contains(Roles.superAdmin)
-    (for {
+    for {
       targetOrganization ← userSrv.getOrganizationId(userId)
       userOrganization ← userSrv.getOrganizationId(request.userId)
-      if targetOrganization == userOrganization || isSuperAdmin
+      _ ← if (targetOrganization == userOrganization || isSuperAdmin) Future.successful(()) else Future.failed(NotFoundError(s"user $userId not found"))
+      _ ← if (userId != request.userId) Future.successful(()) else Future.failed(BadRequestError(s"You cannot disable your own account"))
       _ ← userSrv.delete(userId)
-    } yield NoContent)
-      .recoverWith { case _: NoSuchElementException ⇒ Future.failed(NotFoundError(s"user $userId not found")) }
+    } yield NoContent
   }
 
   @Timed
@@ -171,42 +199,37 @@ class UserCtrl @Inject() (
     renderer.toOutput(OK, users, total)
   }
 
-  private def checkUserOrganization(userId1: String, userId2: String) = {
-    for {
-      userOrganization1 ← userSrv.getOrganizationId(userId1)
-      userOrganization2 ← userSrv.getOrganizationId(userId2)
-    } yield userOrganization1 == userOrganization2
+  private def checkUserOrganization(userId: String)(implicit authContext: AuthContext): Future[Unit] = {
+    if (authContext.roles.contains(Roles.superAdmin)) Future.successful(())
+    else (for {
+      userOrganization1 ← userSrv.getOrganizationId(authContext.userId)
+      userOrganization2 ← userSrv.getOrganizationId(userId)
+      if userOrganization1 == userOrganization2
+    } yield ())
+      .recoverWith { case _ ⇒ Future.failed(NotFoundError(s"user $userId not found")) }
   }
+
   @Timed
   def getKey(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
-    (if (request.roles.contains(Roles.superAdmin)) Future.successful(true)
-    else checkUserOrganization(userId, request.userId))
-      .flatMap {
-        case true  ⇒ authSrv.getKey(userId)
-        case false ⇒ Future.failed(AuthorizationError("Insufficient rights to perform this action"))
-      }
-      .map(Ok(_))
+    for {
+      _ ← checkUserOrganization(userId)
+      key ← authSrv.getKey(userId)
+    } yield Ok(key)
   }
 
   @Timed
   def removeKey(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
-    (if (request.roles.contains(Roles.superAdmin)) Future.successful(true)
-    else checkUserOrganization(userId, request.userId))
-      .flatMap {
-        case true  ⇒ authSrv.removeKey(userId)
-        case false ⇒ Future.failed(AuthorizationError("Insufficient rights to perform this action"))
-      }
-      .map(_ ⇒ Ok)
+    for {
+      _ ← checkUserOrganization(userId)
+      _ ← authSrv.removeKey(userId)
+    } yield Ok
   }
 
   @Timed
   def renewKey(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
-    (if (request.roles.contains(Roles.superAdmin)) Future.successful(true)
-    else checkUserOrganization(userId, request.userId))
-      .flatMap {
-        case true  ⇒ authSrv.renewKey(userId)
-        case false ⇒ Future.failed(AuthorizationError("Insufficient rights to perform this action"))
-      }
-      .map(Ok(_))
+    for {
+      _ ← checkUserOrganization(userId)
+      key ← authSrv.renewKey(userId)
+    } yield Ok(key)
   }
 }
