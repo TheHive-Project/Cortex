@@ -2,26 +2,34 @@
 
 import _ from 'lodash/core';
 
-function runBlock($log, $transitions) {
+function runBlock($log, $transitions, $state) {
   'ngInject';
 
-  $transitions.onSuccess({}, trans => {
-    trans
+  $transitions.onSuccess({}, transition => {
+    transition
       .injector()
       .get('$window')
       .scrollTo(0, 0);
   });
 
-  $transitions.onBefore({}, trans => {
-    let roles = (trans.to().data && trans.to().data.allow) || [];
-    let auth = trans.injector().get('AuthService');
+  $transitions.onBefore({}, transition => {
+    let roles = (transition.to().data && transition.to().data.allow) || [];
+    let auth = transition.injector().get('AuthService');
 
     if (auth.currentUser === null) {
       return;
     }
 
     if (!_.isEmpty(roles) && !auth.hasRole(roles)) {
-      return trans.router.stateService.target('main.jobs');
+      return transition.router.stateService.target('main.jobs');
+    }
+  });
+
+  $transitions.onError({}, transition => {
+    if (transition.error().detail.status === 520) {
+      $state.go('maintenance');
+    } else if (transition.error().detail.status === 401) {
+      $state.go('login');
     }
   });
 }

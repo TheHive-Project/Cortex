@@ -25,21 +25,26 @@ export default class UserService {
   get(user) {
     return this.$http
       .get(`./api/user/${user}`)
-      .then(response => this.$q.resolve(response.data));
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   save(user) {
     return this.$http
       .post('./api/user', user)
-      .then(response => this.$q.resolve(response.data));
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   update(id, user) {
     let defer = this.$q.defer();
 
-    this.$http.patch(`./api/user/${id}`, user).then(response => {
-      defer.resolve(response.data);
-    });
+    this.$http
+      .patch(`./api/user/${id}`, user)
+      .then(response => {
+        defer.resolve(response.data);
+      })
+      .catch(err => defer.reject(err));
 
     return defer.promise;
   }
@@ -49,7 +54,8 @@ export default class UserService {
       .post(`./api/user/${id}/password/change`, {
         password: password
       })
-      .then(response => this.$q.resolve(response.data));
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   setPass(id, password) {
@@ -57,19 +63,22 @@ export default class UserService {
       .post(`./api/user/${id}/password/set`, {
         password: password
       })
-      .then(response => this.$q.resolve(response.data));
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   setKey(id) {
     return this.$http
       .post(`./api/user/${id}/key/renew`)
-      .then(response => this.$q.resolve(response.data));
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   revokeKey(id) {
     return this.$http
       .delete(`./api/user/${id}/key`)
-      .then(response => this.$q.resolve(response.data));
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   getUserInfo(login) {
@@ -96,7 +105,8 @@ export default class UserService {
   getKey(userId) {
     return this.$http
       .get('./api/user/' + userId + '/key')
-      .then(response => this.$q.resolve(response.data));
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   list(query) {
@@ -107,7 +117,8 @@ export default class UserService {
 
     return this.$http
       .post('./api/user/_search', post)
-      .then(response => this.$q.resolve(response.data));
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   autoComplete(query) {

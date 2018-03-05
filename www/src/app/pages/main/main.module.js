@@ -10,7 +10,7 @@ const mainPageModule = angular
   .config(($stateProvider, $urlRouterProvider) => {
     'ngInject';
 
-    $urlRouterProvider.otherwise('/analyzers');
+    $urlRouterProvider.otherwise('/jobs');
 
     $stateProvider.state('main', {
       abstract: true,
@@ -26,9 +26,6 @@ const mainPageModule = angular
             .then(userData => deferred.resolve(userData))
             .catch(err => {
               deferred.reject(err);
-              $state.go(err.status === 520 ? 'maintenance' : 'login');
-
-              //deferred.resolve(err.status === 520 ? err.status : null);
             });
 
           return deferred.promise;

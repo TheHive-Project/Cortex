@@ -22,9 +22,11 @@ const analyzersModule = angular
         datatypes: ($q, AnalyzerService) => {
           let defer = $q.defer();
 
-          AnalyzerService.list().then(() => {
-            defer.resolve(AnalyzerService.getTypes());
-          });
+          AnalyzerService.list()
+            .then(() => {
+              defer.resolve(AnalyzerService.getTypes());
+            })
+            .catch(err => defer.reject(err));
 
           return defer.promise;
         }

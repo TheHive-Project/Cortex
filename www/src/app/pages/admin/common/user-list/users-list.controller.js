@@ -140,13 +140,10 @@ export default class UsersListController {
 
     modalInstance.result
       .then(() => this.UserService.update(id, { status: 'Locked' }))
-      .then(
-        /*response*/
-        () => {
-          this.reload();
-          this.NotificationService.success('User locked successfully');
-        }
-      )
+      .then(() => {
+        this.reload();
+        this.NotificationService.success('User locked successfully');
+      })
       .catch(err => {
         if (!_.isString(err)) {
           this.NotificationService.error('Unable to lock the user.');

@@ -9,7 +9,6 @@ export default class UsersPageController {
   }
 
   reload() {
-    this.$log.log('Reload from users page');
     return this.UserService.list().then(response => (this.users = response));
   }
 }
