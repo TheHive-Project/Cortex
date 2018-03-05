@@ -14,10 +14,17 @@ export default class AuthService {
   }
 
   login(username, password) {
-    return this.$http.post('./api/login', {
-      user: username,
-      password: password
-    });
+    let defer = this.$q.defer();
+
+    this.$http
+      .post('./api/login', {
+        user: username,
+        password: password
+      })
+      .then(response => defer.resolve(response.data))
+      .catch(err => defer.reject(err));
+
+    return defer.promise;
   }
 
   logout() {
