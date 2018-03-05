@@ -55,6 +55,17 @@ export default class OrganizationAnalyzersController {
           }
         }
       )
+      .then(analyzerConfig =>
+        this.AnalyzerService.getConfiguration('global').then(globalConfig => {
+          if (!analyzerConfig.config) {
+            analyzerConfig.config = {};
+          }
+
+          _.merge(analyzerConfig.config, globalConfig.config);
+
+          return analyzerConfig;
+        })
+      )
       .then(analyzerConfig => {
         let modal = this.$uibModal.open({
           animation: true,

@@ -3,7 +3,6 @@
     <h3 class="modal-title">{{$modal.mode === 'create' ? 'Enable' : 'Edit'}} analyzer {{$modal.definition.id}}</h3>
   </div>
   <div class="modal-body">
-    <pre>{{$modal.analyzer | json}}</pre>
     <analyzer-config-form definition="$modal.definition" analyzer="$modal.analyzer"></analyzer-config-form>
   </div>
   <div class="modal-footer">

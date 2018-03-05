@@ -40,10 +40,21 @@ export default class AnalyzerEditController {
       );
 
       // Handle TLP default config
+      const globalConfig = [
+        'proxy_http',
+        'proxy_https',
+        'auto_extract_artifacts'
+      ];
+      _.forEach(globalConfig, cnf => {
+        if (analyzer.configuration[cnf] === undefined) {
+          analyzer.configuration[cnf] =
+            this.configuration.config[cnf] || undefined;
+        }
+      });
+
       if (analyzer.configuration.check_tlp === undefined) {
         analyzer.configuration.check_tlp = true;
       }
-
       if (analyzer.configuration.max_tlp === undefined) {
         analyzer.configuration.max_tlp = 1;
       }
