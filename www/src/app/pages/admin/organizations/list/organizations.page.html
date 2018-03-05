@@ -49,11 +49,11 @@
                 <i class="fa fa-pencil"></i>Edit</a>
             </div>
             <div class="flex-col flex-icon flex-w-100" ng-if="org.status === 'Locked'">
-              <a href class="text-success" ng-click="$ctrl.enable(org.id)">
+              <a href class="text-success" ng-click="$ctrl.enable(org.id)" ng-if="org.id !== 'cortex'">
                 <i class="fa fa-refresh"></i>Enable</a>
             </div>
             <div class="flex-col flex-icon flex-w-100" ng-if="org.status === 'Active'">
-              <a href class="text-danger" ng-click="$ctrl.disable(org.id)">
+              <a href class="text-danger" ng-click="$ctrl.disable(org.id)" ng-if="org.id !== 'cortex'">
                 <i class="fa fa-ban"></i>Disable</a>
             </div>
 
