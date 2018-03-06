@@ -11,8 +11,11 @@
   </div>
 
   <div class="row mv-s" ng-if="$ctrl.users.length > 0">
-    <div class="col-sm-12 flex-table">      
+    <div class="col-sm-12 flex-table">        
       <div class="flex-row media" ng-repeat="user in $ctrl.users track by user.id">
+        <div class="flex-col flex-icon flex-w-100">
+          <span class="label label-default label-lg" ng-class="{'Ok': 'label-success', 'Locked': 'label-danger'}[user.status]">{{user.status}}</span>
+        </div>
         <div class="flex-col flex-1">          
           <h4 class="media-heading">
             <small class="mr-xxs">

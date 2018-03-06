@@ -52,7 +52,7 @@
       </div>
     </div>
 
-    <div class="form-group" ng-class="{ 'has-error' : userForm.organization.$invalid && !userForm.organization.$pristine }">
+    <div class="form-group" ng-class="{ 'has-error' : userForm.organization.$invalid && !userForm.organization.$pristine }" ng-show="!$modal.orgId">
       <label class="col-sm-3 control-label">
         Organization
         <i class="fa fa-asterisk text-danger"></i>

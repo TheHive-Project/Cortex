@@ -70,7 +70,8 @@ export default class AnalyzerService {
     this.$http
       .get('./api/analyzerconfig')
       .then(
-        response => defer.resolve(_.sortBy(response.data, 'name')),
+        //response => defer.resolve(_.sortBy(response.data, 'name')),
+        response => defer.resolve(response.data),
         err => defer.reject(err)
       );
 
