@@ -8,5 +8,14 @@
     .avatar-icon {
       margin-top: -5px;
     }
-  } 
+  }   
+}
+
+.profile-dropdown {
+  &.open {
+    .dropdown-menu {
+      left: auto;
+      right: 0;
+    }
+  }
 }
