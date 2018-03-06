@@ -33,7 +33,10 @@
           <h4 class="media-heading">
             <div ng-repeat="item in config.configurationItems">
               <small class="mr-xxs">
-                <strong>{{item.name}}:</strong> {{item.description}}</small>
+                 <strong><i class="mr-xxs fa" ng-class="{
+                   'fa-check text-success': config.config[item.name],
+                   'fa-times text-danger': !config.config[item.name]
+                  }"></i> {{item.name}}:</strong> {{item.description}}</small>
             </div>            
           </h4>
         </div>
