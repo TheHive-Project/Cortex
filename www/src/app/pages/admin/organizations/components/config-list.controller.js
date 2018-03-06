@@ -29,8 +29,9 @@ export default class OrganizationConfigsController {
           let conf = angular.copy(config);
 
           _.forEach(conf.configurationItems, item => {
-            conf.config[item.name] =
-              item.defaultValue || (item.multi ? [null] : undefined);
+            conf.config[item.name] = conf.config[item.name]
+              ? conf.config[item.name]
+              : item.defaultValue || (item.multi ? [undefined] : undefined);
           });
 
           return conf;

@@ -33,10 +33,10 @@ export default class AnalyzerEditController {
       _.forEach(
         this.definition.configurationItems,
         item =>
-          (analyzer.configuration[item.name] =
-            item.defaultValue ||
-            (item.multi ? [undefined] : undefined) ||
-            (this.configuration.config || {})[item.name])
+          (analyzer.configuration[item.name] = (this.configuration.config ||
+            {})[item.name]) ||
+          item.defaultValue ||
+          (item.multi ? [undefined] : undefined)
       );
 
       // Handle TLP default config

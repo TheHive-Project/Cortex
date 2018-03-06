@@ -14,9 +14,8 @@
   <configuration-form items="$ctrl.definition.configurationItems" configuration="$ctrl.analyzer.configuration"></configuration-form>
 </section>
 
-<!-- Start Test -->
 <section>
-  <h4>Check TLP</h4>
+  <h4>Options</h4>
   <div class="form-group">
     <label class="col-sm-3 control-label">Enable TLP check</label>
     <div class="col-sm-9 form-inline">
@@ -28,35 +27,23 @@
         <label>Max TLP</label>
         <select class="form-control" style="width: 200px;" ng-model="$ctrl.analyzer.configuration.max_tlp"
           ng-options="tlp.value as tlp.key for tlp in $ctrl.Tlps" ng-required="$ctrl.analyzer.configuration.check_tlp"></select>
-      </div>
-      
+      </div>      
     </div>
   </div>  
-</section>
-<!-- End Test -->
-
-<section>
-  <h4>Proxies</h4>
   <div class="form-group">
-    <label class="col-sm-3 control-label">HTTP</label>
+    <label class="col-sm-3 control-label">HTTP Proxy</label>
     <div class="col-sm-9">
       <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_http">
-      <p class="help-block">HTTP proxy</p>
     </div>    
   </div>
   <div class="form-group">
-    <label class="col-sm-3 control-label">HTTPS</label>
+    <label class="col-sm-3 control-label">HTTPS Proxy</label>
     <div class="col-sm-9">
       <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_https">
-      <p class="help-block">HTTPS proxy</p>
     </div>    
   </div>
-</section>
-
-<section>
-  <h4>Rate limiting</h4>
   <div class="form-group">
-    <label class="col-sm-3 control-label">Rate</label>
+    <label class="col-sm-3 control-label">Rate Limiting</label>
     <div class="col-sm-4">
       <input class="form-control" type="number" ng-model="$ctrl.analyzer.rate">
     </div>
