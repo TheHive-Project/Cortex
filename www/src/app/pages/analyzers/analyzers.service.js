@@ -79,10 +79,7 @@ export default class AnalyzerService {
     let defer = this.$q.defer();
     this.$http
       .get('./api/analyzerconfig')
-      .then(
-        response => defer.resolve(_.sortBy(response.data, 'name')),
-        err => defer.reject(err)
-      );
+      .then(response => defer.resolve(response.data), err => defer.reject(err));
 
     return defer.promise;
   }

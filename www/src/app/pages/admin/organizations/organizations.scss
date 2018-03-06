@@ -1,29 +1,7 @@
-.media-items {
-  padding-left: 15px;
-
-  // .media-header {
-  //   padding: 5px;
-  //   font-weight: bold;    
-  //   .media-right {
-  //     width: 100px;
-  //   }
-  // }
-  .media-item {
-    padding: 5px;
-    &:nth-child(odd) {
-      background: #f9f9f9;
-    }
-    &:nth-child(even) {
-      background: #ecf0f5;
-    }
-    .media-right,
-    .media-left {
-      vertical-align: middle;
-    }
-    .media-body {
-      &.vertical {
-        vertical-align: middle;
-      }
-    }
-  }
+.config-list {
+  .global-config {
+    border-left: 4px solid #337ab7;
+    margin-left: -4px;
+    margin-bottom: 30px;    
+  }  
 }

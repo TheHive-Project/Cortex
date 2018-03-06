@@ -18,8 +18,8 @@
         <input type="text" class="form-control input-lg" ng-model="$ctrl.state.filter" placeholder="Filter configurations">
       </div>
     </div>
-    <div class="col-sm-12 flex-table">
-      <div class="flex-row media" ng-repeat="config in $ctrl.configurations | filter:$ctrl.state.filter:name">
+    <div class="col-sm-12 flex-table config-list">
+      <div class="flex-row media" ng-repeat="config in $ctrl.configurations | filter:$ctrl.state.filter:name" ng-class="{'global-config': config.name === 'global'}">
         <div class="flex-col flex-w-100 text-center vertical">
           <div>
             <h4 class="media-heading">{{config.configurationItems.length}}</h4>
@@ -28,7 +28,7 @@
         </div>
         <div class="flex-col flex-3">
           <h4 class="media-heading">
-            <span class="mr-m text-primary">{{config.name}}</span>
+            <span class="mr-m text-primary">{{config.name === 'global' ? 'Global Configuration' : config.name}}</span>
           </h4>
           <h4 class="media-heading">
             <div ng-repeat="item in config.configurationItems">
