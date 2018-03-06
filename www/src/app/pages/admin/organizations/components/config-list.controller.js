@@ -25,7 +25,16 @@ export default class OrganizationConfigsController {
       controllerAs: '$modal',
       size: 'lg',
       resolve: {
-        configuration: () => angular.copy(config)
+        configuration: () => {
+          let conf = angular.copy(config);
+
+          _.forEach(conf.configurationItems, item => {
+            conf.config[item.name] =
+              item.defaultValue || (item.multi ? [null] : undefined);
+          });
+
+          return conf;
+        }
       }
     });
 
