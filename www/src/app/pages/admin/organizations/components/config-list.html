@@ -34,9 +34,11 @@
             <div ng-repeat="item in config.configurationItems">
               <small class="mr-xxs">
                  <strong><i class="mr-xxs fa" ng-class="{
-                   'fa-check text-success': config.config[item.name],
-                   'fa-times text-danger': !config.config[item.name]
-                  }"></i> {{item.name}}:</strong> {{item.description}}</small>
+                   'fa-check text-success': config.config[item.name] !== undefined,
+                   'fa-times text-danger': config.config[item.name] === undefined
+                  }"></i> {{item.name}}:</strong> {{item.description}}
+                  <span ng-if="item.defaultValue">(<em>Default:</em> {{item.defaultValue}})</span>
+              </small>
             </div>            
           </h4>
         </div>
