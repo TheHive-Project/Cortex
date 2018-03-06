@@ -44,6 +44,17 @@ export default class AnalyzerService {
     return defered.promise;
   }
 
+  scan() {
+    let defer = this.$q.defer();
+
+    this.$http
+      .post('./api/analyzerdefinition/scan', {})
+      .then(response => defer.resolve(response.data))
+      .catch(err => defer.reject(err));
+
+    return defer.promise;
+  }
+
   list() {
     let defered = this.$q.defer();
 
@@ -66,12 +77,10 @@ export default class AnalyzerService {
 
   configurations() {
     let defer = this.$q.defer();
-
     this.$http
       .get('./api/analyzerconfig')
       .then(
-        //response => defer.resolve(_.sortBy(response.data, 'name')),
-        response => defer.resolve(response.data),
+        response => defer.resolve(_.sortBy(response.data, 'name')),
         err => defer.reject(err)
       );
 

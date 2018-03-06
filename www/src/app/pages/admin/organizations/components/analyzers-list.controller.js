@@ -164,4 +164,19 @@ export default class OrganizationAnalyzersController {
       this.$onInit();
     });
   }
+
+  refreshAnalyzers() {
+    this.AnalyzerService.scan()
+      .then(() => this.AnalyzerService.definitions())
+      .then(defintions => {
+        this.analyzerDefinitions = defintions;
+        this.$onInit();
+        this.NotificationService.success('Analyzer definitions refreshed.');
+      })
+      .catch(err =>
+        this.NotificationService.error(
+          'Failed to refresh analyzer definitions.'
+        )
+      );
+  }
 }

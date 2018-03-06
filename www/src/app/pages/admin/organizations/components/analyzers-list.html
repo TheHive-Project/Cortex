@@ -59,7 +59,7 @@
 </section>
 
 <section class="mt-m">
-  <p class="lead">Available analyzers ({{$ctrl.definitionsIds.length || 0}})</p>
+  <p class="lead">Available analyzers ({{$ctrl.definitionsIds.length || 0}}) <a href class="pull-right btn btn-primary" ng-click="$ctrl.refreshAnalyzers()"><i class="fa fa-refresh"></i> Refresh analyzers</a></p>
 
   <div class="row mv-s" ng-if="$ctrl.definitionsIds.length === 0">
     <div class="col-md-12">
