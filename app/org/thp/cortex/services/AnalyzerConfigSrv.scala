@@ -112,14 +112,14 @@ class AnalyzerConfigSrv @Inject() (
       }
   }
 
-  def listForUser(userId: String): Future[Map[String, BaseConfig]] = {
+  def listForUser(userId: String): Future[Seq[BaseConfig]] = {
     import org.elastic4play.services.QueryDSL._
     for {
       analyzerConfigItems ← definitions
       analyzerConfigs ← findForUser(userId, any, Some("all"), Nil)
         ._1
         .runFold(analyzerConfigItems) { (definitionConfig, analyzerConfig) ⇒ updateDefinitionConfig(definitionConfig, analyzerConfig) }
-    } yield analyzerConfigs
+    } yield analyzerConfigs.values.toSeq
   }
 
   def findForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[AnalyzerConfig, NotUsed], Future[Long]) = {
