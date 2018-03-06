@@ -113,16 +113,6 @@ export default class OrganizationAnalyzersController {
 
   enable(analyzerId) {
     let definition = this.analyzerDefinitions[analyzerId];
-    // let promise;
-
-    // if (_.map(definition.configurationItems, 'required').indexOf(true) !== -1) {
-    //   // The analyzer requires some configurations
-    //   promise = this.openModal('create', definition, {});
-    // } else {
-    //   promise = this.OrganizationService.enableAnalyzer(analyzerId, {
-    //     name: analyzerId
-    //   });
-    // }
 
     this.openModal('create', definition, {})
       .then(() => {

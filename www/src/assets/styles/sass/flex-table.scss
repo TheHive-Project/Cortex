@@ -1,8 +1,18 @@
 div.flex-table {
 
 }
+div.flex-header {
+  background-color: #fff;
+  border-bottom: 2px solid #ecf0f5;
+  
+  font-size: 16px;
+  //font-weight: bold;
+  padding-top: 8px;
+  padding-bottom: 8px
+}
 
-div.flex-row {
+div.flex-row,
+div.flex-header {
   display: flex;
   justify-content: space-between;
   align-items: stretch;
@@ -18,6 +28,13 @@ div.flex-row {
   > div.flex-col {
     margin: 0 5px;
     padding: 4px;
+
+    .label.label-lg {
+      // margin-right: 5px;
+      font-size: 13px;
+      font-weight: normal;
+      line-height: 1;
+    }
 
     > * {
       flex: 1;

@@ -56,7 +56,7 @@ export default class AnalyzerEditController {
         analyzer.configuration.check_tlp = true;
       }
       if (analyzer.configuration.max_tlp === undefined) {
-        analyzer.configuration.max_tlp = 1;
+        analyzer.configuration.max_tlp = 2;
       }
 
       this.analyzer = analyzer;

@@ -19,6 +19,12 @@
       </div>
     </div>
     <div class="col-sm-12 flex-table config-list">
+      <div class="flex-header media">
+        <div class="flex-col flex-w-100 text-center">Options</div>
+        <div class="flex-col flex-3">Configuration</div>              
+        <div class="flex-col flex-1">Analyzers</div>        
+        <div class="flex-col flex-w-100"></div>
+      </div>
       <div class="flex-row media" ng-repeat="config in $ctrl.configurations | filter:$ctrl.state.filter:name" ng-class="{'global-config': config.name === 'global'}">
         <div class="flex-col flex-w-100 text-center vertical">
           <div>

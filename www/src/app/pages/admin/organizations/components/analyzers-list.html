@@ -15,6 +15,13 @@
       </div>
     </div>
     <div class="col-sm-12 flex-table">
+      <div class="flex-header media">
+        <div class="flex-col flex-1">Analyzer</div>        
+        <div class="flex-col flex-w-200 text-center">Max TLP</div>
+        <div class="flex-col flex-w-200 text-center">Rate Limiting</div>
+        <div class="flex-col flex-w-100"></div>
+        <div class="flex-col flex-w-100"></div>
+      </div>
       <div class="flex-row media" ng-repeat="analyzer in $ctrl.analyzers | filter:$ctrl.state.filterEnabled:name">
         <div class="flex-col flex-1">
           <h4 class="media-heading">
@@ -30,6 +37,12 @@
           </h4>
           <div class="mt-xs text-muted">{{analyzer.description}}</div>
         </div>
+
+        <div class="flex-col flex-w-200 text-center vertical">
+          <div>            
+            <tlp value="analyzer.configuration.check_tlp ? analyzer.configuration.max_tlp : undefined"></tlp>
+          </div>          
+        </div>
         <div class="flex-col flex-w-200 text-center text-muted vertical">
           <div ng-show="analyzer.rate && analyzer.rateUnit" class="text-primary">
             <div>{{analyzer.rate}}</div>
@@ -39,17 +52,11 @@
             <div>N/A</div>
           </div>
         </div>
-        <div class="flex-col flex-w-200 text-center text-muted vertical">
-          <div class="text-primary">
-            <div>Check TLP: {{analyzer.configuration.check_tlp}}</div>
-            <div ng-show="analyzer.configuration.check_tlp">Max TLP: {{analyzer.configuration.max_tlp}}</div>
-          </div>          
-        </div>
-        <div class="flex-col flex-icon text-center">
+        <div class="flex-col flex-icon flex-w-100 text-center">
           <a href class="text-primary" ng-click="$ctrl.edit('edit', $ctrl.analyzerDefinitions[analyzer.analyzerDefinitionId], analyzer)">
             <i class="fa fa-edit"></i>Edit</a>
         </div>
-        <div class="flex-col flex-icon text-center">
+        <div class="flex-col flex-icon flex-w-100 text-center">
           <a href class="text-danger" ng-click="$ctrl.disable(analyzer.id)">
             <i class="fa fa-ban"></i>Disable</a>
         </div>
