@@ -179,7 +179,7 @@ class UserCtrl @Inject() (
   }
 
   @Timed
-  def find: Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
+  def find: Action[Fields] = authenticated(Roles.read, Roles.superAdmin).async(fieldsBodyParser) { implicit request ⇒
     val query = request.body.getValue("query").fold[QueryDef](QueryDSL.any)(_.as[QueryDef])
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
