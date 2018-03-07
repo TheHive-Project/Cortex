@@ -9,6 +9,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.{ FileIO, Sink, Source }
+
 import org.elastic4play._
 import org.elastic4play.controllers._
 import org.elastic4play.database.ModifyConfig
@@ -16,9 +17,8 @@ import org.elastic4play.services._
 import org.scalactic.Accumulation._
 import org.scalactic.{ Bad, Good, One, Or }
 import org.thp.cortex.models._
-import play.api.libs.json.{ JsBoolean, JsObject, JsString, Json }
+import play.api.libs.json._
 import play.api.{ Configuration, Logger }
-
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.sys.process.{ Process, ProcessIO }
@@ -368,7 +368,7 @@ class JobSrv(
           else {
             endJob(job, JobStatus.Failure,
               (report \ "errorMessage").asOpt[String],
-              (report \ "input").asOpt[String])
+              (report \ "input").asOpt[JsValue].map(_.toString))
           }
         }
         catch {
