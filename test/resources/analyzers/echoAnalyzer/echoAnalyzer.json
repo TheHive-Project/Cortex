@@ -28,7 +28,8 @@
     "description": "config item with required boolean value",
     "type": "boolean",
     "multi": false,
-    "required": true
+    "required": true,
+    "defaultValue": true
   },
   {
     "name": "StringField",

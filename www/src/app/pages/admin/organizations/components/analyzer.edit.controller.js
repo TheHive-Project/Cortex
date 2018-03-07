@@ -30,14 +30,15 @@ export default class AnalyzerEditController {
         rateUnit: undefined
       };
 
-      _.forEach(
-        this.definition.configurationItems,
-        item =>
-          (analyzer.configuration[item.name] = (this.configuration.config ||
-            {})[item.name]) ||
+      _.forEach(this.definition.configurationItems, item => {
+        const property = item.name,
+          configValue = (this.configuration.config || {})[property];
+
+        analyzer.configuration[property] =
+          configValue ||
           item.defaultValue ||
-          (item.multi ? [undefined] : undefined)
-      );
+          (item.multi ? [undefined] : undefined);
+      });
 
       // Handle TLP default config
       const globalConfig = [
@@ -60,8 +61,6 @@ export default class AnalyzerEditController {
       }
 
       this.analyzer = analyzer;
-
-      this.$log.log('Inial analyzer config', this.analyzer);
     }
   }
 

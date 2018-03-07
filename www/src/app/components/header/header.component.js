@@ -32,7 +32,6 @@ class HeaderController {
   }
 
   logout() {
-    this.$log.log('logout');
     this.AuthService.logout()
       .then(() => {
         this.$state.go('login');
@@ -65,7 +64,6 @@ class HeaderController {
         });
       })
       .catch(err => {
-        this.$log.log(err);
         if (!_.isString(err)) {
           this.NotificationService.error(
             'An error occurred: ' + err.statusText ||
