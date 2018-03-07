@@ -421,6 +421,7 @@ class JobSrv(
           }
           .map(_ deepMerge artifact +
             ("dataType" -> JsString(job.dataType())) +
+            ("tlp" -> JsNumber(job.tlp())) +
             ("message" -> JsString(job.message().getOrElse(""))))
           .badMap(e ⇒ AttributeCheckingError("job", e.toSeq))
           .toTry
