@@ -9,6 +9,7 @@ import requireRolesDirective from './directives/require-roles/require-roles.dire
 import compareToDirective from './directives/compare-to/compare-to.directive';
 import userAvatarDirective from './directives/user-avatar/user-avatar.directive';
 import tlpDirective from './directives/tlp/tlp.directive';
+import autofocusDirective from './directives/autofocus/autofocus.directive';
 
 import constants from './services/constants';
 import storeFactory from './services/store.factory';
@@ -42,6 +43,7 @@ requireRolesDirective(core);
 compareToDirective(core);
 userAvatarDirective(core);
 tlpDirective(core);
+autofocusDirective(core);
 
 /* Common services */
 
