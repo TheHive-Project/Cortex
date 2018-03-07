@@ -139,6 +139,10 @@ export default class OrganizationsPageController {
   }
 
   disable(id) {
+    if (id === 'cortex') {
+      return;
+    }
+
     let modalInstance = this.ModalService.confirm(
       'Disable organization',
       `Are your sure you want to disable this organization? Its users will no longer be able to have access to Cortex.`,
@@ -162,6 +166,10 @@ export default class OrganizationsPageController {
   }
 
   enable(id) {
+    if (id === 'cortex') {
+      return;
+    }
+
     let modalInstance = this.ModalService.confirm(
       'Enable organization',
       `Are your sure you want to enable this organization? Its users will have access to Cortex.`,

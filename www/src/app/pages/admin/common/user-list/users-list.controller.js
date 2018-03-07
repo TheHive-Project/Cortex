@@ -139,6 +139,10 @@ export default class UsersListController {
   }
 
   lockUser(id) {
+    if (id === this.main.currentUser.id) {
+      return;
+    }
+
     let modalInstance = this.ModalService.confirm(
       'Lock user',
       'Are you sure you want to lock this user. He will no longer be able to have access to Cortex',
@@ -162,6 +166,10 @@ export default class UsersListController {
   }
 
   unlockUser(id) {
+    if (id === this.main.currentUser.id) {
+      return;
+    }
+
     let modalInstance = this.ModalService.confirm(
       'Unlock user',
       'Are you sure you want to unlock this user. He will be able to have access to Cortex',

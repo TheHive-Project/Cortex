@@ -134,7 +134,8 @@ export default class JobsController {
     this.SearchService.configure({
       objectType: 'job',
       filter: this.buildQuery(),
-      range: this.buildRange()
+      range: this.buildRange(),
+      sort: ['-startDate']
     })
       .search()
       .then(response => {

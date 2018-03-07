@@ -20,7 +20,7 @@
         <div class="flex-col flex-w-100" require-roles="orgadmin,analyze"></div>
       </div>
       <div class="flex-row media" ng-repeat="job in $ctrl.jobs track by job.id" ng-init="isFile = job.dataType ==='file'">
-        <div class="flex-col flex-icon flex-w-100">
+        <div class="flex-col flex-w-100 text-center vertical">
           <span class="label label-lg label-default" ng-class="{
             'Success': 'label-success',
             'InProgress': 'label-warning',
@@ -54,12 +54,12 @@
             </div>
           </div>
         </div>
-        <div class="flex-col flex-icon flex-w-100">
-          <a class="text-primary" ui-sref="main.job-report({id: job.id})">
+        <div class="flex-col flex-icon flex-w-100" ui-sref="main.job-report({id: job.id})">
+          <a href class="text-primary">
             <i class="fa fa-search"></i>View</a>
         </div>
-        <div class="flex-col flex-icon flex-w-100" require-roles="orgadmin,analyze">
-          <a href class="text-danger" ng-click="$ctrl.deleteJob(job.id)">
+        <div class="flex-col flex-icon flex-w-100" require-roles="orgadmin,analyze" ng-click="$ctrl.deleteJob(job.id)">
+          <a href class="text-danger">
             <i class="fa fa-ban"></i>Delete</a>
         </div>
       </div>

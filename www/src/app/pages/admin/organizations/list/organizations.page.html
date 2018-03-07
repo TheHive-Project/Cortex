@@ -34,8 +34,15 @@
 
       <div class="row" ng-if="$ctrl.organizations.length > 0">
         <div class="col-sm-12 flex-table">
+          <div class="flex-header media">
+            <div class="flex-col flex-w-100 text-center">Status</div>
+            <div class="flex-col flex-1">Organization</div>                  
+            <div class="flex-col flex-w-100"></div>
+            <div class="flex-col flex-w-100"></div>                  
+          </div>
+
           <div class="flex-row media" ng-repeat="org in $ctrl.organizations track by org.id">
-            <div class="flex-col flex-icon flex-w-100">
+            <div class="flex-col flex-w-100 center-vertical">
               <span class="label label-default label-lg" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
             </div>
             <div class="flex-col flex-1">
@@ -44,16 +51,16 @@
               </h4>
               <span class="text-muted">{{org.description}}</span>
             </div>  
-            <div class="flex-col flex-icon">
-              <a href ng-click="$ctrl.openModal('edit', org)">
+            <div class="flex-col flex-icon flex-w-100" ng-click="$ctrl.openModal('edit', org)">
+              <a href>
                 <i class="fa fa-pencil"></i>Edit</a>
             </div>
-            <div class="flex-col flex-icon flex-w-100" ng-if="org.status === 'Locked'">
-              <a href class="text-success" ng-click="$ctrl.enable(org.id)" ng-if="org.id !== 'cortex'">
+            <div class="flex-col flex-icon flex-w-100" ng-click="$ctrl.enable(org.id)" ng-if="org.status === 'Locked'">
+            <a href class="text-success" ng-if="org.id !== 'cortex'">
                 <i class="fa fa-refresh"></i>Enable</a>
             </div>
-            <div class="flex-col flex-icon flex-w-100" ng-if="org.status === 'Active'">
-              <a href class="text-danger" ng-click="$ctrl.disable(org.id)" ng-if="org.id !== 'cortex'">
+            <div class="flex-col flex-icon flex-w-100" ng-click="$ctrl.disable(org.id)" ng-if="org.status === 'Active'">
+              <a href class="text-danger" ng-if="org.id !== 'cortex'">
                 <i class="fa fa-ban"></i>Disable</a>
             </div>
 

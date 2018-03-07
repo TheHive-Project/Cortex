@@ -16,6 +16,7 @@ export default function(app) {
       scope: {
         value: '='
       },
+      replace: true,
       link: linkFn
     };
 

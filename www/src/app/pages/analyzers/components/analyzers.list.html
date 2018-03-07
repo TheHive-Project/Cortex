@@ -24,13 +24,10 @@
           <div class="mt-xs mb-xxxs">
             <strong>Applies to:</strong>
             <span class="datatype clickable label label-primary" ng-repeat="type in analyzer.dataTypeList" ng-click="$ctrl.run(analyzer, type)">{{type}}</span>&nbsp;
-            <!-- <div class="col-sm-12">
-              <i class="fa fa-exclamation-triangle"></i> {{job.message}}
-            </div> -->
           </div>
         </div>
-        <div class="flex-col flex-icon">
-          <a href class="text-primary" ng-click="$ctrl.run(analyzer)">
+        <div class="flex-col flex-icon flex-w-100" ng-click="$ctrl.run(analyzer)">
+          <a href class="text-primary">
             <i class="fa fa-play"></i>Run</a>
         </div>        
       </div>

@@ -22,7 +22,7 @@
         <div class="flex-col flex-w-100"></div>
       </div>
       <div class="flex-row media" ng-repeat="user in $ctrl.users track by user.id">
-        <div class="flex-col flex-icon flex-w-100">
+        <div class="flex-col flex-w-100 text-center vertical">
           <span class="label label-default label-lg" ng-class="{'Ok': 'label-success', 'Locked': 'label-danger'}[user.status]">{{user.status === 'Ok' ? 'Active' : user.status}}</span>
         </div>
         <div class="flex-col flex-1">          
@@ -84,16 +84,16 @@
           </span>
           </td>
         </div>
-        <div class="flex-col flex-icon flex-w-100">
-          <a href class="text-primary" ng-click="$ctrl.openModal('edit', user)">
+        <div class="flex-col flex-icon flex-w-100" ng-click="$ctrl.openModal('edit', user)">
+          <a href class="text-primary">
             <i class="fa fa-edit"></i>Edit</a>
         </div>
-        <div class="flex-col flex-icon flex-w-100" ng-if="user.status === 'Ok'">
-          <a href class="text-danger" ng-click="$ctrl.lockUser(user.id)" ng-if="user.id !== $ctrl.main.currentUser.id">
+        <div class="flex-col flex-icon flex-w-100" ng-if="user.status === 'Ok'" ng-click="$ctrl.lockUser(user.id)">
+          <a href class="text-danger" ng-if="user.id !== $ctrl.main.currentUser.id">
             <i class="fa fa-ban"></i>Lock</a>
         </div>
-        <div class="flex-col flex-icon flex-w-100" ng-if="user.status === 'Locked'">
-          <a href class="text-success" ng-click="$ctrl.unlockUser(user.id)" ng-if="user.id !== $ctrl.main.currentUser.id">
+        <div class="flex-col flex-icon flex-w-100" ng-if="user.status === 'Locked'" ng-click="$ctrl.unlockUser(user.id)">
+          <a href class="text-success" ng-if="user.id !== $ctrl.main.currentUser.id">
             <i class="fa fa-refresh"></i>Unlock</a>
         </div>
       </div>
