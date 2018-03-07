@@ -67,7 +67,7 @@ export default class OrganizationService {
     let defer = this.$q.defer();
 
     this.$http
-      .get(`./api/organization/analyzer`)
+      .get(`./api/organization/analyzer`, { params: { range: 'all' } })
       .then(response => defer.resolve(response.data))
       .catch(err => defer.reject(err));
 
