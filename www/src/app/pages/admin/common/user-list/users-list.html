@@ -49,13 +49,13 @@
         <div class="flex-col flex-1 vertical">
           <!-- <span ng-if="canSetPass === true"> -->
           <span>
-            <span class="btn btn-sm btn-default" ng-class="{ 'Locked':'disabled', 'Ok':''}[user.status]" ng-click="showPwdForm[user] = true"
-              ng-hide="showPwdForm[user]">New password</span>
-            <form ng-show="showPwdForm[user]" ng-submit="$ctrl.setPassword(user, newValue); showPwdForm[user] = false;">
+            <span class="btn btn-sm btn-default" ng-class="{ 'Locked':'disabled', 'Ok':''}[user.status]" ng-click="$ctrl.showPassword(user, true)"
+              ng-hide="$ctrl.showPwdForm[user.id]">New password</span>
+            <form ng-show="$ctrl.showPwdForm[user.id]" ng-submit="$ctrl.setPassword(user, newValue); $ctrl.showPassword(user, false);">
               <div class="input-group input-group-sm">
-                <input autofocus="autofocus" class="form-control input-sm" ng-model="newValue" type="password">
+                <input auto-focus="user-showPassword-{{user.id}}" class="form-control input-sm" ng-model="newValue" type="password">
                 <span class="input-group-btn">
-                  <button class="btn btn-default" type="button" ng-click="showPwdForm[user] = false">
+                  <button class="btn btn-default" type="button" ng-click="$ctrl.showPassword(user, false)">
                     <i class="fa fa-times text-danger"></i>
                   </button>
                 </span>

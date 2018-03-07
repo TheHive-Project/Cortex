@@ -6,6 +6,7 @@ import editModalTpl from '../user-dialog/user.edit.modal.html';
 export default class UsersListController {
   constructor(
     $log,
+    $scope,
     $uibModal,
     OrganizationService,
     UserService,
@@ -16,6 +17,7 @@ export default class UsersListController {
     'ngInject';
 
     this.$log = $log;
+    this.$scope = $scope;
     this.$uibModal = $uibModal;
     this.OrganizationService = OrganizationService;
     this.UserService = UserService;
@@ -24,6 +26,7 @@ export default class UsersListController {
     this.clipboard = clipboard;
 
     this.userKeyCache = {};
+    this.showPwdForm = {};
   }
 
   $onInit() {
@@ -33,6 +36,13 @@ export default class UsersListController {
 
   reload() {
     this.onReload();
+  }
+
+  showPassword(user, visible) {
+    this.showPwdForm[user.id] = visible;
+    if (visible) {
+      this.$scope.$broadcast(`user-showPassword-${user.id}`);
+    }
   }
 
   getKey(user) {
