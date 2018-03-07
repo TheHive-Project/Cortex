@@ -2,12 +2,14 @@ package org.thp.cortex.models
 
 import javax.inject.{ Inject, Singleton }
 
+import scala.concurrent.Future
 import scala.util.Try
 
-import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.json.{ JsObject, JsString, Json }
 
 import org.elastic4play.models.JsonFormat.enumFormat
-import org.elastic4play.models.{ AttributeDef, ChildModelDef, EntityDef, HiveEnumeration, AttributeFormat ⇒ F, AttributeOption ⇒ O }
+import org.elastic4play.models.{ AttributeDef, BaseEntity, ChildModelDef, EntityDef, HiveEnumeration, AttributeFormat ⇒ F, AttributeOption ⇒ O }
+import org.elastic4play.utils.Hasher
 
 object RateUnit extends Enumeration with HiveEnumeration {
   type Type = Value
@@ -17,6 +19,7 @@ object RateUnit extends Enumeration with HiveEnumeration {
 }
 
 trait AnalyzerAttributes { _: AttributeDef ⇒
+  val analyzerId = attribute("_id", F.stringFmt, "Analyzer id", O.model)
   val name = attribute("name", F.stringFmt, "Analyzer name")
   val analyzerDefinitionId = attribute("analyzerDefinitionId", F.stringFmt, "Analyzer definition id", O.readonly)
   val description = attribute("description", F.textFmt, "Analyzer description")
@@ -27,8 +30,15 @@ trait AnalyzerAttributes { _: AttributeDef ⇒
 }
 
 @Singleton
-class AnalyzerModel @Inject() (
-    organizationModel: OrganizationModel) extends ChildModelDef[AnalyzerModel, Analyzer, OrganizationModel, Organization](organizationModel, "analyzer", "Analyzer", "/analyzer") with AnalyzerAttributes with AuditedModel {
+class AnalyzerModel @Inject() (organizationModel: OrganizationModel) extends ChildModelDef[AnalyzerModel, Analyzer, OrganizationModel, Organization](organizationModel, "analyzer", "Analyzer", "/analyzer") with AnalyzerAttributes with AuditedModel {
+  override def creationHook(parent: Option[BaseEntity], attrs: JsObject): Future[JsObject] = {
+    val hasher = Hasher("md5")
+    val id = for {
+      organizationId ← parent.map(_.id)
+      name ← (attrs \ "name").asOpt[String]
+    } yield hasher.fromString(s"${organizationId}_$name").head.toString
+    Future.successful(attrs + ("_id" -> JsString(id.getOrElse("<null>"))))
+  }
 }
 
 class Analyzer(model: AnalyzerModel, attributes: JsObject) extends EntityDef[AnalyzerModel, Analyzer](model, attributes) with AnalyzerAttributes {
