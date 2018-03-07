@@ -85,6 +85,7 @@ class JobCtrl @Inject() (
               case artifact if artifact.data().isDefined ⇒
                 Json.obj(
                   "data" -> artifact.data(),
+                  "dataType" -> artifact.dataType(),
                   "message" -> artifact.message(),
                   "tags" -> artifact.tags(),
                   "tlp" -> artifact.tlp())
