@@ -3,10 +3,10 @@
 </section>
 
 <section class="analyzers-page content">
-  <div class="box box-primary">
+  <div class="box box-primary paginable-page">
     <div class="box-header">      
       <form ng-submit="$ctrl.applyFilters()">
-        <div class="analyzers-toolbar">
+        <div class="table-toolbar">
           <label class="form-control pull-left">Data Types</label>
 
           <multiselect class="pull-left mr-xs" ng-model="$ctrl.filters.dataType" options="$ctrl.datatypes" placeholder="Select" show-select-all="true"

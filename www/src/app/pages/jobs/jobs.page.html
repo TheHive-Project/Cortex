@@ -3,11 +3,11 @@
 </section>
 
 <section class="jobs-page content">
-  <div class="box box-primary">
+  <div class="box box-primary paginable-page">
     <div class="box-header">
       <!-- <h3 class="box-title">List of existing jobs ()</h3> -->
       <form ng-submit="$ctrl.applyFilters()">
-        <div class="jobs-toolbar">
+        <div class="table-toolbar">
           <label class="form-control pull-left">Data Types</label>
         
           <multiselect class="pull-left mr-xs" ng-model="$ctrl.filters.dataType" options="$ctrl.datatypes" placeholder="Select" show-select-all="true"

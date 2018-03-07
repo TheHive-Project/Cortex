@@ -11,6 +11,12 @@ div.flex-header {
   padding-bottom: 8px
 }
 
+div.flex-row {
+  &:hover {
+    border: 1px dotted #3c8dbc !important;
+  }
+}
+
 div.flex-row,
 div.flex-header {
   display: flex;
@@ -19,10 +25,12 @@ div.flex-header {
 
   &:nth-child(odd) {
     background: #f9f9f9;
+    border: 1px dotted #f9f9f9;
   }
 
   &:nth-child(even) {
     background: #ecf0f5;
+    border: 1px dotted #ecf0f5;
   }
 
   > div.flex-col {
@@ -30,7 +38,6 @@ div.flex-header {
     padding: 4px;
 
     .label.label-lg {
-      // margin-right: 5px;
       font-size: 13px;
       font-weight: normal;
       line-height: 1;
@@ -83,7 +90,8 @@ div.flex-header {
       padding-right: 10px;
       display: flex;
       align-items: center;
-      justify-content: center;      
+      justify-content: center;   
+      cursor: pointer;   
       
       i {
         margin-right: 5px;
