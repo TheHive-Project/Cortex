@@ -40,7 +40,6 @@
           </button>
           <ul class="dropdown-menu" uib-dropdown-menu>
             <li>
-              <a ng-click="$modal.formData.roles = []">none</a>
               <a ng-click="$modal.formData.roles = ['read']">read</a>
               <!-- TODO make it available only on cortex organization -->
               <a ng-click="$modal.formData.roles = ['superadmin']" require-roles="superadmin">superadmin</a>
