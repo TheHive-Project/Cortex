@@ -22,12 +22,12 @@ export default function(app) {
 
     function linkFn(scope) {
       if (scope.value === undefined) {
-        scope.tlpClass = 'text-tlp-none';
+        scope.tlpClass = 'label-none';
         scope.tlp = 'None';
       } else {
         const temp = (_.find(Tlps, { value: scope.value }) || {}).key;
 
-        scope.tlpClass = `text-tlp-${(temp || '').toLowerCase()}`;
+        scope.tlpClass = `label-${(temp || '').toLowerCase()}`;
         scope.tlp = `TLP:${temp}`;
       }
     }
