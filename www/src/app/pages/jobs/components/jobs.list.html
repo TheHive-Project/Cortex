@@ -21,7 +21,7 @@
         <div class="flex-col flex-w-100" require-roles="orgadmin,analyze"></div>
       </div>
       <div class="flex-row media" ng-repeat="job in $ctrl.jobs track by job.id" ng-init="isFile = job.dataType ==='file'">
-        <div class="flex-col flex-w-100 text-center vertical centered">
+        <div class="flex-col flex-w-100 vertical centered">
           <span class="label label-lg label-default" ng-class="{
             'Success': 'label-success',
             'InProgress': 'label-warning',
@@ -47,7 +47,8 @@
           </div>
           <div ng-if="job.status === 'Failure'" class="row text-danger wrap">
             <div class="col-sm-12">
-              <i class="fa fa-exclamation-triangle"></i> {{job.message}}
+              <!-- <i class="fa fa-exclamation-triangle"></i> {{job.message}} -->
+              <pre class="error-trace">{{job.message}}</pre>
             </div>
           </div>
         </div>

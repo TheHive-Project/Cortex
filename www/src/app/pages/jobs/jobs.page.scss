@@ -1,0 +1,8 @@
+pre.error-trace {
+  color: #a94442;
+  border: none;
+  font-size: 10px;
+  word-wrap: break-word;
+  word-break: break-all;
+  background-color: lighten($color: #a94442, $amount: 50%)
+}

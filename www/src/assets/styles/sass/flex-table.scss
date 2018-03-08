@@ -48,7 +48,7 @@ div.flex-header {
     }
      
     > span.label {
-      width: 100px;
+      // width: 100px;
       flex: none;
     }
 
@@ -87,6 +87,9 @@ div.flex-header {
     }
     &.flex-w-100 {
       width: 100px;
+    }
+    &.flex-w-120 {
+      width: 120px;
     }
     &.flex-w-150 {
       width: 150px;
