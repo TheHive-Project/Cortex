@@ -42,8 +42,17 @@ const jobsModule = angular
           },
           analyzers: AnalyzerService =>
             AnalyzerService.list().then(analyzers =>
-              _.map(analyzers, a =>
-                _.pick(a, 'name', 'id', 'dataTypeList', 'analyzerDefinitionId')
+              _.sortBy(
+                _.map(analyzers, a =>
+                  _.pick(
+                    a,
+                    'name',
+                    'id',
+                    'dataTypeList',
+                    'analyzerDefinitionId'
+                  )
+                ),
+                'name'
               )
             )
         }
