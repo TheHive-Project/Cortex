@@ -24,6 +24,11 @@
       <div class="input-group mb-xxxs" ng-repeat="val in $ctrl.configuration[config.name] track by $index">
         <span class="input-group-addon">{{$index+1}}.</span>
         <input class="form-control" type="text" ng-model="$ctrl.configuration[config.name][$index]" ng-required="config.required">
+        <span class="input-group-btn">
+          <button class="btn btn-default" type="button" ng-click="$ctrl.removeOption(config.name, $index)">
+            <i class="fa fa-times text-danger"></i>
+          </button>
+        </span>
       </div>
     </div>
     
@@ -34,6 +39,11 @@
       <div class="input-group mb-xxxs" ng-repeat="val in $ctrl.configuration[config.name] track by $index">
         <span class="input-group-addon">{{$index+1}}.</span>
         <input class="form-control" type="number" ng-model="$ctrl.configuration[config.name][$index]" ng-required="config.required">
+        <span class="input-group-btn">
+          <button class="btn btn-default" type="button" ng-click="$ctrl.removeOption(config.name, $index)">
+            <i class="fa fa-times text-danger"></i>
+          </button>
+        </span>
       </div>
     </div>
     
@@ -46,6 +56,9 @@
           <label uib-btn-radio="true" class="btn btn-default" ng-model="$ctrl.configuration[config.name][$index]">True</label>
           <label uib-btn-radio="false" class="btn btn-default" ng-model="$ctrl.configuration[config.name][$index]">False</label>
         </div>
+        <button class="btn btn-default" type="button" ng-click="$ctrl.removeOption(config.name, $index)">
+          <i class="fa fa-times text-danger"></i>
+        </button>
       </div>
     </div>
     <p class="help-block">{{config.description}}</p>
