@@ -6,6 +6,8 @@ export default class UserEditController {
   constructor(
     $log,
     $uibModalInstance,
+    Roles,
+    AuthService,
     UserService,
     OrganizationService,
     NotificationService,
@@ -18,6 +20,8 @@ export default class UserEditController {
     this.$log = $log;
     this.$uibModalInstance = $uibModalInstance;
 
+    this.Roles = Roles;
+    this.AuthService = AuthService;
     this.UserService = UserService;
     this.NotificationService = NotificationService;
     this.OrganizationService = OrganizationService;
@@ -25,27 +29,53 @@ export default class UserEditController {
     this.user = user;
     this.mode = mode;
 
-    const orgId = (this.organization || {}).id;
+    this.isEdit = this.mode === 'edit';
+
+    const orgId = (this.organization || {}).id || null;
+    this.orgId = orgId;
 
     this.formData = _.defaults(
       _.pick(this.user, 'id', 'name', 'roles', 'organization'),
       {
         id: null,
         name: null,
-        roles: [],
+        roles:
+          orgId && orgId === 'cortex'
+            ? [Roles.SUPERADMIN]
+            : [Roles.READ, Roles.ANALYZE],
         organization: orgId
       }
     );
 
-    this.isEdit = this.mode === 'edit';
-    this.orgId = orgId;
     this.organizations = this.organization ? [this.organization] : [];
+    this.rolesList = this.getRolesList(orgId);
   }
 
   $onInit() {
     if (_.isEmpty(this.organizations)) {
       this.OrganizationService.list().then(orgs => (this.organizations = orgs));
     }
+  }
+
+  getRolesList(orgId) {
+    return orgId && orgId === 'cortex'
+      ? [[this.Roles.SUPERADMIN]]
+      : [
+          [this.Roles.READ],
+          [this.Roles.READ, this.Roles.ANALYZE],
+          [this.Roles.READ, this.Roles.ANALYZE, this.Roles.ORGADMIN]
+        ];
+  }
+
+  onOrgChange() {
+    this.$log.log(this.formData.organization);
+
+    this.rolesList = this.getRolesList(this.formData.organization);
+
+    this.formData.roles =
+      this.formData.organization === 'cortex'
+        ? [this.Roles.SUPERADMIN]
+        : [this.Roles.READ, this.Roles.ANALYZE];
   }
 
   onSuccess(data) {
