@@ -22,7 +22,7 @@
         <div class="flex-col flex-w-100"></div>
       </div>
       <div class="flex-row media" ng-repeat="user in $ctrl.users track by user.id">
-        <div class="flex-col flex-w-100 text-center vertical">
+        <div class="flex-col flex-w-100 text-center vertical centered">
           <span class="label label-default label-lg" ng-class="{'Ok': 'label-success', 'Locked': 'label-danger'}[user.status]">{{user.status === 'Ok' ? 'Active' : user.status}}</span>
         </div>
         <div class="flex-col flex-1">          

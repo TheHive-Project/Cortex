@@ -16,11 +16,12 @@
       <div class="flex-header media">
         <div class="flex-col flex-w-100 text-center">Status</div>        
         <div class="flex-col flex-1">Job details</div>
+        <div class="flex-col flex-w-200 text-center">TLP</div>
         <div class="flex-col flex-w-100"></div>
         <div class="flex-col flex-w-100" require-roles="orgadmin,analyze"></div>
       </div>
       <div class="flex-row media" ng-repeat="job in $ctrl.jobs track by job.id" ng-init="isFile = job.dataType ==='file'">
-        <div class="flex-col flex-w-100 text-center vertical">
+        <div class="flex-col flex-w-100 text-center vertical centered">
           <span class="label label-lg label-default" ng-class="{
             'Success': 'label-success',
             'InProgress': 'label-warning',
@@ -30,29 +31,28 @@
           <h4 class="media-heading text-primary">
              <strong>[{{job.dataType}}]</strong> {{(isFile ? job.attachment.name : job.data) | fang | limitTo:200}}
           </h4>
-          <div class="row mt-xs text-muted">
-            <div class="col-sm-3">
+          <div class="row mv-xs text-muted">
+            <div class="col-sm-4">
               <strong>Analyzer:</strong>
               <span>{{job.analyzerName}}</span>
             </div>
-            <div class="col-sm-3">
+            <div class="col-sm-4">
               <strong>Date:</strong>
               <span am-time-ago="job.createdAt"></span>
             </div>
-            <div class="col-sm-3">
+            <div class="col-sm-4">
               <strong>User:</strong>
-              <span>{{job.createdBy}}</span>
-            </div>
-            <div class="col-sm-3">
-              <strong>Organization:</strong>
-              <span>{{job.organization}}</span>
-            </div>
+              <span>{{job.organization}}/{{job.createdBy}}</span>
+            </div>            
           </div>
-          <div ng-if="job.status === 'Failure'" class="row mt-xs text-danger wrap">
+          <div ng-if="job.status === 'Failure'" class="row text-danger wrap">
             <div class="col-sm-12">
               <i class="fa fa-exclamation-triangle"></i> {{job.message}}
             </div>
           </div>
+        </div>
+        <div class="flex-col flex-w-200 text-center vertical centered">
+          <tlp value="job.tlp"></tlp>
         </div>
         <div class="flex-col flex-icon flex-w-100" ui-sref="main.job-report({id: job.id})">
           <a href class="text-primary">

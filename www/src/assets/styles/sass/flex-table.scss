@@ -46,10 +46,19 @@ div.flex-header {
     > * {
       flex: 1;
     }
+     
+    > span.label {
+      width: 100px;
+      flex: none;
+    }
 
     &.vertical {
       display: flex;
       align-items: center;
+
+      &.centered {
+        justify-content: center;
+      }
     }
 
     &:first-child {

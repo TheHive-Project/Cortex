@@ -17,8 +17,8 @@
     <div class="col-sm-12 flex-table">
       <div class="flex-header media">
         <div class="flex-col flex-1">Analyzer</div>        
-        <div class="flex-col flex-w-100 text-center">Max TLP</div>
-        <div class="flex-col flex-w-200 text-center">Rate Limiting</div>
+        <div class="flex-col flex-w-200 text-center">Max TLP</div>
+        <div class="flex-col flex-w-200 text-center">Rate Limit</div>
         <div class="flex-col flex-w-100"></div>
         <div class="flex-col flex-w-100"></div>
       </div>
@@ -38,17 +38,14 @@
           <div class="mt-xs text-muted">{{analyzer.description}}</div>
         </div>
 
-        <div class="flex-col flex-w-100 text-center vertical">
+        <div class="flex-col flex-w-200 text-center vertical centered">
           <tlp value="analyzer.configuration.check_tlp ? analyzer.configuration.max_tlp : undefined"></tlp>
         </div>
-        <div class="flex-col flex-w-200 text-center text-muted vertical">
-          <div ng-show="analyzer.rate && analyzer.rateUnit" class="text-primary">
-            <div>{{analyzer.rate}}</div>
-            <div>per {{analyzer.rateUnit}}</div>
-          </div>
-          <div ng-show="!analyzer.rate || !analyzer.rateUnit">
-            <div>N/A</div>
-          </div>
+        <div class="flex-col flex-w-200 text-center vertical centered">
+          <span ng-show="analyzer.rate && analyzer.rateUnit" class="label label-lg label-primary">
+            {{analyzer.rate}} per {{analyzer.rateUnit}}
+          </span>
+          <span ng-show="!analyzer.rate || !analyzer.rateUnit" class="label label-lg label-default">None</span>
         </div>
         <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.edit('edit', $ctrl.analyzerDefinitions[analyzer.analyzerDefinitionId], analyzer)">
           <a href class="text-primary">

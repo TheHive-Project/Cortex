@@ -135,7 +135,7 @@ export default class JobsController {
       objectType: 'job',
       filter: this.buildQuery(),
       range: this.buildRange(),
-      sort: ['-startDate']
+      sort: ['-createdAt']
     })
       .search()
       .then(response => {
