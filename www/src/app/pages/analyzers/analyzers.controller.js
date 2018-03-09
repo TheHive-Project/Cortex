@@ -96,7 +96,7 @@ export default class AnalyzersController {
     this.state.pagination = {
       pageSize: this.pagination.pageSize
     };
-    this.localStorageService.set('jobs-page', this.state);
+    this.localStorageService.set('analyzers-page', this.state);
 
     this.SearchService.configure({
       objectType: 'analyzer',
