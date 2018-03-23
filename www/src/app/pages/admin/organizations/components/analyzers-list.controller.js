@@ -26,16 +26,13 @@ export default class OrganizationAnalyzersController {
     this.NotificationService = NotificationService;
 
     this.state = {
-      filterAvailable: '',
-      filterEnabled: ''
+      filterAvailable: ''
     };
   }
 
   $onInit() {
-    this.definitionsIds = _.difference(
-      _.keys(this.analyzerDefinitions),
-      _.map(this.analyzers, 'analyzerDefinitionId')
-    ).sort();
+    this.activeAnalyzers = _.keyBy(this.analyzers, 'analyzerDefinitionId');
+    this.definitionsIds = _.keys(this.analyzerDefinitions).sort();
   }
 
   openModal(mode, definition, analyzer) {

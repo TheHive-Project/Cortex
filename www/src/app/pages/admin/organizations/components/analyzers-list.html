@@ -1,71 +1,9 @@
 <section>
-  <p class="lead">Enabled analyzers ({{$ctrl.analyzers.length || 0}})</p>
-
-  <div class="row mv-s" ng-if="$ctrl.analyzers.length === 0">
-    <div class="col-md-12">
-      <div class="empty-message">No analyzer enabled.</div>
-    </div>
-  </div>
-
-  <div class="row mv-s" ng-if="$ctrl.analyzers.length > 0">
-    <div class="col-sm-12 mb-s">      
-      <div class="input-group">
-        <span class="input-group-addon"><i class="fa fa-search"></i></span>
-        <input type="text" class="form-control input-lg" ng-model="$ctrl.state.filterEnabled" placeholder="Filter enabled analyzers">
-      </div>
-    </div>
-    <div class="col-sm-12 flex-table">
-      <div class="flex-header media">
-        <div class="flex-col flex-1">Analyzer</div>        
-        <div class="flex-col flex-w-200 text-center">Max TLP</div>
-        <div class="flex-col flex-w-200 text-center">Rate Limit</div>
-        <div class="flex-col flex-w-100"></div>
-        <div class="flex-col flex-w-100"></div>
-      </div>
-      <div class="flex-row media" ng-repeat="analyzer in $ctrl.analyzers | filter:$ctrl.state.filterEnabled:name">
-        <div class="flex-col flex-1">
-          <h4 class="media-heading">
-            <span class="mr-m text-primary">{{analyzer.name}}</span>
-          </h4>
-          <h4 class="media-heading">
-            <small class="mr-xxs">
-              <strong>Version:</strong> {{analyzer.version}}</small>
-            <small class="mr-xxs" ng-if="analyzer.author">
-              <strong>Author:</strong> {{analyzer.author}}</small>
-            <small class="mr-xxs" ng-if="analyzer.license">
-              <strong>License:</strong> {{analyzer.license}}</small>
-          </h4>
-          <div class="mt-xs text-muted">{{analyzer.description}}</div>
-        </div>
-
-        <div class="flex-col flex-w-200 text-center vertical centered">
-          <tlp value="analyzer.configuration.check_tlp ? analyzer.configuration.max_tlp : undefined"></tlp>
-        </div>
-        <div class="flex-col flex-w-200 text-center vertical centered">
-          <span ng-show="analyzer.rate && analyzer.rateUnit" class="label label-lg label-primary">
-            {{analyzer.rate}} per {{analyzer.rateUnit}}
-          </span>
-          <span ng-show="!analyzer.rate || !analyzer.rateUnit" class="label label-lg label-default">None</span>
-        </div>
-        <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.edit('edit', $ctrl.analyzerDefinitions[analyzer.analyzerDefinitionId], analyzer)">
-          <a href class="text-primary">
-            <i class="fa fa-edit"></i>Edit</a>
-        </div>
-        <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.disable(analyzer.id)">
-          <a href class="text-danger">
-            <i class="fa fa-ban"></i>Disable</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="mt-m">
   <p class="lead">Available analyzers ({{$ctrl.definitionsIds.length || 0}}) <a href class="pull-right btn btn-primary" ng-click="$ctrl.refreshAnalyzers()"><i class="fa fa-refresh"></i> Refresh analyzers</a></p>
 
   <div class="row mv-s" ng-if="$ctrl.definitionsIds.length === 0">
     <div class="col-md-12">
-      <div class="empty-message">No analyzer enabled.</div>
+      <div class="empty-message">No analyzer available.</div>
     </div>
   </div>
 
@@ -79,7 +17,15 @@
       </div>
     </div>
     <div class="col-sm-12 flex-table">
-      <div class="flex-row media" ng-repeat="def in $ctrl.definitionsIds | filter:$ctrl.state.filterAvailable" ng-init="definition = $ctrl.analyzerDefinitions[def]">
+      <div class="flex-header media">
+        <div class="flex-col flex-1">Analyzer</div>
+        <div class="flex-col flex-w-200 text-center">Max TLP</div>
+        <div class="flex-col flex-w-200 text-center">Rate Limit</div>
+        <div class="flex-col flex-w-100"></div>
+        <div class="flex-col flex-w-100"></div>
+      </div>
+      <div class="flex-row media" ng-repeat="def in $ctrl.definitionsIds | filter:$ctrl.state.filterAvailable" 
+        ng-init="definition = $ctrl.analyzerDefinitions[def];">
         <!-- <div class="media-left">
                 <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
               </div> -->
@@ -97,7 +43,24 @@
           </h4>
           <div class="mt-xs text-muted">{{definition.description}}</div>
         </div>
-        <div class="flex-col flex-icon" ng-click="$ctrl.enable(def)">
+        <div class="flex-col flex-w-200 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+          <tlp value="$ctrl.activeAnalyzers[def].configuration.check_tlp ? $ctrl.activeAnalyzers[def].configuration.max_tlp : undefined"></tlp>
+        </div>
+        <div class="flex-col flex-w-200 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+          <span ng-show="$ctrl.activeAnalyzers[def].rate && $ctrl.activeAnalyzers[def].rateUnit" class="label label-lg label-primary">
+            {{$ctrl.activeAnalyzers[def].rate}} per {{$ctrl.activeAnalyzers[def].rateUnit}}
+          </span>
+          <span ng-show="!$ctrl.activeAnalyzers[def].rate || !$ctrl.activeAnalyzers[def].rateUnit" class="label label-lg label-default">None</span>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="$ctrl.activeAnalyzers[def]" ng-click="$ctrl.edit('edit', $ctrl.analyzerDefinitions[def], $ctrl.activeAnalyzers[def])">
+          <a href class="text-primary">
+            <i class="fa fa-edit"></i>Edit</a>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="$ctrl.activeAnalyzers[def]" ng-click="$ctrl.disable($ctrl.activeAnalyzers[def].id)">
+          <a href class="text-danger">
+            <i class="fa fa-ban"></i>Disable</a>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.enable(def)" ng-if="!$ctrl.activeAnalyzers[def]">
           <a href class="text-success">
             <i class="fa fa-plus"></i>Enable</a>
         </div>
