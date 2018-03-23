@@ -4,5 +4,6 @@ pre.error-trace {
   font-size: 10px;
   word-wrap: break-word;
   word-break: break-all;
+  white-space: pre-wrap;
   background-color: lighten($color: #a94442, $amount: 50%)
 }
