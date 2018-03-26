@@ -1,0 +1,71 @@
+<form class="form-horizontal" name="userForm" ng-submit="$modal.saveUser(userForm)" novalidate>
+  <div class="modal-header bg-primary">
+    <h3 class="modal-title">{{$modal.isEdit ? 'Edit' : 'Add'}} user</h3>
+  </div>
+  <div class="modal-body">
+    <div class="form-group" ng-class="{ 'has-error' : userForm.login.$invalid && !userForm.login.$pristine }">
+      <label class="col-sm-3 control-label">
+        Login
+        <i class="fa fa-asterisk text-danger"></i>
+      </label>
+      <div class="col-sm-9">
+        <input class="form-control" name="login" placeholder="User's login" ng-disabled="$modal.isEdit" ng-model="$modal.formData.id" required
+          type="text" ng-change="$modal.resetLoginError(userForm)">
+        <p class="help-block" ng-show="userForm.login.$invalid && !userForm.login.$pristine && userForm.login.$error.required">This field is required.</p>
+        <p class="help-block" ng-show="userForm.login.$invalid && userForm.login.$error.exists">This login is already in use.</p>
+      </div>
+    </div>
+
+    <div class="form-group" ng-class="{ 'has-error' : userForm.name.$invalid && !userForm.name.$pristine }">
+      <label class="col-sm-3 control-label">
+        Full name
+        <i class="fa fa-asterisk text-danger"></i>
+      </label>
+      <div class="col-sm-9">
+        <input class="form-control" name="name" placeholder="User's name" ng-model="$modal.formData.name" required type="text">
+        <p class="help-block" ng-show="userForm.name.$invalid && !userForm.name.$pristine">This field is required.</p>
+      </div>
+    </div>
+
+    <div class="form-group" ng-class="{ 'has-error' : userForm.organization.$invalid && !userForm.organization.$pristine }" ng-show="!$modal.orgId">
+      <label class="col-sm-3 control-label">
+        Organization
+        <i class="fa fa-asterisk text-danger"></i>
+      </label>
+      <div class="col-sm-9">
+        <select class="form-control" name="organization" ng-model="$modal.formData.organization" ng-options="org.id as org.name for org in $modal.organizations" 
+          ng-change="$modal.onOrgChange()"required></select>
+        <p class="help-block" ng-show="userForm.organization.$invalid && !userForm.organization.$pristine">This field is required.</p>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="col-sm-3 control-label">
+        Roles
+        <i class="fa fa-asterisk text-danger"></i>
+      </label>
+      <div class="col-sm-9">
+        <div class="btn-group" uib-dropdown>
+          <button class="btn btn-default btn-sm dropdown-toggle" uib-dropdown-toggle type="button" ng-disabled="!$modal.formData.organization">
+            {{$modal.formData.roles.join(', ')}}&nbsp;&nbsp;
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" uib-dropdown-menu>
+            <li>
+              <a href ng-click="$modal.formData.roles = r" ng-repeat="r in $modal.rolesList">{{r.join(', ')}}</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+
+
+  </div>
+  <div class="modal-footer text-left">
+    <button class="btn btn-default pull-left" ng-click="$modal.cancel()" type="button">Cancel</button>
+    <span class="btn pull-left">
+      <i class="fa fa-asterisk text-danger"></i>&nbsp;Required field</span>
+    <button class="btn btn-primary pull-right" ng-disabled="userForm.$invalid" type="submit">Save user</button>
+  </div>
+</form>

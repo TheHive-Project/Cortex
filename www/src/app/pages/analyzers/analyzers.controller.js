@@ -2,7 +2,9 @@
 
 import _ from 'lodash/core';
 
-export default class AnalyzersController {
+import PageController from '../../core/controllers/PageController';
+
+export default class AnalyzersController extends PageController {
   constructor(
     $log,
     SearchService,
@@ -11,6 +13,9 @@ export default class AnalyzersController {
     localStorageService
   ) {
     'ngInject';
+
+    super('analyzers-page');
+
     this.$log = $log;
     this.AnalyzerService = AnalyzerService;
     this.NotificationService = NotificationService;
@@ -79,32 +84,6 @@ export default class AnalyzersController {
         : {
             _and: criteria
           };
-  }
-
-  buildRange() {
-    let page = this.pagination.current,
-      size = this.pagination.pageSize;
-
-    return `${(page - 1) * size}-${(page - 1) * size + size}`;
-  }
-
-  applyFilters() {
-    this.state.filters = this.filters;
-    this.localStorageService.set('analyzers-page', this.state);
-    this.load(1);
-  }
-
-  clearFilter(filterName) {
-    this.filters[filterName] = _.isArray(this.filters[filterName]) ? [] : null;
-    this.applyFilters();
-  }
-
-  clearFilters() {
-    _.forEach(_.keys(this.filters), key => {
-      this.filters[key] = _.isArray(this.filters[key]) ? [] : null;
-    });
-
-    this.applyFilters();
   }
 
   load(page) {

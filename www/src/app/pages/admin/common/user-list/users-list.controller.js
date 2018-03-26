@@ -56,6 +56,9 @@ export default class UsersListController {
       .then(() => {
         delete this.userKeyCache[user.id];
         this.reload();
+        this.NotificationService.success(
+          `API key of user ${user.id} has been successfully created.`
+        );
       })
       .catch(response => {
         this.NotificationService.error(
@@ -71,6 +74,9 @@ export default class UsersListController {
       .then(() => {
         delete this.userKeyCache[user.id];
         this.reload();
+        this.NotificationService.success(
+          `API key of user ${user.id} has been successfully revoked.`
+        );
       })
       .catch(response => {
         this.NotificationService.error(
@@ -84,6 +90,9 @@ export default class UsersListController {
   copyKey(user) {
     this.clipboard.copyText(this.userKeyCache[user.id]);
     delete this.userKeyCache[user.id];
+    this.NotificationService.success(
+      `API key of user ${user.id} has been successfully copied to clipboard.`
+    );
   }
 
   setPassword(user, password) {
@@ -93,11 +102,8 @@ export default class UsersListController {
 
     this.UserService.setPass(user.id, password)
       .then(() => {
-        this.NotificationService.log(
-          'The password of user [' +
-            user.id +
-            '] has been successfully updated',
-          'success'
+        this.NotificationService.success(
+          `Password of user ${user.id} has been successfully updated.`
         );
       })
       .catch(response => {
@@ -145,7 +151,7 @@ export default class UsersListController {
 
     let modalInstance = this.ModalService.confirm(
       'Lock user',
-      'Are you sure you want to lock this user. He will no longer be able to have access to Cortex',
+      'Are you sure you want to lock this user? They will no longer be able to have access to Cortex.',
       {
         flavor: 'danger',
         okText: 'Yes, lock the user'
@@ -172,7 +178,7 @@ export default class UsersListController {
 
     let modalInstance = this.ModalService.confirm(
       'Unlock user',
-      'Are you sure you want to unlock this user. He will be able to have access to Cortex',
+      'Are you sure you want to unlock this user? They will be able to have access to Cortex.',
       {
         flavor: 'danger',
         okText: 'Yes, unlock the user'

@@ -2,10 +2,12 @@
 
 import _ from 'lodash/core';
 
+import PageController from '../../../../core/controllers/PageController';
+
 import OrganizationModalController from '../components/organization.modal.controller';
 import organizationModalTpl from '../components/organization.modal.html';
 
-export default class OrganizationsPageController {
+export default class OrganizationsPageController extends PageController {
   constructor(
     $log,
     $uibModal,
@@ -16,6 +18,8 @@ export default class OrganizationsPageController {
     localStorageService
   ) {
     'ngInject';
+
+    super('organizations-page');
 
     this.$log = $log;
     this.$uibModal = $uibModal;
@@ -78,32 +82,6 @@ export default class OrganizationsPageController {
         : {
             _and: criteria
           };
-  }
-
-  buildRange() {
-    let page = this.pagination.current,
-      size = this.pagination.pageSize;
-
-    return `${(page - 1) * size}-${(page - 1) * size + size}`;
-  }
-
-  applyFilters() {
-    this.state.filters = this.filters;
-    this.localStorageService.set('organizations-page', this.state);
-    this.load(1);
-  }
-
-  clearFilter(filterName) {
-    this.filters[filterName] = _.isArray(this.filters[filterName]) ? [] : null;
-    this.applyFilters();
-  }
-
-  clearFilters() {
-    _.forEach(_.keys(this.filters), key => {
-      this.filters[key] = _.isArray(this.filters[key]) ? [] : null;
-    });
-
-    this.applyFilters();
   }
 
   openModal(mode, organization) {

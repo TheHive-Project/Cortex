@@ -2,12 +2,16 @@
 
 import lo from 'lodash';
 
+import UserEditController from '../../../components/user-dialog/user.edit.controller';
+import editModalTpl from '../../../components/user-dialog/user.edit.modal.html';
+
 export default class UserService {
-  constructor($resource, $http, $q) {
+  constructor($resource, $http, $q, $uibModal) {
     'ngInject';
 
     this.$q = $q;
     this.$http = $http;
+    this.$uibModal = $uibModal;
 
     this.userCache = {};
   }
@@ -171,5 +175,22 @@ export default class UserService {
 
   updateCache(userId, userData) {
     this.userCache[userId] = userData;
+  }
+
+  openModal(org, mode, user) {
+    let modal = this.$uibModal.open({
+      animation: true,
+      controller: UserEditController,
+      controllerAs: '$modal',
+      templateUrl: editModalTpl,
+      size: 'lg',
+      resolve: {
+        organization: () => org,
+        user: () => angular.copy(user),
+        mode: () => mode
+      }
+    });
+
+    return modal.result;
   }
 }

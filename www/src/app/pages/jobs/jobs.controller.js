@@ -2,9 +2,9 @@
 
 import _ from 'lodash';
 
-class JobsDeleteController {}
+import PageController from '../../core/controllers/PageController';
 
-export default class JobsController {
+export default class JobsController extends PageController {
   constructor(
     $log,
     $scope,
@@ -17,6 +17,8 @@ export default class JobsController {
     localStorageService
   ) {
     'ngInject';
+
+    super('jobs-page');
 
     this.$log = $log;
     this.$scope = $scope;
@@ -102,32 +104,6 @@ export default class JobsController {
         : {
             _and: criteria
           };
-  }
-
-  buildRange() {
-    let page = this.pagination.current,
-      size = this.pagination.pageSize;
-
-    return `${(page - 1) * size}-${(page - 1) * size + size}`;
-  }
-
-  applyFilters() {
-    this.state.filters = this.filters;
-    this.localStorageService.set('jobs-page', this.state);
-    this.load(1);
-  }
-
-  clearFilter(filterName) {
-    this.filters[filterName] = _.isArray(this.filters[filterName]) ? [] : null;
-    this.applyFilters();
-  }
-
-  clearFilters() {
-    _.forEach(_.keys(this.filters), key => {
-      this.filters[key] = _.isArray(this.filters[key]) ? [] : null;
-    });
-
-    this.applyFilters();
   }
 
   load(page) {
