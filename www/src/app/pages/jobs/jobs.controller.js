@@ -97,9 +97,11 @@ export default class JobsController {
 
     return _.isEmpty(criteria)
       ? {}
-      : {
-          _and: criteria
-        };
+      : criteria.length === 1
+        ? criteria[0]
+        : {
+            _and: criteria
+          };
   }
 
   buildRange() {
@@ -117,6 +119,14 @@ export default class JobsController {
 
   clearFilter(filterName) {
     this.filters[filterName] = _.isArray(this.filters[filterName]) ? [] : null;
+    this.applyFilters();
+  }
+
+  clearFilters() {
+    _.forEach(_.keys(this.filters), key => {
+      this.filters[key] = _.isArray(this.filters[key]) ? [] : null;
+    });
+
     this.applyFilters();
   }
 

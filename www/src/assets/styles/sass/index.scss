@@ -16,6 +16,25 @@ body {
   padding-bottom: 60px;
 }
 
+.btn.btn-clear {
+  &:active {
+    box-shadow: none !important;    
+  }
+
+  &:focus {
+    outline: none !important;
+  }  
+
+  &.text-danger {
+    &:focus {
+      color: #a94442;
+    }
+  }
+}
+.btn.btn-clear:active:focus {
+  outline: none !important;
+}
+
 /*  */
 
 body {

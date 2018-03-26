@@ -22,6 +22,7 @@
           <label class="form-control pull-left">Observable</label>
           <input type="text" class="form-control pull-left mr-xs" placeholder="Search for observable data" ng-model="$ctrl.filters.search">
           <button class="pull-left btn btn-primary" type="submit">Search</button>
+          <button class="pull-left btn btn-clear text-danger" type="button" ng-click="$ctrl.clearFilters()"><i class="fa fa-times-circle"></i> Clear</button>
         
           <select class="ml-xxxs form-control pull-right" ng-model="$ctrl.pagination.pageSize" ng-change="$ctrl.load()" ng-options="v as (v + ' / page') for v in [10, 50, 100, 1000]"></select>
           <ul class="pull-right" ng-show="$ctrl.pagination.total > $ctrl.pagination.pageSize" uib-pagination total-items="$ctrl.pagination.total"

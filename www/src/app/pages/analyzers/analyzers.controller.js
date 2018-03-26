@@ -46,10 +46,20 @@ export default class AnalyzersController {
 
     if (!_.isEmpty(this.filters.search)) {
       criteria.push({
-        _like: {
-          _field: 'description',
-          _value: this.filters.search
-        }
+        _or: [
+          {
+            _like: {
+              _field: 'description',
+              _value: this.filters.search
+            }
+          },
+          {
+            _like: {
+              _field: 'name',
+              _value: this.filters.search
+            }
+          }
+        ]
       });
     }
 
@@ -64,9 +74,11 @@ export default class AnalyzersController {
 
     return _.isEmpty(criteria)
       ? {}
-      : {
-          _and: criteria
-        };
+      : criteria.length === 1
+        ? criteria[0]
+        : {
+            _and: criteria
+          };
   }
 
   buildRange() {
@@ -84,6 +96,14 @@ export default class AnalyzersController {
 
   clearFilter(filterName) {
     this.filters[filterName] = _.isArray(this.filters[filterName]) ? [] : null;
+    this.applyFilters();
+  }
+
+  clearFilters() {
+    _.forEach(_.keys(this.filters), key => {
+      this.filters[key] = _.isArray(this.filters[key]) ? [] : null;
+    });
+
     this.applyFilters();
   }
 
