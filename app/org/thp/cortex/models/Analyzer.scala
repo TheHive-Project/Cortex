@@ -13,8 +13,8 @@ import org.elastic4play.utils.Hasher
 
 object RateUnit extends Enumeration with HiveEnumeration {
   type Type = Value
-  val Day = Value(24 * 60 * 60)
-  val Month = Value(30 * 24 * 60 * 60)
+  val Day = Value(1)
+  val Month = Value(30)
   implicit val reads = enumFormat(this)
 }
 
