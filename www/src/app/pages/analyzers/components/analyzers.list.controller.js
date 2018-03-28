@@ -27,7 +27,8 @@ export default class AnalyzerListController {
       .catch(err => {
         if (!_.isString(err)) {
           this.NotificationService.error(
-            'An error occurred: ' + err.statusText ||
+            err.data.message ||
+              `An error occurred: ${err.statusText}` ||
               'An unexpected error occurred'
           );
         }
