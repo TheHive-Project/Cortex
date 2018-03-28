@@ -49,7 +49,7 @@
         <!-- <span ng-if="canSetPass === true"> -->
         <span>
           <span class="btn btn-sm btn-default" ng-class="{ 'Locked':'disabled', 'Ok':''}[user.status]" ng-click="$ctrl.showPassword(user, true)"
-            ng-hide="$ctrl.showPwdForm[user.id]">New password</span>
+            ng-hide="$ctrl.showPwdForm[user.id]">{{user.hasPassword ? 'Edit password' : 'New password'}}</span>
           <form ng-show="$ctrl.showPwdForm[user.id]" ng-submit="$ctrl.setPassword(user, newValue); $ctrl.showPassword(user, false);">
             <div class="input-group input-group-sm">
               <input auto-focus="user-showPassword-{{user.id}}" class="form-control input-sm" ng-model="newValue" type="password">
