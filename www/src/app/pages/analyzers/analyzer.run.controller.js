@@ -13,22 +13,21 @@ export default class AnalyzerRunController {
     this.Tlps = Tlps;
     this.analyzers = analyzers;
     this.observable = observable;
+    this.initialAnalyzers = [];
   }
 
   $onInit() {
+    this.initialAnalyzers = this.getActiveIds();
     this.formData = {
       analyzers: this.analyzers,
       dataTypes: uniq(_.flatten(_.map(this.analyzers, 'dataTypeList'))),
-      ids: this.getActiveIds()
+      ids: this.getActiveIds().join(',')
     };
     this.observable.tlp = this.observable.tlp || this.Tlps[2].value;
   }
 
   getActiveIds() {
-    return _.map(
-      _.filter(this.analyzers, item => item.active === true),
-      'id'
-    ).join(',');
+    return _.map(_.filter(this.analyzers, item => item.active === true), 'id');
   }
 
   isFile() {
@@ -38,17 +37,24 @@ export default class AnalyzerRunController {
   clearData() {
     delete this.observable.data;
     delete this.observable.attachment;
-    delete this.formData.ids;
 
     _.each(this.analyzers, item => {
-      item.active = false;
+      if (this.initialAnalyzers.indexOf(item.id) === -1) {
+        item.active = false;
+      }
     });
+
+    if (this.initialAnalyzers.length > 0) {
+      this.formData.ids = this.initialAnalyzers.join(',');
+    } else {
+      delete this.formData.ids;
+    }
   }
 
   toggleAnalyzer(analyzer) {
     analyzer.active = !analyzer.active;
 
-    this.formData.ids = this.getActiveIds();
+    this.formData.ids = this.getActiveIds().join(',');
   }
 
   ok() {
