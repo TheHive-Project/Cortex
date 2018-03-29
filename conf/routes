@@ -18,6 +18,10 @@ GET           /api/analyzer/type/:dataType                          org.thp.cort
 POST          /api/analyzer/:id/run                                 org.thp.cortex.controllers.JobCtrl.create(id)
 GET           /api/job/:id/waitreport                               org.thp.cortex.controllers.JobCtrl.waitReport(id, atMost ?= "1minute")
 ####################
+# API used by MISP
+GET           /modules                                              org.thp.cortex.controllers.MispCtrl.modules
+POST          /query                                                org.thp.cortex.controllers.MispCtrl.query
+####################
 
 DELETE        /api/analyzer/:id                                     org.thp.cortex.controllers.AnalyzerCtrl.delete(id)
 PATCH         /api/analyzer/:id                                     org.thp.cortex.controllers.AnalyzerCtrl.update(id)
