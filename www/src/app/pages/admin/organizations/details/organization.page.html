@@ -9,9 +9,7 @@
   <uib-tabset class="nav-tabs-custom">
     <uib-tab index="0">      
       <uib-tab-heading>
-        <i class="fa fa-user"></i> Users ({{$ctrl.users.length}})</uib-tab-heading>
-        <!-- <users-list organization="$ctrl.organization" users="$ctrl.users" on-reload="$ctrl.reloadUsers()"></users-list> -->
-        
+        <i class="fa fa-user"></i> Users</uib-tab-heading>
         <organization-users-list organization="$ctrl.organization"></organization-users-list>        
     </uib-tab>
     <uib-tab index="1" require-roles="orgadmin">

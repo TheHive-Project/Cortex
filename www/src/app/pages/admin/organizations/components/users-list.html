@@ -27,7 +27,6 @@
     
   <users-list organization="$ctrl.organization" users="$ctrl.users" on-reload="$ctrl.reloadUsers()"></users-list>
   
-  
   <div class="mt-s clearfix">
     <div class="box-tools btn-toolbar pull-right">
       <ul ng-show="$ctrl.pagination.total > $ctrl.pagination.pageSize" uib-pagination total-items="$ctrl.pagination.total" ng-change="$ctrl.load()"
