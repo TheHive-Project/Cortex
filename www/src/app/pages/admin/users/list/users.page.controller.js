@@ -62,7 +62,7 @@ export default class UsersPageController extends PageController {
       criteria.push({
         _in: {
           _field: 'status',
-          _values: this.filters.status
+          _values: _.map(this.filters.status, f => (f === 'Active' ? 'Ok' : f))
         }
       });
     }
