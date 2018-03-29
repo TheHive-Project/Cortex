@@ -1,19 +1,22 @@
 #!/bin/bash
 
+ES_HOSTNAME=elasticsearch
 CONFIG_SECRET=1
+CONFIG_ES=1
 CONFIG=1
 CONFIG_FILE=/etc/cortex/application.conf
 ANALYZER_PATH=/opt/Cortex-Analyzers/analyzers
-MISP_MODULE=1
 
 function usage {
 	cat <<- _EOF_
 		Available options:
-		--no-config		| do not try to configure Cortex (add secret and analyzers location)
+		--no-config		| do not try to configure TheHive (add secret and elasticsearch)
 		--no-config-secret	| do not add random secret to configuration
+		--no-config-es		| do not add elasticsearch hosts to configuration
+		--es-hosts <esconfig>	| use this string to configure elasticsearch hosts (format: ["host1:9300","host2:9300"])
+		--es-hostname <host>	| resolve this hostname to find elasticseach instances
 		--secret <secret>	| secret to secure sessions
 		--analyzer-path <path>	| where analyzers are located
-		--no-misp-modules	| disable MISP modules
 	_EOF_
 	exit 1
 }
@@ -24,9 +27,11 @@ do
 	case "$1" in
 		"--no-config")		CONFIG=0;;
 		"--no-config-secret")	CONFIG_SECRET=0;;
+		"--no-config-es")	CONFIG_ES=0;;
+		"--es-hosts")		shift; ES_HOSTS=$1;;
+		"--es-hostname")	shift; ES_HOSTNAME=$1;;
 		"--secret")		shift; SECRET=$1;;
 		"--analyzer-path")	shift; ANALYZER_PATH=$1;;
-		"--no-misp-modules")	shift; MISP_MODULE=0;;
 		"--")			STOP=1;;
 		*)			usage
 	esac
@@ -46,12 +51,34 @@ then
 		echo play.crypto.secret=\"$SECRET\" >> $CONFIG_FILE
 	fi
 
-	echo analyzer.path=\"$ANALYZER_PATH\" >> $CONFIG_FILE
-
-	if test $MISP_MODULE = 1
+	if test $CONFIG_ES = 1
 	then
-		echo 'misp.modules.enabled = true' >> $CONFIG_FILE
+		if test -z "$ES_HOSTS"
+		then
+			function join_es_hosts {
+				echo -n "[\"$1"
+				shift
+				printf "%s:9300\"]" "${@/#/:9300\",\"}"
+			}
+
+			ES=$(getent ahostsv4 $ES_HOSTNAME | awk '{ print $1 }' | sort -u)
+			if test -z "$ES"
+			then
+				echo "Warning automatic elasticsearch host config fails"
+			else
+				ES_HOSTS=$(join_es_hosts $ES)
+			fi
+		fi
+		if test -n "$ES_HOSTS"
+		then
+			echo Using elasticsearch host: $ES_HOSTS
+			echo search.host=$ES_HOSTS >> $CONFIG_FILE
+		else
+			echo elasticsearch host not configured
+		fi
 	fi
+
+	echo analyzer.path=[\"$ANALYZER_PATH\"] >> $CONFIG_FILE
 
 	echo 'include file("/etc/cortex/application.conf")' >> $CONFIG_FILE
 fi

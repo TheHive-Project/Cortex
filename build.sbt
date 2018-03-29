@@ -47,8 +47,7 @@ mappings in Universal ~= {
     file("package/cortex.service") -> "package/cortex.service",
     file("package/cortex.conf") -> "package/cortex.conf",
     file("package/cortex") -> "package/cortex",
-    file("package/logback.xml") -> "conf/logback.xml",
-    file("contrib/misp-modules-loader.py") -> "contrib/misp-modules-loader.py"
+    file("package/logback.xml") -> "conf/logback.xml"
   )
 }
 
@@ -120,7 +119,7 @@ defaultLinuxInstallLocation in Docker := "/opt/cortex"
 dockerRepository := Some("certbdf")
 dockerUpdateLatest := true
 dockerEntrypoint := Seq("/opt/cortex/entrypoint")
-dockerExposedPorts := Seq(9000)
+dockerExposedPorts := Seq(9001)
 mappings in Docker ++= Seq(
   file("package/docker/entrypoint") -> "/opt/cortex/entrypoint",
   file("conf/logback.xml") -> "/etc/cortex/logback.xml",
@@ -141,18 +140,15 @@ dockerCommands ~= { dc =>
       Cmd("USER", "root"),
       ExecCmd("RUN", "bash", "-c",
         "apt-get update && " +
-          "apt-get install -y --no-install-recommends python-pip python2.7-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git && " +
+          "apt-get install -y --no-install-recommends python-pip python2.7-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git libssl-dev && " +
+          "pip install -U pip setuptools && " +
           "cd /opt && " +
           "git clone https://github.com/CERT-BDF/Cortex-Analyzers.git && " +
-          "pip install $(sort -u Cortex-Analyzers/analyzers/*/requirements.txt) && " +
-          "apt-get install -y --no-install-recommends python3-setuptools python3-dev zlib1g-dev libxslt1-dev libxml2-dev libpq5 libjpeg-dev && git clone https://github.com/MISP/misp-modules.git && " +
-          "easy_install3 pip && " +
-          "(cd misp-modules && pip3 install -I -r REQUIREMENTS && pip3 install -I .) && " +
-          "rm -rf misp_modules /var/lib/apt/lists/* /tmp/*"),
+          "pip install $(sort -u Cortex-Analyzers/analyzers/*/requirements.txt)"),
       Cmd("ADD", "var", "/var"),
       Cmd("ADD", "etc", "/etc"),
       ExecCmd("RUN", "chown", "-R", "daemon:root", "/var/log/cortex"),
-      ExecCmd("RUN", "chmod", "+x", "/opt/cortex/bin/cortex", "/opt/cortex/entrypoint", "/opt/cortex/contrib/misp-modules-loader.py")) ++
+      ExecCmd("RUN", "chmod", "+x", "/opt/cortex/bin/cortex", "/opt/cortex/entrypoint")) ++
     dockerTailCmds
 }
 
