@@ -7,7 +7,6 @@ import uiRouter from '@uirouter/angularjs';
 
 import coreModule from './core/core.module';
 import indexComponents from './index.components';
-import indexRoutes from './index.routes';
 
 import mainModule from './pages/main/main.module';
 import loginModule from './pages/login/login.module';
@@ -40,9 +39,6 @@ const App = angular.module('cortex', [
 
   // components
   indexComponents.name,
-
-  // routes
-  indexRoutes.name,
 
   // pages
   mainModule.name,

@@ -2,7 +2,6 @@
 
 const core = angular.module('cortex.core', []);
 
-import validationTestDirective from './directives/validation-test/validation-test.directive';
 import fixedHeightDirective from './directives/fixed-height/fixed-height.directive';
 import fileChooserDirective from './directives/file-chooser/file-chooser.directive';
 import requireRolesDirective from './directives/require-roles/require-roles.directive';
@@ -12,8 +11,6 @@ import tlpDirective from './directives/tlp/tlp.directive';
 import autofocusDirective from './directives/autofocus/autofocus.directive';
 
 import constants from './services/constants';
-import storeFactory from './services/store.factory';
-import resolverProvider from './services/resolver.provider';
 
 import notificationService from './services/common/NotificationService';
 import streamService from './services/common/StreamService';
@@ -36,7 +33,6 @@ core
   .service('UserService', UserService)
   .service('ModalService', ModalService);
 
-validationTestDirective(core);
 fixedHeightDirective(core);
 fileChooserDirective(core);
 requireRolesDirective(core);
@@ -54,8 +50,6 @@ utilsService(core);
 
 /* App services */
 constants(core);
-storeFactory(core);
-resolverProvider(core);
 
 /* Filters */
 fangFilter(core);
