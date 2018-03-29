@@ -57,7 +57,7 @@ class JobCtrl @Inject() (
     }
   }
 
-  def delete(jobId: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { implicit request ⇒
+  def delete(jobId: String): Action[AnyContent] = authenticated(Roles.analyze, Roles.orgAdmin).async { implicit request ⇒
     jobSrv.getForUser(request.userId, jobId)
       .flatMap(job ⇒ jobSrv.delete(job))
       .map(_ ⇒ NoContent)
