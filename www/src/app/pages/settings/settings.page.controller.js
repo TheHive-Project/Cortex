@@ -71,7 +71,7 @@ export default class SettingsPageController {
         this.currentUser.name = data.name;
 
         // TODO
-        //UserInfoSrv.update(data._id, data);
+        this.UserService.updateCache(data._id, data);
 
         this.NotificationService.log(
           'Your basic information have been successfully updated',
