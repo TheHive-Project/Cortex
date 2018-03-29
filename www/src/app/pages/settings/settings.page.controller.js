@@ -69,8 +69,6 @@ export default class SettingsPageController {
     })
       .then(data => {
         this.currentUser.name = data.name;
-
-        // TODO
         this.UserService.updateCache(data._id, data);
 
         this.NotificationService.log(
@@ -117,7 +115,7 @@ export default class SettingsPageController {
           );
         });
     } else {
-      this.$state.go('main.jobs');
+      this.$state.go('index');
     }
   }
   clearPassword(form, changePassword) {
@@ -134,7 +132,7 @@ export default class SettingsPageController {
   }
 
   cancel() {
-    this.$state.go('main.jobs');
+    this.$state.go('index');
   }
 
   clearAvatar(form) {
