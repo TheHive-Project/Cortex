@@ -1,0 +1,21 @@
+.navbar {
+  .avatar.avatar-xs {
+    line-height: 20px;
+    span {
+      line-height: 20px;
+      font-weight: bold;
+    }
+    .avatar-icon {
+      margin-top: -5px;
+    }
+  }   
+}
+
+.profile-dropdown {
+  &.open {
+    .dropdown-menu {
+      left: auto;
+      right: 0;
+    }
+  }
+}

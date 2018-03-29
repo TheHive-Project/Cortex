@@ -13,7 +13,7 @@
     <div class="container">
         <div class="navbar-header">
             <!-- <a href class="navbar-brand"><b>Cortex</b></a> -->
-            <a class="navbar-brand" ui-sref="analyzers">
+            <a class="navbar-brand" ui-sref="app.analyzers">
                 <img alt="Cortex" src="images/logo-small.svg">
             </a>
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
@@ -27,10 +27,13 @@
                     <a href ng-click="nav.newAnalysis()"><i class="fa fa-plus"></i> New Analysis</a>
                 </li>
                 <li ui-sref-active="active">
-                    <a ui-sref="analyzers"><i class="fa fa-cogs"></i> Analyzers</a>
+                    <a ui-sref="app.analyzers"><i class="fa fa-cogs"></i> Analyzers</a>
                 </li>
                 <li ui-sref-active="active">
-                    <a ui-sref="jobs"><i class="fa fa-hourglass"></i> Jobs</a>
+                    <a ui-sref="app.jobs"><i class="fa fa-hourglass"></i> Jobs</a>
+                </li>
+                <li ui-sref-active="active">
+                    <a href ng-click="nav.logout()"><i class="fa fa-sign-out"></i> Logout</a>
                 </li>
             </ul>
         </div>

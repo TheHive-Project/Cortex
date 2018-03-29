@@ -6,9 +6,36 @@
 
             $urlRouterProvider.otherwise('/analyzers');
 
-            $stateProvider                
-                .state('analyzers', {
-                    url: '/analyzers',
+            $stateProvider.state('login', {
+                url: '/login',
+                templateUrl: 'views/login.html',
+                controller: 'LoginController'
+            });
+
+            $stateProvider.state('app', {
+                url: '/',
+                abstract: true,
+                templateUrl: 'views/app.html',
+                controller: 'AppController',
+                resolve: {
+                    currentUser: function($q, $state, AuthService) {
+                        var deferred = $q.defer();
+
+                        AuthService.current()
+                            .then(function(userData) {
+                                return deferred.resolve(userData);
+                            }).catch(function(err) {
+                                return deferred.resolve(err.status === 520 ? err.status : null);
+                            });
+
+                        return deferred.promise;
+                    }
+                }
+            });
+
+            $stateProvider
+                .state('app.analyzers', {
+                    url: 'analyzers',
                     templateUrl: 'views/analyzers.html',
                     controller: 'AnalyzersCtrl',
                     controllerAs: 'vm',
@@ -18,8 +45,8 @@
                         }
                     }
                 })
-                .state('jobs', {
-                    url: '/jobs',
+                .state('app.jobs', {
+                    url: 'jobs',
                     templateUrl: 'views/jobs.html',
                     controller: 'JobsCtrl',
                     controllerAs: 'vm',
@@ -29,8 +56,8 @@
                         }
                     }
                 })
-                .state('job-report', {
-                    url: '/jobs/{id}',
+                .state('app.job-report', {
+                    url: 'jobs/{id}',
                     templateUrl: 'views/jobs.report.html',
                     controller: 'JobReportCtrl',
                     controllerAs: 'vm',
@@ -44,7 +71,7 @@
                                 }, function (response) {
                                     $log.error('Error while getting job report');
                                     defered.reject(response);
-                                    $state.go('jobs');
+                                    $state.go('app.jobs');
                                 });
 
                             return defered.promise;

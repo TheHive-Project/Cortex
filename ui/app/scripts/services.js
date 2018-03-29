@@ -2,7 +2,7 @@
     'use strict';
 
     angular.module('cortex')
-        .value('_', window._)
+        .value('_', _)
         .value('Tlps', [{
             key: 'WHITE',
             value: 0
@@ -32,18 +32,6 @@
                 }));
             };
         })
-        .service('NotificationService', function(HtmlSanitizer, Notification) {
-            this.success = function(message) {
-                var sanitized = HtmlSanitizer.sanitize(message);
-
-                return Notification.success(sanitized);
-            };
-            this.error = function(message) {
-                var sanitized = HtmlSanitizer.sanitize(message);
-
-                return Notification.error(sanitized);
-            };
-        })
         .service('VersionSrv', function($q, $http) {
             this.get = function() {
                 var deferred = $q.defer();
@@ -71,18 +59,18 @@
                 var defered = $q.defer();
 
                 if (this.analyzers === null) {
-                    $http.get('/api/analyzer')
+                    $http.get('./api/analyzer')
                         .then(function(response) {
                             self.analyzers = response.data;
 
-                            self.dataTypes = _.mapObject(
+                            self.dataTypes = _.mapValues(
                                 _.groupBy(
                                     _.flatten(
-                                        _.pluck(response.data, 'dataTypeList')
-                                    ),
+                                        _.map(response.data, 'dataTypeList')
+                                    )/*,
                                     function(item) {
                                         return item;
-                                    }
+                                    }*/
                                 ),
                                 function(value /*, key*/ ) {
                                     return value.length;
@@ -112,7 +100,7 @@
 
                     return $http({
                         method: 'POST',
-                        url: '/api/analyzer/' + id + '/run',
+                        url: './api/analyzer/' + id + '/run',
                         headers: {
                             'Content-Type': undefined
                         },
@@ -146,24 +134,24 @@
                         }
                     };
 
-                    return $http.post('/api/analyzer/' + id + '/run', postData);
+                    return $http.post('./api/analyzer/' + id + '/run', postData);
                 }
             };
 
         })
         .service('JobSrv', function($http) {
             this.list = function(params) {
-                return $http.get('/api/job', {
+                return $http.get('./api/job', {
                     params: params
                 });
             };
 
             this.report = function(jobId) {
-                return $http.get('/api/job/' + jobId + '/report');
+                return $http.get('./api/job/' + jobId + '/report');
             };
 
             this.remove = function(jobId) {
-                return $http.delete('/api/job/' + jobId);
+                return $http.delete('./api/job/' + jobId);
             };
         })
         .service('UtilsSrv', function() {

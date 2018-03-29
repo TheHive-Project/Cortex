@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cortex</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" type="image/png" href="favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="favicon-128x128.png" sizes="128x128" />
+    <!-- <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"> -->
+    <% for(var i=0; i < htmlWebpackPlugin.files.css; i++) { %>
+        <link href="<%= htmlWebpackPlugin.files.css[i] %>" rel="stylesheet">
+    <% } %>
+
+    <% for(var i=0; i < htmlWebpackPlugin.files.chunks; i++) { %>
+        <script src="<%= htmlWebpackPlugin.files.chunks[i].entry %>" defer></script>
+    <% } %>
+</head>
+<body class="hold-transition skin-blue layout-top-nav">
+    <!--[if lt IE 10]>
+    <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+
+    <div ui-view></div>
+
+    <footer-test></footer-test>
+
+</body>
+</html>

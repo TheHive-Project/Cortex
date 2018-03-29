@@ -1,0 +1,12 @@
+<form class="form-horizontal" name="form" ng-submit="$modal.save()">
+  <div class="modal-header bg-primary">
+    <h3 class="modal-title">Edit configuration: {{$modal.configuration.name}}</h3>
+  </div>
+  <div class="modal-body">
+    <configuration-form items="$modal.configuration.configurationItems" configuration="$modal.configuration.config"></configuration-form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-default pull-left" type="button" ng-click="$modal.cancel()">Cancel</button>    
+    <button class="btn btn-primary pull-right" type="submit" ng-disabled="form.$invalid">Save</button>
+  </div>
+</form>

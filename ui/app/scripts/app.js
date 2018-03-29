@@ -15,8 +15,12 @@ angular.module('cortex', [
         'angularMoment',
         'ngSanitize',
         'angularUtils.directives.dirPagination',
-        'angular-page-loader'
+        'angular-page-loader',
+        'thehive-kit'
     ])
+    .config(function(MaintenanceServiceProvider) {
+      MaintenanceServiceProvider.setSuccessState('app.analyzers');
+    })
     .config(function(NotificationProvider) {
         NotificationProvider.setOptions({
             delay: 4000,

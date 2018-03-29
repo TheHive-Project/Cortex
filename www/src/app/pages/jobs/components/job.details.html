@@ -1,0 +1,26 @@
+<div class="box box-primary">
+  <div class="box-header">
+    <i class="fa fa-gear"></i>
+    {{$ctrl.job.analyzerName}}
+  </div>
+  <div class="box-body with-border">
+
+    <strong>Artifact</strong>
+    <p>
+      [{{$ctrl.job.dataType | uppercase}}] {{(($ctrl.job.dataType === 'file') ? $ctrl.job.attachment.name
+      : $ctrl.job.data) | fang}}
+    </p>
+    <hr>
+
+    <strong>Date</strong>
+    <p>
+      <span am-time-ago="$ctrl.job.date"></span>
+    </p>
+    <hr>
+
+    <strong>Status</strong>
+    <p>
+      <span class="label label-default" ng-class="{'Success': 'label-success', 'InProgress': 'label-warning', 'Failure': 'label-danger'}[$ctrl.job.status]">{{$ctrl.job.status}}</span>
+    </p>
+  </div>
+</div>
