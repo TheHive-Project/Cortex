@@ -18,10 +18,4 @@ export default class OrganizationPageController {
     this.OrganizationService = OrganizationService;
     this.AuthService = AuthService;
   }
-
-  reloadUsers() {
-    this.OrganizationService.users(this.organization.id).then(
-      response => (this.users = response)
-    );
-  }
 }

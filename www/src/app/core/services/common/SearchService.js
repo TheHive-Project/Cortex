@@ -28,6 +28,10 @@ export default class SearchService {
     this.config = _.assign({}, config);
 
     // Set the URL
+    if (this.config.url) {
+      return this;
+    }
+
     if (!_.isString(config.objectType) || config.objectType === 'any') {
       this.config.url = './api/_search';
     } else {
@@ -39,16 +43,18 @@ export default class SearchService {
 
   buildQueryString() {
     // Set the URL
-    if (
-      !_.isString(this.config.objectType) ||
-      this.config.objectType === 'any'
-    ) {
-      this.config.url = './api/_search';
-    } else {
-      this.config.url = `./api/${this.config.objectType.replace(
-        /_/g,
-        '/'
-      )}/_search`;
+    if (this.config.objectType) {
+      if (
+        !_.isString(this.config.objectType) ||
+        this.config.objectType === 'any'
+      ) {
+        this.config.url = './api/_search';
+      } else {
+        this.config.url = `./api/${this.config.objectType.replace(
+          /_/g,
+          '/'
+        )}/_search`;
+      }
     }
 
     let queryString = [];

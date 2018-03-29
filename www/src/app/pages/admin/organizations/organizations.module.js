@@ -14,6 +14,9 @@ import analyzerConfigFormTpl from './components/analyzer-config-form.html';
 import OrganizationAnalyzersController from './components/analyzers-list.controller';
 import organizationAnalyzersTpl from './components/analyzers-list.html';
 
+import OrganizationUsersController from './components/users-list.controller';
+import organizationUsersTpl from './components/users-list.html';
+
 import OrganizationConfigsController from './components/config-list.controller';
 import organizationConfigsTpl from './components/config-list.html';
 
@@ -93,6 +96,13 @@ const organizationsModule = angular
       organization: '<',
       analyzerDefinitions: '<',
       analyzers: '<'
+    }
+  })
+  .component('organizationUsersList', {
+    controller: OrganizationUsersController,
+    templateUrl: organizationUsersTpl,
+    bindings: {
+      organization: '<'
     }
   })
   .component('organizationConfigList', {

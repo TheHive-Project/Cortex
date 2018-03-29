@@ -79,7 +79,7 @@ export default class OrganizationService {
 
     this.$http
       .get(`./api/organization/${id}/user`)
-      .then(response => defer.resolve(response.data))
+      .then(response => defer.resolve(response))
       .catch(err => defer.reject(err));
 
     return defer.promise;
