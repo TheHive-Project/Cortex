@@ -14,15 +14,6 @@ trait AnalyzerConfigAttributes { _: AttributeDef ⇒
 @Singleton
 class AnalyzerConfigModel @Inject() (
     organizationModel: OrganizationModel) extends ChildModelDef[AnalyzerConfigModel, AnalyzerConfig, OrganizationModel, Organization](organizationModel, "analyzerConfig", "AnalyzerConfig", "/analyzer/config") with AnalyzerConfigAttributes {
-  //  def empty(name: String, organizationId: String): AnalyzerConfig = new AnalyzerConfig(
-  //    this,
-  //    Json.obj(
-  //      "name" -> name,
-  //      "configuration" -> "{}",
-  //      "_parent" -> organizationId,
-  //      "_id" -> name,
-  //      "_routing" -> "",
-  //      "_version" -> 0))
 }
 
 class AnalyzerConfig(model: AnalyzerConfigModel, attributes: JsObject) extends EntityDef[AnalyzerConfigModel, AnalyzerConfig](model, attributes) with AnalyzerConfigAttributes {

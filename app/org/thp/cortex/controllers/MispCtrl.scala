@@ -23,26 +23,6 @@ class MispCtrl @Inject() (
   private[MispCtrl] lazy val logger = Logger(getClass)
 
   def modules: Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
-
-    /*val (analyzers, analyzerCount) = analyzerSrv.findForUser(request.userId, QueryDSL.any, Some("all"), Nil)
-
-      val mispAnalyzers = analyzers.mapAsyncUnordered(1) { analyzer => analyzerSrv.getDefinition(analyzer.analyzerId()).map(analyzer -> _) }
-      .map {
-        case (analyzer, analyzerDefinition) =>
-          Json.obj(
-            "name" → analyzer.id,
-            "type" → "cortex",
-            "mispattributes" → Json.obj(
-              "input" → analyzer.dataTypeList().flatMap(dataType2mispType).distinct,
-              "output" → Json.arr()),
-            "meta" → Json.obj(
-              "module-type" → Json.arr("cortex"),
-              "description" → analyzer.description(),
-              "author" → analyzerDefinition.author,
-              "version" → analyzerDefinition.version,
-              "config" → Json.arr()))
-      }
-*/
     val (analyzers, analyzerCount) = mispSrv.moduleList
     renderer.toOutput(OK, analyzers, analyzerCount)
   }

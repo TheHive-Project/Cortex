@@ -17,11 +17,6 @@ import org.elastic4play.models.HiveEnumeration
 import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.{ AttributeError, InvalidFormatAttributeError, MissingAttributeError }
 
-//object AnalyzerStatus extends Enumeration with HiveEnumeration {
-//  type Type = Value
-//  val Enabled, Disabled = Value
-//}
-
 object AnalyzerConfigItemType extends Enumeration with HiveEnumeration {
   type Type = Value
   val string, number, boolean = Value

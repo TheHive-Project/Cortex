@@ -99,49 +99,6 @@ class MispSrv @Inject() (
     }
   }
 
-  //  private def toReport(mispOutput: JsObject): Report = {
-  //    (mispOutput \ "results").asOpt[Seq[JsObject]]
-  //      .map { attributes ⇒
-  //        val artifacts: Seq[Artifact] = for {
-  //          attribute ← attributes
-  //          tpe ← (attribute \ "types").asOpt[Seq[String]]
-  //            .orElse((attribute \ "types").asOpt[String].map(Seq(_)))
-  //            .getOrElse(Nil)
-  //          dataType = mispType2dataType(tpe) // TODO handle FileArtifact
-  //          value ← (attribute \ "values").asOpt[Seq[String]]
-  //            .orElse((attribute \ "values").asOpt[String].map(Seq(_)))
-  //            .getOrElse(Nil)
-  //        } yield DataArtifact(value, Json.obj("dataType" → dataType))
-  //        SuccessReport(artifacts, Json.obj("artifacts" → Json.toJson(artifacts)), JsObject(Nil))
-  //      }
-  //      .getOrElse {
-  //        val message = (mispOutput \ "error").asOpt[String].getOrElse(mispOutput.toString)
-  //        FailureReport(message, JsNull)
-  //      }
-  //  }
-
-  /*
-    private def toMispOutput(report: Report): JsObject = {
-      report match {
-        case SuccessReport(artifacts, _, _) ⇒
-          val attributes = artifacts.map {
-            case artifact: DataArtifact ⇒
-              Json.obj(
-                "types" → dataType2mispType(artifact.dataType),
-                "values" → Json.arr(artifact.data))
-            case artifact: FileArtifact ⇒ ??? // TODO
-          }
-          val cortexAttribute = Json.obj(
-            "types" → Seq("cortex"),
-            "values" → Json.arr(Json.toJson(report).toString))
-
-          Json.obj("results" → (attributes :+ cortexAttribute))
-        case FailureReport(message, _) ⇒
-          Json.obj("error" → message)
-      }
-    }
-   */
-
   private def toMispOutput(artifact: Artifact): JsObject = {
     (artifact.data(), artifact.attachment()) match {
       case (Some(data), None) ⇒ Json.obj(
