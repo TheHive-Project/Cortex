@@ -1,109 +1,145 @@
 # Change Log
 
-## [1.1.4](https://github.com/CERT-BDF/Cortex/tree/1.1.4) (2017-09-15)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.3...1.1.4)
+## [2.0.1](https://github.com/TheHive-Project/Cortex/tree/2.0.1) (2018-03-30)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.0...2.0.1)
+
+**Fixed bugs:**
+
+- File upload component not working [\#69](https://github.com/TheHive-Project/Cortex/issues/69)
+- Packages contain obsolete configuration sample [\#68](https://github.com/TheHive-Project/Cortex/issues/68)
+- User can't change his password [\#67](https://github.com/TheHive-Project/Cortex/issues/67)
+
+## [2.0.0](https://github.com/TheHive-Project/Cortex/tree/2.0.0) (2018-03-29)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.4...2.0.0)
 
 **Implemented enhancements:**
 
-- Group ownership in Docker image prevents running on OpenShift [\#42](https://github.com/CERT-BDF/Cortex/issues/42)
+- Display analyzers only if necessary configuration values are set [\#14](https://github.com/TheHive-Project/Cortex/issues/14)
 
 **Fixed bugs:**
 
-- Display a error notification on analyzer start fail [\#39](https://github.com/CERT-BDF/Cortex/issues/39)
-- Cortex removes the input details from failure reports [\#38](https://github.com/CERT-BDF/Cortex/issues/38)
+- Error when clicking out of the "New Analysis" box [\#48](https://github.com/TheHive-Project/Cortex/issues/48)
 
 **Closed issues:**
 
-- Disable analyzer in configuration file [\#32](https://github.com/CERT-BDF/Cortex/issues/32)
+- AMD64 REPO 404 [\#64](https://github.com/TheHive-Project/Cortex/issues/64)
+- Unable for Cortex to connected to MISP [\#61](https://github.com/TheHive-Project/Cortex/issues/61)
+- Cortex crashed after a OutOfMemoryError [\#60](https://github.com/TheHive-Project/Cortex/issues/60)
+- Malwareconfig Lookup and Yara Rule Additions [\#57](https://github.com/TheHive-Project/Cortex/issues/57)
+- Shodan Analyzer Fails - Module cortexutils Not Found [\#55](https://github.com/TheHive-Project/Cortex/issues/55)
+- API: Resource not found by Assets controller [\#47](https://github.com/TheHive-Project/Cortex/issues/47)
+- Wrong MISP config in conf/application.sample [\#45](https://github.com/TheHive-Project/Cortex/issues/45)
+- Local, LDAP, AD and API Key Authentication [\#7](https://github.com/TheHive-Project/Cortex/issues/7)
+- Limit Rates and Respect Quotas [\#6](https://github.com/TheHive-Project/Cortex/issues/6)
+- Persistence and Report Caching [\#5](https://github.com/TheHive-Project/Cortex/issues/5)
+- Provide alternative paths for analyzers in addition to standard path.  [\#4](https://github.com/TheHive-Project/Cortex/issues/4)
+- Provide way to reload conf file for new API keys without shutdown. [\#3](https://github.com/TheHive-Project/Cortex/issues/3)
+- Provide Secret Key auth to upstream service [\#2](https://github.com/TheHive-Project/Cortex/issues/2)
 
-## [1.1.3](https://github.com/CERT-BDF/Cortex/tree/1.1.3) (2017-06-14)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/debian/1.1.2-2...1.1.3)
+**Merged pull requests:**
+
+- Add proxy configuration block [\#52](https://github.com/TheHive-Project/Cortex/pull/52) ([cemasirt](https://github.com/cemasirt))
+- Fixed Typo [\#46](https://github.com/TheHive-Project/Cortex/pull/46) ([steoleary](https://github.com/steoleary))
+- Adding WOT config sample [\#43](https://github.com/TheHive-Project/Cortex/pull/43) ([mthlvt](https://github.com/mthlvt))
+
+## [1.1.4](https://github.com/TheHive-Project/Cortex/tree/1.1.4) (2017-09-15)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.3...1.1.4)
 
 **Fixed bugs:**
 
-- Problem Start Cortex on Ubuntu 16.04 [\#35](https://github.com/CERT-BDF/Cortex/issues/35)
-- Error when parsing analyzer failure report [\#33](https://github.com/CERT-BDF/Cortex/issues/33)
+- Display a error notification on analyzer start fail [\#39](https://github.com/TheHive-Project/Cortex/issues/39)
+- Cortex removes the input details from failure reports [\#38](https://github.com/TheHive-Project/Cortex/issues/38)
 
-## [debian/1.1.2-2](https://github.com/CERT-BDF/Cortex/tree/debian/1.1.2-2) (2017-05-24)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.2...debian/1.1.2-2)
+**Closed issues:**
 
-## [1.1.2](https://github.com/CERT-BDF/Cortex/tree/1.1.2) (2017-05-24)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/debian/1.1.1-2...1.1.2)
+- Group ownership in Docker image prevents running on OpenShift [\#42](https://github.com/TheHive-Project/Cortex/issues/42)
+- Disable analyzer in configuration file [\#32](https://github.com/TheHive-Project/Cortex/issues/32)
+
+## [1.1.3](https://github.com/TheHive-Project/Cortex/tree/1.1.3) (2017-06-14)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/debian/1.1.2-2...1.1.3)
+
+**Fixed bugs:**
+
+- Problem Start Cortex on Ubuntu 16.04 [\#35](https://github.com/TheHive-Project/Cortex/issues/35)
+- Error when parsing analyzer failure report [\#33](https://github.com/TheHive-Project/Cortex/issues/33)
+
+## [1.1.2](https://github.com/TheHive-Project/Cortex/tree/1.1.2) (2017-05-24)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/debian/1.1.1-2...1.1.2)
 
 **Implemented enhancements:**
 
-- Add page loader [\#30](https://github.com/CERT-BDF/Cortex/issues/30)
-- Initialize MISP modules at startup [\#28](https://github.com/CERT-BDF/Cortex/issues/28)
+- Add page loader [\#30](https://github.com/TheHive-Project/Cortex/issues/30)
+- Initialize MISP modules at startup [\#28](https://github.com/TheHive-Project/Cortex/issues/28)
 
 **Fixed bugs:**
 
-- jobstatus from jobs within cortex are not updated when status changes [\#31](https://github.com/CERT-BDF/Cortex/issues/31)
-- Cortex and MISP unclear and error-loop [\#29](https://github.com/CERT-BDF/Cortex/issues/29)
-- Error 500 in TheHive when a job is submited to Cortex [\#27](https://github.com/CERT-BDF/Cortex/issues/27)
+- jobstatus from jobs within cortex are not updated when status changes [\#31](https://github.com/TheHive-Project/Cortex/issues/31)
+- Cortex and MISP unclear and error-loop [\#29](https://github.com/TheHive-Project/Cortex/issues/29)
+- Error 500 in TheHive when a job is submited to Cortex [\#27](https://github.com/TheHive-Project/Cortex/issues/27)
 
-## [debian/1.1.1-2](https://github.com/CERT-BDF/Cortex/tree/debian/1.1.1-2) (2017-05-19)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/rpm/1.1.1-2...debian/1.1.1-2)
+## [debian/1.1.1-2](https://github.com/TheHive-Project/Cortex/tree/debian/1.1.1-2) (2017-05-19)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/rpm/1.1.1-2...debian/1.1.1-2)
 
-## [rpm/1.1.1-2](https://github.com/CERT-BDF/Cortex/tree/rpm/1.1.1-2) (2017-05-19)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.1...rpm/1.1.1-2)
-
-**Fixed bugs:**
-
-- After Upgrade from Cortex 1.0.2 to 1.1.1 system does not come up [\#26](https://github.com/CERT-BDF/Cortex/issues/26)
-
-## [1.1.1](https://github.com/CERT-BDF/Cortex/tree/1.1.1) (2017-05-17)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.1.0...1.1.1)
+## [rpm/1.1.1-2](https://github.com/TheHive-Project/Cortex/tree/rpm/1.1.1-2) (2017-05-19)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.1...rpm/1.1.1-2)
 
 **Fixed bugs:**
 
-- Missing logos and favicons [\#25](https://github.com/CERT-BDF/Cortex/issues/25)
+- After Upgrade from Cortex 1.0.2 to 1.1.1 system does not come up [\#26](https://github.com/TheHive-Project/Cortex/issues/26)
+
+## [1.1.1](https://github.com/TheHive-Project/Cortex/tree/1.1.1) (2017-05-17)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.0...1.1.1)
+
+**Fixed bugs:**
+
+- Missing logos and favicons [\#25](https://github.com/TheHive-Project/Cortex/issues/25)
 
 **Closed issues:**
 
-- Cortex 1.1.0 doesnt work with theHive 2.11.0 [\#24](https://github.com/CERT-BDF/Cortex/issues/24)
-- MISP integration [\#21](https://github.com/CERT-BDF/Cortex/issues/21)
+- Cortex 1.1.0 doesnt work with theHive 2.11.0 [\#24](https://github.com/TheHive-Project/Cortex/issues/24)
+- MISP integration [\#21](https://github.com/TheHive-Project/Cortex/issues/21)
 
-## [1.1.0](https://github.com/CERT-BDF/Cortex/tree/1.1.0) (2017-05-12)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.0.2...1.1.0)
+## [1.1.0](https://github.com/TheHive-Project/Cortex/tree/1.1.0) (2017-05-12)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.0.2...1.1.0)
 
 **Implemented enhancements:**
 
-- Add support to .deb and .rpm package generation [\#20](https://github.com/CERT-BDF/Cortex/issues/20)
-- Scala code cleanup [\#19](https://github.com/CERT-BDF/Cortex/issues/19)
-- Display analyzers metadata [\#18](https://github.com/CERT-BDF/Cortex/issues/18)
+- Add support to .deb and .rpm package generation [\#20](https://github.com/TheHive-Project/Cortex/issues/20)
+- Scala code cleanup [\#19](https://github.com/TheHive-Project/Cortex/issues/19)
+- Display analyzers metadata [\#18](https://github.com/TheHive-Project/Cortex/issues/18)
 
 **Closed issues:**
 
-- Display Cortex version on the footer [\#23](https://github.com/CERT-BDF/Cortex/issues/23)
-- Use new logo and favicon [\#22](https://github.com/CERT-BDF/Cortex/issues/22)
+- Display Cortex version on the footer [\#23](https://github.com/TheHive-Project/Cortex/issues/23)
+- Use new logo and favicon [\#22](https://github.com/TheHive-Project/Cortex/issues/22)
 
-## [1.0.2](https://github.com/CERT-BDF/Cortex/tree/1.0.2) (2017-04-19)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.0.1...1.0.2)
+## [1.0.2](https://github.com/TheHive-Project/Cortex/tree/1.0.2) (2017-04-19)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.0.1...1.0.2)
 
 **Fixed bugs:**
 
-- Redirect to jobs list when a job is not found [\#16](https://github.com/CERT-BDF/Cortex/issues/16)
-- Global section in configuration file is ignored [\#13](https://github.com/CERT-BDF/Cortex/issues/13)
-- Secure the usage of angular-ui-notification library [\#12](https://github.com/CERT-BDF/Cortex/issues/12)
-- Jobs list API doesn't take into account the limit param [\#11](https://github.com/CERT-BDF/Cortex/issues/11)
+- Redirect to jobs list when a job is not found [\#16](https://github.com/TheHive-Project/Cortex/issues/16)
+- Global section in configuration file is ignored [\#13](https://github.com/TheHive-Project/Cortex/issues/13)
+- Secure the usage of angular-ui-notification library [\#12](https://github.com/TheHive-Project/Cortex/issues/12)
+- Jobs list API doesn't take into account the limit param [\#11](https://github.com/TheHive-Project/Cortex/issues/11)
 
 **Closed issues:**
 
-- Support for cuckoo malware analysis plattform \(link analysis\) [\#17](https://github.com/CERT-BDF/Cortex/issues/17)
-- Documentation on 'How to create an analyzer' [\#10](https://github.com/CERT-BDF/Cortex/issues/10)
+- Support for cuckoo malware analysis plattform \(link analysis\) [\#17](https://github.com/TheHive-Project/Cortex/issues/17)
+- Documentation on 'How to create an analyzer' [\#10](https://github.com/TheHive-Project/Cortex/issues/10)
 
-## [1.0.1](https://github.com/CERT-BDF/Cortex/tree/1.0.1) (2017-03-08)
-[Full Changelog](https://github.com/CERT-BDF/Cortex/compare/1.0.0...1.0.1)
+## [1.0.1](https://github.com/TheHive-Project/Cortex/tree/1.0.1) (2017-03-08)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.0.0...1.0.1)
 
 **Fixed bugs:**
 
-- Fix page scroll issues [\#9](https://github.com/CERT-BDF/Cortex/issues/9)
+- Fix page scroll issues [\#9](https://github.com/TheHive-Project/Cortex/issues/9)
 
 **Closed issues:**
 
-- Missing install repertory [\#1](https://github.com/CERT-BDF/Cortex/issues/1)
+- Missing install repertory [\#1](https://github.com/TheHive-Project/Cortex/issues/1)
 
-## [1.0.0](https://github.com/CERT-BDF/Cortex/tree/1.0.0) (2017-02-01)
+## [1.0.0](https://github.com/TheHive-Project/Cortex/tree/1.0.0) (2017-02-01)
 
 
 \* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*
