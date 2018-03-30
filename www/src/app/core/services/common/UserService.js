@@ -53,9 +53,10 @@ export default class UserService {
     return defer.promise;
   }
 
-  changePass(id, password) {
+  changePass(id, currentPassword, password) {
     return this.$http
       .post(`./api/user/${id}/password/change`, {
+        currentPassword: currentPassword,
         password: password
       })
       .then(response => this.$q.resolve(response.data))

@@ -1,5 +1,6 @@
 'use strict';
 
+import $ from 'jquery';
 import Dropzone from 'dropzone';
 
 import tpl from './file-chooser.html';

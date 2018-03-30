@@ -88,18 +88,12 @@ export default class SettingsPageController {
       return;
     }
 
-    let updatedFields = {};
     if (
       this.passData.currentPassword &&
       this.passData.password !== '' &&
       this.passData.password === this.passData.passwordConfirm
     ) {
-      updatedFields.currentPassword = this.passData.currentPassword;
-      updatedFields.password = this.passData.password;
-    }
-
-    if (updatedFields !== {}) {
-      this.UserService.changePass(this.currentUser.id, updatedFields)
+      this.UserService.changePass(this.currentUser.id, this.passData.currentPassword, this.passData.password)
         .then(() => {
           this.NotificationService.log(
             'Your password has been successfully updated',

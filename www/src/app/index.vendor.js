@@ -1,6 +1,7 @@
 'use strict';
 
-// node_modules
+import $ from 'jquery';
+
 import 'angular';
 
 import '@uirouter/angularjs';
@@ -12,8 +13,6 @@ import 'oclazyload';
 import 'angular-sanitize';
 
 import 'angular-messages';
-
-import 'jquery';
 
 import 'angular-resource';
 
