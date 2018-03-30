@@ -25,33 +25,41 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 
 
 ## Analyzers
-Cortex has 27 analyzers listed below:
+Cortex has 30 analyzers listed below. To configure them, read the
+[Cortex Analyzers Requirements Guide](https://github.com/CERT-BDF/CortexDocs/blob/master/analyzer_requirements.md).
 
 + Abuse_Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
 + CERTatPassiveDNS*: Check [CERT.at Passive DNS Service](https://www.cert.at/about/contact/contact.html) for a given domain.
 + CIRCLPassiveDNS\*: Check [CIRCL's Passive DNS](https://www.circl.lu/services/passive-dns/) for a given domain.
 + CIRCLPassiveSSL\*: Check [CIRCL's Passive SSL](https://www.circl.lu/services/passive-ssl/) service for a given IP address or certificate hash.
 + CuckooSandbox: analyze URLs and files using [Cuckoo Sandbox](https://cuckoosandbox.org/).
-+ DNSDB\*: leverage Farsight's [DNSDB](https://www.dnsdb.info/) for pDNS.
++ DNSDB\*: leverage Farsight Security's [DNSDB](https://www.dnsdb.info/) for 
+Passive DNS.
 + DomainTools\*: look up domain names, IP addresses, WHOIS records, etc. using the popular [DomainTools](http://domaintools.com/) service API.
++ EmergingThreats\*: leverage Proofpoint's [Emerging Threats Intelligence](https://threatintel.proofpoint.com/) to assess the reputation of various observables and obtain additional and valuable information on malware.
 + File_Info: parse files in several formats such as OLE and OpenXML to detect
- VBA macros, extract their source code, generate useful information on PE, PDF files and much more.
+ VBA macros, extract their source code, generate useful information on PE, PDF files and much more. 
 + FireHOLBlocklists: check IP addresses against the [FireHOL blocklists](https://firehol.org/).
 + GoogleSafebrowsing\*: check URLs against [Google Safebrowsing](https://www.google.com/transparencyreport/safebrowsing/).
++ HybridAnalysis\*: fetch [Hybrid Analysis](https://www.hybrid-analysis.com/) reports associated with hashes and filenames.
 + Hippocampe: query threat feeds through [Hippocampe](https://github.com/CERT-BDF/Hippocampe), a FOSS tool that centralizes feeds and allows you to associate a confidence level to each one of them (that can be changed over time) and get a score indicating the data quality.
 + JoeSandbox\*: analyze URLs and files using the powerful [Joe Sandbox](https://www.joesecurity.org/) malware analysis solution.
 + MaxMind: geolocation.
 + MISP\*: search for [MISP](http://www.misp-project.org/) events in one or several MISP instances containing the observable submitted as input.  
-+ Nessus: use Tenable's [Nessus Vulnerability Scanner](https://www.tenable.com/products/nessus-vulnerability-scanner) to scan an IP address or a FQDN.
++ Nessus: use [Nessus Professional](https://www.tenable.com/products/nessus-vulnerability-scanner),
+a popular vulnerability scanner to scan an IP address or a FQDN.
 + MsgParser: parse Outlook message files automatically and show the key information it contains such as headers, attachments etc.
 + OTXQuery\*: query AlienVault [Open Threat Exchange](https://otx.alienvault.com/) for IPs, domains, URLs, or file hashes.
 + PassiveTotal\*: leverage [RiskIQ's PassiveTotal](https://www.passivetotal.org/) service to gain invaluable insight on observables, identify overlapping infrastructure using Passive DNS, WHOIS, SSL certificates and more.
-+ Phishing Initiative\*: query [Phishing Initiative](https://phishing-initiative.fr/contrib/) to assess whether a URL has been flagged a phishing site.
-+ PhishTank\*: query [PhishTank](https://www.phishtank.com/) to assess whether a URL has been flagged a phishing site.
++ Phishing Initiative\*: query [Phishing Initiative](https://phishing-initiative.fr/contrib/) to assess whether a URL has been 
+flagged as a phishing site.
++ PhishTank\*: query [PhishTank](https://www.phishtank.com/) to assess 
+whether a URL has been flagged as a phishing site.
++ Shodan\*: retrieve key [Shodan](https://www.shodan.io/) information on domains and IP addresses.
 + URLCategory: check the Fortinet categories of URLs.
 + VirusShare: check whether a file/hash is available on [VirusShare.com](https://virusshare.com/).
-+ VirusTotal\*: look up files, URLs and hashes through [VirusTotal](https://www.virustotal.com/).
-+ VMRay\*: analyze files using [VMRay](https://www.vmray.com/).
++ VirusTotal\*: look up files, URLs and hashes in [VirusTotal](https://www.virustotal.com/).
++ VMRay\*: analyze files using the [VMRay Analyzer Platform](https://www.vmray.com/products/).
 + WOT\*: check a domain against [Web of Trust](https://www.mywot.com/), a website reputation service.
 + Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
 + Yeti: retrieve all available information related to a domain, a fully qualified domain name, an IP address, a URL or a hash from a [YETI](https://yeti-platform.github.io/) instance. 
@@ -68,14 +76,21 @@ Cortex is an open source and free software released under the [AGPL](https://git
 Information, news and updates are regularly posted on [TheHive Project Twitter account](https://twitter.com/thehive_project) and on [the blog](https://blog.thehive-project.org/).
 
 # Contributing
-We welcome your contributions, **[particularly new analyzers](https://github.com/CERT-BDF/cortex-analyzers/)** that can take away the load off overworked fellow analysts. Please feel free to fork the code, play with it, make some patches and send us pull requests using [issues](https://github.com/CERT-BDF/Cortex/issues).
+We welcome your contributions, **[particularly new analyzers](https://github.com/CERT-BDF/CortexDocs/blob/master/api/how-to-create-an-analyzer.md)**
+that can take away the load off overworked fellow analysts. Please feel free 
+to fork the code, play with it, make some patches and send us pull requests 
+using [issues](https://github.com/CERT-BDF/Cortex/issues).
 
 We do have a [Code of conduct](code_of_conduct.md). Make sure to check it out before contributing.
 
 # Support
 Please [open an issue on GitHub](https://github.com/CERT-BDF/Cortex/issues) if you'd like to report a bug or request a feature.
 
-**Important Note**: if you encounter an issue with an analyzer or would like to request a new one or an improvement to an existing analyzer, please open an issue on the [analyzers' dedicated GitHub repository](https://github.com/CERT-BDF/cortex-analyzers/issues/new). If you have problems with TheHive or would like to request a TheHive-related feature, please [open an issue on its dedicated GitHub repository](https://github.com/CERT-BDF/TheHive/issues/new).
+**Important Note**: if you encounter an issue with an analyzer or would like to
+request a new one or an improvement to an existing analyzer, please open an
+issue on the [analyzers' dedicated GitHub repository](https://github.com/CERT-BDF/cortex-analyzers/issues/new).
+If you have problems with TheHive or would like to request a TheHive-related
+feature, please [open an issue on its dedicated GitHub repository](https://github.com/CERT-BDF/TheHive/issues/new).
 
 Alternatively, if you need to contact the project team, send an email to <support@thehive-project.org>.
 

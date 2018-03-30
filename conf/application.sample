@@ -278,6 +278,13 @@ analyzer {
     VirusTotal {
       #key="..."
     }
+    
+    # Web Of Trust: this analyzer requires an API key. Depending  on  your
+    # usage, you can use a free API key or paid one.
+    # See https://www.mywot.com/wiki/API#Registration
+    WOT {
+      #key="..."
+    }
 
     # VMRay:  this  analyzer  requires  the  URL  of  a  VMRay  Analyzer
     # Platform, the associated API key and a cert path to  validate  the
