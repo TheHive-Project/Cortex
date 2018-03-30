@@ -1,0 +1,113 @@
+<!--
+<a ui-sref="home" class="logo">
+    <span class="logo-mini"><b>C</b></span>
+    <span class="logo-lg">Cortex</span>
+</a>
+<nav class="navbar navbar-static-top" role="navigation">
+    <a href class="sidebar-toggle" data-toggle="offcanvas" role="button">
+        <span class="sr-only">Toggle navigation</span>
+    </a>
+</nav>
+-->
+<nav class="navbar navbar-static-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <!-- <a href class="navbar-brand"><b>Cortex</b></a> -->
+      <a class="navbar-brand" ui-sref="main.analyzers">
+        <img alt="Cortex" src="../../../assets/images/logo-small.svg">
+      </a>
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse">
+      <ul class="ml-l nav navbar-nav" require-roles="orgadmin,analyze">
+        <li>
+          <a href ng-click="$ctrl.newAnalysis()">
+            <i class="fa fa-plus"></i> <strong>New Analysis</strong></a>
+        </li>
+      </ul>
+      <ul class="nav navbar-nav pull-right">
+        <li ui-sref-active="active" require-roles="orgadmin,analyze">
+          <a ui-sref="main.jobs">
+            <i class="fa fa-hourglass"></i> <strong>Jobs History</strong></a>
+        </li>
+        <li ui-sref-active="active" require-roles="orgadmin,analyze">
+          <a ui-sref="main.analyzers">
+            <i class="fa fa-cogs"></i>
+            <strong>Analyzers</strong>
+          </a>
+        </li>
+        <li ui-sref-active="active" require-roles="orgadmin">
+          <a ui-sref="main.organization({id: $ctrl.main.currentUser.organization})">
+            <i class="fa fa-file-text"></i>
+            <strong>Organization</strong>
+          </a>
+        </li>
+        <li ui-sref-active="active" require-roles="superadmin">
+          <a ui-sref="main.organizations">
+            <i class="fa fa-file-text"></i>
+            <strong>Organizations</strong>
+          </a>
+        </li>
+        <li ui-sref-active="active" require-roles="superadmin">
+          <a ui-sref="main.users">
+            <i class="fa fa-users"></i>
+            <strong>Users</strong>
+          </a>
+        </li>
+        <!-- <li class="dropdown" require-roles="superadmin" uib-dropdown>
+          <a class="dropdown-toggle" uib-dropdown-toggle href>
+            <i class="fa fa-cog"></i>
+            <span class="hpad5"><strong>Administration</strong></span>
+            <b class="caret"></b>
+          </a>
+          <ul class="dropdown-menu" uib-dropdown-menu>            
+            <li>
+              <a ui-sref="main.users">
+                <i class="fa fa-users"></i>
+                <span class="hpad5">Users</span>
+              </a>
+            </li>     
+            <li class="divider"></li>
+            <li>
+              <a ui-sref="main.organizations">
+                <i class="fa fa-file-text"></i>
+                <span class="hpad5">Organizations</span>
+              </a>
+            </li>
+          </ul>
+        </li> -->
+        <li class="profile-dropdown dropdown" uib-dropdown>
+          <a class="dropdown-toggle" uib-dropdown-toggle href>
+            <user-avatar user-id="$ctrl.main.currentUser.id" prefix="true"></user-avatar>
+          </a>
+          <ul class="dropdown-menu" uib-dropdown-menu>
+            <li ui-sref-active="active">
+              <a href ui-sref="main.settings">
+                <i class="fa fa-address-book"></i>
+                <strong>Settings</strong>
+              </a>
+            </li>
+            <li class="divider"></li>
+            <li ui-sref-active="active">
+              <a href ng-click="$ctrl.about()">
+                <i class="fa fa-question-circle"></i>
+                <strong>About</strong>
+              </a>
+            </li>
+            <li class="divider"></li>
+            <li ui-sref-active="active">
+              <a href ng-click="$ctrl.logout()">
+                <i class="fa fa-sign-out"></i>
+                <strong>Logout</strong>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</nav>

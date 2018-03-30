@@ -1,0 +1,198 @@
+
+$icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
+@import '~bootstrap-sass/assets/stylesheets/_bootstrap.scss';
+
+@import './vendors/AdminLTE.scss';
+@import './vendors/AdminLTE-skin-blue.scss';
+
+@import './flex-table.scss';
+@import './paginable-table.scss';
+
+
+html { height: 100%; }
+body {
+  min-height: 100%;
+  position: relative;
+  padding-bottom: 60px;
+}
+
+.btn.btn-clear {
+  &:active {
+    box-shadow: none !important;    
+  }
+
+  &:focus {
+    outline: none !important;
+  }  
+
+  &.text-danger {
+    &:focus {
+      color: #a94442;
+    }
+  }
+  background-color: #fff;
+}
+.btn.btn-clear:active:focus {
+  outline: none !important;
+}
+
+/*  */
+
+body {
+  padding: 0;
+  background-color: #ecf0f5;
+}
+
+.header {
+  margin-bottom: 30px;
+}
+
+.footer {
+  height: 50px;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.wrap {
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.navbar-header {
+  padding-left: 10px;
+}
+
+.navbar-brand {
+  width: 130px;
+  padding: 12px 15px;
+}
+
+.footer {
+  padding-top: 19px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.empty-message {
+  background-color: #f5f5f5;
+  color: #AAA;
+  font-size: 18px;
+  text-align: center;
+  padding: 40px;
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.container-narrow>hr {
+  margin: 30px 0;
+}
+
+.search-box {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.datatype.label {
+  margin-right: 5px;
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.panel {
+  border: 0;
+}
+
+.panel-heading {
+  border-radius: 0;
+}
+
+.panel-body {
+  padding: 10px 15px;
+  background-color: #eee;
+}
+
+.panel-heading h3 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: normal;
+  width: 75%;
+  padding-top: 8px;
+}
+
+a.text-white,
+a.text-white:hover {
+  color: white;
+}
+
+
+/* Responsive: Portrait tablets and up */
+
+@media screen and (min-width: 768px) {
+  .container {
+    max-width: 1200px;
+  }
+  /* Remove the padding we set earlier */
+  .header,
+  .footer {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.job-box .job-artifact {
+  padding: 5px 20px;
+}
+
+.job-box .job-details .label {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.job-box .job-analyzer {
+  margin-right: 20px;
+}
+
+.job-box .job-report pre {
+  background: #333;
+  color: #fff;
+  /*
+    background-color: #eee !important;
+    border: none;
+    border-radius: 0;
+    color: #777;
+    */
+}
+
+.analyzer-box {
+  background-color: #efefef;
+  padding: 15px 10px;
+  margin-bottom: 10px;
+}
+
+.analyzer-box .title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.box-tools .pagination {
+  margin: 0;
+}
+
+[ng\:cloak],
+[ng-cloak],
+[data-ng-cloak],
+[x-ng-cloak],
+.ng-cloak,
+.x-ng-cloak {
+  display: none !important;
+}

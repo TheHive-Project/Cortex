@@ -1,0 +1,6 @@
+<div class="clearfix avatar avatar-{{iconSize || 'xs'}}">  
+  <img ng-if="userData.avatar" class="avatar-icon" alt="{{userData.name}}" uib-tooltip="{{userData.name}}" tooltip-placement="bottom" data-ng-src="{{'data:image/jpeg;base64,' + userData.avatar}}" />
+  <div ng-if="!userData.avatar" class="avatar-icon" uib-tooltip="{{userData.name}}" tooltip-placement="bottom">{{initials}}</div>
+  <span ng-if="!iconOnly" class="avatar-name">{{prefix ? userData.organization + '/' + userData.name : userData.name}}</span>
+</div>
+

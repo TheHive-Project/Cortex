@@ -18,3 +18,4 @@ target
 
 conf/application.conf
 
+sbt-launch.jar

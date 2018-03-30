@@ -38,7 +38,7 @@ Passive DNS.
 + DomainTools\*: look up domain names, IP addresses, WHOIS records, etc. using the popular [DomainTools](http://domaintools.com/) service API.
 + EmergingThreats\*: leverage Proofpoint's [Emerging Threats Intelligence](https://threatintel.proofpoint.com/) to assess the reputation of various observables and obtain additional and valuable information on malware.
 + File_Info: parse files in several formats such as OLE and OpenXML to detect
- VBA macros, extract their source code, generate useful information on PE, PDF files and much more.
+ VBA macros, extract their source code, generate useful information on PE, PDF files and much more. 
 + FireHOLBlocklists: check IP addresses against the [FireHOL blocklists](https://firehol.org/).
 + GoogleSafebrowsing\*: check URLs against [Google Safebrowsing](https://www.google.com/transparencyreport/safebrowsing/).
 + HybridAnalysis\*: fetch [Hybrid Analysis](https://www.hybrid-analysis.com/) reports associated with hashes and filenames.
@@ -62,7 +62,7 @@ whether a URL has been flagged as a phishing site.
 + VMRay\*: analyze files using the [VMRay Analyzer Platform](https://www.vmray.com/products/).
 + WOT\*: check a domain against [Web of Trust](https://www.mywot.com/), a website reputation service.
 + Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
-+ Yeti: retrieve all available information related to a domain, a fully qualified domain name, an IP address, a URL or a hash from a [YETI](https://yeti-platform.github.io/) instance.
++ Yeti: retrieve all available information related to a domain, a fully qualified domain name, an IP address, a URL or a hash from a [YETI](https://yeti-platform.github.io/) instance. 
 
 The star (\*) indicates that the analyzer needs an API key, a user account or special access from the service provider to work correctly. **We do not provide API keys, user accounts or request access on your behalf**. You have to use your own or contact the service provider.
 

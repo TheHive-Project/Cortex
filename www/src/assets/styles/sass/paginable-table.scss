@@ -1,0 +1,30 @@
+.paginable-page {
+  .box-tools {
+    >select {
+      width: 120px;
+    }
+  }
+  .table-toolbar {
+    label.form-control {
+      border: 0;
+      width: auto;
+      padding-left: 0;
+      padding-right: 5px;
+    }
+    input.form-control {
+      width: 300px;
+    }
+    >select {
+      width: 120px;
+    }
+    multiselect {
+      width: 150px;
+      .dropdown-menu {
+        width: 300px !important;
+      }
+    }
+    .pagination {
+      margin: 0;
+    }
+  }
+}

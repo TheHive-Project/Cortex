@@ -1,0 +1,39 @@
+<div class="paginable-page">  
+  <div class="mt-xxxs mb-xs clearfix">
+    <form ng-submit="$ctrl.applyFilters()">
+      <div class="table-toolbar">
+        <button class="btn btn-primary pull-left mr-m" type="button" ng-click="$ctrl.newUser()">
+          <i class="fa fa-plus"></i> Add user</button>
+    
+        <label class="form-control pull-left">Status</label>
+        <multiselect class="pull-left mr-xs" ng-model="$ctrl.filters.status" options="$ctrl.statuses" placeholder="Select" show-select-all="true"
+          show-unselect-all="true" classes-btn="($ctrl.filters.status.length > 0) ? 'btn-block btn-primary' : 'btn-default btn-block'">
+        </multiselect>
+    
+        <label class="form-control pull-left">Description</label>
+        <input type="text" class="form-control pull-left mr-xs" placeholder="Search for description" ng-model="$ctrl.filters.search">
+        <button class="pull-left btn btn-primary" type="submit">Search</button>
+        <button class="pull-left btn btn-clear text-danger ml-xxxs" type="button" ng-click="$ctrl.clearFilters()">
+          <i class="fa fa-times-circle"></i> Clear</button>
+    
+        <select class="ml-xxxs form-control pull-right" ng-model="$ctrl.pagination.pageSize" ng-change="$ctrl.load()" ng-options="v as (v + ' / page') for v in [10, 50, 100, 1000]"></select>
+        <ul class="pull-right" ng-show="$ctrl.pagination.total > $ctrl.pagination.pageSize" uib-pagination total-items="$ctrl.pagination.total"
+          ng-change="$ctrl.load()" ng-model="$ctrl.pagination.current" boundary-links="true" items-per-page="$ctrl.pagination.pageSize"
+          previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;" max-size="3" rotate="false"></ul>
+      </div>
+    </form>
+
+  </div>
+    
+  <users-list organization="$ctrl.organization" users="$ctrl.users" on-reload="$ctrl.reload()"></users-list>
+  
+  <div class="mt-s clearfix">
+    <div class="box-tools btn-toolbar pull-right">
+      <ul ng-show="$ctrl.pagination.total > $ctrl.pagination.pageSize" uib-pagination total-items="$ctrl.pagination.total" ng-change="$ctrl.load()"
+        ng-model="$ctrl.pagination.current" boundary-links="true" items-per-page="$ctrl.pagination.pageSize" previous-text="&lsaquo;"
+        next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;" max-size="3" rotate="false"></ul>
+      <select class="ml-xs form-control pull-right " ng-model="$ctrl.pagination.pageSize" ng-change="$ctrl.load()" ng-options="v as (v + ' / page') for v in [10, 50, 100, 1000]"></select>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,27 @@
+<div class="jumbotron async-box">
+    <div class="container">
+        <h1>Hello, from the <del>dark side</del> Lazy Loaded page!!!</h1>
+        <p>Just set resolve rule with require.ensure statement and then use angularOcLazyLoad to init module</p>
+    </div>
+</div>
+
+<pre>
+    resolve: {
+        modulePreloading: function($q, $ocLazyLoad) {
+            "ngInject";
+
+            var deferred = $q.defer();
+
+            require.ensure([], function (require) {
+              var asyncModule = require('./async.module');
+              $ocLazyLoad.load({
+                name: asyncModule.default.name,
+              });
+
+              deferred.resolve(asyncModule.default.controller);
+            });
+
+            return deferred.promise;
+        }
+    }
+</pre>

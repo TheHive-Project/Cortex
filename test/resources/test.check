@@ -1,0 +1,51 @@
+###################
+# API used by TheHive
+[X] GET           /api/status
+[X] GET           /api/analyzer
+[X] GET           /api/analyzer/:id
+[X] GET           /api/analyzer/type/:dataType
+[X] POST          /api/analyzer/:id/run
+[X] GET           /api/job/:id/waitreport
+####################
+
+[X] GET           /api/job/:id/artifacts
+[X] GET           /api/analyzerdefinition
+[O] POST          /api/analyzerdefinition/scan
+[X] POST          /api/organization/:organizationId/analyzer/:analyzerId
+
+[ ] GET           /api/job
+[ ] GET           /api/job/:id
+[ ] GET           /api/job/:id/report
+
+[ ] GET           /api/organization                                            
+[X] GET           /api/organization/:id
+[ ] POST          /api/organization
+[ ] PATCH         /api/organization/:id
+[ ] DELETE        /api/organization/:id
+
+[ ] POST          /api/stream
+[ ] GET           /api/stream/status
+[ ] GET           /api/stream/:streamId
+
+[X] POST          /api/maintenance/migrate
+[ ] GET           /api/datastore/:hash
+[ ] GET           /api/datastorezip/:hash
+
+[ ] GET           /api/list
+[ ] DELETE        /api/list/:itemId
+[ ] PATCH         /api/list/:itemId
+[ ] POST          /api/list/:listName
+[ ] GET           /api/list/:listName
+[ ] POST          /api/list/:listName/_exists
+
+[ ] GET           /api/user/current
+[ ] POST          /api/user/_search
+[X] POST          /api/user
+[X] GET           /api/user/:userId
+[ ] DELETE        /api/user/:userId
+[ ] PATCH         /api/user/:userId
+[ ] POST          /api/user/:userId/password/set
+[ ] POST          /api/user/:userId/password/change
+[ ] GET           /api/user/:userId/key
+[ ] DELETE        /api/user/:userId/key
+[ ] POST          /api/user/:userId/key/renew
