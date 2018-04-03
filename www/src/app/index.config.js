@@ -3,6 +3,7 @@
 
 function config(
   $logProvider,
+  $httpProvider,
   $compileProvider,
   $locationProvider,
   MaintenanceServiceProvider,
@@ -10,6 +11,9 @@ function config(
   localStorageServiceProvider
 ) {
   'ngInject';
+
+  $httpProvider.defaults.xsrfCookieName = 'CORTEX-XSRF-TOKEN';
+  $httpProvider.defaults.xsrfHeaderName = 'X-CORTEX-XSRF-TOKEN';
 
   $logProvider.debugEnabled(true);
 
