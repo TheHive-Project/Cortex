@@ -52,7 +52,7 @@ function runBlock(
       return;
     }
 
-    let status = transition.error().detail;
+    let status = transition.error().detail.status;
 
     if (status === 520) {
       $state.go('maintenance');
