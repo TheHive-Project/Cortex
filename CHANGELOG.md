@@ -1,5 +1,17 @@
 # Change Log
 
+## [2.0.2](https://github.com/TheHive-Project/Cortex/tree/2.02)
+
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.1...2.0.2)
+
+**Fixed bugs:**
+
+- Silently failure when ElasticSearch is unreachable [\#76](https://github.com/TheHive-Project/Cortex/issues/76)
+- Coretxutils and TypeError: argument of type 'bool' is not iterable [\#73](https://github.com/TheHive-Project/Cortex/issues/73)
+- Unable to disable analyzers [\#72](https://github.com/TheHive-Project/Cortex/issues/72)
+- Cortex 2 is not passing proxy variable to analyzers [\#71](https://github.com/TheHive-Project/Cortex/issues/71)
+- Session collision when TheHive & Cortex 2 share the same URL [\#70](https://github.com/TheHive-Project/Cortex/issues/70)
+
 ## [2.0.1](https://github.com/TheHive-Project/Cortex/tree/2.0.1) (2018-03-30)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.0...2.0.1)
 
@@ -9,7 +21,7 @@
 - Packages contain obsolete configuration sample [\#68](https://github.com/TheHive-Project/Cortex/issues/68)
 - User can't change his password [\#67](https://github.com/TheHive-Project/Cortex/issues/67)
 
-## [2.0.0](https://github.com/TheHive-Project/Cortex/tree/2.0.0) (2018-03-29)
+## [2.0.0](https://github.com/TheHive-Project/Cortex/tree/2.0.0) (2018-03-30)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.4...2.0.0)
 
 **Implemented enhancements:**
@@ -62,6 +74,9 @@
 
 - Problem Start Cortex on Ubuntu 16.04 [\#35](https://github.com/TheHive-Project/Cortex/issues/35)
 - Error when parsing analyzer failure report [\#33](https://github.com/TheHive-Project/Cortex/issues/33)
+
+## [debian/1.1.2-2](https://github.com/TheHive-Project/Cortex/tree/debian/1.1.2-2) (2017-05-24)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.2...debian/1.1.2-2)
 
 ## [1.1.2](https://github.com/TheHive-Project/Cortex/tree/1.1.2) (2017-05-24)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/debian/1.1.1-2...1.1.2)
