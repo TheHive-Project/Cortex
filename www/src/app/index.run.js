@@ -2,7 +2,15 @@
 
 import _ from 'lodash/core';
 
-function runBlock($log, $q, $transitions, $state, AuthService, Roles) {
+function runBlock(
+  $log,
+  $q,
+  $transitions,
+  $state,
+  AuthService,
+  Roles,
+  NotificationService
+) {
   'ngInject';
 
   $transitions.onSuccess({}, transition => {
@@ -44,10 +52,18 @@ function runBlock($log, $q, $transitions, $state, AuthService, Roles) {
       return;
     }
 
-    if (transition.error().detail.status === 520) {
+    let status = transition.error().detail;
+
+    if (status === 520) {
       $state.go('maintenance');
-    } else if (transition.error().detail.status === 401) {
+    } else if (status === 401) {
       $state.go('login');
+    } else {
+      NotificationService.handleError(
+        'Error',
+        transition.error().detail.data,
+        status
+      );
     }
   });
 }

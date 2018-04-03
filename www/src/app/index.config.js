@@ -15,7 +15,7 @@ function config(
   $httpProvider.defaults.xsrfCookieName = 'CORTEX-XSRF-TOKEN';
   $httpProvider.defaults.xsrfHeaderName = 'X-CORTEX-XSRF-TOKEN';
 
-  $logProvider.debugEnabled(true);
+  $logProvider.debugEnabled(false);
 
   if (NODE_ENV === 'production') {
     $logProvider.debugEnabled(false);
