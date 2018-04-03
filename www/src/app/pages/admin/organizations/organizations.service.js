@@ -94,6 +94,6 @@ export default class OrganizationService {
   }
 
   disableAnalyzer(analyzerId) {
-    return this.$http.delete(`./api//analyzer/${analyzerId}`);
+    return this.$http.delete(`./api/analyzer/${analyzerId}`);
   }
 }

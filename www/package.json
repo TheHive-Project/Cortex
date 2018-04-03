@@ -1,27 +1,24 @@
 {
   "name": "cortex",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A powerfull observable analysis engine",
   "license": "AGPL-v3",
   "homepage": "https://github.com/TheHive-Project/Cortex",
   "bin": {
     "cross-env": "./node_modules/cross-env/bin/cross-env.js",
     "webpack": "./node_modules/webpack/bin/webpack.js",
-    "webpack-dev-server":
-      "./node_modules/webpack-dev-server/bin/webpack-dev-server.js"
+    "webpack-dev-server": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js"
   },
   "scripts": {
     "start": "npm run dev",
-    "dev":
-      "cross-env NODE_ENV=development webpack-dev-server --progress --bail --open",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --progress --bail --open",
     "build": "cross-env NODE_ENV=production webpack -p --colors"
   },
   "dependencies": {
     "@uirouter/angularjs": "^1.0.12",
     "angular": "1.6.8",
     "angular-base64-upload": "^0.1.23",
-    "angular-bootstrap-multiselect":
-      "git+https://github.com/bentorfs/angular-bootstrap-multiselect.git",
+    "angular-bootstrap-multiselect": "git+https://github.com/bentorfs/angular-bootstrap-multiselect.git",
     "angular-clipboard": "^1.6.2",
     "angular-images-resizer": "^2.0.2",
     "angular-local-storage": "^0.7.1",

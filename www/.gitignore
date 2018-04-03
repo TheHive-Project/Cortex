@@ -5,3 +5,4 @@ bower_components/
 .tmp/
 true!ng-annotate/
 dist/
+package-lock.json
