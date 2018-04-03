@@ -415,9 +415,9 @@ class JobSrv(
           .validatedBy(_.read(configAndParam))
           .map(cfg ⇒ Json.obj("config" -> JsObject(cfg).deepMerge(analyzerDefinition.configuration)))
           .map { cfg ⇒
-            val proxy_http = (cfg \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("http" -> proxy)) }
-            val proxy_https = (cfg \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("https" -> proxy)) }
-            cfg.deepMerge(proxy_http).deepMerge(proxy_https)
+            val proxy_http = (cfg \ "config" \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("http" -> proxy)) }
+            val proxy_https = (cfg \ "config" \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("https" -> proxy)) }
+            cfg.deepMerge(Json.obj("config" -> (proxy_http.deepMerge(proxy_https))))
           }
           .map(_ deepMerge artifact +
             ("dataType" -> JsString(job.dataType())) +
