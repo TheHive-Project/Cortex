@@ -45,5 +45,8 @@ class JobModel @Inject() () extends ModelDef[JobModel, Job]("job", "Job", "/job"
 class Job(model: JobModel, attributes: JsObject) extends EntityDef[JobModel, Job](model, attributes) with JobAttributes {
   val params: JsObject = Try(Json.parse(parameters()).as[JsObject]).getOrElse(JsObject.empty)
 
-  override def toJson: JsObject = super.toJson + ("date" -> Json.toJson(createdAt))
+  override def toJson: JsObject = {
+    val output = super.toJson + ("date" -> Json.toJson(createdAt))
+    input().fold(output)(i ⇒ output + ("input" -> Json.parse(i)))
+  }
 }
