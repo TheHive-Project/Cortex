@@ -33,6 +33,9 @@ export default class OrganizationAnalyzersController {
   $onInit() {
     this.activeAnalyzers = _.keyBy(this.analyzers, 'analyzerDefinitionId');
     this.definitionsIds = _.keys(this.analyzerDefinitions).sort();
+    this.invalidAnalyzers = _.filter(this.analyzers, a =>
+      _.isEmpty(a.dataTypeList)
+    );
   }
 
   openModal(mode, definition, analyzer) {
