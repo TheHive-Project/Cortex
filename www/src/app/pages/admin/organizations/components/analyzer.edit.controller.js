@@ -49,7 +49,9 @@ export default class AnalyzerEditController {
       _.forEach(globalConfig, cnf => {
         if (analyzer.configuration[cnf] === undefined) {
           analyzer.configuration[cnf] =
-            this.configuration.config[cnf] || undefined;
+            this.configuration.config[cnf] !== undefined
+              ? this.configuration.config[cnf]
+              : undefined;
         }
       });
 

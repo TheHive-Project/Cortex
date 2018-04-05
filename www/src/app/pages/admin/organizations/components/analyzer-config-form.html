@@ -31,18 +31,6 @@
     </div>
   </div>  
   <div class="form-group">
-    <label class="col-sm-3 control-label">HTTP Proxy</label>
-    <div class="col-sm-9">
-      <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_http">
-    </div>    
-  </div>
-  <div class="form-group">
-    <label class="col-sm-3 control-label">HTTPS Proxy</label>
-    <div class="col-sm-9">
-      <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_https">
-    </div>    
-  </div>
-  <div class="form-group">
     <label class="col-sm-3 control-label">Rate Limiting</label>
     <div class="col-sm-4">
       <input class="form-control" type="number" ng-model="$ctrl.analyzer.rate">
@@ -55,5 +43,29 @@
     <div class="col-sm-offset-3 col-sm-9">
       <p class="help-block">Define the maximum number of requests and the associated unit if applicable.</p>
     </div>  
+  </div>  
+  <div class="form-group">
+    <label class="col-sm-3 control-label">HTTP Proxy</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_http">
+    </div>    
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">HTTPS Proxy</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_https">
+    </div>    
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Extract observables</label>
+    <div class="col-sm-9">
+      <div class="btn-group">
+        <label uib-btn-radio="true" class="btn btn-default" ng-model="$ctrl.analyzer.configuration.auto_extract_artifacts">True</label>
+        <label uib-btn-radio="false" class="btn btn-default" ng-model="$ctrl.analyzer.configuration.auto_extract_artifacts">False</label>
+      </div>
+    </div>
+    <div class="col-sm-offset-3 col-sm-9">
+      <p class="help-block">Set to True to enable automatic observables extraction from analysis reports</p>
+    </div>
   </div>  
 </section>
