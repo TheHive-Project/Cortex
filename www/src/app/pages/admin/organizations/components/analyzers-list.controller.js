@@ -157,13 +157,13 @@ export default class OrganizationAnalyzersController {
 
   refreshAnalyzers() {
     this.AnalyzerService.scan()
-      .then(() => this.AnalyzerService.definitions())
+      .then(() => this.AnalyzerService.definitions(true))
       .then(defintions => {
         this.analyzerDefinitions = defintions;
-        this.$onInit();
+        this.reload();
         this.NotificationService.success('Analyzer definitions refreshed.');
       })
-      .catch(err =>
+      .catch(() =>
         this.NotificationService.error(
           'Failed to refresh analyzer definitions.'
         )

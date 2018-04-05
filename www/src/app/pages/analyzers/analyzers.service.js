@@ -23,10 +23,10 @@ export default class AnalyzerService {
     return this.dataTypes;
   }
 
-  definitions() {
+  definitions(force) {
     let defered = this.$q.defer();
 
-    if (this.analyzerDefinitions === null) {
+    if (force || this.analyzerDefinitions === null) {
       this.$http.get('./api/analyzerdefinition').then(
         response => {
           this.analyzerDefinitions = _.keyBy(response.data, 'id');
