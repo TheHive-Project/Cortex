@@ -39,34 +39,36 @@ export default class OrganizationAnalyzersController {
   }
 
   openModal(mode, definition, analyzer) {
-    let promise;
-
-    if (definition && definition.baseConfig) {
-      promise = this.AnalyzerService.getConfiguration(definition.baseConfig);
-    } else {
-      promise = this.$q.resolve({});
-    }
-    return promise
-      .then(
-        analyzerConfig => analyzerConfig,
-        err => {
-          if (err.status === 404) {
-            return {};
+    let baseConfigName = definition ? definition.baseConfig : undefined;
+    return this.AnalyzerService.getBaseConfig(baseConfigName)
+      .then(baseConfig => {
+        let configs = {
+          globalConfig: {},
+          baseConfig: baseConfig,
+          analyzerConfig: {
+            config: {}
           }
-        }
-      )
-      .then(analyzerConfig =>
-        this.AnalyzerService.getConfiguration('global').then(globalConfig => {
-          if (!analyzerConfig.config) {
-            analyzerConfig.config = {};
+        };
+
+        return this.AnalyzerService.getConfiguration('global').then(
+          globalConfig => {
+            configs.globalConfig = globalConfig;
+
+            if (!baseConfig.config) {
+              baseConfig.config = {};
+            }
+
+            _.merge(
+              configs.analyzerConfig.config,
+              configs.baseConfig.config,
+              configs.globalConfig.config
+            );
+
+            return configs;
           }
-
-          _.merge(analyzerConfig.config, globalConfig.config);
-
-          return analyzerConfig;
-        })
-      )
-      .then(analyzerConfig => {
+        );
+      })
+      .then(configs => {
         let modal = this.$uibModal.open({
           animation: true,
           controller: AnalyzerEditController,
@@ -75,7 +77,9 @@ export default class OrganizationAnalyzersController {
           size: 'lg',
           resolve: {
             definition: () => definition,
-            configuration: () => analyzerConfig,
+            globalConfig: () => configs.globalConfig,
+            baseConfig: () => configs.baseConfig,
+            configuration: () => configs.analyzerConfig,
             analyzer: () => angular.copy(analyzer),
             mode: () => mode
           }

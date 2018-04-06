@@ -7,6 +7,8 @@ export default class AnalyzerEditController {
     $log,
     $uibModalInstance,
     definition,
+    globalConfig,
+    baseConfig,
     configuration,
     analyzer,
     mode
@@ -17,6 +19,8 @@ export default class AnalyzerEditController {
     this.$uibModalInstance = $uibModalInstance;
     this.mode = mode;
     this.definition = definition;
+    this.globalConfig = globalConfig;
+    this.baseConfig = baseConfig;
     this.configuration = configuration;
     this.analyzer = analyzer;
   }

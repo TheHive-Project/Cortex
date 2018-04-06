@@ -3,7 +3,11 @@
     <h3 class="modal-title">{{$modal.mode === 'create' ? 'Enable' : 'Edit'}} analyzer {{$modal.definition.id}}</h3>
   </div>
   <div class="modal-body">
-    <analyzer-config-form definition="$modal.definition" analyzer="$modal.analyzer"></analyzer-config-form>
+    <analyzer-config-form definition="$modal.definition"       
+      global-config="$modal.globalConfig"
+      base-config="$modal.baseConfig"
+      configuration="$modal.configuration"
+      analyzer="$modal.analyzer"></analyzer-config-form>
   </div>
   <div class="modal-footer">
     <button class="btn btn-default pull-left" type="button" ng-click="$modal.cancel()">Cancel</button>

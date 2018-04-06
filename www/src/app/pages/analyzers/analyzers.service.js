@@ -84,6 +84,21 @@ export default class AnalyzerService {
     return defer.promise;
   }
 
+  getBaseConfig(baseConfig) {
+    let defer = this.$q.defer();
+
+    if (baseConfig) {
+      this.getConfiguration(baseConfig).then(
+        cfg => defer.resolve(cfg),
+        () => defer.resolve({})
+      );
+    } else {
+      defer.resolve({});
+    }
+
+    return defer.promise;
+  }
+
   getConfiguration(name) {
     let defer = this.$q.defer();
 
