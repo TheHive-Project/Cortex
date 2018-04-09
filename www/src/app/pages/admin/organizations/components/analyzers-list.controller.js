@@ -33,37 +33,42 @@ export default class OrganizationAnalyzersController {
   $onInit() {
     this.activeAnalyzers = _.keyBy(this.analyzers, 'analyzerDefinitionId');
     this.definitionsIds = _.keys(this.analyzerDefinitions).sort();
+    this.invalidAnalyzers = _.filter(this.analyzers, a =>
+      _.isEmpty(a.dataTypeList)
+    );
   }
 
   openModal(mode, definition, analyzer) {
-    let promise;
-
-    if (definition && definition.baseConfig) {
-      promise = this.AnalyzerService.getConfiguration(definition.baseConfig);
-    } else {
-      promise = this.$q.resolve({});
-    }
-    return promise
-      .then(
-        analyzerConfig => analyzerConfig,
-        err => {
-          if (err.status === 404) {
-            return {};
+    let baseConfigName = definition ? definition.baseConfig : undefined;
+    return this.AnalyzerService.getBaseConfig(baseConfigName)
+      .then(baseConfig => {
+        let configs = {
+          globalConfig: {},
+          baseConfig: baseConfig,
+          analyzerConfig: {
+            config: {}
           }
-        }
-      )
-      .then(analyzerConfig =>
-        this.AnalyzerService.getConfiguration('global').then(globalConfig => {
-          if (!analyzerConfig.config) {
-            analyzerConfig.config = {};
+        };
+
+        return this.AnalyzerService.getConfiguration('global').then(
+          globalConfig => {
+            configs.globalConfig = globalConfig;
+
+            if (!baseConfig.config) {
+              baseConfig.config = {};
+            }
+
+            _.merge(
+              configs.analyzerConfig.config,
+              configs.baseConfig.config,
+              configs.globalConfig.config
+            );
+
+            return configs;
           }
-
-          _.merge(analyzerConfig.config, globalConfig.config);
-
-          return analyzerConfig;
-        })
-      )
-      .then(analyzerConfig => {
+        );
+      })
+      .then(configs => {
         let modal = this.$uibModal.open({
           animation: true,
           controller: AnalyzerEditController,
@@ -72,7 +77,9 @@ export default class OrganizationAnalyzersController {
           size: 'lg',
           resolve: {
             definition: () => definition,
-            configuration: () => analyzerConfig,
+            globalConfig: () => configs.globalConfig,
+            baseConfig: () => configs.baseConfig,
+            configuration: () => configs.analyzerConfig,
             analyzer: () => angular.copy(analyzer),
             mode: () => mode
           }
@@ -89,7 +96,14 @@ export default class OrganizationAnalyzersController {
         } else {
           return this.OrganizationService.updateAnalyzer(
             analyzer.id,
-            _.pick(response, 'configuration', 'rate', 'rateUnit', 'name')
+            _.pick(
+              response,
+              'configuration',
+              'rate',
+              'rateUnit',
+              'name',
+              'jobCache'
+            )
           );
         }
       })
@@ -154,13 +168,13 @@ export default class OrganizationAnalyzersController {
 
   refreshAnalyzers() {
     this.AnalyzerService.scan()
-      .then(() => this.AnalyzerService.definitions())
+      .then(() => this.AnalyzerService.definitions(true))
       .then(defintions => {
         this.analyzerDefinitions = defintions;
-        this.$onInit();
+        this.reload();
         this.NotificationService.success('Analyzer definitions refreshed.');
       })
-      .catch(err =>
+      .catch(() =>
         this.NotificationService.error(
           'Failed to refresh analyzer definitions.'
         )

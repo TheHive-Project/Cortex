@@ -19,7 +19,7 @@ import org.scalactic.{ Bad, Good, One, Or }
 import org.thp.cortex.models._
 import play.api.libs.json._
 import play.api.{ Configuration, Logger }
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.sys.process.{ Process, ProcessIO }
 import scala.util.control.NonFatal
@@ -300,7 +300,8 @@ class JobSrv(
   }
 
   def findSimilarJob(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, parameters: JsObject): Future[Option[Job]] = {
-    if (jobCache.length == 0) {
+    val cache = analyzer.jobCache().fold(jobCache)(_.minutes)
+    if (cache.length == 0) {
       logger.info("Job cache is disabled")
       Future.successful(None)
     }
@@ -312,7 +313,7 @@ class JobSrv(
         "analyzerId" ~= analyzer.id,
         "status" ~!= JobStatus.Failure,
         "status" ~!= JobStatus.Deleted,
-        "startDate" ~>= (now - jobCache.toMillis),
+        "startDate" ~>= (now - cache.toMillis),
         "dataType" ~= dataType,
         "tlp" ~= tlp,
         dataAttachment.fold(data ⇒ "data" ~= data, attachment ⇒ "attachment.id" ~= attachment.id),
@@ -410,19 +411,19 @@ class JobSrv(
             "data" -> job.data().get)
       }
       .map { artifact ⇒
-        val configAndParam = analyzer.config.deepMerge(job.params)
         (BaseConfig.global.items ++ BaseConfig.tlp.items ++ analyzerDefinition.configurationItems)
-          .validatedBy(_.read(configAndParam))
+          .validatedBy(_.read(analyzer.config))
           .map(cfg ⇒ Json.obj("config" -> JsObject(cfg).deepMerge(analyzerDefinition.configuration)))
           .map { cfg ⇒
             val proxy_http = (cfg \ "config" \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("http" -> proxy)) }
             val proxy_https = (cfg \ "config" \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("https" -> proxy)) }
-            cfg.deepMerge(Json.obj("config" -> (proxy_http.deepMerge(proxy_https))))
+            cfg.deepMerge(Json.obj("config" -> proxy_http.deepMerge(proxy_https)))
           }
           .map(_ deepMerge artifact +
             ("dataType" -> JsString(job.dataType())) +
             ("tlp" -> JsNumber(job.tlp())) +
-            ("message" -> JsString(job.message().getOrElse(""))))
+            ("message" -> JsString(job.message().getOrElse(""))) +
+            ("parameters" -> job.params))
           .badMap(e ⇒ AttributeCheckingError("job", e.toSeq))
           .toTry
       }

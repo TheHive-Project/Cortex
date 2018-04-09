@@ -1,6 +1,6 @@
 {
   "name": "cortex",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "A powerfull observable analysis engine",
   "license": "AGPL-v3",
   "homepage": "https://github.com/TheHive-Project/Cortex",
@@ -21,6 +21,7 @@
     "angular-bootstrap-multiselect": "git+https://github.com/bentorfs/angular-bootstrap-multiselect.git",
     "angular-clipboard": "^1.6.2",
     "angular-images-resizer": "^2.0.2",
+    "angular-input-masks": "^4.1.0",
     "angular-local-storage": "^0.7.1",
     "angular-messages": "1.6.8",
     "angular-moment": "^1.2.0",

@@ -7,6 +7,8 @@ export default class AnalyzerEditController {
     $log,
     $uibModalInstance,
     definition,
+    globalConfig,
+    baseConfig,
     configuration,
     analyzer,
     mode
@@ -17,6 +19,8 @@ export default class AnalyzerEditController {
     this.$uibModalInstance = $uibModalInstance;
     this.mode = mode;
     this.definition = definition;
+    this.globalConfig = globalConfig;
+    this.baseConfig = baseConfig;
     this.configuration = configuration;
     this.analyzer = analyzer;
   }
@@ -27,7 +31,8 @@ export default class AnalyzerEditController {
         name: this.definition.id,
         configuration: {},
         rate: undefined,
-        rateUnit: undefined
+        rateUnit: undefined,
+        jobCache: null
       };
 
       _.forEach(this.definition.configurationItems, item => {
@@ -49,7 +54,9 @@ export default class AnalyzerEditController {
       _.forEach(globalConfig, cnf => {
         if (analyzer.configuration[cnf] === undefined) {
           analyzer.configuration[cnf] =
-            this.configuration.config[cnf] || undefined;
+            this.configuration.config[cnf] !== undefined
+              ? this.configuration.config[cnf]
+              : undefined;
         }
       });
 

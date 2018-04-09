@@ -1,13 +1,32 @@
 # Change Log
 
-## [2.0.2](https://github.com/TheHive-Project/Cortex/tree/2.02)
+## [2.0.3](https://github.com/TheHive-Project/Cortex/tree/2.0.3) (2018-04-09)
 
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.2...2.0.3)
+
+**Implemented enhancements:**
+
+- Allow arbitrary parameters for a job [\#86](https://github.com/TheHive-Project/Cortex/issues/86)
+- Change of global config for proxy is not reflected in analyzer's configurations [\#81](https://github.com/TheHive-Project/Cortex/issues/81)
+
+**Fixed bugs:**
+
+- Refresh Analyzers button not working [\#83](https://github.com/TheHive-Project/Cortex/issues/83)
+- Version Upgrade of Analyzer makes all Analyzers invisible for TheHive \(Cortex2\) [\#75](https://github.com/TheHive-Project/Cortex/issues/75)
+
+**Closed issues:**
+
+- Allow specifying a cache period per analyzer [\#85](https://github.com/TheHive-Project/Cortex/issues/85)
+- Display existing analyzers with invalid definition [\#82](https://github.com/TheHive-Project/Cortex/issues/82)
+- Allow configuring auto artifacts extraction per analyzer [\#80](https://github.com/TheHive-Project/Cortex/issues/80)
+
+## [2.0.2](https://github.com/TheHive-Project/Cortex/tree/2.0.2) (2018-04-04)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.1...2.0.2)
 
 **Fixed bugs:**
 
-- Silently failure when ElasticSearch is unreachable [\#76](https://github.com/TheHive-Project/Cortex/issues/76)
 - Coretxutils and TypeError: argument of type 'bool' is not iterable [\#73](https://github.com/TheHive-Project/Cortex/issues/73)
+- Silently failure when ElasticSearch is unreachable [\#76](https://github.com/TheHive-Project/Cortex/issues/76)
 - Unable to disable analyzers [\#72](https://github.com/TheHive-Project/Cortex/issues/72)
 - Cortex 2 is not passing proxy variable to analyzers [\#71](https://github.com/TheHive-Project/Cortex/issues/71)
 - Session collision when TheHive & Cortex 2 share the same URL [\#70](https://github.com/TheHive-Project/Cortex/issues/70)

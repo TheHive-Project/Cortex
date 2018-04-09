@@ -46,12 +46,12 @@ class AnalyzerCtrl @Inject() (
   }
 
   private val emptyAnalyzerDefinitionJson = Json.obj(
-    "version" -> JsNull,
-    "description" -> JsNull,
+    "version" -> "0.0",
+    "description" -> "unknown",
     "dataTypeList" -> Nil,
-    "author" -> JsNull,
-    "url" -> JsNull,
-    "license" -> JsNull)
+    "author" -> "unknown",
+    "url" -> "unknown",
+    "license" -> "unknown")
 
   private def analyzerJson(analyzer: Analyzer, analyzerDefinition: Option[AnalyzerDefinition]) = {
     analyzer.toJson ++ analyzerDefinition.fold(emptyAnalyzerDefinitionJson) { ad ⇒

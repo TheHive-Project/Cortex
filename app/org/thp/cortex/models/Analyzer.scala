@@ -27,6 +27,7 @@ trait AnalyzerAttributes { _: AttributeDef ⇒
   val configuration = attribute("configuration", F.textFmt, "Configuration of analyzer", O.sensitive)
   val rate = optionalAttribute("rate", F.numberFmt, "Number ")
   val rateUnit = optionalAttribute("rateUnit", F.enumFmt(RateUnit), "")
+  val jobCache = optionalAttribute("jobCache", F.numberFmt, "")
 }
 
 @Singleton
