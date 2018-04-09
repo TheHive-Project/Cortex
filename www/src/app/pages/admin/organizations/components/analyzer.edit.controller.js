@@ -31,7 +31,8 @@ export default class AnalyzerEditController {
         name: this.definition.id,
         configuration: {},
         rate: undefined,
-        rateUnit: undefined
+        rateUnit: undefined,
+        jobCache: null
       };
 
       _.forEach(this.definition.configurationItems, item => {

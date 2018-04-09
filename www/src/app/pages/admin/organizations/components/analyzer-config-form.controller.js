@@ -11,6 +11,11 @@ export default class AnalyzerConfigFormController {
     this.rateUnits = ['Day', 'Month'];
   }
 
+  $onInit() {
+    this.useGlobalCache =
+      this.analyzer.jobCache === null || this.analyzer.jobCache === undefined;
+  }
+
   applyConfig(config) {
     _.forEach(
       _.keys(config),

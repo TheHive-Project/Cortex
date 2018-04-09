@@ -96,7 +96,14 @@ export default class OrganizationAnalyzersController {
         } else {
           return this.OrganizationService.updateAnalyzer(
             analyzer.id,
-            _.pick(response, 'configuration', 'rate', 'rateUnit', 'name')
+            _.pick(
+              response,
+              'configuration',
+              'rate',
+              'rateUnit',
+              'name',
+              'jobCache'
+            )
           );
         }
       })
