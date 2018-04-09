@@ -140,11 +140,13 @@ dockerCommands ~= { dc =>
       Cmd("USER", "root"),
       ExecCmd("RUN", "bash", "-c",
         "apt-get update && " +
-          "apt-get install -y --no-install-recommends python-pip python2.7-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git libssl-dev && " +
+          "apt-get install -y --no-install-recommends python-pip python2.7-dev python3-pip python3-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git libssl-dev && " +
           "pip install -U pip setuptools && " +
+          "pip3 install -U pip setuptools && " +
           "cd /opt && " +
           "git clone https://github.com/CERT-BDF/Cortex-Analyzers.git && " +
-          "pip install $(sort -u Cortex-Analyzers/analyzers/*/requirements.txt)"),
+          "pip install $(sort -u Cortex-Analyzers/analyzers/*/requirements.txt) && " +
+          "sort -u Cortex-Analyzers/analyzers/*/requirements.txt | grep -v ';python_version' | xargs -n 1 pip3 install || true"),
       Cmd("ADD", "var", "/var"),
       Cmd("ADD", "etc", "/etc"),
       ExecCmd("RUN", "chown", "-R", "daemon:root", "/var/log/cortex"),
