@@ -126,7 +126,10 @@ const organizationsModule = angular
     templateUrl: analyzerConfigFormTpl,
     bindings: {
       analyzer: '=',
-      definition: '='
+      definition: '=',
+      configuration: '<',
+      globalConfig: '<',
+      baseConfig: '<'
     }
   })
   .service('OrganizationService', organizationService);

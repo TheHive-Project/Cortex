@@ -33,6 +33,7 @@ const App = angular.module('cortex', [
   'btorfs.multiselect',
   'LocalStorageModule',
   'angularUtils.directives.dirPagination',
+  'ui.utils.masks',
 
   // core
   coreModule.name,

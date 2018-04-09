@@ -40,6 +40,8 @@ import 'angular-images-resizer';
 
 import 'angular-base64-upload';
 
+import 'angular-input-masks';
+
 // local scripts
 //import "../assets/js/...";
 

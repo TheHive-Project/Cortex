@@ -23,10 +23,10 @@ export default class AnalyzerService {
     return this.dataTypes;
   }
 
-  definitions() {
+  definitions(force) {
     let defered = this.$q.defer();
 
-    if (this.analyzerDefinitions === null) {
+    if (force || this.analyzerDefinitions === null) {
       this.$http.get('./api/analyzerdefinition').then(
         response => {
           this.analyzerDefinitions = _.keyBy(response.data, 'id');
@@ -80,6 +80,21 @@ export default class AnalyzerService {
     this.$http
       .get('./api/analyzerconfig')
       .then(response => defer.resolve(response.data), err => defer.reject(err));
+
+    return defer.promise;
+  }
+
+  getBaseConfig(baseConfig) {
+    let defer = this.$q.defer();
+
+    if (baseConfig) {
+      this.getConfiguration(baseConfig).then(
+        cfg => defer.resolve(cfg),
+        () => defer.resolve({})
+      );
+    } else {
+      defer.resolve({});
+    }
 
     return defer.promise;
   }
