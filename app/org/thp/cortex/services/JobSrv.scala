@@ -19,7 +19,7 @@ import org.scalactic.{ Bad, Good, One, Or }
 import org.thp.cortex.models._
 import play.api.libs.json._
 import play.api.{ Configuration, Logger }
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.sys.process.{ Process, ProcessIO }
 import scala.util.control.NonFatal
@@ -300,7 +300,8 @@ class JobSrv(
   }
 
   def findSimilarJob(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, parameters: JsObject): Future[Option[Job]] = {
-    if (jobCache.length == 0) {
+    val cache = analyzer.jobCache().fold(jobCache)(_.minutes)
+    if (cache.length == 0) {
       logger.info("Job cache is disabled")
       Future.successful(None)
     }
@@ -312,7 +313,7 @@ class JobSrv(
         "analyzerId" ~= analyzer.id,
         "status" ~!= JobStatus.Failure,
         "status" ~!= JobStatus.Deleted,
-        "startDate" ~>= (now - jobCache.toMillis),
+        "startDate" ~>= (now - cache.toMillis),
         "dataType" ~= dataType,
         "tlp" ~= tlp,
         dataAttachment.fold(data ⇒ "data" ~= data, attachment ⇒ "attachment.id" ~= attachment.id),
