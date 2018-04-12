@@ -99,8 +99,16 @@ export default class UserEditController {
       return;
     }
 
-    let postData = _.pick(this.formData, 'name', 'roles', 'organization');
+    let postData;
     let promise;
+
+    if (
+      this.AuthService.currentUser.roles.indexOf(this.Roles.SUPERADMIN) !== -1
+    ) {
+      postData = _.pick(this.formData, 'name', 'roles', 'organization');
+    } else {
+      postData = _.pick(this.formData, 'name', 'roles');
+    }
 
     if (this.user.id) {
       promise = this.UserService.update(this.user.id, postData);
