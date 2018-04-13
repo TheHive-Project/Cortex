@@ -2,11 +2,10 @@ package org.thp.cortex.controllers
 
 import javax.inject.Inject
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
-import org.elastic4play.services.QueryDSL
 import org.thp.cortex.models.Roles
 import org.thp.cortex.services.{ AnalyzerSrv, MispSrv }
 import play.api.Logger
-import play.api.libs.json.{ JsObject, JsValue, Json }
+import play.api.libs.json.{ JsObject, JsValue }
 import play.api.mvc._
 
 import scala.concurrent.{ ExecutionContext, Future }

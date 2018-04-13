@@ -210,9 +210,11 @@ class UserCtrl @Inject() (
   }
 
   @Timed
-  def getKey(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
+  def getKey(userId: String): Action[AnyContent] = authenticated().async { implicit request ⇒
     for {
       _ ← checkUserOrganization(userId)
+      _ ← if (userId == request.userId || request.roles.contains(Roles.orgAdmin) || request.roles.contains(Roles.superAdmin)) Future.successful(())
+      else Future.failed(AuthorizationError("You are not authorized to perform this operation"))
       key ← authSrv.getKey(userId)
     } yield Ok(key)
   }
@@ -226,9 +228,11 @@ class UserCtrl @Inject() (
   }
 
   @Timed
-  def renewKey(userId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
+  def renewKey(userId: String): Action[AnyContent] = authenticated().async { implicit request ⇒
     for {
       _ ← checkUserOrganization(userId)
+      _ ← if (userId == request.userId || request.roles.contains(Roles.orgAdmin) || request.roles.contains(Roles.superAdmin)) Future.successful(())
+      else Future.failed(AuthorizationError("You are not authorized to perform this operation"))
       key ← authSrv.renewKey(userId)
     } yield Ok(key)
   }
