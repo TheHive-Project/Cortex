@@ -1,7 +1,27 @@
 # Change Log
 
-## [2.0.3](https://github.com/TheHive-Project/Cortex/tree/2.0.3) (2018-04-09)
+## [2.0.4](https://github.com/TheHive-Project/Cortex/tree/2.0.4) (2018-04-13)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.3...2.0.4)
 
+**Implemented enhancements:**
+
+- Let a Read/Analyze User Display/Change their API Key [\#89](https://github.com/TheHive-Project/Cortex/issues/89)
+
+**Fixed bugs:**
+
+- Strictly filter the list of analyzers in the run dialog [\#95](https://github.com/TheHive-Project/Cortex/issues/95)
+- Updating users by orgAdmin users fails silently [\#94](https://github.com/TheHive-Project/Cortex/issues/94)
+- Fix analyzer configurations icons [\#93](https://github.com/TheHive-Project/Cortex/issues/93)
+- Wrong page redirection [\#92](https://github.com/TheHive-Project/Cortex/issues/92)
+- Sort analyzers list by name [\#91](https://github.com/TheHive-Project/Cortex/issues/91)
+- Cortex 2.0.3 docker container having cortex analyzer errors [\#90](https://github.com/TheHive-Project/Cortex/issues/90)
+- Install python3 requirements for analyzers in public docker image [\#58](https://github.com/TheHive-Project/Cortex/issues/58)
+
+**Closed issues:**
+
+- Insufficient Rights To Perform This Action [\#87](https://github.com/TheHive-Project/Cortex/issues/87)
+
+## [2.0.3](https://github.com/TheHive-Project/Cortex/tree/2.0.3) (2018-04-09)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.2...2.0.3)
 
 **Implemented enhancements:**
