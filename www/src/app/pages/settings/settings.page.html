@@ -127,6 +127,36 @@
       </div>
     </form>
 
+    <!-- Update API Key -->
+    <form ng-if="$ctrl.canChangeKey">
+      <div class="box box-primary">
+        <div class="box-header" ng-if="$ctrl.currentUser.hasKey">
+          <h3 class="box-title">API Key</h3>
+        </div>
+        <div class="box-body">          
+          <div class="callout callout-warning mv-0" ng-if="!$ctrl.currentUser.hasKey">
+            <h4>You don't have any API key.</h4>          
+            <p> Please contact your organization's administrator.</p>
+          </div>
+          <div class="form-group" ng-if="$ctrl.currentUser.hasKey">
+            <p>You have an API key defined. You can renew it if needed.</p>
+            <div class="input-group">
+              <span class="input-group-btn">
+                <span class="btn btn-default" ng-click="$ctrl.createKey()">Renew</span>
+                <span class="btn btn-primary" ng-click="$ctrl.getKey()" ng-if="!$ctrl.keyData.key">Reveal</span>
+              </span>
+              <input class="form-control" readonly ng-model="$ctrl.keyData.key" ng-if="$ctrl.keyData.key">
+              <span class="input-group-btn" ng-if="$ctrl.keyData.key">
+                <button class="btn btn-primary" type="button" ng-click="$ctrl.copyKey()">
+                  <i class="fa fa-copy"></i>
+                </button>
+              </span>
+            </div>            
+          </div>
+        </div>
+      </div>
+    </form>
+
   </div>
 </div>
 
