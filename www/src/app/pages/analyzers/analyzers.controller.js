@@ -100,7 +100,8 @@ export default class AnalyzersController extends PageController {
     this.SearchService.configure({
       objectType: 'analyzer',
       filter: this.buildQuery(),
-      range: this.buildRange()
+      range: this.buildRange(),
+      sort: '+name'
     })
       .search()
       .then(response => {

@@ -58,19 +58,23 @@ export default class AnalyzerService {
   list() {
     let defered = this.$q.defer();
 
-    this.$http.get('./api/analyzer', { params: { range: 'all' } }).then(
-      response => {
-        this.analyzers = response.data;
-        this.dataTypes = _.sortBy(
-          _.uniq(_.flatten(_.map(response.data, 'dataTypeList')))
-        );
+    this.$http
+      .get('./api/analyzer', {
+        params: { range: 'all', sort: '+name' }
+      })
+      .then(
+        response => {
+          this.analyzers = response.data;
+          this.dataTypes = _.sortBy(
+            _.uniq(_.flatten(_.map(response.data, 'dataTypeList')))
+          );
 
-        defered.resolve(response.data);
-      },
-      response => {
-        defered.reject(response);
-      }
-    );
+          defered.resolve(response.data);
+        },
+        response => {
+          defered.reject(response);
+        }
+      );
 
     return defered.promise;
   }

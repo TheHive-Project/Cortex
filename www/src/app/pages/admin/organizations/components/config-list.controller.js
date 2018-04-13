@@ -18,6 +18,10 @@ export default class OrganizationConfigsController {
     };
   }
 
+  isSet(config) {
+    return _.indexOf([undefined, null, ''], config) === -1;
+  }
+
   edit(config) {
     let modal = this.$uibModal.open({
       controller: ConfigurationEditController,
@@ -26,11 +30,11 @@ export default class OrganizationConfigsController {
       size: 'lg',
       resolve: {
         configuration: () => {
-          let defaultValues = {
-            string: null,
-            number: 0,
-            boolean: true
-          };
+          // let defaultValues = {
+          //   string: null,
+          //   number: 0,
+          //   boolean: true
+          // };
           let conf = angular.copy(config);
 
           _.forEach(conf.configurationItems, item => {

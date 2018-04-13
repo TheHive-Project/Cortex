@@ -137,9 +137,9 @@ export default class UsersListController {
           `User ${mode === 'edit' ? 'updated' : 'created'} successfully`
         );
       })
-      .catch(rejection => {
-        if (rejection && rejection.type === 'ConflictError') {
-          // Handle user uniquness
+      .catch(err => {
+        if (!_.isString(err)) {
+          this.NotificationService.error('Unable to update the user.');
         }
       });
   }

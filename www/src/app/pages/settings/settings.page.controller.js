@@ -6,8 +6,10 @@ export default class SettingsPageController {
     $scope,
     $state,
     UserService,
+    ModalService,
     NotificationService,
-    resizeService
+    resizeService,
+    clipboard
   ) {
     'ngInject';
 
@@ -16,8 +18,10 @@ export default class SettingsPageController {
     this.$state = $state;
 
     this.UserService = UserService;
+    this.ModalService = ModalService;
     this.NotificationService = NotificationService;
     this.resizeService = resizeService;
+    this.clipboard = clipboard;
 
     this.basicData = {};
     this.passData = {
@@ -26,6 +30,7 @@ export default class SettingsPageController {
       password: '',
       passwordConfirm: ''
     };
+    this.keyData = {};
   }
 
   $onInit() {
@@ -40,6 +45,9 @@ export default class SettingsPageController {
 
     this.canChangePass =
       this.config.config.capabilities.indexOf('changePassword') !== -1;
+
+    this.canChangeKey =
+      this.config.config.capabilities.indexOf('authByKey') !== -1;
 
     this.$scope.$watch('$ctrl.avatar', value => {
       if (!value) {
@@ -93,7 +101,11 @@ export default class SettingsPageController {
       this.passData.password !== '' &&
       this.passData.password === this.passData.passwordConfirm
     ) {
-      this.UserService.changePass(this.currentUser.id, this.passData.currentPassword, this.passData.password)
+      this.UserService.changePass(
+        this.currentUser.id,
+        this.passData.currentPassword,
+        this.passData.password
+      )
         .then(() => {
           this.NotificationService.log(
             'Your password has been successfully updated',
@@ -133,5 +145,44 @@ export default class SettingsPageController {
     this.basicData.avatar = null;
     form.avatar.$setValidity('maxsize', true);
     form.avatar.$setPristine(true);
+  }
+
+  getKey() {
+    this.UserService.getKey(this.currentUser.id).then(key => {
+      this.keyData.key = key;
+    });
+  }
+
+  createKey() {
+    let modalInstance = this.ModalService.confirm(
+      'Renew API Key',
+      'Are you sure you want to renew your API Key?',
+      {
+        flavor: 'danger',
+        okText: 'Yes, renew it'
+      }
+    );
+
+    modalInstance.result
+      .then(() => this.UserService.setKey(this.currentUser.id))
+      .then(() => {
+        delete this.keyData.key;
+        this.NotificationService.success(
+          'API key has been successfully renewed.'
+        );
+      })
+      .catch(err => {
+        if (!_.isString(err)) {
+          this.NotificationService.error('Unable to lock the user.');
+        }
+      });
+  }
+
+  copyKey() {
+    this.clipboard.copyText(this.keyData.key);
+    delete this.keyData.key;
+    this.NotificationService.success(
+      'API key has been successfully copied to clipboard.'
+    );
   }
 }
