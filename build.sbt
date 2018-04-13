@@ -145,8 +145,8 @@ dockerCommands ~= { dc =>
           "pip3 install -U pip setuptools && " +
           "cd /opt && " +
           "git clone https://github.com/CERT-BDF/Cortex-Analyzers.git && " +
-          "pip install $(sort -u Cortex-Analyzers/analyzers/*/requirements.txt) && " +
-          "sort -u Cortex-Analyzers/analyzers/*/requirements.txt | grep -v ';python_version' | xargs -n 1 pip3 install || true"),
+          "for I in Cortex-Analyzers/analyzers/*/requirements.txt; do pip2 install -r $I; done && " +
+          "for I in Cortex-Analyzers/analyzers/*/requirements.txt; do pip3 install -r $I || true; done"),
       Cmd("ADD", "var", "/var"),
       Cmd("ADD", "etc", "/etc"),
       ExecCmd("RUN", "chown", "-R", "daemon:root", "/var/log/cortex"),
