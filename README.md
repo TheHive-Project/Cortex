@@ -10,7 +10,7 @@ Cortex, an open source and free software, has been created by [TheHive Project](
 By using Cortex, you won't need to rewrite the wheel every time you'd like to use a service or a tool to analyze an observable and help you investigate the case at hand. Leverage one of the several analyzers it contains and if you are missing a tool or a service, create a suitable program easily and make it available for the whole team (or better, [for the whole community](https://github.com/CERT-BDF/cortex-analyzers/)) thanks to Cortex.
 
 # Cortex and TheHive
-Along with [MISP](http://www.misp-project.org/), Cortex is the perfect companion for [TheHive](https://thehive-project.org). Starting from Buckfast (TheHive version 2.10), you can analyze tens or hundreds of observables in a few clicks using one or several Cortex instances depending on your OPSEC needs and security requirements. Moreover, TheHive comes with a report template engine that allows you to adjust the output of Cortex analyzers to your taste instead of having to create your own JSON parsers for Cortex output.
+Along with [MISP](http://www.misp-project.org/), Cortex is the perfect companion for [TheHive](https://thehive-project.org). TheHive let you analyze tens or hundreds of observables in a few clicks by leveraging one or several Cortex instances depending on your OPSEC needs and performance requirements. Moreover, TheHive comes with a report template engine that allows you to adjust the output of Cortex analyzers to your taste instead of having to create your own JSON parsers for Cortex output.
 
 # Cortex and MISP
 Starting from Cortex 1.1.1, Cortex can be integrated with [MISP](http://www.misp-project.org/) in two ways:
@@ -25,46 +25,8 @@ Cortex is written in Scala. The front-end uses AngularJS with Bootstrap. Its RES
 
 
 ## Analyzers
-Cortex has 30 analyzers listed below. To configure them, read the
+Thanks to Cortex, you can analyze different types of observables using tens of analyzers. As of April 14, 2018, there are 39 publicly available analyzers. Most analyzers come in different flavors. For example, using the VirusTotal analyzer, you can submit a file to VT or simply check the latest available report associated with a file or a hash. The full analyzer list, including flavors and requirements, is maintained in the
 [Cortex Analyzers Requirements Guide](https://github.com/CERT-BDF/CortexDocs/blob/master/analyzer_requirements.md).
-
-+ Abuse_Finder: use CERT-SG's [Abuse Finder](https://github.com/certsocietegenerale/abuse_finder) to find the abuse contact associated with domain names, URLs, IP and email addresses.
-+ CERTatPassiveDNS*: Check [CERT.at Passive DNS Service](https://www.cert.at/about/contact/contact.html) for a given domain.
-+ CIRCLPassiveDNS\*: Check [CIRCL's Passive DNS](https://www.circl.lu/services/passive-dns/) for a given domain.
-+ CIRCLPassiveSSL\*: Check [CIRCL's Passive SSL](https://www.circl.lu/services/passive-ssl/) service for a given IP address or certificate hash.
-+ CuckooSandbox: analyze URLs and files using [Cuckoo Sandbox](https://cuckoosandbox.org/).
-+ DNSDB\*: leverage Farsight Security's [DNSDB](https://www.dnsdb.info/) for 
-Passive DNS.
-+ DomainTools\*: look up domain names, IP addresses, WHOIS records, etc. using the popular [DomainTools](http://domaintools.com/) service API.
-+ EmergingThreats\*: leverage Proofpoint's [Emerging Threats Intelligence](https://threatintel.proofpoint.com/) to assess the reputation of various observables and obtain additional and valuable information on malware.
-+ File_Info: parse files in several formats such as OLE and OpenXML to detect
- VBA macros, extract their source code, generate useful information on PE, PDF files and much more. 
-+ FireHOLBlocklists: check IP addresses against the [FireHOL blocklists](https://firehol.org/).
-+ GoogleSafebrowsing\*: check URLs against [Google Safebrowsing](https://www.google.com/transparencyreport/safebrowsing/).
-+ HybridAnalysis\*: fetch [Hybrid Analysis](https://www.hybrid-analysis.com/) reports associated with hashes and filenames.
-+ Hippocampe: query threat feeds through [Hippocampe](https://github.com/CERT-BDF/Hippocampe), a FOSS tool that centralizes feeds and allows you to associate a confidence level to each one of them (that can be changed over time) and get a score indicating the data quality.
-+ JoeSandbox\*: analyze URLs and files using the powerful [Joe Sandbox](https://www.joesecurity.org/) malware analysis solution.
-+ MaxMind: geolocation.
-+ MISP\*: search for [MISP](http://www.misp-project.org/) events in one or several MISP instances containing the observable submitted as input.  
-+ Nessus: use [Nessus Professional](https://www.tenable.com/products/nessus-vulnerability-scanner),
-a popular vulnerability scanner to scan an IP address or a FQDN.
-+ MsgParser: parse Outlook message files automatically and show the key information it contains such as headers, attachments etc.
-+ OTXQuery\*: query AlienVault [Open Threat Exchange](https://otx.alienvault.com/) for IPs, domains, URLs, or file hashes.
-+ PassiveTotal\*: leverage [RiskIQ's PassiveTotal](https://www.passivetotal.org/) service to gain invaluable insight on observables, identify overlapping infrastructure using Passive DNS, WHOIS, SSL certificates and more.
-+ Phishing Initiative\*: query [Phishing Initiative](https://phishing-initiative.fr/contrib/) to assess whether a URL has been 
-flagged as a phishing site.
-+ PhishTank\*: query [PhishTank](https://www.phishtank.com/) to assess 
-whether a URL has been flagged as a phishing site.
-+ Shodan\*: retrieve key [Shodan](https://www.shodan.io/) information on domains and IP addresses.
-+ URLCategory: check the Fortinet categories of URLs.
-+ VirusShare: check whether a file/hash is available on [VirusShare.com](https://virusshare.com/).
-+ VirusTotal\*: look up files, URLs and hashes in [VirusTotal](https://www.virustotal.com/).
-+ VMRay\*: analyze files using the [VMRay Analyzer Platform](https://www.vmray.com/products/).
-+ WOT\*: check a domain against [Web of Trust](https://www.mywot.com/), a website reputation service.
-+ Yara: check files against [YARA](https://virustotal.github.io/yara/) rules using yara-python.
-+ Yeti: retrieve all available information related to a domain, a fully qualified domain name, an IP address, a URL or a hash from a [YETI](https://yeti-platform.github.io/) instance. 
-
-The star (\*) indicates that the analyzer needs an API key, a user account or special access from the service provider to work correctly. **We do not provide API keys, user accounts or request access on your behalf**. You have to use your own or contact the service provider.
 
 ## Documentation
 We have made several guides available in the [Documentation repository](https://github.com/CERT-BDF/CortexDocs).
