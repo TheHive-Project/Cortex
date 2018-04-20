@@ -144,7 +144,7 @@ dockerCommands ~= { dc =>
           "pip install -U pip setuptools && " +
           "pip3 install -U pip setuptools && " +
           "cd /opt && " +
-          "git clone https://github.com/CERT-BDF/Cortex-Analyzers.git && " +
+          "git clone https://github.com/TheHive-Project/Cortex-Analyzers.git && " +
           "for I in Cortex-Analyzers/analyzers/*/requirements.txt; do pip2 install -r $I; done && " +
           "for I in Cortex-Analyzers/analyzers/*/requirements.txt; do pip3 install -r $I || true; done"),
       Cmd("ADD", "var", "/var"),
