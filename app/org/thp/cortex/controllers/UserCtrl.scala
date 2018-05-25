@@ -98,7 +98,7 @@ class UserCtrl @Inject() (
           case _                                          ⇒ Future.failed(AuthorizationError("You can't give superadmin right to an user"))
         }
         // check organization
-        _ ← if (!fields.contains("organization")) Future.successful(()) else Future.failed(AuthorizationError("You can't move an user to another organization"))
+        _ ← if (fields.getString("organization").fold(true)(_ == targetUserOrganization)) Future.successful(()) else Future.failed(AuthorizationError("You can't move an user to another organization"))
       } yield ()
     }
 
