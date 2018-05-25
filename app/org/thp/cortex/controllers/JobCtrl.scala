@@ -109,14 +109,15 @@ class JobCtrl @Inject() (
           "full" -> Json.parse(report.full()),
           "success" -> true,
           "artifacts" -> artifacts)
-      case JobStatus.InProgress ⇒ Future.successful(JsString("Running"))
       case JobStatus.Failure ⇒
         val errorMessage = job.errorMessage().getOrElse("")
         Future.successful(Json.obj(
           "errorMessage" → errorMessage,
           "input" → job.input(),
           "success" → false))
-      case JobStatus.Waiting ⇒ Future.successful(JsString("Waiting"))
+      case JobStatus.InProgress ⇒ Future.successful(JsString("Running"))
+      case JobStatus.Waiting    ⇒ Future.successful(JsString("Waiting"))
+      case JobStatus.Deleted    ⇒ Future.successful(JsString("Deleted"))
     })
       .map { report ⇒
         Json.toJson(job).as[JsObject] + ("report" -> report)
