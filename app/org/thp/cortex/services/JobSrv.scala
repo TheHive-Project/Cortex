@@ -1,7 +1,7 @@
 package org.thp.cortex.services
 
 import java.io.{ ByteArrayOutputStream, InputStream }
-import java.nio.file.{ Files, Path }
+import java.nio.file.Files
 import java.util.Date
 import javax.inject.{ Inject, Singleton }
 
@@ -78,9 +78,9 @@ class JobSrv(
   private lazy val analyzeExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("analyzer")
   private val osexec =
     if (System.getProperty("os.name").toLowerCase.contains("win"))
-      (c: Path) ⇒ s"""cmd /c $c"""
+      (c: String) ⇒ s"""cmd /c $c"""
     else
-      (c: Path) ⇒ s"""sh -c "$c" """
+      (c: String) ⇒ c
 
   runPreviousJobs()
 
@@ -339,8 +339,8 @@ class JobSrv(
         var output = ""
         var error = ""
         try {
-          logger.info(s"Execute ${osexec(analyzerDefinition.cmd)} in ${analyzerDefinition.baseDirectory}")
-          Process(osexec(analyzerDefinition.cmd), analyzerDefinition.baseDirectory.toFile).run(
+          logger.info(s"Execute ${osexec(analyzerDefinition.command)} in ${analyzerDefinition.baseDirectory}")
+          Process(osexec(analyzerDefinition.command), analyzerDefinition.baseDirectory.toFile).run(
             new ProcessIO(
               { stdin ⇒ Try(stdin.write(input.toString.getBytes("UTF-8"))); stdin.close() },
               { stdout ⇒ output = readStream(stdout) },
