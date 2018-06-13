@@ -30,14 +30,19 @@ class MispSrv @Inject() (
 
   private[MispSrv] lazy val logger = Logger(getClass)
 
-  def moduleList(implicit authContext: AuthContext): ((Source[JsObject, NotUsed], Future[Long])) = {
+  def moduleList(implicit authContext: AuthContext): (Source[JsObject, NotUsed], Future[Long]) = {
     val (analyzers, analyzerCount) = analyzerSrv.findForUser(authContext.userId, QueryDSL.any, Some("all"), Nil)
 
-    val mispAnalyzers = analyzers.mapAsyncUnordered(1) { analyzer ⇒ analyzerSrv.getDefinition(analyzer.analyzerId()).map(analyzer -> _) }
-      .map {
-        case (analyzer, analyzerDefinition) ⇒
+    val mispAnalyzers = analyzers
+      .mapAsyncUnordered(1) { analyzer ⇒
+        analyzerSrv.getDefinition(analyzer.analyzerDefinitionId())
+          .map(ad ⇒ Some(analyzer -> ad))
+          .recover { case _ ⇒ None }
+      }
+      .collect {
+        case Some((analyzer, analyzerDefinition)) ⇒
           Json.obj(
-            "name" → analyzer.id,
+            "name" → analyzer.name(),
             "type" → "cortex",
             "mispattributes" → Json.obj(
               "input" → analyzer.dataTypeList().flatMap(dataType2mispType).distinct,
