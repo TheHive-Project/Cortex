@@ -224,7 +224,7 @@ class UserCtrl @Inject() (
     for {
       _ ← checkUserOrganization(userId)
       _ ← authSrv.removeKey(userId)
-    } yield Ok
+    } yield NoContent
   }
 
   @Timed
