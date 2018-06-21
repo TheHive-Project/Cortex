@@ -352,9 +352,11 @@ class JobSrv(
             val fullReport = (report \ "full").as[JsObject].toString
             val summaryReport = (report \ "summary").as[JsObject].toString
             val artifacts = (report \ "artifacts").asOpt[Seq[JsObject]].getOrElse(Nil)
+            val operations = (report \ "operations").asOpt[Seq[JsObject]].getOrElse(Nil)
             val reportFields = Fields.empty
               .set("full", fullReport)
               .set("summary", summaryReport)
+              .set("operations", JsArray(operations).toString)
             createSrv[ReportModel, Report, Job](reportModel, job, reportFields)
               .flatMap { report ⇒
                 Future.traverse(artifacts) { artifact ⇒

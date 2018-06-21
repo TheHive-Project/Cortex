@@ -108,7 +108,8 @@ class JobCtrl @Inject() (
           "summary" -> Json.parse(report.summary()),
           "full" -> Json.parse(report.full()),
           "success" -> true,
-          "artifacts" -> artifacts)
+          "artifacts" -> artifacts,
+          "operations" -> Json.parse(report.operations()))
       case JobStatus.Failure ⇒
         val errorMessage = job.errorMessage().getOrElse("")
         Future.successful(Json.obj(
