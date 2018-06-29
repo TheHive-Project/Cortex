@@ -150,7 +150,11 @@ class JobSrv(
       findForOrganization(organizationId, withId(jobId), Some("0-1"), Nil)
     }
       ._1
-      .runWith(Sink.head)
+      .runWith(Sink.headOption)
+      .flatMap {
+        case Some(j) ⇒ Future.successful(j)
+        case None    ⇒ Future.failed(NotFoundError(s"job $jobId not found"))
+      }
   }
 
   def delete(job: Job)(implicit authContext: AuthContext): Future[Job] = deleteSrv(job)
