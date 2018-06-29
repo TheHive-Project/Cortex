@@ -38,6 +38,10 @@ object BaseConfig {
     ConfigurationDefinitionItem("check_tlp", "", AnalyzerConfigItemType.boolean, multi = false, required = false, None),
     ConfigurationDefinitionItem("max_tlp", "", AnalyzerConfigItemType.number, multi = false, required = false, None)),
     None)
+  val pap = BaseConfig("pap", Nil, Seq(
+    ConfigurationDefinitionItem("check_pap", "", AnalyzerConfigItemType.boolean, multi = false, required = false, None),
+    ConfigurationDefinitionItem("max_pap", "", AnalyzerConfigItemType.number, multi = false, required = false, None)),
+    None)
 }
 
 @Singleton

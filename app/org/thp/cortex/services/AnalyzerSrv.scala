@@ -150,7 +150,7 @@ class AnalyzerSrv(
 
   def create(organization: Organization, analyzerDefinition: AnalyzerDefinition, analyzerFields: Fields)(implicit authContext: AuthContext): Future[Analyzer] = {
     val rawConfig = analyzerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
-    val configItems = analyzerDefinition.configurationItems ++ BaseConfig.global.items ++ BaseConfig.tlp.items
+    val configItems = analyzerDefinition.configurationItems ++ BaseConfig.global.items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items
     val configOrErrors = configItems
       .validatedBy(_.read(rawConfig))
       .map(JsObject.apply)

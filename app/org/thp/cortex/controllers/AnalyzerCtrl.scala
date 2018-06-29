@@ -1,10 +1,9 @@
 package org.thp.cortex.controllers
 
 import javax.inject.{ Inject, Singleton }
-
 import scala.concurrent.{ ExecutionContext, Future }
 
-import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.json.{ JsNumber, JsObject, Json }
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
 import akka.stream.Materializer
@@ -56,6 +55,8 @@ class AnalyzerCtrl @Inject() (
   private def analyzerJson(analyzer: Analyzer, analyzerDefinition: Option[AnalyzerDefinition]) = {
     analyzer.toJson ++ analyzerDefinition.fold(emptyAnalyzerDefinitionJson) { ad ⇒
       Json.obj(
+        "maxTlp" -> (analyzer.config \ "max_tlp").asOpt[JsNumber],
+        "maxPap" -> (analyzer.config \ "max_pap").asOpt[JsNumber],
         "version" -> ad.version,
         "description" -> ad.description,
         "author" -> ad.author,
