@@ -1,6 +1,6 @@
 package org.thp.cortex.models
 
-import java.nio.file.{ Path, Paths }
+import java.nio.file.Path
 
 import scala.util.{ Failure, Success, Try }
 
