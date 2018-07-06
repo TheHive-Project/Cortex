@@ -1,11 +1,11 @@
 package org.thp.cortex.controllers
 
-import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 import play.api.libs.json.JsObject
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
+import javax.inject.{ Inject, Singleton }
 import org.thp.cortex.models.{ BaseConfig, Roles }
 import org.thp.cortex.services.{ AnalyzerConfigSrv, UserSrv }
 
@@ -13,7 +13,7 @@ import org.elastic4play.BadRequestError
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 
 @Singleton
-class AnalyzerConfigCtrl @Inject() (
+class ResponderConfigCtrl @Inject() (
     analyzerConfigSrv: AnalyzerConfigSrv,
     userSrv: UserSrv,
     authenticated: Authenticated,

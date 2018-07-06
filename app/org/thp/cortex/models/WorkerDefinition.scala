@@ -17,16 +17,16 @@ import org.elastic4play.models.HiveEnumeration
 import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.{ AttributeError, InvalidFormatAttributeError, MissingAttributeError }
 
-object AnalyzerConfigItemType extends Enumeration with HiveEnumeration {
+object WorkerConfigItemType extends Enumeration with HiveEnumeration {
   type Type = Value
   val string, number, boolean = Value
-  implicit val reads = enumFormat(this)
+  implicit val reads: Format[WorkerConfigItemType.Type] = enumFormat(this)
 }
 
 case class ConfigurationDefinitionItem(
     name: String,
     description: String,
-    `type`: AnalyzerConfigItemType.Type,
+    `type`: WorkerConfigItemType.Type,
     multi: Boolean,
     required: Boolean,
     defaultValue: Option[JsValue]) {
@@ -35,7 +35,7 @@ case class ConfigurationDefinitionItem(
   def isMulti: Boolean = multi
 
   private def check(v: JsValue): JsValue Or Every[AttributeError] = {
-    import AnalyzerConfigItemType._
+    import WorkerConfigItemType._
     v match {
       case _: JsString if `type` == string   ⇒ Good(v)
       case _: JsNumber if `type` == number   ⇒ Good(v)
@@ -65,14 +65,14 @@ object ConfigurationDefinitionItem {
   implicit val reads: Reads[ConfigurationDefinitionItem] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "description").read[String] and
-    (JsPath \ "type").read[AnalyzerConfigItemType.Type] and
+    (JsPath \ "type").read[WorkerConfigItemType.Type] and
     (JsPath \ "multi").readWithDefault[Boolean](false) and
     (JsPath \ "required").readWithDefault[Boolean](false) and
     (JsPath \ "defaultValue").readNullable[JsValue])(ConfigurationDefinitionItem.apply _)
   implicit val writes: Writes[ConfigurationDefinitionItem] = Json.writes[ConfigurationDefinitionItem]
 }
 
-case class AnalyzerDefinition(
+case class WorkerDefinition(
     name: String,
     version: String,
     description: String,
@@ -84,26 +84,27 @@ case class AnalyzerDefinition(
     command: String,
     baseConfiguration: Option[String],
     configurationItems: Seq[ConfigurationDefinitionItem],
-    configuration: JsObject) {
-  val id = (name + "_" + version).replaceAll("\\.", "_")
+    configuration: JsObject,
+    tpe: WorkerType.Type) {
+  val id: String = (name + "_" + version).replaceAll("\\.", "_")
 
   def canProcessDataType(dataType: String): Boolean = dataTypeList.contains(dataType)
 }
 
-object AnalyzerDefinition {
+object WorkerDefinition {
   lazy val logger = Logger(getClass)
 
-  def fromPath(definitionFile: Path): Try[AnalyzerDefinition] = {
+  def fromPath(definitionFile: Path, workerType: WorkerType.Type): Try[WorkerDefinition] = {
     readJsonFile(definitionFile)
       .recoverWith {
         case error ⇒
-          logger.warn(s"Load of analyzer $definitionFile fails", error)
+          logger.warn(s"Load of worker $definitionFile fails", error)
           Failure(error)
       }
-      .map(_.validate(AnalyzerDefinition.reads(definitionFile.getParent.getParent)))
+      .map(_.validate(WorkerDefinition.reads(definitionFile.getParent.getParent, workerType)))
       .flatMap {
-        case JsSuccess(analyzerDefinition, _) ⇒ Success(analyzerDefinition)
-        case JsError(errors)                  ⇒ sys.error(s"Json description file $definitionFile is invalid: $errors")
+        case JsSuccess(workerDefinition, _) ⇒ Success(workerDefinition)
+        case JsError(errors)                ⇒ sys.error(s"Json description file $definitionFile is invalid: $errors")
       }
   }
 
@@ -114,7 +115,7 @@ object AnalyzerDefinition {
     json
   }
 
-  def reads(path: Path): Reads[AnalyzerDefinition] = (
+  def reads(path: Path, workerType: WorkerType.Type): Reads[WorkerDefinition] = (
     (JsPath \ "name").read[String] and
     (JsPath \ "version").read[String] and
     (JsPath \ "description").read[String] and
@@ -126,18 +127,19 @@ object AnalyzerDefinition {
     (JsPath \ "command").read[String] and
     (JsPath \ "baseConfig").readNullable[String] and
     (JsPath \ "configurationItems").read[Seq[ConfigurationDefinitionItem]].orElse(Reads.pure(Nil)) and
-    (JsPath \ "config").read[JsObject].orElse(Reads.pure(JsObject.empty)))(AnalyzerDefinition.apply _)
-  implicit val writes: Writes[AnalyzerDefinition] = Writes[AnalyzerDefinition] { analyzerDefinition ⇒
+    (JsPath \ "config").read[JsObject].orElse(Reads.pure(JsObject.empty)) and
+    Reads.pure(workerType))(WorkerDefinition.apply _)
+  implicit val writes: Writes[WorkerDefinition] = Writes[WorkerDefinition] { workerDefinition ⇒
     Json.obj(
-      "id" -> analyzerDefinition.id,
-      "name" -> analyzerDefinition.name,
-      "version" -> analyzerDefinition.version,
-      "description" -> analyzerDefinition.description,
-      "dataTypeList" -> analyzerDefinition.dataTypeList,
-      "author" -> analyzerDefinition.author,
-      "url" -> analyzerDefinition.url,
-      "license" -> analyzerDefinition.license,
-      "baseConfig" -> analyzerDefinition.baseConfiguration,
-      "configurationItems" -> analyzerDefinition.configurationItems)
+      "id" -> workerDefinition.id,
+      "name" -> workerDefinition.name,
+      "version" -> workerDefinition.version,
+      "description" -> workerDefinition.description,
+      "dataTypeList" -> workerDefinition.dataTypeList,
+      "author" -> workerDefinition.author,
+      "url" -> workerDefinition.url,
+      "license" -> workerDefinition.license,
+      "baseConfig" -> workerDefinition.baseConfiguration,
+      "configurationItems" -> workerDefinition.configurationItems)
   }
 }

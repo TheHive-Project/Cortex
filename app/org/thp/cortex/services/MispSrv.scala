@@ -21,7 +21,7 @@ import org.elastic4play.services._
 
 @Singleton
 class MispSrv @Inject() (
-    analyzerSrv: AnalyzerSrv,
+    workerSrv: WorkerSrv,
     attachmentSrv: AttachmentSrv,
     jobSrv: JobSrv,
     @Named("audit") auditActor: ActorRef,
@@ -31,11 +31,11 @@ class MispSrv @Inject() (
   private[MispSrv] lazy val logger = Logger(getClass)
 
   def moduleList(implicit authContext: AuthContext): (Source[JsObject, NotUsed], Future[Long]) = {
-    val (analyzers, analyzerCount) = analyzerSrv.findForUser(authContext.userId, QueryDSL.any, Some("all"), Nil)
+    val (analyzers, analyzerCount) = workerSrv.findAnalyzersForUser(authContext.userId, QueryDSL.any, Some("all"), Nil)
 
     val mispAnalyzers = analyzers
       .mapAsyncUnordered(1) { analyzer ⇒
-        analyzerSrv.getDefinition(analyzer.analyzerDefinitionId())
+        workerSrv.getDefinition(analyzer.workerDefinitionId())
           .map(ad ⇒ Some(analyzer -> ad))
           .recover { case _ ⇒ None }
       }
@@ -62,7 +62,7 @@ class MispSrv @Inject() (
     val duration = 20.minutes // TODO configurable
 
     for {
-      analyzer ← analyzerSrv.get(module)
+      analyzer ← workerSrv.get(module)
       job ← jobSrv.create(analyzer, mispType2dataType(mispType), artifact, 0, "", JsObject.empty, force = false)
       _ ← auditActor.ask(Register(job.id, duration))(Timeout(duration))
       updatedJob ← jobSrv.getForUser(authContext.userId, job.id)

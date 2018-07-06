@@ -31,7 +31,7 @@ class JobSrv(
     jobModel: JobModel,
     reportModel: ReportModel,
     artifactModel: ArtifactModel,
-    analyzerSrv: AnalyzerSrv,
+    workerSrv: WorkerSrv,
     userSrv: UserSrv,
     getSrv: GetSrv,
     createSrv: CreateSrv,
@@ -48,7 +48,7 @@ class JobSrv(
       jobModel: JobModel,
       reportModel: ReportModel,
       artifactModel: ArtifactModel,
-      analyzerSrv: AnalyzerSrv,
+      workerSrv: WorkerSrv,
       userSrv: UserSrv,
       getSrv: GetSrv,
       createSrv: CreateSrv,
@@ -63,7 +63,7 @@ class JobSrv(
     jobModel,
     reportModel,
     artifactModel,
-    analyzerSrv,
+    workerSrv,
     userSrv,
     getSrv,
     createSrv,
@@ -75,7 +75,8 @@ class JobSrv(
     ec, mat)
 
   private lazy val logger = Logger(getClass)
-  private lazy val analyzeExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("analyzer")
+  private lazy val analyzerExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("analyzer")
+  private lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
   private val osexec =
     if (System.getProperty("os.name").toLowerCase.contains("win"))
       (c: String) ⇒ s"""cmd /c $c"""
@@ -91,9 +92,9 @@ class JobSrv(
         ._1
         .runForeach { job ⇒
           (for {
-            analyzer ← analyzerSrv.get(job.analyzerId())
-            analyzerDefinition ← analyzerSrv.getDefinition(job.analyzerId())
-            updatedJob ← run(analyzerDefinition, analyzer, job)
+            worker ← workerSrv.get(job.workerId())
+            workerDefinition ← workerSrv.getDefinition(job.workerId())
+            updatedJob ← run(workerDefinition, worker, job)
           } yield updatedJob)
             .onComplete {
               case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
@@ -159,7 +160,7 @@ class JobSrv(
 
   def delete(job: Job)(implicit authContext: AuthContext): Future[Job] = deleteSrv(job)
 
-  def legacyCreate(analyzer: Analyzer, attributes: JsObject, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
+  def legacyCreate(worker: Worker, attributes: JsObject, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
     val dataType = Or.from((attributes \ "dataType").asOpt[String], One(MissingAttributeError("dataType")))
     val dataFiv = fields.get("data") match {
       case Some(fiv: FileInputValue)            ⇒ Good(Right(fiv))
@@ -178,7 +179,7 @@ class JobSrv(
     }
       .fold(
         typeDataAttachment ⇒ typeDataAttachment._2.flatMap(
-          da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters, force)),
+          da ⇒ create(worker, typeDataAttachment._1, da, tlp, message, parameters, force)),
         errors ⇒ {
           val attributeError = AttributeCheckingError("job", errors)
           logger.error("legacy job create fails", attributeError)
@@ -187,7 +188,7 @@ class JobSrv(
   }
 
   def create(analyzerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
-    analyzerSrv.getForUser(authContext.userId, analyzerId).flatMap { analyzer ⇒
+    workerSrv.getForUser(authContext.userId, analyzerId).flatMap { worker ⇒
       /*
       In Cortex 1, fields looks like:
       {
@@ -218,7 +219,7 @@ class JobSrv(
           "optional parameters": "value"
         }
        */
-      fields.getValue("attributes").map(attributes ⇒ legacyCreate(analyzer, attributes.as[JsObject], fields)).getOrElse {
+      fields.getValue("attributes").map(attributes ⇒ legacyCreate(worker, attributes.as[JsObject], fields)).getOrElse {
         val dataType = Or.from(fields.getString("dataType"), One(MissingAttributeError("dataType")))
         val dataFiv = (fields.get("data"), fields.getString("data"), fields.get("attachment")) match {
           case (_, Some(data), None)                ⇒ Good(Left(data))
@@ -242,24 +243,24 @@ class JobSrv(
           case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
         }
           .fold(
-            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters, force)),
+            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(worker, typeDataAttachment._1, da, tlp, message, parameters, force)),
             errors ⇒ Future.failed(AttributeCheckingError("job", errors)))
       }
     }
   }
 
-  def create(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject, force: Boolean)(implicit authContext: AuthContext): Future[Job] = {
+  def create(worker: Worker, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject, force: Boolean)(implicit authContext: AuthContext): Future[Job] = {
     val previousJob = if (force) Future.successful(None)
-    else findSimilarJob(analyzer, dataType, dataAttachment, tlp, parameters)
+    else findSimilarJob(worker, dataType, dataAttachment, tlp, parameters)
     previousJob.flatMap {
       case Some(job) ⇒ Future.successful(job)
-      case None ⇒ isUnderRateLimit(analyzer).flatMap {
+      case None ⇒ isUnderRateLimit(worker).flatMap {
         case true ⇒
           val fields = Fields(Json.obj(
-            "analyzerDefinitionId" -> analyzer.analyzerDefinitionId(),
-            "analyzerId" -> analyzer.id,
-            "analyzerName" -> analyzer.name(),
-            "organization" -> analyzer.parentId,
+            "analyzerDefinitionId" -> worker.workerDefinitionId(),
+            "analyzerId" -> worker.id,
+            "analyzerName" -> worker.name(),
+            "organization" -> worker.parentId,
             "status" -> JobStatus.Waiting,
             "dataType" -> dataType,
             "tlp" -> tlp,
@@ -269,10 +270,10 @@ class JobSrv(
             case Left(data)        ⇒ fields.set("data", data)
             case Right(attachment) ⇒ fields.set("attachment", AttachmentInputValue(attachment))
           }
-          analyzerSrv.getDefinition(analyzer.analyzerDefinitionId()).flatMap { analyzerDefinition ⇒
+          workerSrv.getDefinition(worker.workerDefinitionId()).flatMap { workerDefinition ⇒
             createSrv[JobModel, Job](jobModel, fieldWithData).andThen {
               case Success(job) ⇒
-                run(analyzerDefinition, analyzer, job)
+                run(workerDefinition, worker, job)
                   .onComplete {
                     case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
                     case Failure(e) ⇒ logger.error(s"Job ${job.id} has failed", e)
@@ -280,22 +281,22 @@ class JobSrv(
             }
           }
         case false ⇒
-          Future.failed(RateLimitExceeded(analyzer))
+          Future.failed(RateLimitExceeded(worker))
 
       }
     }
   }
 
-  private def isUnderRateLimit(analyzer: Analyzer): Future[Boolean] = {
+  private def isUnderRateLimit(worker: Worker): Future[Boolean] = {
     (for {
-      rate ← analyzer.rate()
-      rateUnit ← analyzer.rateUnit()
+      rate ← worker.rate()
+      rateUnit ← worker.rateUnit()
     } yield {
       import org.elastic4play.services.QueryDSL._
       val now = new Date().getTime
-      logger.info(s"Checking rate limit on analyzer ${analyzer.name()} from ${new Date(now - rateUnit.id.toLong * 24 * 60 * 60 * 1000)}")
-      stats(and("createdAt" ~>= (now - rateUnit.id.toLong * 24 * 60 * 60 * 1000), "analyzerId" ~= analyzer.id), Seq(selectCount)).map { stats ⇒
-        val count = (stats \ "count").as[Long]
+      logger.info(s"Checking rate limit on worker ${worker.name()} from ${new Date(now - rateUnit.id.toLong * 24 * 60 * 60 * 1000)}")
+      stats(and("createdAt" ~>= (now - rateUnit.id.toLong * 24 * 60 * 60 * 1000), "analyzerId" ~= worker.id), Seq(selectCount)).map { s ⇒
+        val count = (s \ "count").as[Long]
         logger.info(s"$count analysis found (limit is $rate)")
         count < rate
       }
@@ -303,18 +304,18 @@ class JobSrv(
       .getOrElse(Future.successful(true))
   }
 
-  def findSimilarJob(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, parameters: JsObject): Future[Option[Job]] = {
-    val cache = analyzer.jobCache().fold(jobCache)(_.minutes)
+  def findSimilarJob(worker: Worker, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, parameters: JsObject): Future[Option[Job]] = {
+    val cache = worker.jobCache().fold(jobCache)(_.minutes)
     if (cache.length == 0) {
       logger.info("Job cache is disabled")
       Future.successful(None)
     }
     else {
       import org.elastic4play.services.QueryDSL._
-      logger.info(s"Looking for similar job (analyzer=${analyzer.id}, dataType=$dataType, data=$dataAttachment, tlp=$tlp, parameters=$parameters")
+      logger.info(s"Looking for similar job (worker=${worker.id}, dataType=$dataType, data=$dataAttachment, tlp=$tlp, parameters=$parameters")
       val now = new Date().getTime
       find(and(
-        "analyzerId" ~= analyzer.id,
+        "analyzerId" ~= worker.id,
         "status" ~!= JobStatus.Failure,
         "status" ~!= JobStatus.Deleted,
         "startDate" ~>= (now - cache.toMillis),
@@ -336,15 +337,19 @@ class JobSrv(
       rename("type", "dataType"))(artifact)
   }
 
-  def run(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job)(implicit authContext: AuthContext): Future[Job] = {
-    buildInput(analyzerDefinition, analyzer, job)
+  def run(workerDefinition: WorkerDefinition, worker: Worker, job: Job)(implicit authContext: AuthContext): Future[Job] = {
+    val executionContext = workerDefinition.tpe match {
+      case WorkerType.analyzer  ⇒ analyzerExecutionContext
+      case WorkerType.responder ⇒ responderExecutionContext
+    }
+    buildInput(workerDefinition, worker, job)
       .flatMap { input ⇒
         startJob(job)
         var output = ""
         var error = ""
         try {
-          logger.info(s"Execute ${osexec(analyzerDefinition.command)} in ${analyzerDefinition.baseDirectory}")
-          Process(osexec(analyzerDefinition.command), analyzerDefinition.baseDirectory.toFile).run(
+          logger.info(s"Execute ${osexec(workerDefinition.command)} in ${workerDefinition.baseDirectory}")
+          Process(osexec(workerDefinition.command), workerDefinition.baseDirectory.toFile).run(
             new ProcessIO(
               { stdin ⇒ Try(stdin.write(input.toString.getBytes("UTF-8"))); stdin.close() },
               { stdout ⇒ output = readStream(stdout) },
@@ -383,7 +388,7 @@ class JobSrv(
             val errorMessage = (error + output).take(8192)
             endJob(job, JobStatus.Failure, Some(s"Invalid output\n$errorMessage"))
         }
-      }(analyzeExecutionContext)
+      }(executionContext)
   }
 
   def getReport(jobId: String)(implicit authContext: AuthContext): Future[Report] = getForUser(authContext.userId, jobId).flatMap(getReport)
@@ -395,7 +400,7 @@ class JobSrv(
       .map(_.getOrElse(throw NotFoundError(s"Job ${job.id} has no report")))
   }
 
-  private def buildInput(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job): Future[JsObject] = {
+  private def buildInput(workerDefinition: WorkerDefinition, worker: Worker, job: Job): Future[JsObject] = {
     job.attachment()
       .map { attachment ⇒
         val tempFile = Files.createTempFile(s"cortex-job-${job.id}-", "")
@@ -417,9 +422,9 @@ class JobSrv(
             "data" -> job.data().get)
       }
       .map { artifact ⇒
-        (BaseConfig.global.items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items ++ analyzerDefinition.configurationItems)
-          .validatedBy(_.read(analyzer.config))
-          .map(cfg ⇒ Json.obj("config" -> JsObject(cfg).deepMerge(analyzerDefinition.configuration)))
+        (BaseConfig.global.items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items ++ workerDefinition.configurationItems)
+          .validatedBy(_.read(worker.config))
+          .map(cfg ⇒ Json.obj("config" -> JsObject(cfg).deepMerge(workerDefinition.configuration)))
           .map { cfg ⇒
             val proxy_http = (cfg \ "config" \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("http" -> proxy)) }
             val proxy_https = (cfg \ "config" \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("https" -> proxy)) }
@@ -436,6 +441,7 @@ class JobSrv(
       .flatMap(Future.fromTry)
   }
 
+  //
   private def startJob(job: Job)(implicit authContext: AuthContext): Future[Job] = {
     val fields = Fields.empty
       .set("status", JobStatus.InProgress.toString)

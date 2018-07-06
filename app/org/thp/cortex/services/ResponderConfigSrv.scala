@@ -9,7 +9,7 @@ import org.thp.cortex.models.{ BaseConfig, WorkerConfigModel, WorkerType }
 import org.elastic4play.services.{ CreateSrv, FindSrv, UpdateSrv }
 
 @Singleton
-class AnalyzerConfigSrv @Inject() (
+class ResponderConfigSrv @Inject() (
     val workerConfigModel: WorkerConfigModel,
     val userSrv: UserSrv,
     val organizationSrv: OrganizationSrv,
@@ -20,7 +20,6 @@ class AnalyzerConfigSrv @Inject() (
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer) extends WorkerConfigSrv {
 
-  override val workerType: WorkerType.Type = WorkerType.analyzer
-  def definitions: Future[Map[String, BaseConfig]] =
-    buildDefinitionMap(workerSrv.listAnalyzerDefinitions._1)
+  override val workerType: WorkerType.Type = WorkerType.responder
+  def definitions: Future[Map[String, BaseConfig]] = buildDefinitionMap(workerSrv.listResponderDefinitions._1)
 }
