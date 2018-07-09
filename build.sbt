@@ -4,14 +4,14 @@ lazy val cortex = (project in file("."))
   .enablePlugins(PlayScala)
   .enablePlugins(PublishToBinTray)
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.12.6"
 
 libraryDependencies ++= Seq(
   ehcache,
   ws,
   specs2 % Test,
   "net.codingwell" %% "scala-guice" % "4.1.0",
-  "org.cert-bdf" %% "elastic4play" % "1.5.0",
+  "org.thehive-project" %% "elastic4play" % "1.6.0-SNAPSHOT",
   "org.reflections" % "reflections" % "0.9.11",
   "net.lingala.zip4j" % "zip4j" % "1.3.2",
   "com.typesafe.play" %% "play-guice" % play.core.PlayVersion.current
