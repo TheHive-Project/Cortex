@@ -8,20 +8,30 @@ import organizationsPageTpl from './list/organizations.page.html';
 import OrganizationPageController from './details/organization.page.controller';
 import organizationPageTpl from './details/organization.page.html';
 
+// Users
+import OrganizationUsersController from './components/users-list.controller';
+import organizationUsersTpl from './components/users-list.html';
+
+// Analyzers 
 import AnalyzerConfigFormController from './components/analyzer-config-form.controller';
 import analyzerConfigFormTpl from './components/analyzer-config-form.html';
 
 import OrganizationAnalyzersController from './components/analyzers-list.controller';
 import organizationAnalyzersTpl from './components/analyzers-list.html';
 
-import OrganizationUsersController from './components/users-list.controller';
-import organizationUsersTpl from './components/users-list.html';
-
 import OrganizationConfigsController from './components/config-list.controller';
 import organizationConfigsTpl from './components/config-list.html';
 
 import ConfigurationForm from './components/config-form.controller';
 import configurationFormTpl from './components/config-form.html';
+
+// Responders
+import ResponderConfigFormController from './components/responders/responder-config-form.controller';
+import responderConfigFormTpl from './components/responders/responder-config-form.html';
+
+import OrganizationRespondersController from './components/responders/responders-list.controller';
+import organizationRespondersTpl from './components/responders/responders-list.html';
+
 
 import organizationService from './organizations.service.js';
 
@@ -67,6 +77,20 @@ const organizationsModule = angular
             } else {
               return $q.resolve([]);
             }
+          },
+          responderDefinitions: (AuthService, ResponderService, $q) => {
+            if (AuthService.hasRole([Roles.ORGADMIN])) {
+              return ResponderService.definitions();
+            } else {
+              return $q.resolve({});
+            }
+          },
+          responders: (AuthService, OrganizationService, $q) => {
+            if (AuthService.hasRole([Roles.ORGADMIN])) {
+              return OrganizationService.responders();
+            } else {
+              return $q.resolve([]);
+            }
           }
         },
         data: {
@@ -86,7 +110,9 @@ const organizationsModule = angular
       users: '<',
       analyzerDefinitions: '<',
       analyzers: '<',
-      configurations: '<'
+      configurations: '<',
+      responderDefinitions: '<',
+      responders: '<'
     }
   })
   .component('organizationAnalyzersList', {
@@ -96,6 +122,15 @@ const organizationsModule = angular
       organization: '<',
       analyzerDefinitions: '<',
       analyzers: '<'
+    }
+  })
+  .component('organizationRespondersList', {
+    controller: OrganizationRespondersController,
+    templateUrl: organizationRespondersTpl,
+    bindings: {
+      organization: '<',
+      responderDefinitions: '<',
+      responders: '<'
     }
   })
   .component('organizationUsersList', {
@@ -126,6 +161,17 @@ const organizationsModule = angular
     templateUrl: analyzerConfigFormTpl,
     bindings: {
       analyzer: '=',
+      definition: '=',
+      configuration: '<',
+      globalConfig: '<',
+      baseConfig: '<'
+    }
+  })
+  .component('responderConfigForm', {
+    controller: ResponderConfigFormController,
+    templateUrl: responderConfigFormTpl,
+    bindings: {
+      responder: '=',
       definition: '=',
       configuration: '<',
       globalConfig: '<',

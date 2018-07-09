@@ -14,13 +14,24 @@
     </uib-tab>
     <uib-tab index="1" require-roles="orgadmin">
       <uib-tab-heading>
-        <i class="fa fa-cog"></i> Configurations</uib-tab-heading>      
+        <i class="fa fa-cog"></i> Analyzers Config</uib-tab-heading>      
         <organization-config-list organization="$ctrl.organization" configurations="$ctrl.configurations"></organization-config-list>
     </uib-tab>
     <uib-tab index="2" require-roles="orgadmin">
       <uib-tab-heading>
         <i class="fa fa-cogs"></i> Analyzers</uib-tab-heading>
       <organization-analyzers-list organization="$ctrl.organization" analyzer-definitions="$ctrl.analyzerDefinitions" analyzers="$ctrl.analyzers"></organization-analyzers-list>      
+    </uib-tab>
+
+    <uib-tab index="3" require-roles="orgadmin">
+      <uib-tab-heading>
+        <i class="fa fa-cog"></i> Responders Config</uib-tab-heading>
+        <organization-config-list organization="$ctrl.organization" configurations="$ctrl.configurations"></organization-config-list>
+    </uib-tab>
+    <uib-tab index="4" require-roles="orgadmin">
+      <uib-tab-heading>
+        <i class="fa fa-forward"></i> Responders</uib-tab-heading>
+        <organization-responders-list organization="$ctrl.organization" responder-definitions="$ctrl.responderDefinitions" responders="$ctrl.responders"></organization-responders-list>
     </uib-tab>
     
   </uib-tabset>

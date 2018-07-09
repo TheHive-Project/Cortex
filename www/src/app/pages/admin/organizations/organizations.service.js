@@ -60,18 +60,35 @@ export default class OrganizationService {
   }
 
   enable(id) {
-    return this.$http.patch(`./api/organization/${id}`, { status: 'Active' });
+    return this.$http.patch(`./api/organization/${id}`, {
+      status: 'Active'
+    });
   }
 
   analyzers() {
     let defer = this.$q.defer();
 
     this.$http
-      .get(`./api/organization/analyzer`, { params: { range: 'all' } })
+      .get(`./api/organization/analyzer`, {
+        params: {
+          range: 'all'
+        }
+      })
       .then(response => defer.resolve(response.data))
       .catch(err => defer.reject(err));
 
     return defer.promise;
+  }
+
+  responders() {
+    return this.$http
+      .get(`./api/organization/responder`, {
+        params: {
+          range: 'all'
+        }
+      })
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   users(id) {
@@ -95,5 +112,17 @@ export default class OrganizationService {
 
   disableAnalyzer(analyzerId) {
     return this.$http.delete(`./api/analyzer/${analyzerId}`);
+  }
+
+  enableResponder(responderId, config) {
+    return this.$http.post(`./api/organization/responder/${responderId}`, config);
+  }
+
+  updateResponder(responderId, config) {
+    return this.$http.patch(`./api/responder/${responderId}`, config);
+  }
+
+  disableResponder(responderId) {
+    return this.$http.delete(`./api/responder/${responderId}`);
   }
 }
