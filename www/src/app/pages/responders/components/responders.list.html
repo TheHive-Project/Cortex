@@ -1,0 +1,32 @@
+<section>
+  <div class="row mv-s" ng-if="$ctrl.responders.length === 0">
+    <div class="col-md-12">
+      <div class="empty-message">No responders found.</div>
+    </div>
+  </div>
+
+  <div class="row mv-s" ng-if="$ctrl.responders.length > 0">
+    <div class="col-sm-12 flex-table">
+      <div class="flex-row media" ng-repeat="responder in $ctrl.responders track by responder.id">
+        <div class="flex-col flex-1">
+          <h4 class="media-heading">
+            <span class="text-primary mr-m">{{responder.name}}</span>
+            <small class="mr-xxs">
+              <strong>Version:</strong> {{responder.version}}</small>
+            <small class="mr-xxs" ng-if="responder.author">
+              <strong>Author:</strong> {{responder.author}}</small>
+            <small class="mr-xxs" ng-if="responder.license">
+              <strong>License:</strong> {{responder.license}}</small>
+          </h4>
+          <div class="mt-xs text-muted">
+            {{responder.description}}
+          </div>
+          <div class="mt-xs mb-xxxs">
+            <strong>Applies to:</strong>
+            <span class="datatype clickable label label-primary" ng-repeat="type in responder.dataTypeList">{{type}}</span>&nbsp;
+          </div>
+        </div>        
+      </div>
+    </div>
+  </div>
+</section>
