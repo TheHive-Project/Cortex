@@ -15,7 +15,8 @@ object JobStatus extends Enumeration with HiveEnumeration {
   implicit val reads = enumFormat(this)
 }
 
-trait JobAttributes { _: AttributeDef ⇒
+trait JobAttributes {
+  _: AttributeDef ⇒
   val workerDefinitionId = attribute("workerDefinitionId", F.stringFmt, "Worker definition id", O.readonly)
   val workerId = attribute("workerId", F.stringFmt, "Worker id", O.readonly)
   val workerName = attribute("workerName", F.stringFmt, "Worker name", O.readonly)
@@ -47,6 +48,8 @@ class Job(model: JobModel, attributes: JsObject) extends EntityDef[JobModel, Job
 
   override def toJson: JsObject = {
     val output = super.toJson + ("date" -> Json.toJson(createdAt))
-    input().fold(output)(i ⇒ output + ("input" -> Json.parse(i)))
+    input().fold(output)(i ⇒ output +
+      ("input" -> Json.parse(i))) +
+      ("parameters" -> params)
   }
 }
