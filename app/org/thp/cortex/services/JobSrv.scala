@@ -306,7 +306,7 @@ class JobSrv(
 
   def findSimilarJob(worker: Worker, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, parameters: JsObject): Future[Option[Job]] = {
     val cache = worker.jobCache().fold(jobCache)(_.minutes)
-    if (cache.length == 0) {
+    if (cache.length == 0 || worker.tpe() == WorkerType.responder) {
       logger.info("Job cache is disabled")
       Future.successful(None)
     }
