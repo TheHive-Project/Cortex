@@ -34,17 +34,13 @@ trait WorkerConfigSrv {
       .filter(_.baseConfiguration.isDefined)
       .map(d ⇒ d.copy(configurationItems = d.configurationItems.map(_.copy(required = false))))
       .groupBy(200, _.baseConfiguration.get) // TODO replace groupBy by fold to prevent "too many streams" error
-      .map(d ⇒ BaseConfig(d.baseConfiguration.get, Seq(d.name), d.configurationItems, None))
+      .map(d ⇒ BaseConfig.global(d.tpe) + BaseConfig(d.baseConfiguration.get, Seq(d.name), d.configurationItems, None))
       .reduce(_ + _)
       .filterNot(_.items.isEmpty)
       .mergeSubstreams
       .mapMaterializedValue(_ ⇒ NotUsed)
       .runWith(Sink.seq)
-      .map { baseConfigs ⇒
-        (BaseConfig.global +: baseConfigs)
-          .map(c ⇒ c.name -> c)
-          .toMap
-      }
+      .map(_.map(c ⇒ c.name -> c).toMap)
   }
 
   def getForUser(userId: String, configName: String): Future[BaseConfig] = {

@@ -422,7 +422,7 @@ class JobSrv(
             "data" -> job.data().get)
       }
       .map { artifact ⇒
-        (BaseConfig.global.items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items ++ workerDefinition.configurationItems)
+        (BaseConfig.global(worker.tpe()).items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items ++ workerDefinition.configurationItems)
           .validatedBy(_.read(worker.config))
           .map(cfg ⇒ Json.obj("config" -> JsObject(cfg).deepMerge(workerDefinition.configuration)))
           .map { cfg ⇒
