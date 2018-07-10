@@ -13,14 +13,14 @@ import OrganizationUsersController from './components/users-list.controller';
 import organizationUsersTpl from './components/users-list.html';
 
 // Analyzers 
-import AnalyzerConfigFormController from './components/analyzer-config-form.controller';
-import analyzerConfigFormTpl from './components/analyzer-config-form.html';
+import AnalyzerConfigFormController from './components/analyzers/analyzer-config-form.controller';
+import analyzerConfigFormTpl from './components/analyzers/analyzer-config-form.html';
 
-import OrganizationAnalyzersController from './components/analyzers-list.controller';
-import organizationAnalyzersTpl from './components/analyzers-list.html';
+import OrganizationAnalyzersController from './components/analyzers/analyzers-list.controller';
+import organizationAnalyzersTpl from './components/analyzers/analyzers-list.html';
 
-import OrganizationConfigsController from './components/config-list.controller';
-import organizationConfigsTpl from './components/config-list.html';
+import OrganizationConfigsController from './components/analyzers/config-list.controller';
+import organizationConfigsTpl from './components/analyzers/config-list.html';
 
 import ConfigurationForm from './components/config-form.controller';
 import configurationFormTpl from './components/config-form.html';
@@ -32,8 +32,10 @@ import responderConfigFormTpl from './components/responders/responder-config-for
 import OrganizationRespondersController from './components/responders/responders-list.controller';
 import organizationRespondersTpl from './components/responders/responders-list.html';
 
+import OrganizationReponderConfigsController from './components/responders/config-list.controller';
+import organizationResponderConfigsTpl from './components/responders/config-list.html';
 
-import organizationService from './organizations.service.js';
+import organizationService from './organizations.service';
 
 import './organizations.scss';
 
@@ -71,9 +73,16 @@ const organizationsModule = angular
               return $q.resolve([]);
             }
           },
-          configurations: (AuthService, AnalyzerService, $q) => {
+          analyzersConfigurations: (AuthService, AnalyzerService, $q) => {
             if (AuthService.hasRole([Roles.ORGADMIN])) {
               return AnalyzerService.configurations();
+            } else {
+              return $q.resolve([]);
+            }
+          },
+          respondersConfigurations: (AuthService, ResponderService, $q) => {
+            if (AuthService.hasRole([Roles.ORGADMIN])) {
+              return ResponderService.configurations();
             } else {
               return $q.resolve([]);
             }
@@ -110,9 +119,10 @@ const organizationsModule = angular
       users: '<',
       analyzerDefinitions: '<',
       analyzers: '<',
-      configurations: '<',
+      analyzersConfigurations: '<',
       responderDefinitions: '<',
-      responders: '<'
+      responders: '<',
+      respondersConfigurations: '<'
     }
   })
   .component('organizationAnalyzersList', {
@@ -143,6 +153,14 @@ const organizationsModule = angular
   .component('organizationConfigList', {
     controller: OrganizationConfigsController,
     templateUrl: organizationConfigsTpl,
+    bindings: {
+      organization: '<',
+      configurations: '<'
+    }
+  })
+  .component('organizationResponderConfigList', {
+    controller: OrganizationReponderConfigsController,
+    templateUrl: organizationResponderConfigsTpl,
     bindings: {
       organization: '<',
       configurations: '<'

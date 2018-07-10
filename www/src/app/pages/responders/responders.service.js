@@ -2,17 +2,13 @@
 
 import _ from 'lodash';
 
-// import AnalyzerRunController from './analyzer.run.controller';
-// import runAnalyzerModalTpl from './analyzer.run.modal.html';
-
 export default class ResponderService {
-  constructor($log, $q, $http, $uibModal) {
+  constructor($log, $q, $http) {
     'ngInject';
 
     this.$log = $log;
     this.$q = $q;
     this.$http = $http;
-    this.$uibModal = $uibModal;
 
     this.responderDefinitions = null;
     this.responders = null;
@@ -45,14 +41,10 @@ export default class ResponderService {
   }
 
   scan() {
-    let defer = this.$q.defer();
-
-    this.$http
+    return this.$http
       .post('./api/responderdefinition/scan', {})
-      .then(response => defer.resolve(response.data))
-      .catch(err => defer.reject(err));
-
-    return defer.promise;
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   list() {
@@ -83,12 +75,9 @@ export default class ResponderService {
   }
 
   configurations() {
-    let defer = this.$q.defer();
-    this.$http
+    return this.$http
       .get('./api/responderconfig')
-      .then(response => defer.resolve(response.data), err => defer.reject(err));
-
-    return defer.promise;
+      .then(response => this.$q.resolve(response.data), err => this.$q.reject(err));
   }
 
   getBaseConfig(baseConfig) {
@@ -107,96 +96,14 @@ export default class ResponderService {
   }
 
   getConfiguration(name) {
-    let defer = this.$q.defer();
-
-    this.$http
+    return this.$http
       .get(`./api/responderconfig/${name}`)
-      .then(response => defer.resolve(response.data), err => defer.reject(err));
-
-    return defer.promise;
+      .then(response => this.$q.resolve(response.data), err => this.$q.reject(err));
   }
 
   saveConfiguration(name, values) {
-    let defer = this.$q.defer();
-
-    this.$http
+    return this.$http
       .patch(`./api/responderconfig/${name}`, values)
-      .then(response => defer.resolve(response.data), err => defer.reject(err));
-
-    return defer.promise;
+      .then(response => this.$q.resolve(response.data), err => this.$q.reject(err));
   }
-
-  // openRunModal(analyzers, observable) {
-  //   let modalInstance = this.$uibModal.open({
-  //     animation: true,
-  //     templateUrl: runAnalyzerModalTpl,
-  //     controller: AnalyzerRunController,
-  //     controllerAs: '$modal',
-  //     size: 'lg',
-  //     resolve: {
-  //       observable: () => angular.copy(observable),
-  //       analyzers: () => angular.copy(analyzers)
-  //     }
-  //   });
-
-  //   return modalInstance.result.then(result =>
-  //     this.$q.all(
-  //       result.analyzerIds.map(analyzerId =>
-  //         this.run(analyzerId, result.observable)
-  //       )
-  //     )
-  //   );
-  // }
-
-  // run(id, artifact) {
-  //   let postData;
-
-  //   if (artifact.dataType === 'file') {
-  //     postData = {
-  //       attachment: artifact.attachment,
-  //       dataType: artifact.dataType,
-  //       tlp: artifact.tlp
-  //     };
-
-  //     return this.$http({
-  //       method: 'POST',
-  //       url: './api/analyzer/' + id + '/run',
-  //       headers: {
-  //         'Content-Type': undefined
-  //       },
-  //       transformRequest: data => {
-  //         let formData = new FormData(),
-  //           copy = angular.copy(data, {}),
-  //           _json = {};
-
-  //         angular.forEach(data, (value, key) => {
-  //           if (
-  //             Object.getPrototypeOf(value) instanceof Blob ||
-  //             Object.getPrototypeOf(value) instanceof File
-  //           ) {
-  //             formData.append(key, value);
-  //             delete copy[key];
-  //           } else {
-  //             _json[key] = value;
-  //           }
-  //         });
-
-  //         formData.append('_json', angular.toJson(_json));
-
-  //         return formData;
-  //       },
-  //       data: postData
-  //     });
-  //   } else {
-  //     postData = {
-  //       data: artifact.data,
-  //       attributes: {
-  //         dataType: artifact.dataType,
-  //         tlp: artifact.tlp
-  //       }
-  //     };
-
-  //     return this.$http.post('./api/analyzer/' + id + '/run', postData);
-  //   }
-  // }
 }

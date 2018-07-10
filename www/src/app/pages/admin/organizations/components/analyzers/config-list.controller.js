@@ -1,8 +1,8 @@
 'use strict';
 import _ from 'lodash/core';
 
-import ConfigurationEditController from './config.edit.controller';
-import configurationEditTpl from './config.edit.modal.html';
+import ConfigurationEditController from '../config.edit.controller';
+import configurationEditTpl from '../config.edit.modal.html';
 
 export default class OrganizationConfigsController {
   constructor($log, $uibModal, AnalyzerService, NotificationService) {
@@ -39,9 +39,9 @@ export default class OrganizationConfigsController {
 
           _.forEach(conf.configurationItems, item => {
             conf.config[item.name] =
-              conf.config[item.name] !== undefined
-                ? conf.config[item.name]
-                : item.defaultValue || (item.multi ? [undefined] : undefined);
+              conf.config[item.name] !== undefined ?
+              conf.config[item.name] :
+              item.defaultValue || (item.multi ? [undefined] : undefined);
           });
 
           return conf;

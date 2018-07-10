@@ -15,7 +15,7 @@
     <uib-tab index="1" require-roles="orgadmin">
       <uib-tab-heading>
         <i class="fa fa-cog"></i> Analyzers Config</uib-tab-heading>      
-        <organization-config-list organization="$ctrl.organization" configurations="$ctrl.configurations"></organization-config-list>
+        <organization-config-list organization="$ctrl.organization" configurations="$ctrl.analyzersConfigurations"></organization-config-list>
     </uib-tab>
     <uib-tab index="2" require-roles="orgadmin">
       <uib-tab-heading>
@@ -26,7 +26,7 @@
     <uib-tab index="3" require-roles="orgadmin">
       <uib-tab-heading>
         <i class="fa fa-cog"></i> Responders Config</uib-tab-heading>
-        <organization-config-list organization="$ctrl.organization" configurations="$ctrl.configurations"></organization-config-list>
+        <organization-responder-config-list organization="$ctrl.organization" configurations="$ctrl.respondersConfigurations"></organization-responder-config-list>
     </uib-tab>
     <uib-tab index="4" require-roles="orgadmin">
       <uib-tab-heading>
