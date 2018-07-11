@@ -1,10 +1,9 @@
 package org.thp.cortex.models
 
 import javax.inject.{ Inject, Singleton }
-
 import scala.util.Try
 
-import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.json.{ JsObject, JsString, Json }
 
 import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.models.{ AttributeDef, EntityDef, HiveEnumeration, ModelDef, AttributeFormat ⇒ F, AttributeOption ⇒ O }
@@ -50,6 +49,9 @@ class Job(model: JobModel, attributes: JsObject) extends EntityDef[JobModel, Job
     val output = super.toJson + ("date" → Json.toJson(createdAt))
     input().fold(output)(i ⇒ output +
       ("input" → Json.parse(i))) +
-      ("parameters" → params)
+      ("parameters" → params) +
+      ("analyzerId" → JsString(workerId())) +
+      ("analyzerName" → JsString(workerName())) +
+      ("analyzerDefinitionId" → JsString(workerDefinitionId()))
   }
 }
