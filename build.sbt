@@ -16,7 +16,8 @@ libraryDependencies ++= Seq(
   Dependencies.zip4j
 )
 
-//resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+resolvers += Resolver.sbtPluginRepo("releases")
+resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 publishArtifact in (Compile, packageDoc) := false
 publishArtifact in packageDoc := false
 sources in (Compile,doc) := Seq.empty

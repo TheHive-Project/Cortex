@@ -1,12 +1,11 @@
 'use strict';
 
-import _ from 'lodash';
-
 export default class OrganizationPageController {
   constructor(
     $log,
     $stateParams,
     AnalyzerService,
+    ResponderService,
     OrganizationService,
     AuthService
   ) {
@@ -15,6 +14,7 @@ export default class OrganizationPageController {
     this.$log = $log;
     this.orgId = $stateParams.id;
     this.AnalyzerService = AnalyzerService;
+    this.ResponderService = ResponderService;
     this.OrganizationService = OrganizationService;
     this.AuthService = AuthService;
   }

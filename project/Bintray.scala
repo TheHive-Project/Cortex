@@ -79,9 +79,9 @@ object Bintray extends AutoPlugin {
         bintrayPackage.value,
         version.value,
         sLog.value,
-        "deb_distribution" -> "any",
-        "deb_component" -> "main",
-        "deb_architecture" -> "all"
+        "deb_distribution" → "any",
+        "deb_component" → "main",
+        "deb_architecture" → "all"
       )
     },
 

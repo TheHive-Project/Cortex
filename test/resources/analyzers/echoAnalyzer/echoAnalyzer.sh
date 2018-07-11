@@ -18,6 +18,10 @@ cat << EOF
 			"dataType": ${DATATYPE}
 		}
 	],
-	"full": ${ARTIFACT}
+	"full": ${ARTIFACT},
+	"operations": [
+		{ "type": "AddTagToCase", "tag": "From Action Operation" },
+		{ "type": "CreateTask", "title": "task created by action", "description": "yop !" }
+	]
 }
 EOF

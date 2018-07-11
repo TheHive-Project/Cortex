@@ -35,8 +35,8 @@ class JobCtrl @Inject() (
     implicit val mat: Materializer,
     implicit val actorSystem: ActorSystem) extends AbstractController(components) with Status {
 
-  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
-    val (jobs, jobTotal) = jobSrv.listForUser(request.userId, dataTypeFilter, dataFilter, analyzerFilter, range)
+  def list(dataTypeFilter: Option[String], dataFilter: Option[String], workerFilter: Option[String], range: Option[String]): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
+    val (jobs, jobTotal) = jobSrv.listForUser(request.userId, dataTypeFilter, dataFilter, workerFilter, range)
     renderer.toOutput(OK, jobs, jobTotal)
   }
 
@@ -84,31 +84,32 @@ class JobCtrl @Inject() (
             .collect {
               case artifact if artifact.data().isDefined ⇒
                 Json.obj(
-                  "data" -> artifact.data(),
-                  "dataType" -> artifact.dataType(),
-                  "message" -> artifact.message(),
-                  "tags" -> artifact.tags(),
-                  "tlp" -> artifact.tlp())
+                  "data" → artifact.data(),
+                  "dataType" → artifact.dataType(),
+                  "message" → artifact.message(),
+                  "tags" → artifact.tags(),
+                  "tlp" → artifact.tlp())
               case artifact if artifact.attachment().isDefined ⇒
                 artifact.attachment().fold(JsObject.empty) { a ⇒
                   Json.obj(
-                    "attachment" ->
+                    "attachment" →
                       Json.obj(
-                        "contentType" -> a.contentType,
-                        "id" -> a.id,
-                        "name" -> a.name,
-                        "size" -> a.size),
-                    "message" -> artifact.message(),
-                    "tags" -> artifact.tags(),
-                    "tlp" -> artifact.tlp())
+                        "contentType" → a.contentType,
+                        "id" → a.id,
+                        "name" → a.name,
+                        "size" → a.size),
+                    "message" → artifact.message(),
+                    "tags" → artifact.tags(),
+                    "tlp" → artifact.tlp())
                 }
             }
             .runWith(Sink.seq)
         } yield Json.obj(
-          "summary" -> Json.parse(report.summary()),
-          "full" -> Json.parse(report.full()),
-          "success" -> true,
-          "artifacts" -> artifacts)
+          "summary" → Json.parse(report.summary()),
+          "full" → Json.parse(report.full()),
+          "success" → true,
+          "artifacts" → artifacts,
+          "operations" → Json.parse(report.operations()))
       case JobStatus.Failure ⇒
         val errorMessage = job.errorMessage().getOrElse("")
         Future.successful(Json.obj(
@@ -120,7 +121,7 @@ class JobCtrl @Inject() (
       case JobStatus.Deleted    ⇒ Future.successful(JsString("Deleted"))
     })
       .map { report ⇒
-        Json.toJson(job).as[JsObject] + ("report" -> report)
+        Json.toJson(job).as[JsObject] + ("report" → report)
       }
   }
 
@@ -132,7 +133,7 @@ class JobCtrl @Inject() (
     jobSrv.getForUser(request.userId, jobId)
       .flatMap {
         case job if job.status() == JobStatus.InProgress || job.status() == JobStatus.Waiting ⇒
-          println(s"job status is ${job.status()} => wait")
+          println(s"job status is ${job.status()} ⇒ wait")
           val duration = Duration(atMost).asInstanceOf[FiniteDuration]
           implicit val timeout: Timeout = Timeout(duration)
           (auditActor ? Register(jobId, duration))
@@ -141,7 +142,7 @@ class JobCtrl @Inject() (
             .withTimeout(duration, ())
             .flatMap(_ ⇒ getJobWithReport(request.userId, jobId))
         case job ⇒
-          println(s"job status is ${job.status()} => send it directly")
+          println(s"job status is ${job.status()} ⇒ send it directly")
           getJobWithReport(request.userId, job)
       }
       .map(Ok(_))

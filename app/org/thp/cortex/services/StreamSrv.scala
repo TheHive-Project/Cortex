@@ -32,7 +32,7 @@ class DeadLetterMonitoringActor @Inject() (system: ActorSystem) extends Actor {
 
   override def receive: Receive = {
     case DeadLetter(StreamActor.GetOperations, sender, recipient) ⇒
-      logger.warn(s"receive dead GetOperations message, $sender -> $recipient")
+      logger.warn(s"receive dead GetOperations message, $sender → $recipient")
       sender ! StreamActor.StreamNotFound
     case other ⇒
       logger.error(s"receive dead message : $other")
@@ -171,7 +171,7 @@ class StreamActor(
     case operation: AuditOperation ⇒
       val requestId = operation.authContext.requestId
       val normalizedOperation = normalizeOperation(operation)
-      logger.debug(s"Receiving audit operation : $operation => $normalizedOperation")
+      logger.debug(s"Receiving audit operation : $operation ⇒ $normalizedOperation")
       val updatedOperationGroup = currentMessages.get(requestId) match {
         case None ⇒
           logger.debug("Operation that comes after the end of request, make operation ready to send")

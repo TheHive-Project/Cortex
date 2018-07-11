@@ -9,6 +9,7 @@ import org.elastic4play.models.{ AttributeDef, EntityDef, AttributeFormat ⇒ F,
 trait ReportAttributes { _: AttributeDef ⇒
   val full = attribute("full", F.textFmt, "Full content of the report", O.readonly)
   val summary = attribute("summary", F.textFmt, "Summary of the report", O.readonly)
+  val operations = attribute("operations", F.textFmt, "Update operations applied at the end of the job", "[]", O.unaudited)
 }
 
 @Singleton
