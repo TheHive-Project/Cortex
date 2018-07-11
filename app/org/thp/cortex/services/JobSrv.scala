@@ -187,8 +187,8 @@ class JobSrv(
         })
   }
 
-  def create(analyzerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
-    workerSrv.getForUser(authContext.userId, analyzerId).flatMap { worker ⇒
+  def create(workerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
+    workerSrv.getForUser(authContext.userId, workerId).flatMap { worker ⇒
       /*
       In Cortex 1, fields looks like:
       {
@@ -257,9 +257,9 @@ class JobSrv(
       case None ⇒ isUnderRateLimit(worker).flatMap {
         case true ⇒
           val fields = Fields(Json.obj(
-            "analyzerDefinitionId" -> worker.workerDefinitionId(),
-            "analyzerId" -> worker.id,
-            "analyzerName" -> worker.name(),
+            "workerDefinitionId" -> worker.workerDefinitionId(),
+            "workerId" -> worker.id,
+            "workerName" -> worker.name(),
             "organization" -> worker.parentId,
             "status" -> JobStatus.Waiting,
             "dataType" -> dataType,

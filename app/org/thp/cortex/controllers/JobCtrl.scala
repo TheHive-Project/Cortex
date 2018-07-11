@@ -35,8 +35,8 @@ class JobCtrl @Inject() (
     implicit val mat: Materializer,
     implicit val actorSystem: ActorSystem) extends AbstractController(components) with Status {
 
-  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
-    val (jobs, jobTotal) = jobSrv.listForUser(request.userId, dataTypeFilter, dataFilter, analyzerFilter, range)
+  def list(dataTypeFilter: Option[String], dataFilter: Option[String], workerFilter: Option[String], range: Option[String]): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
+    val (jobs, jobTotal) = jobSrv.listForUser(request.userId, dataTypeFilter, dataFilter, workerFilter, range)
     renderer.toOutput(OK, jobs, jobTotal)
   }
 
