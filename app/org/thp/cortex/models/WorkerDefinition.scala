@@ -49,14 +49,14 @@ case class ConfigurationDefinitionItem(
     (config \ name).toOption
       .orElse(defaultValue)
       .map {
-        case JsArray(values) if isMulti ⇒ values.validatedBy(check).map(a ⇒ name -> JsArray(a))
-        case value if !isMulti          ⇒ check(value).map(name -> _)
+        case JsArray(values) if isMulti ⇒ values.validatedBy(check).map(a ⇒ name → JsArray(a))
+        case value if !isMulti          ⇒ check(value).map(name → _)
         case value                      ⇒ Bad(One(InvalidFormatAttributeError(name, `type`.toString, JsonInputValue(value))))
       }
       .getOrElse {
-        if (isMulti) Good(name -> JsArray.empty)
+        if (isMulti) Good(name → JsArray.empty)
         else if (isRequired) Bad(One(MissingAttributeError(name)))
-        else Good(name -> JsNull)
+        else Good(name → JsNull)
       }
   }
 }
@@ -131,15 +131,15 @@ object WorkerDefinition {
     Reads.pure(workerType))(WorkerDefinition.apply _)
   implicit val writes: Writes[WorkerDefinition] = Writes[WorkerDefinition] { workerDefinition ⇒
     Json.obj(
-      "id" -> workerDefinition.id,
-      "name" -> workerDefinition.name,
-      "version" -> workerDefinition.version,
-      "description" -> workerDefinition.description,
-      "dataTypeList" -> workerDefinition.dataTypeList,
-      "author" -> workerDefinition.author,
-      "url" -> workerDefinition.url,
-      "license" -> workerDefinition.license,
-      "baseConfig" -> workerDefinition.baseConfiguration,
-      "configurationItems" -> workerDefinition.configurationItems)
+      "id" → workerDefinition.id,
+      "name" → workerDefinition.name,
+      "version" → workerDefinition.version,
+      "description" → workerDefinition.description,
+      "dataTypeList" → workerDefinition.dataTypeList,
+      "author" → workerDefinition.author,
+      "url" → workerDefinition.url,
+      "license" → workerDefinition.license,
+      "baseConfig" → workerDefinition.baseConfiguration,
+      "configurationItems" → workerDefinition.configurationItems)
   }
 }

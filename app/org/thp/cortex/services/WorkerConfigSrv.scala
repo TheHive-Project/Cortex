@@ -42,7 +42,7 @@ trait WorkerConfigSrv {
       .runWith(Sink.seq)
       .map { baseConfigs ⇒
         (BaseConfig.global(workerType) +: baseConfigs)
-          .map(c ⇒ c.name -> c)
+          .map(c ⇒ c.name → c)
           .toMap
       }
   }
@@ -86,7 +86,7 @@ trait WorkerConfigSrv {
   private def updateDefinitionConfig(definitionConfig: Map[String, BaseConfig], analyzerConfig: WorkerConfig): Map[String, BaseConfig] = {
     definitionConfig.get(analyzerConfig.name())
       .fold(definitionConfig) { baseConfig ⇒
-        definitionConfig + (analyzerConfig.name() -> baseConfig.copy(config = Some(analyzerConfig)))
+        definitionConfig + (analyzerConfig.name() → baseConfig.copy(config = Some(analyzerConfig)))
       }
   }
 
@@ -106,7 +106,7 @@ trait WorkerConfigSrv {
       .map(organizationId ⇒ findForOrganization(organizationId, queryDef, range, sortBy))
     val configSource = Source.fromFutureSource(configs.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val configTotal = configs.flatMap(_._2)
-    configSource -> configTotal
+    configSource → configTotal
   }
 
   def findForOrganization(organizationId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[WorkerConfig, NotUsed], Future[Long]) = {

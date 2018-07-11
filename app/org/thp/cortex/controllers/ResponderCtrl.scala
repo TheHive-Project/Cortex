@@ -45,24 +45,24 @@ class ResponderCtrl @Inject() (
   }
 
   private val emptyResponderDefinitionJson = Json.obj(
-    "version" -> "0.0",
-    "description" -> "unknown",
-    "dataTypeList" -> Nil,
-    "author" -> "unknown",
-    "url" -> "unknown",
-    "license" -> "unknown")
+    "version" → "0.0",
+    "description" → "unknown",
+    "dataTypeList" → Nil,
+    "author" → "unknown",
+    "url" → "unknown",
+    "license" → "unknown")
 
   private def responderJson(responder: Worker, responderDefinition: Option[WorkerDefinition]) = {
     responder.toJson ++ responderDefinition.fold(emptyResponderDefinitionJson) { ad ⇒
       Json.obj(
-        "maxTlp" -> (responder.config \ "max_tlp").asOpt[JsNumber],
-        "maxPap" -> (responder.config \ "max_pap").asOpt[JsNumber],
-        "version" -> ad.version,
-        "description" -> ad.description,
-        "author" -> ad.author,
-        "url" -> ad.url,
-        "license" -> ad.license,
-        "baseConfig" -> ad.baseConfiguration)
+        "maxTlp" → (responder.config \ "max_tlp").asOpt[JsNumber],
+        "maxPap" → (responder.config \ "max_pap").asOpt[JsNumber],
+        "version" → ad.version,
+        "description" → ad.description,
+        "author" → ad.author,
+        "url" → ad.url,
+        "license" → ad.license,
+        "baseConfig" → ad.baseConfiguration)
     }
   }
 
@@ -71,7 +71,7 @@ class ResponderCtrl @Inject() (
       .map(responderDefinition ⇒ responderJson(responder, Some(responderDefinition)))
       .recover { case _ ⇒ responderJson(responder, None) }
       .map {
-        case a if isAdmin ⇒ a + ("configuration" -> Json.parse(responder.configuration()))
+        case a if isAdmin ⇒ a + ("configuration" → Json.parse(responder.configuration()))
         case a            ⇒ a
       }
   }

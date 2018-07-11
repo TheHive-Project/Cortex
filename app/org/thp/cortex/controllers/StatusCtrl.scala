@@ -36,7 +36,7 @@ class StatusCtrl @Inject() (
           "Play" → getVersion(classOf[AbstractController]),
           "Elastic4s" → getVersion(classOf[ElasticDsl]),
           "ElasticSearch client" → getVersion(classOf[org.elasticsearch.Build]),
-          "ElasticSearch cluster" -> versions.mkString(", ")),
+          "ElasticSearch cluster" → versions.mkString(", ")),
         "config" → Json.obj(
           "authType" → (authSrv match {
             case multiAuthSrv: MultiAuthSrv ⇒ multiAuthSrv.authProviders.map { a ⇒ JsString(a.name) }

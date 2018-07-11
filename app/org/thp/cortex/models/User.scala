@@ -42,5 +42,5 @@ class User(model: UserModel, attributes: JsObject) extends EntityDef[UserModel, 
   override def toJson: JsObject = super.toJson +
     ("roles" → JsArray(roles().map(r ⇒ JsString(r.name.toLowerCase())))) +
     ("hasKey" → JsBoolean(key().isDefined)) +
-    ("hasPassword" -> JsBoolean(password().isDefined))
+    ("hasPassword" → JsBoolean(password().isDefined))
 }

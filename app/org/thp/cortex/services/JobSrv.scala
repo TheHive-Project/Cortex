@@ -110,7 +110,7 @@ class JobSrv(
     val a = userSrv.getOrganizationId(userId).map(x)
     val aSource = Source.fromFutureSource(a.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val aTotal = a.flatMap(_._2)
-    aSource -> aTotal
+    aSource → aTotal
   }
 
   def listForUser(userId: String, dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): (Source[Job, NotUsed], Future[Long]) = {
@@ -174,8 +174,8 @@ class JobSrv(
     val parameters = (attributes \ "parameters").asOpt[JsObject].getOrElse(JsObject.empty)
     val force = fields.getBoolean("force").getOrElse(false)
     withGood(dataType, dataFiv) {
-      case (dt, Right(fiv)) ⇒ dt -> attachmentSrv.save(fiv).map(Right.apply)
-      case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
+      case (dt, Right(fiv)) ⇒ dt → attachmentSrv.save(fiv).map(Right.apply)
+      case (dt, Left(data)) ⇒ dt → Future.successful(Left(data))
     }
       .fold(
         typeDataAttachment ⇒ typeDataAttachment._2.flatMap(
@@ -239,8 +239,8 @@ class JobSrv(
           .getOrElse(JsObject.empty)
 
         withGood(dataType, dataFiv) {
-          case (dt, Right(fiv)) ⇒ dt -> attachmentSrv.save(fiv).map(Right.apply)
-          case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
+          case (dt, Right(fiv)) ⇒ dt → attachmentSrv.save(fiv).map(Right.apply)
+          case (dt, Left(data)) ⇒ dt → Future.successful(Left(data))
         }
           .fold(
             typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(worker, typeDataAttachment._1, da, tlp, message, parameters, force)),
@@ -257,15 +257,15 @@ class JobSrv(
       case None ⇒ isUnderRateLimit(worker).flatMap {
         case true ⇒
           val fields = Fields(Json.obj(
-            "workerDefinitionId" -> worker.workerDefinitionId(),
-            "workerId" -> worker.id,
-            "workerName" -> worker.name(),
-            "organization" -> worker.parentId,
-            "status" -> JobStatus.Waiting,
-            "dataType" -> dataType,
-            "tlp" -> tlp,
-            "message" -> message,
-            "parameters" -> parameters.toString))
+            "workerDefinitionId" → worker.workerDefinitionId(),
+            "workerId" → worker.id,
+            "workerName" → worker.name(),
+            "organization" → worker.parentId,
+            "status" → JobStatus.Waiting,
+            "dataType" → dataType,
+            "tlp" → tlp,
+            "message" → message,
+            "parameters" → parameters.toString))
           val fieldWithData = dataAttachment match {
             case Left(data)        ⇒ fields.set("data", data)
             case Right(attachment) ⇒ fields.set("attachment", AttachmentInputValue(attachment))
@@ -324,7 +324,7 @@ class JobSrv(
         dataAttachment.fold(data ⇒ "data" ~= data, attachment ⇒ "attachment.id" ~= attachment.id),
         "parameters" ~= parameters.toString), Some("0-1"), Seq("-createdAt"))
         ._1
-        .map(j ⇒ new Job(jobModel, j.attributes + ("fromCache" -> JsBoolean(true))))
+        .map(j ⇒ new Job(jobModel, j.attributes + ("fromCache" → JsBoolean(true))))
         .runWith(Sink.headOption)
     }
   }
@@ -414,27 +414,27 @@ class JobSrv(
       .map {
         case Some(file) ⇒
           Json.obj(
-            "file" -> file.toString,
-            "filename" -> job.attachment().get.name,
-            "contentType" -> job.attachment().get.contentType)
+            "file" → file.toString,
+            "filename" → job.attachment().get.name,
+            "contentType" → job.attachment().get.contentType)
         case None if job.data().nonEmpty ⇒
           Json.obj(
-            "data" -> job.data().get)
+            "data" → job.data().get)
       }
       .map { artifact ⇒
         (BaseConfig.global(worker.tpe()).items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items ++ workerDefinition.configurationItems)
           .validatedBy(_.read(worker.config))
-          .map(cfg ⇒ Json.obj("config" -> JsObject(cfg).deepMerge(workerDefinition.configuration)))
+          .map(cfg ⇒ Json.obj("config" → JsObject(cfg).deepMerge(workerDefinition.configuration)))
           .map { cfg ⇒
-            val proxy_http = (cfg \ "config" \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("http" -> proxy)) }
-            val proxy_https = (cfg \ "config" \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("https" -> proxy)) }
-            cfg.deepMerge(Json.obj("config" -> proxy_http.deepMerge(proxy_https)))
+            val proxy_http = (cfg \ "config" \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" → Json.obj("http" → proxy)) }
+            val proxy_https = (cfg \ "config" \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" → Json.obj("https" → proxy)) }
+            cfg.deepMerge(Json.obj("config" → proxy_http.deepMerge(proxy_https)))
           }
           .map(_ deepMerge artifact +
-            ("dataType" -> JsString(job.dataType())) +
-            ("tlp" -> JsNumber(job.tlp())) +
-            ("message" -> JsString(job.message().getOrElse(""))) +
-            ("parameters" -> job.params))
+            ("dataType" → JsString(job.dataType())) +
+            ("tlp" → JsNumber(job.tlp())) +
+            ("message" → JsString(job.message().getOrElse(""))) +
+            ("parameters" → job.params))
           .badMap(e ⇒ AttributeCheckingError("job", e.toSeq))
           .toTry
       }

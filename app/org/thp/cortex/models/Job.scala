@@ -38,7 +38,7 @@ trait JobAttributes {
 @Singleton
 class JobModel @Inject() () extends ModelDef[JobModel, Job]("job", "Job", "/job") with JobAttributes with AuditedModel {
 
-  override val removeAttribute: JsObject = Json.obj("status" -> JobStatus.Deleted)
+  override val removeAttribute: JsObject = Json.obj("status" → JobStatus.Deleted)
 
   override def defaultSortBy: Seq[String] = Seq("-createdAt")
 }
@@ -47,9 +47,9 @@ class Job(model: JobModel, attributes: JsObject) extends EntityDef[JobModel, Job
   val params: JsObject = Try(Json.parse(parameters()).as[JsObject]).getOrElse(JsObject.empty)
 
   override def toJson: JsObject = {
-    val output = super.toJson + ("date" -> Json.toJson(createdAt))
+    val output = super.toJson + ("date" → Json.toJson(createdAt))
     input().fold(output)(i ⇒ output +
-      ("input" -> Json.parse(i))) +
-      ("parameters" -> params)
+      ("input" → Json.parse(i))) +
+      ("parameters" → params)
   }
 }

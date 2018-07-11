@@ -36,7 +36,7 @@ class MispSrv @Inject() (
     val mispAnalyzers = analyzers
       .mapAsyncUnordered(1) { analyzer ⇒
         workerSrv.getDefinition(analyzer.workerDefinitionId())
-          .map(ad ⇒ Some(analyzer -> ad))
+          .map(ad ⇒ Some(analyzer → ad))
           .recover { case _ ⇒ None }
       }
       .collect {
@@ -54,7 +54,7 @@ class MispSrv @Inject() (
               "version" → analyzerDefinition.version,
               "config" → Json.arr()))
       }
-    mispAnalyzers -> analyzerCount
+    mispAnalyzers → analyzerCount
   }
 
   def query(module: String, mispType: String, data: String)(implicit authContext: AuthContext): Future[JsObject] = {
@@ -79,12 +79,12 @@ class MispSrv @Inject() (
             .map { artifact ⇒ toMispOutput(artifact) }
             .runWith(Sink.seq)
           reportJson = Json.obj(
-            "full" -> report.full(),
-            "summary" -> report.summary())
+            "full" → report.full(),
+            "summary" → report.summary())
           cortexAttribute = Json.obj(
-            "types" -> Json.arr("cortex"),
-            "values" -> Json.arr(reportJson.toString))
-        } yield Json.obj("results" -> (artifacts :+ cortexAttribute))
+            "types" → Json.arr("cortex"),
+            "values" → Json.arr(reportJson.toString))
+        } yield Json.obj("results" → (artifacts :+ cortexAttribute))
       case JobStatus.Waiting ⇒ Future.successful(Json.obj("error" → "This job hasn't finished yet"))
       case JobStatus.Deleted ⇒ Future.successful(Json.obj("error" → "This job has been deleted"))
       case JobStatus.Failure ⇒
@@ -107,9 +107,9 @@ class MispSrv @Inject() (
   private def toMispOutput(artifact: Artifact): JsObject = {
     (artifact.data(), artifact.attachment()) match {
       case (Some(data), None) ⇒ Json.obj(
-        "types" -> dataType2mispType(artifact.dataType()),
-        "values" -> Json.arr(data))
-      //case (None, Some(_)) => ???
+        "types" → dataType2mispType(artifact.dataType()),
+        "values" → Json.arr(data))
+      //case (None, Some(_)) ⇒ ???
       case _ ⇒ ???
     }
   }

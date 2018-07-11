@@ -23,9 +23,9 @@ class Migration @Inject() (
   def endMigration(version: Int): Future[Unit] = {
     userSrv.inInitAuthContext { implicit authContext ⇒
       organizationSrv.create(Fields(Json.obj(
-        "name" -> "cortex",
-        "description" -> "Default organization",
-        "status" -> "Active")))
+        "name" → "cortex",
+        "description" → "Default organization",
+        "status" → "Active")))
         .transform { case _ ⇒ Success(()) } // ignore errors (already exist)
     }
   }
@@ -33,7 +33,7 @@ class Migration @Inject() (
   val operations: PartialFunction[DatabaseState, Seq[Operation]] = {
     case DatabaseState(1) ⇒ Seq(
       // add type to analyzer
-      addAttribute("analyzer", "type" -> JsString("analyzer")),
+      addAttribute("analyzer", "type" → JsString("analyzer")),
 
       renameAttribute("job", "workerDefinitionId", "analyzerDefinitionId"),
       renameAttribute("job", "workerId", "analyzerId"),
@@ -41,10 +41,10 @@ class Migration @Inject() (
 
       renameEntity("analyzer", "worker"),
       renameAttribute("worker", "workerDefinitionId", "analyzerDefinitionId"),
-      addAttribute("worker", "type" -> JsString(WorkerType.analyzer.toString)),
+      addAttribute("worker", "type" → JsString(WorkerType.analyzer.toString)),
 
       renameEntity("analyzerConfig", "workerConfig"),
-      addAttribute("workerConfig", "type" -> JsString(WorkerType.analyzer.toString)))
+      addAttribute("workerConfig", "type" → JsString(WorkerType.analyzer.toString)))
 
     case _ ⇒ Nil
   }

@@ -10,10 +10,10 @@ case class BaseConfig(name: String, workerNames: Seq[String], items: Seq[Configu
 object BaseConfig {
   implicit val writes: Writes[BaseConfig] = Writes[BaseConfig] { baseConfig ⇒
     Json.obj(
-      "name" -> baseConfig.name,
-      "workers" -> baseConfig.workerNames,
-      "configurationItems" -> baseConfig.items,
-      "config" -> baseConfig.config.fold(JsObject.empty)(_.jsonConfig))
+      "name" → baseConfig.name,
+      "workers" → baseConfig.workerNames,
+      "configurationItems" → baseConfig.items,
+      "config" → baseConfig.config.fold(JsObject.empty)(_.jsonConfig))
   }
   def global(tpe: WorkerType.Type) = {
     val typedItems = tpe match {

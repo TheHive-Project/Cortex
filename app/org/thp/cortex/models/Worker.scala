@@ -46,7 +46,7 @@ class WorkerModel @Inject() (organizationModel: OrganizationModel) extends Child
       organizationId ← parent.map(_.id)
       name ← (attrs \ "name").asOpt[String]
     } yield hasher.fromString(s"${organizationId}_$name").head.toString
-    Future.successful(attrs + ("_id" -> JsString(id.getOrElse("<null>"))))
+    Future.successful(attrs + ("_id" → JsString(id.getOrElse("<null>"))))
   }
 }
 

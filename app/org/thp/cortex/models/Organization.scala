@@ -34,7 +34,7 @@ class OrganizationModel @Inject() (
   private lazy val logger = Logger(getClass)
   lazy val userModel = userModelProvider.get
   lazy val workerModel = workerModelProvider.get
-  override def removeAttribute = Json.obj("status" -> "Locked")
+  override def removeAttribute = Json.obj("status" → "Locked")
 
   override def creationHook(parent: Option[BaseEntity], attrs: JsObject): Future[JsObject] =
     Future.successful {
@@ -91,5 +91,5 @@ class OrganizationModel @Inject() (
 }
 
 class Organization(model: OrganizationModel, attributes: JsObject) extends EntityDef[OrganizationModel, Organization](model, attributes) with OrganizationAttributes {
-  override def toJson: JsObject = super.toJson + ("name" -> JsString(id))
+  override def toJson: JsObject = super.toJson + ("name" → JsString(id))
 }

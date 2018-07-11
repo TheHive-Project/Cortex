@@ -75,16 +75,16 @@ class WorkerSrv(
     case None         ⇒ Future.failed(NotFoundError(s"Worker $workerId not found"))
   }
 
-  //  def listDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = Source(workerMap.values.toList) -> Future.successful(workerMap.size.toLong)
+  //  def listDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = Source(workerMap.values.toList) → Future.successful(workerMap.size.toLong)
 
   def listAnalyzerDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = {
     val analyzerDefinitions = workerMap.values.filter(_.tpe == WorkerType.analyzer)
-    Source(analyzerDefinitions.toList) -> Future.successful(analyzerDefinitions.size.toLong)
+    Source(analyzerDefinitions.toList) → Future.successful(analyzerDefinitions.size.toLong)
   }
 
   def listResponderDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = {
     val analyzerDefinitions = workerMap.values.filter(_.tpe == WorkerType.responder)
-    Source(analyzerDefinitions.toList) -> Future.successful(analyzerDefinitions.size.toLong)
+    Source(analyzerDefinitions.toList) → Future.successful(analyzerDefinitions.size.toLong)
   }
 
   def get(workerId: String): Future[Worker] = getSrv[WorkerModel, Worker](workerModel, workerId)
@@ -130,7 +130,7 @@ class WorkerSrv(
   //    } yield findForOrganization(organizationId, queryDef, range, sortBy)
   //    val analyserSource = Source.fromFutureSource(workers.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
   //    val analyserTotal = workers.flatMap(_._2)
-  //    analyserSource -> analyserTotal
+  //    analyserSource → analyserTotal
   //  }
 
   def findAnalyzersForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Worker, NotUsed], Future[Long]) = {
@@ -141,7 +141,7 @@ class WorkerSrv(
     } yield findForOrganization(organizationId, and(queryDef, "type" ~= WorkerType.analyzer), range, sortBy)
     val analyserSource = Source.fromFutureSource(analyzers.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val analyserTotal = analyzers.flatMap(_._2)
-    analyserSource -> analyserTotal
+    analyserSource → analyserTotal
   }
 
   def findRespondersForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Worker, NotUsed], Future[Long]) = {
@@ -152,7 +152,7 @@ class WorkerSrv(
     } yield findForOrganization(organizationId, and(queryDef, "type" ~= WorkerType.responder), range, sortBy)
     val analyserSource = Source.fromFutureSource(analyzers.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val analyserTotal = analyzers.flatMap(_._2)
-    analyserSource -> analyserTotal
+    analyserSource → analyserTotal
   }
 
   private def findForOrganization(organizationId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Worker, NotUsed], Future[Long]) = {
@@ -165,8 +165,8 @@ class WorkerSrv(
   }
 
   def rescan(): Unit = {
-    scan(analyzersPaths.map(_ -> WorkerType.analyzer) ++
-      workersPaths.map(_ -> WorkerType.responder))
+    scan(analyzersPaths.map(_ → WorkerType.analyzer) ++
+      workersPaths.map(_ → WorkerType.responder))
   }
 
   def scan(analyzerPaths: Seq[(Path, WorkerType.Type)]): Unit = {
@@ -184,7 +184,7 @@ class WorkerSrv(
           Nil
         },
         ad ⇒ Seq(ad))
-    } yield analyzerDefinition.id -> analyzerDefinition)
+    } yield analyzerDefinition.id → analyzerDefinition)
       .toMap
 
     workerMapLock.synchronized {

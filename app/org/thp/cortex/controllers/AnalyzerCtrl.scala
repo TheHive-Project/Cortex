@@ -45,25 +45,25 @@ class AnalyzerCtrl @Inject() (
   }
 
   private val emptyAnalyzerDefinitionJson = Json.obj(
-    "version" -> "0.0",
-    "description" -> "unknown",
-    "dataTypeList" -> Nil,
-    "author" -> "unknown",
-    "url" -> "unknown",
-    "license" -> "unknown")
+    "version" → "0.0",
+    "description" → "unknown",
+    "dataTypeList" → Nil,
+    "author" → "unknown",
+    "url" → "unknown",
+    "license" → "unknown")
 
   private def analyzerJson(analyzer: Worker, analyzerDefinition: Option[WorkerDefinition]) = {
     analyzer.toJson ++ analyzerDefinition.fold(emptyAnalyzerDefinitionJson) { ad ⇒
       Json.obj(
-        "maxTlp" -> (analyzer.config \ "max_tlp").asOpt[JsNumber],
-        "maxPap" -> (analyzer.config \ "max_pap").asOpt[JsNumber],
-        "version" -> ad.version,
-        "description" -> ad.description,
-        "author" -> ad.author,
-        "url" -> ad.url,
-        "license" -> ad.license,
-        "baseConfig" -> ad.baseConfiguration)
-    } + ("analyzerDefinitionId" -> JsString(analyzer.workerDefinitionId())) // For compatibility reason
+        "maxTlp" → (analyzer.config \ "max_tlp").asOpt[JsNumber],
+        "maxPap" → (analyzer.config \ "max_pap").asOpt[JsNumber],
+        "version" → ad.version,
+        "description" → ad.description,
+        "author" → ad.author,
+        "url" → ad.url,
+        "license" → ad.license,
+        "baseConfig" → ad.baseConfiguration)
+    } + ("analyzerDefinitionId" → JsString(analyzer.workerDefinitionId())) // For compatibility reason
   }
 
   private def analyzerJson(isAdmin: Boolean)(analyzer: Worker): Future[JsObject] = {
@@ -71,7 +71,7 @@ class AnalyzerCtrl @Inject() (
       .map(analyzerDefinition ⇒ analyzerJson(analyzer, Some(analyzerDefinition)))
       .recover { case _ ⇒ analyzerJson(analyzer, None) }
       .map {
-        case a if isAdmin ⇒ a + ("configuration" -> Json.parse(analyzer.configuration()))
+        case a if isAdmin ⇒ a + ("configuration" → Json.parse(analyzer.configuration()))
         case a            ⇒ a
       }
   }

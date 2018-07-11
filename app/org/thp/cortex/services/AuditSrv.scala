@@ -44,13 +44,13 @@ class AuditActor @Inject() (
     case Register(jobId, timeout) ⇒
       logger.info(s"Register new listener for job $jobId ($sender)")
       val newActorList = registration.getOrElse(jobId, Nil) :+ sender
-      registration += (jobId -> newActorList)
+      registration += (jobId → newActorList)
       context.system.scheduler.scheduleOnce(timeout, self, Unregister(jobId, sender))
 
     case Unregister(jobId, actorRef) ⇒
       logger.info(s"Unregister listener for job $jobId ($actorRef)")
       val newActorList = registration.getOrElse(jobId, Nil).filterNot(_ == actorRef)
-      registration += (jobId -> newActorList)
+      registration += (jobId → newActorList)
 
     case AuditOperation(EntityExtractor(model, id, routing), action, details, authContext, date) ⇒
       if (model.modelName == "job" && action == AuditableAction.Update) {
