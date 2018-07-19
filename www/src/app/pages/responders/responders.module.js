@@ -20,15 +20,9 @@ const respondersModule = angular
       component: 'respondersPage',
       resolve: {
         datatypes: ($q, ResponderService) => {
-          let defer = $q.defer();
-
-          ResponderService.list()
-            .then(() => {
-              defer.resolve(ResponderService.getTypes());
-            })
-            .catch(err => defer.reject(err));
-
-          return defer.promise;
+          return ResponderService.list()
+            .then(() => $q.resolve(ResponderService.getTypes()))
+            .catch(err => $q.reject(err));
         }
       },
       data: {

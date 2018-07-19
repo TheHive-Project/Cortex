@@ -5,23 +5,36 @@
 <section class="analyzers-page content">
   <div class="box box-primary paginable-page">
     <div class="box-header">      
-      <form ng-submit="$ctrl.applyFilters()">
-        <div class="table-toolbar">
-          <label class="form-control pull-left">Data Types</label>
-
+      <form class="form-inline table-toolbar" ng-submit="$ctrl.applyFilters()">
+        <div class="form-group">
+          <div>
+            <Label>Data Types</Label>
+          </div>
           <multiselect class="pull-left mr-xs" ng-model="$ctrl.filters.dataType" options="$ctrl.datatypes" placeholder="Select" show-select-all="true"
             show-unselect-all="true" classes-btn="($ctrl.filters.dataType.length > 0) ? 'btn-block btn-primary' : 'btn-default btn-block'">
           </multiselect>
-          
-          <label class="form-control pull-left">Analyzer</label>
-          <input type="text" class="form-control pull-left mr-xs" placeholder="Search for analyzer description" ng-model="$ctrl.filters.search">
-          <button class="pull-left btn btn-primary" type="submit">Search</button>
-          <button class="pull-left btn btn-clear text-danger ml-xxxs" type="button" ng-click="$ctrl.clearFilters()"><i class="fa fa-times-circle"></i> Clear</button>
-
-          <select class="ml-xxxs form-control pull-right" ng-model="$ctrl.pagination.pageSize" ng-change="$ctrl.load()" ng-options="v as (v + ' / page') for v in [10, 50, 100, 1000]"></select>
-          <ul class="pull-right" ng-show="$ctrl.pagination.total > $ctrl.pagination.pageSize" uib-pagination total-items="$ctrl.pagination.total"
-            ng-change="$ctrl.load()" ng-model="$ctrl.pagination.current" boundary-links="true" items-per-page="$ctrl.pagination.pageSize"
-            previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;" max-size="3" rotate="false"></ul>
+        </div>        
+        <div class="form-group">
+          <div>
+            <Label>Analyzer</Label>
+          </div>
+          <div>
+            <input type="text" class="form-control pull-left mr-xs" placeholder="Search for analyzer description" ng-model="$ctrl.filters.search">
+            <button class="btn btn-primary" type="submit">Search</button>
+            <button class="btn btn-clear text-danger ml-xxxs" type="button" ng-click="$ctrl.clearFilters()">
+              <i class="fa fa-times-circle"></i> Clear</button>
+          </div>
+        </div>
+        <div class="form-group pull-right">
+          <div>
+            <label>Page size</label>
+          </div>
+          <div>
+            <select class="form-control" ng-model="$ctrl.pagination.pageSize" ng-change="$ctrl.load()" ng-options="v as (v + ' / page') for v in [10, 50, 100, 1000]"></select>
+            <ul class="pull-right" ng-show="$ctrl.pagination.total > $ctrl.pagination.pageSize" uib-pagination total-items="$ctrl.pagination.total"
+              ng-change="$ctrl.load()" ng-model="$ctrl.pagination.current" boundary-links="true" items-per-page="$ctrl.pagination.pageSize"
+              previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;" max-size="3" rotate="false"></ul>
+          </div>
         </div>
       </form>
     </div>
