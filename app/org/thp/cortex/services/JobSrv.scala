@@ -265,7 +265,8 @@ class JobSrv(
             "dataType" → dataType,
             "tlp" → tlp,
             "message" → message,
-            "parameters" → parameters.toString))
+            "parameters" → parameters.toString,
+            "type" → worker.tpe()))
           val fieldWithData = dataAttachment match {
             case Left(data)        ⇒ fields.set("data", data)
             case Right(attachment) ⇒ fields.set("attachment", AttachmentInputValue(attachment))

@@ -1,13 +1,14 @@
 package org.thp.cortex.models
 
-import javax.inject.{ Inject, Singleton }
 import scala.util.Try
 
 import play.api.libs.json.{ JsObject, JsString, Json }
 
+import javax.inject.{ Inject, Singleton }
+import org.thp.cortex.models.JsonFormat.workerTypeFormat
+
 import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.models.{ AttributeDef, EntityDef, HiveEnumeration, ModelDef, AttributeFormat ⇒ F, AttributeOption ⇒ O }
-
 object JobStatus extends Enumeration with HiveEnumeration {
   type Type = Value
   val Waiting, InProgress, Success, Failure, Deleted = Value
@@ -32,6 +33,7 @@ trait JobAttributes {
   val parameters = attribute("parameters", F.stringFmt, "Parameters for this job", "{}")
   val input = optionalAttribute("input", F.textFmt, "Data sent to worker")
   val fromCache = optionalAttribute("fromCache", F.booleanFmt, "Indicates if cache is used", O.form)
+  val tpe = attribute("type", F.enumFmt(WorkerType), "", O.readonly)
 }
 
 @Singleton
