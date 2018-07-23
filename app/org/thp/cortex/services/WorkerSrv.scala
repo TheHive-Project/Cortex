@@ -224,8 +224,8 @@ class WorkerSrv(
   def create(organizationId: String, workerDefinition: WorkerDefinition, workerFields: Fields)(implicit authContext: AuthContext): Future[Worker] = {
     for {
       organization ← organizationSrv.get(organizationId)
-      analyzer ← create(organization, workerDefinition, workerFields)
-    } yield analyzer
+      worker ← create(organization, workerDefinition, workerFields)
+    } yield worker
   }
 
   def delete(analyzer: Worker)(implicit authContext: AuthContext): Future[Unit] =

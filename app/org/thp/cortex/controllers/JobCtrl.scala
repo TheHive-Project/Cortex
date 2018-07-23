@@ -63,8 +63,8 @@ class JobCtrl @Inject() (
       .map(_ ⇒ NoContent)
   }
 
-  def create(analyzerId: String): Action[Fields] = authenticated(Roles.analyze).async(fieldsBodyParser) { implicit request ⇒
-    jobSrv.create(analyzerId, request.body)
+  def create(workerId: String): Action[Fields] = authenticated(Roles.analyze).async(fieldsBodyParser) { implicit request ⇒
+    jobSrv.create(workerId, request.body)
       .map { job ⇒
         renderer.toOutput(OK, job)
       }
@@ -133,7 +133,6 @@ class JobCtrl @Inject() (
     jobSrv.getForUser(request.userId, jobId)
       .flatMap {
         case job if job.status() == JobStatus.InProgress || job.status() == JobStatus.Waiting ⇒
-          println(s"job status is ${job.status()} ⇒ wait")
           val duration = Duration(atMost).asInstanceOf[FiniteDuration]
           implicit val timeout: Timeout = Timeout(duration)
           (auditActor ? Register(jobId, duration))
@@ -142,7 +141,6 @@ class JobCtrl @Inject() (
             .withTimeout(duration, ())
             .flatMap(_ ⇒ getJobWithReport(request.userId, jobId))
         case job ⇒
-          println(s"job status is ${job.status()} ⇒ send it directly")
           getJobWithReport(request.userId, job)
       }
       .map(Ok(_))
