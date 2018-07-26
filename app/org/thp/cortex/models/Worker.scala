@@ -45,7 +45,8 @@ class WorkerModel @Inject() (organizationModel: OrganizationModel) extends Child
     val id = for {
       organizationId ← parent.map(_.id)
       name ← (attrs \ "name").asOpt[String]
-    } yield hasher.fromString(s"${organizationId}_$name").head.toString
+      tpe ← (attrs \ "type").asOpt[String]
+    } yield hasher.fromString(s"${organizationId}_${name}_$tpe").head.toString
     Future.successful(attrs + ("_id" → JsString(id.getOrElse("<null>"))))
   }
 }
