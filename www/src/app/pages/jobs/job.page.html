@@ -18,6 +18,12 @@
           <h3 class="box-title">Job report</h3>
         </div>
         <div class="box-body job-report">
+          <div ng-if="$ctrl.job.type === 'responder'">
+            <h5 class="text-primary">Object</h5>
+            <pre>{{$ctrl.job.data | json}}</pre>
+          </div>
+          
+          <h5 class="text-primary mt-xs">Report</h5>
           <pre>{{$ctrl.job.report | json}}</pre>
         </div>
       </div>
