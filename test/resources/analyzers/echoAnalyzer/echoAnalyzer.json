@@ -4,7 +4,7 @@
   "author": "TheHive-Project",
   "url": "https://github.com/thehive-project/thehive",
   "license": "AGPL-V3",
-  "baseconfig": "echoAnalyzer",
+  "baseConfig": "echoAnalyzer",
   "config": {
 
   },

@@ -26,7 +26,7 @@ import org.elastic4play.database.ModifyConfig
 @Singleton
 class WorkerSrv(
     analyzersPaths: Seq[Path],
-    workersPaths: Seq[Path],
+    respondersPaths: Seq[Path],
     workerModel: WorkerModel,
     organizationSrv: OrganizationSrv,
     userSrv: UserSrv,
@@ -40,7 +40,7 @@ class WorkerSrv(
 
   @Inject() def this(
       config: Configuration,
-      analyzerModel: WorkerModel,
+      workerModel: WorkerModel,
       organizationSrv: OrganizationSrv,
       userSrv: UserSrv,
       createSrv: CreateSrv,
@@ -52,7 +52,7 @@ class WorkerSrv(
       mat: Materializer) = this(
     config.get[Seq[String]]("analyzer.path").map(p ⇒ Paths.get(p)),
     config.get[Seq[String]]("responder.path").map(p ⇒ Paths.get(p)),
-    analyzerModel,
+    workerModel,
     organizationSrv,
     userSrv,
     createSrv,
@@ -83,8 +83,8 @@ class WorkerSrv(
   }
 
   def listResponderDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = {
-    val analyzerDefinitions = workerMap.values.filter(_.tpe == WorkerType.responder)
-    Source(analyzerDefinitions.toList) → Future.successful(analyzerDefinitions.size.toLong)
+    val responderDefinitions = workerMap.values.filter(_.tpe == WorkerType.responder)
+    Source(responderDefinitions.toList) → Future.successful(responderDefinitions.size.toLong)
   }
 
   def get(workerId: String): Future[Worker] = getSrv[WorkerModel, Worker](workerModel, workerId)
@@ -103,36 +103,6 @@ class WorkerSrv(
       .map(_.getOrElse(throw NotFoundError(s"worker $workerId not found")))
   }
 
-  //  private def listForOrganization(organizationId: String): (Source[Worker, NotUsed], Future[Long]) = {
-  //    import org.elastic4play.services.QueryDSL._
-  //    findForOrganization(organizationId, any, Some("all"), Nil)
-  //  }
-  //
-  //  def listAnalyzerForOrganization(organizationId: String): (Source[Worker, NotUsed], Future[Long]) = {
-  //    import org.elastic4play.services.QueryDSL._
-  //    findForOrganization(organizationId, "type" ~= WorkerType.analyzer, Some("all"), Nil)
-  //  }
-  //
-  //  private def listForUser(userId: String): (Source[Worker, NotUsed], Future[Long]) = {
-  //    import org.elastic4play.services.QueryDSL._
-  //    findForUser(userId, any, Some("all"), Nil)
-  //  }
-  //
-  //  def listAnalyzerForUser(userId: String): (Source[Worker, NotUsed], Future[Long]) = {
-  //    import org.elastic4play.services.QueryDSL._
-  //    findForUser(userId, "type" ~= WorkerType.analyzer, Some("all"), Nil)
-  //  }
-  //
-  //  def findForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Worker, NotUsed], Future[Long]) = {
-  //    val workers = for {
-  //      user ← userSrv.get(userId)
-  //      organizationId = user.organization()
-  //    } yield findForOrganization(organizationId, queryDef, range, sortBy)
-  //    val analyserSource = Source.fromFutureSource(workers.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
-  //    val analyserTotal = workers.flatMap(_._2)
-  //    analyserSource → analyserTotal
-  //  }
-
   def findAnalyzersForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Worker, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
     val analyzers = for {
@@ -146,12 +116,12 @@ class WorkerSrv(
 
   def findRespondersForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Worker, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
-    val analyzers = for {
+    val responders = for {
       user ← userSrv.get(userId)
       organizationId = user.organization()
     } yield findForOrganization(organizationId, and(queryDef, "type" ~= WorkerType.responder), range, sortBy)
-    val analyserSource = Source.fromFutureSource(analyzers.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
-    val analyserTotal = analyzers.flatMap(_._2)
+    val analyserSource = Source.fromFutureSource(responders.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val analyserTotal = responders.flatMap(_._2)
     analyserSource → analyserTotal
   }
 
@@ -166,31 +136,31 @@ class WorkerSrv(
 
   def rescan(): Unit = {
     scan(analyzersPaths.map(_ → WorkerType.analyzer) ++
-      workersPaths.map(_ → WorkerType.responder))
+      respondersPaths.map(_ → WorkerType.responder))
   }
 
-  def scan(analyzerPaths: Seq[(Path, WorkerType.Type)]): Unit = {
-    val analyzers = (for {
-      (analyzerPath, analyzerType) ← analyzerPaths
-      analyzerDir ← Try(Files.newDirectoryStream(analyzerPath).asScala).getOrElse {
-        logger.warn(s"Analyzer directory ($analyzerPath) is not found")
+  def scan(workerPaths: Seq[(Path, WorkerType.Type)]): Unit = {
+    val workers = (for {
+      (workerPath, workerType) ← workerPaths
+      workerDir ← Try(Files.newDirectoryStream(workerPath).asScala).getOrElse {
+        logger.warn(s"Worker directory ($workerPath) is not found")
         Nil
       }
-      if Files.isDirectory(analyzerDir)
-      infoFile ← Files.newDirectoryStream(analyzerDir, "*.json").asScala
-      analyzerDefinition ← WorkerDefinition.fromPath(infoFile, analyzerType).fold(
+      if Files.isDirectory(workerDir)
+      infoFile ← Files.newDirectoryStream(workerDir, "*.json").asScala
+      workerDefinition ← WorkerDefinition.fromPath(infoFile, workerType).fold(
         error ⇒ {
-          logger.warn("Analyzer definition file read error", error)
+          logger.warn("Worker definition file read error", error)
           Nil
         },
         ad ⇒ Seq(ad))
-    } yield analyzerDefinition.id → analyzerDefinition)
+    } yield workerDefinition.id → workerDefinition)
       .toMap
 
     workerMapLock.synchronized {
-      workerMap = analyzers
+      workerMap = workers
     }
-    logger.info(s"New analyzer list:\n\n\t${workerMap.values.map(a ⇒ s"${a.name} ${a.version}").mkString("\n\t")}\n")
+    logger.info(s"New worker list:\n\n\t${workerMap.values.map(a ⇒ s"${a.name} ${a.version}").mkString("\n\t")}\n")
   }
 
   def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(implicit authContext: AuthContext): Future[Worker] = {
@@ -217,7 +187,7 @@ class WorkerSrv(
 
       }, {
         case One(e)         ⇒ Future.failed(e)
-        case Every(es @ _*) ⇒ Future.failed(AttributeCheckingError(s"analyzer(${workerDefinition.name}).configuration", es))
+        case Every(es @ _*) ⇒ Future.failed(AttributeCheckingError(s"worker(${workerDefinition.name}).configuration", es))
       })
   }
 
@@ -228,22 +198,22 @@ class WorkerSrv(
     } yield worker
   }
 
-  def delete(analyzer: Worker)(implicit authContext: AuthContext): Future[Unit] =
-    deleteSrv.realDelete(analyzer)
+  def delete(worker: Worker)(implicit authContext: AuthContext): Future[Unit] =
+    deleteSrv.realDelete(worker)
 
-  def delete(analyzerId: String)(implicit authContext: AuthContext): Future[Unit] =
-    deleteSrv.realDelete[WorkerModel, Worker](workerModel, analyzerId)
+  def delete(workerId: String)(implicit authContext: AuthContext): Future[Unit] =
+    deleteSrv.realDelete[WorkerModel, Worker](workerModel, workerId)
 
-  def update(analyzer: Worker, fields: Fields)(implicit authContext: AuthContext): Future[Worker] = update(analyzer, fields, ModifyConfig.default)
+  def update(worker: Worker, fields: Fields)(implicit authContext: AuthContext): Future[Worker] = update(worker, fields, ModifyConfig.default)
 
-  def update(analyzer: Worker, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Worker] = {
-    val analyzerFields = fields.getValue("configuration").fold(fields)(cfg ⇒ fields.set("configuration", cfg.toString))
-    updateSrv(analyzer, analyzerFields, modifyConfig)
+  def update(worker: Worker, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Worker] = {
+    val workerFields = fields.getValue("configuration").fold(fields)(cfg ⇒ fields.set("configuration", cfg.toString))
+    updateSrv(worker, workerFields, modifyConfig)
   }
 
-  def update(analyzerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Worker] = update(analyzerId, fields, ModifyConfig.default)
+  def update(workerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Worker] = update(workerId, fields, ModifyConfig.default)
 
-  def update(analyzerId: String, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Worker] = {
-    get(analyzerId).flatMap(analyzer ⇒ update(analyzer, fields, modifyConfig))
+  def update(workerId: String, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Worker] = {
+    get(workerId).flatMap(worker ⇒ update(worker, fields, modifyConfig))
   }
 }

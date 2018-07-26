@@ -55,38 +55,38 @@ trait WorkerConfigSrv {
   def getForOrganization(organizationId: String, configName: String): Future[BaseConfig] = {
     import org.elastic4play.services.QueryDSL._
     for {
-      analyzerConfig ← findForOrganization(organizationId, "name" ~= configName, Some("0-1"), Nil)
+      workerConfig ← findForOrganization(organizationId, "name" ~= configName, Some("0-1"), Nil)
         ._1
         .runWith(Sink.headOption)
       d ← definitions
       baseConfig ← d.get(configName).fold[Future[BaseConfig]](Future.failed(NotFoundError(s"config $configName not found")))(Future.successful)
-    } yield baseConfig.copy(config = analyzerConfig)
+    } yield baseConfig.copy(config = workerConfig)
   }
 
   def create(organization: Organization, fields: Fields)(implicit authContext: AuthContext): Future[WorkerConfig] = {
     createSrv[WorkerConfigModel, WorkerConfig, Organization](workerConfigModel, organization, fields.set("type", workerType.toString))
   }
 
-  def update(analyzerConfig: WorkerConfig, fields: Fields)(implicit authContext: AuthContext): Future[WorkerConfig] = {
-    updateSrv(analyzerConfig, fields, ModifyConfig.default)
+  def update(workerConfig: WorkerConfig, fields: Fields)(implicit authContext: AuthContext): Future[WorkerConfig] = {
+    updateSrv(workerConfig, fields, ModifyConfig.default)
   }
 
-  def updateOrCreate(userId: String, analyzerConfigName: String, config: JsObject)(implicit authContext: AuthContext): Future[BaseConfig] = {
+  def updateOrCreate(userId: String, workerConfigName: String, config: JsObject)(implicit authContext: AuthContext): Future[BaseConfig] = {
     for {
       organizationId ← userSrv.getOrganizationId(userId)
       organization ← organizationSrv.get(organizationId)
-      baseConfig ← getForOrganization(organizationId, analyzerConfigName)
+      baseConfig ← getForOrganization(organizationId, workerConfigName)
       validatedConfig ← baseConfig.items.validatedBy(_.read(config))
         .map(_.filterNot(_._2 == JsNull))
-        .fold(c ⇒ Future.successful(Fields.empty.set("config", JsObject(c).toString).set("name", analyzerConfigName)), errors ⇒ Future.failed(AttributeCheckingError("analyzerConfig", errors.toSeq)))
-      newAnalyzerConfig ← baseConfig.config.fold(create(organization, validatedConfig))(analyzerConfig ⇒ update(analyzerConfig, validatedConfig))
-    } yield baseConfig.copy(config = Some(newAnalyzerConfig))
+        .fold(c ⇒ Future.successful(Fields.empty.set("config", JsObject(c).toString).set("name", workerConfigName)), errors ⇒ Future.failed(AttributeCheckingError("workerConfig", errors.toSeq)))
+      newWorkerConfig ← baseConfig.config.fold(create(organization, validatedConfig))(workerConfig ⇒ update(workerConfig, validatedConfig))
+    } yield baseConfig.copy(config = Some(newWorkerConfig))
   }
 
-  private def updateDefinitionConfig(definitionConfig: Map[String, BaseConfig], analyzerConfig: WorkerConfig): Map[String, BaseConfig] = {
-    definitionConfig.get(analyzerConfig.name())
+  private def updateDefinitionConfig(definitionConfig: Map[String, BaseConfig], workerConfig: WorkerConfig): Map[String, BaseConfig] = {
+    definitionConfig.get(workerConfig.name())
       .fold(definitionConfig) { baseConfig ⇒
-        definitionConfig + (analyzerConfig.name() → baseConfig.copy(config = Some(analyzerConfig)))
+        definitionConfig + (workerConfig.name() → baseConfig.copy(config = Some(workerConfig)))
       }
   }
 
@@ -94,11 +94,11 @@ trait WorkerConfigSrv {
     import org.elastic4play.services.QueryDSL._
     for {
       configItems ← definitions
-      analyzerConfigItems = configItems
-      analyzerConfigs ← findForUser(userId, any, Some("all"), Nil)
+      workerConfigItems = configItems
+      workerConfigs ← findForUser(userId, any, Some("all"), Nil)
         ._1
-        .runFold(analyzerConfigItems) { (definitionConfig, analyzerConfig) ⇒ updateDefinitionConfig(definitionConfig, analyzerConfig) }
-    } yield analyzerConfigs.values.toSeq
+        .runFold(workerConfigItems) { (definitionConfig, workerConfig) ⇒ updateDefinitionConfig(definitionConfig, workerConfig) }
+    } yield workerConfigs.values.toSeq
   }
 
   def findForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[WorkerConfig, NotUsed], Future[Long]) = {
