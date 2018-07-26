@@ -418,9 +418,9 @@ class JobSrv(
             "file" → file.toString,
             "filename" → job.attachment().get.name,
             "contentType" → job.attachment().get.contentType)
-        case None if job.data().nonEmpty && job.tpe == WorkerType.responder ⇒
+        case None if job.data().nonEmpty && job.tpe() == WorkerType.responder ⇒
           Json.obj("data" → Json.parse(job.data().get))
-        case None if job.data().nonEmpty && job.tpe == WorkerType.analyzer ⇒
+        case None if job.data().nonEmpty && job.tpe() == WorkerType.analyzer ⇒
           Json.obj("data" → job.data().get)
       }
       .map { artifact ⇒
