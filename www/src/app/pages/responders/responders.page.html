@@ -8,10 +8,10 @@
       <form class="form-inline table-toolbar" ng-submit="$ctrl.applyFilters()">
         <div class="form-group">
           <div>
-            <Label>Data Types</Label>
+            <Label>Data Types ({{$ctrl.datatypes.length}})</Label>
           </div>
           <multiselect class="pull-left mr-xs" ng-model="$ctrl.filters.dataType" options="$ctrl.datatypes" placeholder="Select" show-select-all="true"
-            show-unselect-all="true" classes-btn="($ctrl.filters.dataType.length > 0) ? 'btn-block btn-primary' : 'btn-default btn-block'">
+            show-unselect-all="true" show-search="true" classes-btn="($ctrl.filters.dataType.length > 0) ? 'btn-block btn-primary' : 'btn-default btn-block'">
           </multiselect>
         </div>        
         <div class="form-group">

@@ -7,25 +7,37 @@
     <div class="box-header">
       <form class="form-inline table-toolbar" ng-submit="$ctrl.applyFilters()">
         <div class="form-group">
-          <div><Label>Data Types</Label></div>
+          <div>
+            <Label>Data Types ({{$ctrl.datatypes.length}})</Label>
+          </div>
           <multiselect class="pull-left mr-xs" ng-model="$ctrl.filters.dataType" options="$ctrl.datatypes" placeholder="Select" show-select-all="true"
-            show-unselect-all="true" classes-btn="($ctrl.filters.dataType.length > 0) ? 'btn-block btn-primary' : 'btn-default btn-block'">
+ show-unselect-all="true" show-search="true" classes-btn="($ctrl.filters.dataType.length > 0) ? 'btn-block btn-primary' :
+'btn-default btn-block'">
           </multiselect>
         </div>
         <div class="form-group">
           <div>
-            <Label>Job Type</Label>
+            <Label>Job Type ({{$ctrl.jobtypes.length}})</Label>
           </div>
           <multiselect class="pull-left mr-xs" ng-model="$ctrl.filters.jobType" options="$ctrl.jobtypes" placeholder="Select" show-select-all="true"
- show-unselect-all="true" classes-btn="($ctrl.filters.jobType.length > 0) ? 'btn-block btn-primary' : 'btn-default btn-block'">
+ show-unselect-all="true" show-search="true" classes-btn="($ctrl.filters.jobType.length > 0) ? 'btn-block btn-primary' :
+'btn-default btn-block'">
           </multiselect>
         </div>
         <div class="form-group">
           <div>
-            <Label>Analyzers</Label>
+            <Label>Analyzers ({{$ctrl.analyzers.length}})</Label>
           </div>
-          <multiselect class="pull-left mr-xs" ng-model="$ctrl.filters.analyzer" options="$ctrl.analyzers" id-prop="id" display-prop="name"
-            placeholder="Select" show-select-all="true" show-unselect-all="true" classes-btn="($ctrl.filters.analyzer.length > 0) ? 'btn-block btn-primary' : 'btn-default btn-block'">
+          <multiselect class="pull-left mr-xs" ng-model="$ctrl.filters.analyzer" 
+            options="$ctrl.analyzers" 
+            show-search="true"
+            id-prop="id" 
+            display-prop="name"
+            placeholder="Select" 
+            show-select-all="true" 
+            show-unselect-all="true" 
+            search-limit="100"
+            classes-btn="($ctrl.filters.analyzer.length > 0) ? 'btn-block btn-primary' : 'btn-default btn-block'">
           </multiselect>
         </div>
         <div class="form-group">
