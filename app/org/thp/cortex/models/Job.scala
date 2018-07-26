@@ -48,12 +48,16 @@ class Job(model: JobModel, attributes: JsObject) extends EntityDef[JobModel, Job
   val params: JsObject = Try(Json.parse(parameters()).as[JsObject]).getOrElse(JsObject.empty)
 
   override def toJson: JsObject = {
-    val output = super.toJson + ("date" → Json.toJson(createdAt))
-    input().fold(output)(i ⇒ output +
+    val output = input().fold(super.toJson)(i ⇒ super.toJson +
       ("input" → Json.parse(i))) +
       ("parameters" → params) +
       ("analyzerId" → JsString(workerId())) +
       ("analyzerName" → JsString(workerName())) +
-      ("analyzerDefinitionId" → JsString(workerDefinitionId()))
+      ("analyzerDefinitionId" → JsString(workerDefinitionId())) +
+      ("date" → Json.toJson(createdAt))
+    data() match {
+      case Some(d) if tpe() == WorkerType.responder ⇒ output + ("data" -> Json.parse(d))
+      case _                                        ⇒ output
+    }
   }
 }

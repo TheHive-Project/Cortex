@@ -63,7 +63,19 @@ class JobCtrl @Inject() (
       .map(_ ⇒ NoContent)
   }
 
-  def create(workerId: String): Action[Fields] = authenticated(Roles.analyze).async(fieldsBodyParser) { implicit request ⇒
+  def createResponderJob(workerId: String): Action[Fields] = authenticated(Roles.analyze).async(fieldsBodyParser) { implicit request ⇒
+    val fields = request.body
+    val fieldsWithStringData = fields.getValue("data") match {
+      case Some(d) ⇒ fields.set("data", d.toString)
+      case None    ⇒ fields
+    }
+    jobSrv.create(workerId, fieldsWithStringData)
+      .map { job ⇒
+        renderer.toOutput(OK, job)
+      }
+  }
+
+  def createAnalyzerJob(workerId: String): Action[Fields] = authenticated(Roles.analyze).async(fieldsBodyParser) { implicit request ⇒
     jobSrv.create(workerId, request.body)
       .map { job ⇒
         renderer.toOutput(OK, job)

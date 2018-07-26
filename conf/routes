@@ -15,13 +15,13 @@ GET           /api/analyzer                                         org.thp.cort
 POST          /api/analyzer/_search                                 org.thp.cortex.controllers.AnalyzerCtrl.find
 GET           /api/analyzer/:id                                     org.thp.cortex.controllers.AnalyzerCtrl.get(id)
 GET           /api/analyzer/type/:dataType                          org.thp.cortex.controllers.AnalyzerCtrl.listForType(dataType)
-POST          /api/analyzer/:id/run                                 org.thp.cortex.controllers.JobCtrl.create(id)
+POST          /api/analyzer/:id/run                                 org.thp.cortex.controllers.JobCtrl.createAnalyzerJob(id)
 
 GET           /api/responder                                        org.thp.cortex.controllers.ResponderCtrl.find
 POST          /api/responder/_search                                org.thp.cortex.controllers.ResponderCtrl.find
 GET           /api/responder/:id                                    org.thp.cortex.controllers.ResponderCtrl.get(id)
 GET           /api/responder/type/:dataType                         org.thp.cortex.controllers.ResponderCtrl.listForType(dataType)
-POST          /api/responder/:id/run                                org.thp.cortex.controllers.JobCtrl.create(id)
+POST          /api/responder/:id/run                                org.thp.cortex.controllers.JobCtrl.createResponderJob(id)
 
 GET           /api/job/:id/waitreport                               org.thp.cortex.controllers.JobCtrl.waitReport(id, atMost ?= "1minute")
 ####################
