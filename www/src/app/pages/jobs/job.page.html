@@ -19,10 +19,9 @@
         </div>
         <div class="box-body job-report">
           <div ng-if="$ctrl.job.type === 'responder'">
-            <h5 class="text-primary">Object</h5>
+            <h5 class="text-primary">Input details</h5>
             <pre>{{$ctrl.job.data | json}}</pre>
           </div>
-          
           <h5 class="text-primary mt-xs">Report</h5>
           <pre>{{$ctrl.job.report | json}}</pre>
         </div>

@@ -7,8 +7,13 @@
 
     <strong>Artifact</strong>
     <p>
-      [{{$ctrl.job.dataType | uppercase}}] {{(($ctrl.job.dataType === 'file') ? $ctrl.job.attachment.name
-      : $ctrl.job.data) | fang}}
+      <span>[{{$ctrl.job.dataType | uppercase}}]</span> 
+      <span ng-if="$ctrl.job.type !== 'responder'">{{(($ctrl.job.dataType === 'file') ? $ctrl.job.attachment.name: $ctrl.job.data) | fang}}</span>
+      <span ng-if="$ctrl.job.type === 'responder'">{{$ctrl.job.label || 'No Label'}}</span>
+      
+    </p>
+    <p ng-if="">
+      [{{$ctrl.job.dataType | uppercase}}] {{(($ctrl.job.dataType === 'file') ? $ctrl.job.attachment.name : $ctrl.job.data) | fang}}
     </p>
     <hr>
 
@@ -17,6 +22,19 @@
       <span am-time-ago="$ctrl.job.date"></span>
     </p>
     <hr>
+
+    <strong>TLP</strong>
+    <p>
+      <tlp value="$ctrl.job.tlp"></tlp>
+    </p>
+    <hr>
+
+    <strong>PAP</strong>
+    <p>
+      <tlp value="$ctrl.job.pap"></tlp>
+    </p>
+    <hr>
+
 
     <strong>Status</strong>
     <p>
