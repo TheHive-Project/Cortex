@@ -44,6 +44,8 @@ class Migration @Inject() (
         renameAttribute("job", "workerName", "analyzerName"),
         addAttribute("job", "type" → JsString(WorkerType.analyzer.toString)),
 
+        addAttribute("report", "operations" → JsString("[]")),
+
         renameEntity("analyzer", "worker"),
         renameAttribute("worker", "workerDefinitionId", "analyzerDefinitionId"),
         addAttribute("worker", "type" → JsString(WorkerType.analyzer.toString)),

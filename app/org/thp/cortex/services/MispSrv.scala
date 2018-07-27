@@ -63,7 +63,7 @@ class MispSrv @Inject() (
 
     for {
       analyzer ← workerSrv.get(module)
-      job ← jobSrv.create(analyzer, mispType2dataType(mispType), artifact, 0, "", JsObject.empty, force = false)
+      job ← jobSrv.create(analyzer, mispType2dataType(mispType), artifact, 0, "", JsObject.empty, None, force = false)
       _ ← auditActor.ask(Register(job.id, duration))(Timeout(duration))
       updatedJob ← jobSrv.getForUser(authContext.userId, job.id)
       mispOutput ← toMispOutput(authContext.userId, updatedJob)

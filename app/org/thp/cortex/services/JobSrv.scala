@@ -172,6 +172,7 @@ class JobSrv(
     val tlp = (attributes \ "tlp").asOpt[Long].getOrElse(2L)
     val message = (attributes \ "message").asOpt[String].getOrElse("")
     val parameters = (attributes \ "parameters").asOpt[JsObject].getOrElse(JsObject.empty)
+    val label = (attributes \ "label").asOpt[String]
     val force = fields.getBoolean("force").getOrElse(false)
     withGood(dataType, dataFiv) {
       case (dt, Right(fiv)) ⇒ dt → attachmentSrv.save(fiv).map(Right.apply)
@@ -179,7 +180,7 @@ class JobSrv(
     }
       .fold(
         typeDataAttachment ⇒ typeDataAttachment._2.flatMap(
-          da ⇒ create(worker, typeDataAttachment._1, da, tlp, message, parameters, force)),
+          da ⇒ create(worker, typeDataAttachment._1, da, tlp, message, parameters, label, force)),
         errors ⇒ {
           val attributeError = AttributeCheckingError("job", errors)
           logger.error("legacy job create fails", attributeError)
@@ -243,13 +244,13 @@ class JobSrv(
           case (dt, Left(data)) ⇒ dt → Future.successful(Left(data))
         }
           .fold(
-            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(worker, typeDataAttachment._1, da, tlp, message, parameters, force)),
+            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(worker, typeDataAttachment._1, da, tlp, message, parameters, fields.getString("label"), force)),
             errors ⇒ Future.failed(AttributeCheckingError("job", errors)))
       }
     }
   }
 
-  def create(worker: Worker, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject, force: Boolean)(implicit authContext: AuthContext): Future[Job] = {
+  def create(worker: Worker, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject, label: Option[String], force: Boolean)(implicit authContext: AuthContext): Future[Job] = {
     val previousJob = if (force) Future.successful(None)
     else findSimilarJob(worker, dataType, dataAttachment, tlp, parameters)
     previousJob.flatMap {
@@ -267,6 +268,7 @@ class JobSrv(
             "message" → message,
             "parameters" → parameters.toString,
             "type" → worker.tpe()))
+            .set("label", label.map(JsString.apply))
           val fieldWithData = dataAttachment match {
             case Left(data)        ⇒ fields.set("data", data)
             case Right(attachment) ⇒ fields.set("attachment", AttachmentInputValue(attachment))
