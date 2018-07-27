@@ -34,6 +34,7 @@ trait JobAttributes {
   val input = optionalAttribute("input", F.textFmt, "Data sent to worker")
   val fromCache = optionalAttribute("fromCache", F.booleanFmt, "Indicates if cache is used", O.form)
   val tpe = attribute("type", F.enumFmt(WorkerType), "", O.readonly)
+  val lbel = optionalAttribute("label", F.stringFmt, "Label of the job")
 }
 
 @Singleton
