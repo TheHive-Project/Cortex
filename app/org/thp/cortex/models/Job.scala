@@ -28,6 +28,7 @@ trait JobAttributes {
   val data = optionalAttribute("data", F.stringFmt, "Content of the artifact", O.readonly)
   val attachment = optionalAttribute("attachment", F.attachmentFmt, "Artifact file content", O.readonly)
   val tlp = attribute("tlp", TlpAttributeFormat, "TLP level", 2L)
+  val pap = attribute("pap", TlpAttributeFormat, "PAP level", 2L)
   val message = optionalAttribute("message", F.textFmt, "Message associated to the analysis")
   val errorMessage = optionalAttribute("message", F.textFmt, "Message returned by the worker when it fails")
   val parameters = attribute("parameters", F.stringFmt, "Parameters for this job", "{}")

@@ -170,6 +170,7 @@ class JobSrv(
       case None                                 ⇒ Bad(One(MissingAttributeError("data")))
     }
     val tlp = (attributes \ "tlp").asOpt[Long].getOrElse(2L)
+    val pap = (attributes \ "pap").asOpt[Long].getOrElse(2L)
     val message = (attributes \ "message").asOpt[String].getOrElse("")
     val parameters = (attributes \ "parameters").asOpt[JsObject].getOrElse(JsObject.empty)
     val label = (attributes \ "label").asOpt[String]
@@ -180,7 +181,7 @@ class JobSrv(
     }
       .fold(
         typeDataAttachment ⇒ typeDataAttachment._2.flatMap(
-          da ⇒ create(worker, typeDataAttachment._1, da, tlp, message, parameters, label, force)),
+          da ⇒ create(worker, typeDataAttachment._1, da, tlp, pap, message, parameters, label, force)),
         errors ⇒ {
           val attributeError = AttributeCheckingError("job", errors)
           logger.error("legacy job create fails", attributeError)
@@ -232,6 +233,7 @@ class JobSrv(
         }
 
         val tlp = fields.getLong("tlp").getOrElse(2L)
+        val pap = fields.getLong("pap").getOrElse(2L)
         val message = fields.getString("message").getOrElse("")
         val force = fields.getBoolean("force").getOrElse(false)
         val parameters = fields.getValue("parameters").collect {
@@ -244,13 +246,22 @@ class JobSrv(
           case (dt, Left(data)) ⇒ dt → Future.successful(Left(data))
         }
           .fold(
-            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(worker, typeDataAttachment._1, da, tlp, message, parameters, fields.getString("label"), force)),
+            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(worker, typeDataAttachment._1, da, tlp, pap, message, parameters, fields.getString("label"), force)),
             errors ⇒ Future.failed(AttributeCheckingError("job", errors)))
       }
     }
   }
 
-  def create(worker: Worker, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject, label: Option[String], force: Boolean)(implicit authContext: AuthContext): Future[Job] = {
+  def create(
+      worker: Worker,
+      dataType: String,
+      dataAttachment: Either[String, Attachment],
+      tlp: Long,
+      pap: Long,
+      message: String,
+      parameters: JsObject,
+      label: Option[String],
+      force: Boolean)(implicit authContext: AuthContext): Future[Job] = {
     val previousJob = if (force) Future.successful(None)
     else findSimilarJob(worker, dataType, dataAttachment, tlp, parameters)
     previousJob.flatMap {
@@ -265,6 +276,7 @@ class JobSrv(
             "status" → JobStatus.Waiting,
             "dataType" → dataType,
             "tlp" → tlp,
+            "pap" → pap,
             "message" → message,
             "parameters" → parameters.toString,
             "type" → worker.tpe()))
