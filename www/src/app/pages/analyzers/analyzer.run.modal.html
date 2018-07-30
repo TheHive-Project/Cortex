@@ -13,6 +13,14 @@
       </div>
     </div>
     <div class="form-group">
+      <label class="col-sm-2 control-label">PAP
+        <i class="fa fa-asterisk text-danger"></i>
+      </label>
+      <div class="col-sm-4">
+        <select class="form-control" ng-model="$modal.observable.pap" ng-options="pap.value as pap.key for pap in $modal.Tlps" required></select>
+      </div>
+    </div>
+    <div class="form-group">
       <label class="col-sm-2 control-label">Data Type
         <i class="fa fa-asterisk text-danger"></i>
       </label>

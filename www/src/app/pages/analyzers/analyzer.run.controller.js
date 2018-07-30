@@ -24,6 +24,7 @@ export default class AnalyzerRunController {
       ids: this.getActiveIds().join(',')
     };
     this.observable.tlp = this.observable.tlp || this.Tlps[2].value;
+    this.observable.pap = this.observable.pap || this.Tlps[2].value;
   }
 
   getActiveIds() {
