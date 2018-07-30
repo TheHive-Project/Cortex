@@ -374,7 +374,7 @@ class JobSrv(
           val success = (report \ "success").asOpt[Boolean].getOrElse(false)
           if (success) {
             val fullReport = (report \ "full").as[JsObject].toString
-            val summaryReport = (report \ "summary").as[JsObject].toString
+            val summaryReport = (report \ "summary").asOpt[JsObject].getOrElse(JsObject.empty).toString
             val artifacts = (report \ "artifacts").asOpt[Seq[JsObject]].getOrElse(Nil)
             val operations = (report \ "operations").asOpt[Seq[JsObject]].getOrElse(Nil)
             val reportFields = Fields.empty
@@ -449,6 +449,7 @@ class JobSrv(
           .map(_ deepMerge artifact +
             ("dataType" → JsString(job.dataType())) +
             ("tlp" → JsNumber(job.tlp())) +
+            ("pap" → JsNumber(job.pap())) +
             ("message" → JsString(job.message().getOrElse(""))) +
             ("parameters" → job.params))
           .badMap(e ⇒ AttributeCheckingError("job", e.toSeq))
