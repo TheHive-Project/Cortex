@@ -35,8 +35,8 @@ class JobCtrl @Inject() (
     implicit val mat: Materializer,
     implicit val actorSystem: ActorSystem) extends AbstractController(components) with Status {
 
-  def list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
-    val (jobs, jobTotal) = jobSrv.listForUser(request.userId, dataTypeFilter, dataFilter, analyzerFilter, range)
+  def list(dataTypeFilter: Option[String], dataFilter: Option[String], workerFilter: Option[String], range: Option[String]): Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
+    val (jobs, jobTotal) = jobSrv.listForUser(request.userId, dataTypeFilter, dataFilter, workerFilter, range)
     renderer.toOutput(OK, jobs, jobTotal)
   }
 
@@ -63,8 +63,20 @@ class JobCtrl @Inject() (
       .map(_ ⇒ NoContent)
   }
 
-  def create(analyzerId: String): Action[Fields] = authenticated(Roles.analyze).async(fieldsBodyParser) { implicit request ⇒
-    jobSrv.create(analyzerId, request.body)
+  def createResponderJob(workerId: String): Action[Fields] = authenticated(Roles.analyze).async(fieldsBodyParser) { implicit request ⇒
+    val fields = request.body
+    val fieldsWithStringData = fields.getValue("data") match {
+      case Some(d) ⇒ fields.set("data", d.toString)
+      case None    ⇒ fields
+    }
+    jobSrv.create(workerId, fieldsWithStringData)
+      .map { job ⇒
+        renderer.toOutput(OK, job)
+      }
+  }
+
+  def createAnalyzerJob(workerId: String): Action[Fields] = authenticated(Roles.analyze).async(fieldsBodyParser) { implicit request ⇒
+    jobSrv.create(workerId, request.body)
       .map { job ⇒
         renderer.toOutput(OK, job)
       }
@@ -84,42 +96,44 @@ class JobCtrl @Inject() (
             .collect {
               case artifact if artifact.data().isDefined ⇒
                 Json.obj(
-                  "data" -> artifact.data(),
-                  "dataType" -> artifact.dataType(),
-                  "message" -> artifact.message(),
-                  "tags" -> artifact.tags(),
-                  "tlp" -> artifact.tlp())
+                  "data" → artifact.data(),
+                  "dataType" → artifact.dataType(),
+                  "message" → artifact.message(),
+                  "tags" → artifact.tags(),
+                  "tlp" → artifact.tlp())
               case artifact if artifact.attachment().isDefined ⇒
                 artifact.attachment().fold(JsObject.empty) { a ⇒
                   Json.obj(
-                    "attachment" ->
+                    "attachment" →
                       Json.obj(
-                        "contentType" -> a.contentType,
-                        "id" -> a.id,
-                        "name" -> a.name,
-                        "size" -> a.size),
-                    "message" -> artifact.message(),
-                    "tags" -> artifact.tags(),
-                    "tlp" -> artifact.tlp())
+                        "contentType" → a.contentType,
+                        "id" → a.id,
+                        "name" → a.name,
+                        "size" → a.size),
+                    "message" → artifact.message(),
+                    "tags" → artifact.tags(),
+                    "tlp" → artifact.tlp())
                 }
             }
             .runWith(Sink.seq)
         } yield Json.obj(
-          "summary" -> Json.parse(report.summary()),
-          "full" -> Json.parse(report.full()),
-          "success" -> true,
-          "artifacts" -> artifacts)
-      case JobStatus.InProgress ⇒ Future.successful(JsString("Running"))
+          "summary" → Json.parse(report.summary()),
+          "full" → Json.parse(report.full()),
+          "success" → true,
+          "artifacts" → artifacts,
+          "operations" → Json.parse(report.operations()))
       case JobStatus.Failure ⇒
         val errorMessage = job.errorMessage().getOrElse("")
         Future.successful(Json.obj(
           "errorMessage" → errorMessage,
           "input" → job.input(),
           "success" → false))
-      case JobStatus.Waiting ⇒ Future.successful(JsString("Waiting"))
+      case JobStatus.InProgress ⇒ Future.successful(JsString("Running"))
+      case JobStatus.Waiting    ⇒ Future.successful(JsString("Waiting"))
+      case JobStatus.Deleted    ⇒ Future.successful(JsString("Deleted"))
     })
       .map { report ⇒
-        Json.toJson(job).as[JsObject] + ("report" -> report)
+        Json.toJson(job).as[JsObject] + ("report" → report)
       }
   }
 
@@ -131,7 +145,6 @@ class JobCtrl @Inject() (
     jobSrv.getForUser(request.userId, jobId)
       .flatMap {
         case job if job.status() == JobStatus.InProgress || job.status() == JobStatus.Waiting ⇒
-          println(s"job status is ${job.status()} => wait")
           val duration = Duration(atMost).asInstanceOf[FiniteDuration]
           implicit val timeout: Timeout = Timeout(duration)
           (auditActor ? Register(jobId, duration))
@@ -140,7 +153,6 @@ class JobCtrl @Inject() (
             .withTimeout(duration, ())
             .flatMap(_ ⇒ getJobWithReport(request.userId, jobId))
         case job ⇒
-          println(s"job status is ${job.status()} => send it directly")
           getJobWithReport(request.userId, job)
       }
       .map(Ok(_))

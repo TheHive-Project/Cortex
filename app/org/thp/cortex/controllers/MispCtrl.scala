@@ -3,7 +3,7 @@ package org.thp.cortex.controllers
 import javax.inject.Inject
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.thp.cortex.models.Roles
-import org.thp.cortex.services.{ AnalyzerSrv, MispSrv }
+import org.thp.cortex.services.{ WorkerSrv, MispSrv }
 import play.api.Logger
 import play.api.libs.json.{ JsObject, JsValue }
 import play.api.mvc._
@@ -12,7 +12,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class MispCtrl @Inject() (
     mispSrv: MispSrv,
-    analyzerSrv: AnalyzerSrv,
+    analyzerSrv: WorkerSrv,
     authenticated: Authenticated,
     fieldsBodyParser: FieldsBodyParser,
     renderer: Renderer,

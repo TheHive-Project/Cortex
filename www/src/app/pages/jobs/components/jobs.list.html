@@ -29,7 +29,9 @@
         </div>
         <div class="flex-col flex-1">
           <h4 class="media-heading text-primary">
-             <strong>[{{job.dataType}}]</strong> {{(isFile ? job.attachment.name : job.data) | fang | limitTo:200}}
+            <strong>[{{job.dataType}}]</strong>            
+            <span ng-if="job.type !== 'responder'">{{(isFile ? job.attachment.name : job.data) | fang | limitTo:200}}</span>
+            <span ng-if="job.type === 'responder'">{{job.label || 'No Label'}}</span>
           </h4>
           <div class="row mv-xs text-muted">
             <div class="col-sm-4">

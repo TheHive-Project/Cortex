@@ -30,16 +30,11 @@ const jobsModule = angular
         component: 'jobsPage',
         resolve: {
           datatypes: ($q, AnalyzerService) => {
-            let defer = $q.defer();
-
-            AnalyzerService.list()
-              .then(() => {
-                defer.resolve(AnalyzerService.getTypes());
-              })
-              .catch(err => defer.reject(err));
-
-            return defer.promise;
+            return AnalyzerService.list()
+              .then(() => $q.resolve(AnalyzerService.getTypes()))
+              .catch(err => $q.reject(err));
           },
+          jobtypes: () => ['analyzer', 'responder'],
           analyzers: AnalyzerService =>
             AnalyzerService.list().then(analyzers =>
               _.sortBy(
@@ -65,10 +60,10 @@ const jobsModule = angular
             let defered = $q.defer();
 
             JobService.report($stateParams.id).then(
-              function(response) {
+              function (response) {
                 defered.resolve(response.data);
               },
-              function(response) {
+              function (response) {
                 $log.error('Error while getting job report');
                 defered.reject(response);
                 $state.go('main.jobs');
@@ -85,7 +80,8 @@ const jobsModule = angular
     templateUrl: tpl,
     bindings: {
       datatypes: '<',
-      analyzers: '<'
+      analyzers: '<',
+      jobtypes: '<'
     }
   })
   .component('jobsList', {

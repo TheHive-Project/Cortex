@@ -31,8 +31,8 @@ class AnalyzersSpec extends PlaySpecification with Mockito {
         adminUser.userId returns "admin"
         UserSrv.getFromId(Matchers.any[RequestHeader], Matchers.eq("admin")) returns Future.successful(adminUser)
 
-        builder(GuiceApplicationBuilder().configure("analyzer.path" -> Seq(Paths.get("test/resources/analyzers").toAbsolutePath.toString))
-          .configure("search.index" -> "TEST")
+        builder(GuiceApplicationBuilder().configure("analyzer.path" → Seq(Paths.get("test/resources/analyzers").toAbsolutePath.toString))
+          .configure("search.index" → "TEST")
           .overrides(bind[UserSrv].toInstance(UserSrv)))
           .build()
       })
@@ -46,7 +46,7 @@ class AnalyzersSpec extends PlaySpecification with Mockito {
     "scan and read definitions" in new WithTheHiveApp {
       private val analyzerCtrl = inject[AnalyzerCtrl]
       private val result = analyzerCtrl.listDefinitions()(FakeRequest()
-        .withSession("username" -> "admin"))
+        .withSession("username" → "admin"))
 
       status(result) must equalTo(OK)
       contentType(result) must beSome("application/json")
@@ -64,15 +64,15 @@ class AnalyzersSpec extends PlaySpecification with Mockito {
 
       private val analyzerCtrl = inject[AnalyzerCtrl]
       private val result = analyzerCtrl.create("fakeAnalyzer_1_0")(FakeRequest()
-        .withSession("username" -> "admin")
-        .withHeaders("Content-Type" -> "application/json")
-        .withJsonBody(Json.obj("name" -> "myFakeAnalyzerInstance")))
+        .withSession("username" → "admin")
+        .withHeaders("Content-Type" → "application/json")
+        .withJsonBody(Json.obj("name" → "myFakeAnalyzerInstance")))
 
       //println(s"DEBUG: body=${contentAsString(result)}")
       status(result) must equalTo(CREATED)
       contentType(result) must beSome("application/json")
       //      contentAsJson(result) must_=== Json.obj(
-      //        "" -> "")
+      //        "" → "")
 
     }
   }

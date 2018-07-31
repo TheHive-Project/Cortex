@@ -1,7 +1,7 @@
 package org.thp.cortex.services
 
 import java.io.{ ByteArrayOutputStream, InputStream }
-import java.nio.file.{ Files, Path }
+import java.nio.file.Files
 import java.util.Date
 import javax.inject.{ Inject, Singleton }
 
@@ -31,7 +31,7 @@ class JobSrv(
     jobModel: JobModel,
     reportModel: ReportModel,
     artifactModel: ArtifactModel,
-    analyzerSrv: AnalyzerSrv,
+    workerSrv: WorkerSrv,
     userSrv: UserSrv,
     getSrv: GetSrv,
     createSrv: CreateSrv,
@@ -48,7 +48,7 @@ class JobSrv(
       jobModel: JobModel,
       reportModel: ReportModel,
       artifactModel: ArtifactModel,
-      analyzerSrv: AnalyzerSrv,
+      workerSrv: WorkerSrv,
       userSrv: UserSrv,
       getSrv: GetSrv,
       createSrv: CreateSrv,
@@ -63,7 +63,7 @@ class JobSrv(
     jobModel,
     reportModel,
     artifactModel,
-    analyzerSrv,
+    workerSrv,
     userSrv,
     getSrv,
     createSrv,
@@ -75,12 +75,13 @@ class JobSrv(
     ec, mat)
 
   private lazy val logger = Logger(getClass)
-  private lazy val analyzeExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("analyzer")
+  private lazy val analyzerExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("analyzer")
+  private lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
   private val osexec =
     if (System.getProperty("os.name").toLowerCase.contains("win"))
-      (c: Path) ⇒ s"""cmd /c $c"""
+      (c: String) ⇒ s"""cmd /c $c"""
     else
-      (c: Path) ⇒ s"""sh -c "$c" """
+      (c: String) ⇒ c
 
   runPreviousJobs()
 
@@ -91,9 +92,9 @@ class JobSrv(
         ._1
         .runForeach { job ⇒
           (for {
-            analyzer ← analyzerSrv.get(job.analyzerId())
-            analyzerDefinition ← analyzerSrv.getDefinition(job.analyzerId())
-            updatedJob ← run(analyzerDefinition, analyzer, job)
+            worker ← workerSrv.get(job.workerId())
+            workerDefinition ← workerSrv.getDefinition(job.workerId())
+            updatedJob ← run(workerDefinition, worker, job)
           } yield updatedJob)
             .onComplete {
               case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
@@ -109,7 +110,7 @@ class JobSrv(
     val a = userSrv.getOrganizationId(userId).map(x)
     val aSource = Source.fromFutureSource(a.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val aTotal = a.flatMap(_._2)
-    aSource -> aTotal
+    aSource → aTotal
   }
 
   def listForUser(userId: String, dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String]): (Source[Job, NotUsed], Future[Long]) = {
@@ -150,12 +151,16 @@ class JobSrv(
       findForOrganization(organizationId, withId(jobId), Some("0-1"), Nil)
     }
       ._1
-      .runWith(Sink.head)
+      .runWith(Sink.headOption)
+      .flatMap {
+        case Some(j) ⇒ Future.successful(j)
+        case None    ⇒ Future.failed(NotFoundError(s"job $jobId not found"))
+      }
   }
 
   def delete(job: Job)(implicit authContext: AuthContext): Future[Job] = deleteSrv(job)
 
-  def legacyCreate(analyzer: Analyzer, attributes: JsObject, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
+  def legacyCreate(worker: Worker, attributes: JsObject, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
     val dataType = Or.from((attributes \ "dataType").asOpt[String], One(MissingAttributeError("dataType")))
     val dataFiv = fields.get("data") match {
       case Some(fiv: FileInputValue)            ⇒ Good(Right(fiv))
@@ -165,16 +170,18 @@ class JobSrv(
       case None                                 ⇒ Bad(One(MissingAttributeError("data")))
     }
     val tlp = (attributes \ "tlp").asOpt[Long].getOrElse(2L)
+    val pap = (attributes \ "pap").asOpt[Long].getOrElse(2L)
     val message = (attributes \ "message").asOpt[String].getOrElse("")
     val parameters = (attributes \ "parameters").asOpt[JsObject].getOrElse(JsObject.empty)
+    val label = (attributes \ "label").asOpt[String]
     val force = fields.getBoolean("force").getOrElse(false)
     withGood(dataType, dataFiv) {
-      case (dt, Right(fiv)) ⇒ dt -> attachmentSrv.save(fiv).map(Right.apply)
-      case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
+      case (dt, Right(fiv)) ⇒ dt → attachmentSrv.save(fiv).map(Right.apply)
+      case (dt, Left(data)) ⇒ dt → Future.successful(Left(data))
     }
       .fold(
         typeDataAttachment ⇒ typeDataAttachment._2.flatMap(
-          da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters, force)),
+          da ⇒ create(worker, typeDataAttachment._1, da, tlp, pap, message, parameters, label, force)),
         errors ⇒ {
           val attributeError = AttributeCheckingError("job", errors)
           logger.error("legacy job create fails", attributeError)
@@ -182,8 +189,8 @@ class JobSrv(
         })
   }
 
-  def create(analyzerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
-    analyzerSrv.getForUser(authContext.userId, analyzerId).flatMap { analyzer ⇒
+  def create(workerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Job] = {
+    workerSrv.getForUser(authContext.userId, workerId).flatMap { worker ⇒
       /*
       In Cortex 1, fields looks like:
       {
@@ -214,7 +221,7 @@ class JobSrv(
           "optional parameters": "value"
         }
        */
-      fields.getValue("attributes").map(attributes ⇒ legacyCreate(analyzer, attributes.as[JsObject], fields)).getOrElse {
+      fields.getValue("attributes").map(attributes ⇒ legacyCreate(worker, attributes.as[JsObject], fields)).getOrElse {
         val dataType = Or.from(fields.getString("dataType"), One(MissingAttributeError("dataType")))
         val dataFiv = (fields.get("data"), fields.getString("data"), fields.get("attachment")) match {
           case (_, Some(data), None)                ⇒ Good(Left(data))
@@ -226,6 +233,7 @@ class JobSrv(
         }
 
         val tlp = fields.getLong("tlp").getOrElse(2L)
+        val pap = fields.getLong("pap").getOrElse(2L)
         val message = fields.getString("message").getOrElse("")
         val force = fields.getBoolean("force").getOrElse(false)
         val parameters = fields.getValue("parameters").collect {
@@ -234,41 +242,53 @@ class JobSrv(
           .getOrElse(JsObject.empty)
 
         withGood(dataType, dataFiv) {
-          case (dt, Right(fiv)) ⇒ dt -> attachmentSrv.save(fiv).map(Right.apply)
-          case (dt, Left(data)) ⇒ dt -> Future.successful(Left(data))
+          case (dt, Right(fiv)) ⇒ dt → attachmentSrv.save(fiv).map(Right.apply)
+          case (dt, Left(data)) ⇒ dt → Future.successful(Left(data))
         }
           .fold(
-            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(analyzer, typeDataAttachment._1, da, tlp, message, parameters, force)),
+            typeDataAttachment ⇒ typeDataAttachment._2.flatMap(da ⇒ create(worker, typeDataAttachment._1, da, tlp, pap, message, parameters, fields.getString("label"), force)),
             errors ⇒ Future.failed(AttributeCheckingError("job", errors)))
       }
     }
   }
 
-  def create(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, message: String, parameters: JsObject, force: Boolean)(implicit authContext: AuthContext): Future[Job] = {
+  def create(
+      worker: Worker,
+      dataType: String,
+      dataAttachment: Either[String, Attachment],
+      tlp: Long,
+      pap: Long,
+      message: String,
+      parameters: JsObject,
+      label: Option[String],
+      force: Boolean)(implicit authContext: AuthContext): Future[Job] = {
     val previousJob = if (force) Future.successful(None)
-    else findSimilarJob(analyzer, dataType, dataAttachment, tlp, parameters)
+    else findSimilarJob(worker, dataType, dataAttachment, tlp, parameters)
     previousJob.flatMap {
       case Some(job) ⇒ Future.successful(job)
-      case None ⇒ isUnderRateLimit(analyzer).flatMap {
+      case None ⇒ isUnderRateLimit(worker).flatMap {
         case true ⇒
           val fields = Fields(Json.obj(
-            "analyzerDefinitionId" -> analyzer.analyzerDefinitionId(),
-            "analyzerId" -> analyzer.id,
-            "analyzerName" -> analyzer.name(),
-            "organization" -> analyzer.parentId,
-            "status" -> JobStatus.Waiting,
-            "dataType" -> dataType,
-            "tlp" -> tlp,
-            "message" -> message,
-            "parameters" -> parameters.toString))
+            "workerDefinitionId" → worker.workerDefinitionId(),
+            "workerId" → worker.id,
+            "workerName" → worker.name(),
+            "organization" → worker.parentId,
+            "status" → JobStatus.Waiting,
+            "dataType" → dataType,
+            "tlp" → tlp,
+            "pap" → pap,
+            "message" → message,
+            "parameters" → parameters.toString,
+            "type" → worker.tpe()))
+            .set("label", label.map(JsString.apply))
           val fieldWithData = dataAttachment match {
             case Left(data)        ⇒ fields.set("data", data)
             case Right(attachment) ⇒ fields.set("attachment", AttachmentInputValue(attachment))
           }
-          analyzerSrv.getDefinition(analyzer.analyzerDefinitionId()).flatMap { analyzerDefinition ⇒
+          workerSrv.getDefinition(worker.workerDefinitionId()).flatMap { workerDefinition ⇒
             createSrv[JobModel, Job](jobModel, fieldWithData).andThen {
               case Success(job) ⇒
-                run(analyzerDefinition, analyzer, job)
+                run(workerDefinition, worker, job)
                   .onComplete {
                     case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
                     case Failure(e) ⇒ logger.error(s"Job ${job.id} has failed", e)
@@ -276,22 +296,22 @@ class JobSrv(
             }
           }
         case false ⇒
-          Future.failed(RateLimitExceeded(analyzer))
+          Future.failed(RateLimitExceeded(worker))
 
       }
     }
   }
 
-  private def isUnderRateLimit(analyzer: Analyzer): Future[Boolean] = {
+  private def isUnderRateLimit(worker: Worker): Future[Boolean] = {
     (for {
-      rate ← analyzer.rate()
-      rateUnit ← analyzer.rateUnit()
+      rate ← worker.rate()
+      rateUnit ← worker.rateUnit()
     } yield {
       import org.elastic4play.services.QueryDSL._
       val now = new Date().getTime
-      logger.info(s"Checking rate limit on analyzer ${analyzer.name()} from ${new Date(now - rateUnit.id.toLong * 24 * 60 * 60 * 1000)}")
-      stats(and("createdAt" ~>= (now - rateUnit.id.toLong * 24 * 60 * 60 * 1000), "analyzerId" ~= analyzer.id), Seq(selectCount)).map { stats ⇒
-        val count = (stats \ "count").as[Long]
+      logger.info(s"Checking rate limit on worker ${worker.name()} from ${new Date(now - rateUnit.id.toLong * 24 * 60 * 60 * 1000)}")
+      stats(and("createdAt" ~>= (now - rateUnit.id.toLong * 24 * 60 * 60 * 1000), "analyzerId" ~= worker.id), Seq(selectCount)).map { s ⇒
+        val count = (s \ "count").as[Long]
         logger.info(s"$count analysis found (limit is $rate)")
         count < rate
       }
@@ -299,18 +319,18 @@ class JobSrv(
       .getOrElse(Future.successful(true))
   }
 
-  def findSimilarJob(analyzer: Analyzer, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, parameters: JsObject): Future[Option[Job]] = {
-    val cache = analyzer.jobCache().fold(jobCache)(_.minutes)
-    if (cache.length == 0) {
+  def findSimilarJob(worker: Worker, dataType: String, dataAttachment: Either[String, Attachment], tlp: Long, parameters: JsObject): Future[Option[Job]] = {
+    val cache = worker.jobCache().fold(jobCache)(_.minutes)
+    if (cache.length == 0 || worker.tpe() == WorkerType.responder) {
       logger.info("Job cache is disabled")
       Future.successful(None)
     }
     else {
       import org.elastic4play.services.QueryDSL._
-      logger.info(s"Looking for similar job (analyzer=${analyzer.id}, dataType=$dataType, data=$dataAttachment, tlp=$tlp, parameters=$parameters")
+      logger.info(s"Looking for similar job (worker=${worker.id}, dataType=$dataType, data=$dataAttachment, tlp=$tlp, parameters=$parameters")
       val now = new Date().getTime
       find(and(
-        "analyzerId" ~= analyzer.id,
+        "analyzerId" ~= worker.id,
         "status" ~!= JobStatus.Failure,
         "status" ~!= JobStatus.Deleted,
         "startDate" ~>= (now - cache.toMillis),
@@ -319,7 +339,7 @@ class JobSrv(
         dataAttachment.fold(data ⇒ "data" ~= data, attachment ⇒ "attachment.id" ~= attachment.id),
         "parameters" ~= parameters.toString), Some("0-1"), Seq("-createdAt"))
         ._1
-        .map(j ⇒ new Job(jobModel, j.attributes + ("fromCache" -> JsBoolean(true))))
+        .map(j ⇒ new Job(jobModel, j.attributes + ("fromCache" → JsBoolean(true))))
         .runWith(Sink.headOption)
     }
   }
@@ -332,15 +352,19 @@ class JobSrv(
       rename("type", "dataType"))(artifact)
   }
 
-  def run(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job)(implicit authContext: AuthContext): Future[Job] = {
-    buildInput(analyzerDefinition, analyzer, job)
+  def run(workerDefinition: WorkerDefinition, worker: Worker, job: Job)(implicit authContext: AuthContext): Future[Job] = {
+    val executionContext = workerDefinition.tpe match {
+      case WorkerType.analyzer  ⇒ analyzerExecutionContext
+      case WorkerType.responder ⇒ responderExecutionContext
+    }
+    buildInput(workerDefinition, worker, job)
       .flatMap { input ⇒
         startJob(job)
         var output = ""
         var error = ""
         try {
-          logger.info(s"Execute ${osexec(analyzerDefinition.cmd)} in ${analyzerDefinition.baseDirectory}")
-          Process(osexec(analyzerDefinition.cmd), analyzerDefinition.baseDirectory.toFile).run(
+          logger.info(s"Execute ${osexec(workerDefinition.command)} in ${workerDefinition.baseDirectory}")
+          Process(osexec(workerDefinition.command), workerDefinition.baseDirectory.toFile).run(
             new ProcessIO(
               { stdin ⇒ Try(stdin.write(input.toString.getBytes("UTF-8"))); stdin.close() },
               { stdout ⇒ output = readStream(stdout) },
@@ -350,11 +374,13 @@ class JobSrv(
           val success = (report \ "success").asOpt[Boolean].getOrElse(false)
           if (success) {
             val fullReport = (report \ "full").as[JsObject].toString
-            val summaryReport = (report \ "summary").as[JsObject].toString
+            val summaryReport = (report \ "summary").asOpt[JsObject].getOrElse(JsObject.empty).toString
             val artifacts = (report \ "artifacts").asOpt[Seq[JsObject]].getOrElse(Nil)
+            val operations = (report \ "operations").asOpt[Seq[JsObject]].getOrElse(Nil)
             val reportFields = Fields.empty
               .set("full", fullReport)
               .set("summary", summaryReport)
+              .set("operations", JsArray(operations).toString)
             createSrv[ReportModel, Report, Job](reportModel, job, reportFields)
               .flatMap { report ⇒
                 Future.traverse(artifacts) { artifact ⇒
@@ -377,7 +403,7 @@ class JobSrv(
             val errorMessage = (error + output).take(8192)
             endJob(job, JobStatus.Failure, Some(s"Invalid output\n$errorMessage"))
         }
-      }(analyzeExecutionContext)
+      }(executionContext)
   }
 
   def getReport(jobId: String)(implicit authContext: AuthContext): Future[Report] = getForUser(authContext.userId, jobId).flatMap(getReport)
@@ -389,7 +415,7 @@ class JobSrv(
       .map(_.getOrElse(throw NotFoundError(s"Job ${job.id} has no report")))
   }
 
-  private def buildInput(analyzerDefinition: AnalyzerDefinition, analyzer: Analyzer, job: Job): Future[JsObject] = {
+  private def buildInput(workerDefinition: WorkerDefinition, worker: Worker, job: Job): Future[JsObject] = {
     job.attachment()
       .map { attachment ⇒
         val tempFile = Files.createTempFile(s"cortex-job-${job.id}-", "")
@@ -403,33 +429,36 @@ class JobSrv(
       .map {
         case Some(file) ⇒
           Json.obj(
-            "file" -> file.toString,
-            "filename" -> job.attachment().get.name,
-            "contentType" -> job.attachment().get.contentType)
-        case None if job.data().nonEmpty ⇒
-          Json.obj(
-            "data" -> job.data().get)
+            "file" → file.toString,
+            "filename" → job.attachment().get.name,
+            "contentType" → job.attachment().get.contentType)
+        case None if job.data().nonEmpty && job.tpe() == WorkerType.responder ⇒
+          Json.obj("data" → Json.parse(job.data().get))
+        case None if job.data().nonEmpty && job.tpe() == WorkerType.analyzer ⇒
+          Json.obj("data" → job.data().get)
       }
       .map { artifact ⇒
-        (BaseConfig.global.items ++ BaseConfig.tlp.items ++ analyzerDefinition.configurationItems)
-          .validatedBy(_.read(analyzer.config))
-          .map(cfg ⇒ Json.obj("config" -> JsObject(cfg).deepMerge(analyzerDefinition.configuration)))
+        (BaseConfig.global(worker.tpe()).items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items ++ workerDefinition.configurationItems)
+          .validatedBy(_.read(worker.config))
+          .map(cfg ⇒ Json.obj("config" → JsObject(cfg).deepMerge(workerDefinition.configuration)))
           .map { cfg ⇒
-            val proxy_http = (cfg \ "config" \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("http" -> proxy)) }
-            val proxy_https = (cfg \ "config" \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" -> Json.obj("https" -> proxy)) }
-            cfg.deepMerge(Json.obj("config" -> proxy_http.deepMerge(proxy_https)))
+            val proxy_http = (cfg \ "config" \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" → Json.obj("http" → proxy)) }
+            val proxy_https = (cfg \ "config" \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" → Json.obj("https" → proxy)) }
+            cfg.deepMerge(Json.obj("config" → proxy_http.deepMerge(proxy_https)))
           }
           .map(_ deepMerge artifact +
-            ("dataType" -> JsString(job.dataType())) +
-            ("tlp" -> JsNumber(job.tlp())) +
-            ("message" -> JsString(job.message().getOrElse(""))) +
-            ("parameters" -> job.params))
+            ("dataType" → JsString(job.dataType())) +
+            ("tlp" → JsNumber(job.tlp())) +
+            ("pap" → JsNumber(job.pap())) +
+            ("message" → JsString(job.message().getOrElse(""))) +
+            ("parameters" → job.params))
           .badMap(e ⇒ AttributeCheckingError("job", e.toSeq))
           .toTry
       }
       .flatMap(Future.fromTry)
   }
 
+  //
   private def startJob(job: Job)(implicit authContext: AuthContext): Future[Job] = {
     val fields = Fields.empty
       .set("status", JobStatus.InProgress.toString)

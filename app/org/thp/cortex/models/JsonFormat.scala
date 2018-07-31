@@ -2,6 +2,7 @@ package org.thp.cortex.models
 
 import play.api.libs.json._
 
+import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.services.Role
 
 object JsonFormat {
@@ -11,4 +12,5 @@ object JsonFormat {
     case _                               ⇒ JsError(Seq(JsPath → Seq(JsonValidationError(s"error.expected.role(${Roles.roleNames}"))))
   }
   implicit val roleFormat: Format[Role] = Format[Role](roleReads, roleWrites)
+  implicit val workerTypeFormat: Format[WorkerType.Value] = enumFormat(WorkerType)
 }

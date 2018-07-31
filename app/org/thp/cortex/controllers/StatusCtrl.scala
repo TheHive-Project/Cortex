@@ -11,7 +11,7 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
 import com.sksamuel.elastic4s.ElasticDsl
-import org.thp.cortex.models.Analyzer
+import org.thp.cortex.models.Worker
 
 import org.elastic4play.database.DBIndex
 import org.elastic4play.services.AuthSrv
@@ -31,12 +31,12 @@ class StatusCtrl @Inject() (
     dbIndex.clusterVersions.map { versions ⇒
       Ok(Json.obj(
         "versions" → Json.obj(
-          "Cortex" → getVersion(classOf[Analyzer]),
+          "Cortex" → getVersion(classOf[Worker]),
           "Elastic4Play" → getVersion(classOf[AuthSrv]),
           "Play" → getVersion(classOf[AbstractController]),
           "Elastic4s" → getVersion(classOf[ElasticDsl]),
           "ElasticSearch client" → getVersion(classOf[org.elasticsearch.Build]),
-          "ElasticSearch cluster" -> versions.mkString(", ")),
+          "ElasticSearch cluster" → versions.mkString(", ")),
         "config" → Json.obj(
           "authType" → (authSrv match {
             case multiAuthSrv: MultiAuthSrv ⇒ multiAuthSrv.authProviders.map { a ⇒ JsString(a.name) }

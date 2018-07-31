@@ -1,0 +1,68 @@
+<!-- <pre>{{$ctrl.configurations | json}}</pre> -->
+
+<section>
+  <p class="lead">Available responder configurations ({{$ctrl.configurations.length || 0}})</p>
+
+  <div class="row mv-s" ng-if="$ctrl.configurations.length === 0">
+    <div class="col-md-12">
+      <div class="empty-message">No configurations found.</div>
+    </div>
+  </div>
+
+  <div class="row mv-s" ng-if="$ctrl.configurations.length > 0">
+    <div class="col-sm-12 mb-s">
+      <div class="input-group">
+        <span class="input-group-addon">
+          <i class="fa fa-search"></i>
+        </span>
+        <input type="text" class="form-control input-lg" ng-model="$ctrl.state.filter" placeholder="Filter configurations">
+      </div>
+    </div>
+    <div class="col-sm-12 flex-table config-list">
+      <div class="flex-header media">
+        <div class="flex-col flex-w-100 text-center">Options</div>
+        <div class="flex-col flex-3">Configuration</div>              
+        <div class="flex-col flex-1">Responders</div>        
+        <div class="flex-col flex-w-100"></div>
+      </div>
+      <div class="flex-row media" ng-repeat="config in $ctrl.configurations | filter:$ctrl.state.filter:name" ng-class="{'global-config': config.name === 'global'}">
+        <div class="flex-col flex-w-100 text-center vertical">
+          <div>
+            <h4 class="media-heading">{{config.configurationItems.length}}</h4>
+            <ng-pluralize count="config.configurationItems.length" when="{'0': 'Options', '1': 'Option', 'other': 'Options'}"></ng-pluralize>
+          </div>
+        </div>
+        <div class="flex-col flex-3">
+          <h4 class="media-heading">
+            <span class="mr-m text-primary">{{config.name === 'global' ? 'Global Configuration' : config.name}}</span>
+          </h4>
+          <h4 class="media-heading">
+            <div ng-repeat="item in config.configurationItems">
+              <small class="mr-xxs">
+                 <strong><i class="mr-xxs fa" ng-class="{
+                   'fa-check text-success': $ctrl.isSet(config.config[item.name]),
+                   'fa-times text-danger': !$ctrl.isSet(config.config[item.name])
+                  }"></i> {{item.name}}:</strong> {{item.description}}
+                  <span ng-if="item.defaultValue">(<em>Default:</em> {{item.defaultValue}})</span>
+              </small>
+            </div>            
+          </h4>
+        </div>
+        <div class="flex-col flex-1">
+          <h4 class="media-heading">            
+            <span class="mr-m text-primary"><ng-pluralize count="config.responders.length" when="{'0': '0 Responders', '1': '1 Responder', 'other': '{} Responders'}"></ng-pluralize></span>
+          </h4>
+          <h4 class="media-heading">
+            <div ng-repeat="item in config.responders">
+              <small>{{item}}</small>
+            </div>
+          </h4>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.edit(config)">
+          <a href class="text-primary">
+            <i class="fa fa-edit"></i>Edit</a>
+        </div>        
+      </div>
+    </div>
+  </div>
+</section>

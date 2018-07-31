@@ -15,7 +15,14 @@ GET           /api/analyzer                                         org.thp.cort
 POST          /api/analyzer/_search                                 org.thp.cortex.controllers.AnalyzerCtrl.find
 GET           /api/analyzer/:id                                     org.thp.cortex.controllers.AnalyzerCtrl.get(id)
 GET           /api/analyzer/type/:dataType                          org.thp.cortex.controllers.AnalyzerCtrl.listForType(dataType)
-POST          /api/analyzer/:id/run                                 org.thp.cortex.controllers.JobCtrl.create(id)
+POST          /api/analyzer/:id/run                                 org.thp.cortex.controllers.JobCtrl.createAnalyzerJob(id)
+
+GET           /api/responder                                        org.thp.cortex.controllers.ResponderCtrl.find
+POST          /api/responder/_search                                org.thp.cortex.controllers.ResponderCtrl.find
+GET           /api/responder/:id                                    org.thp.cortex.controllers.ResponderCtrl.get(id)
+GET           /api/responder/type/:dataType                         org.thp.cortex.controllers.ResponderCtrl.listForType(dataType)
+POST          /api/responder/:id/run                                org.thp.cortex.controllers.JobCtrl.createResponderJob(id)
+
 GET           /api/job/:id/waitreport                               org.thp.cortex.controllers.JobCtrl.waitReport(id, atMost ?= "1minute")
 ####################
 # API used by MISP
@@ -23,22 +30,33 @@ GET           /modules                                              org.thp.cort
 POST          /query                                                org.thp.cortex.controllers.MispCtrl.query
 ####################
 
+GET           /api/job/:id/artifacts                                org.thp.cortex.controllers.JobCtrl.listArtifacts(id)
+
 DELETE        /api/analyzer/:id                                     org.thp.cortex.controllers.AnalyzerCtrl.delete(id)
 PATCH         /api/analyzer/:id                                     org.thp.cortex.controllers.AnalyzerCtrl.update(id)
-GET           /api/job/:id/artifacts                                org.thp.cortex.controllers.JobCtrl.listArtifacts(id)
 GET           /api/analyzerdefinition                               org.thp.cortex.controllers.AnalyzerCtrl.listDefinitions
 POST          /api/analyzerdefinition/scan                          org.thp.cortex.controllers.AnalyzerCtrl.scan
-#POST          /api/organization/analyzer/:analyzerId                        org.thp.cortex.controllers.AnalyzerCtrl.create(analyzerId)
 GET           /api/organization/analyzer                            org.thp.cortex.controllers.AnalyzerCtrl.find
 GET           /api/organization/analyzer/_search                    org.thp.cortex.controllers.AnalyzerCtrl.find
 POST          /api/organization/analyzer/:analyzerId                org.thp.cortex.controllers.AnalyzerCtrl.create(analyzerId)
-#GET           /api/organization/:organizationId/analyzer                    org.thp.cortex.controllers.AnalyzerCtrl.findForOrganization(organizationId)
-#POST          /api/organization/:organizationId/analyzer/_search            org.thp.cortex.controllers.AnalyzerCtrl.findForOrganization(organizationId)
+
+DELETE        /api/responder/:id                                    org.thp.cortex.controllers.ResponderCtrl.delete(id)
+PATCH         /api/responder/:id                                    org.thp.cortex.controllers.ResponderCtrl.update(id)
+GET           /api/responderdefinition                              org.thp.cortex.controllers.ResponderCtrl.listDefinitions
+POST          /api/responderdefinition/scan                         org.thp.cortex.controllers.ResponderCtrl.scan
+GET           /api/organization/responder                           org.thp.cortex.controllers.ResponderCtrl.find
+GET           /api/organization/responder/_search                   org.thp.cortex.controllers.ResponderCtrl.find
+POST          /api/organization/responder/:responderId              org.thp.cortex.controllers.ResponderCtrl.create(responderId)
 
 
 GET           /api/analyzerconfig/:analyzerConfigName               org.thp.cortex.controllers.AnalyzerConfigCtrl.get(analyzerConfigName)
 GET           /api/analyzerconfig                                   org.thp.cortex.controllers.AnalyzerConfigCtrl.list
 PATCH         /api/analyzerconfig/:analyzerConfigName               org.thp.cortex.controllers.AnalyzerConfigCtrl.update(analyzerConfigName)
+
+GET           /api/responderconfig/:responderConfigName             org.thp.cortex.controllers.ResponderConfigCtrl.get(responderConfigName)
+GET           /api/responderconfig                                  org.thp.cortex.controllers.ResponderConfigCtrl.list
+PATCH         /api/responderconfig/:responderConfigName             org.thp.cortex.controllers.ResponderConfigCtrl.update(responderConfigName)
+
 
 GET           /api/job                                              org.thp.cortex.controllers.JobCtrl.list(dataTypeFilter: Option[String], dataFilter: Option[String], analyzerFilter: Option[String], range: Option[String])
 POST          /api/job/_search                                      org.thp.cortex.controllers.JobCtrl.find

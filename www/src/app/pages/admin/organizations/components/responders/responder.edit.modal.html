@@ -1,0 +1,15 @@
+<form class="form-horizontal" name="form" ng-submit="$modal.save()">
+  <div class="modal-header bg-primary">
+    <h3 class="modal-title">{{$modal.mode === 'create' ? 'Enable' : 'Edit'}} responder {{$modal.definition.id}}</h3>
+  </div>
+  <div class="modal-body">
+    <responder-config-form definition="$modal.definition" global-config="$modal.globalConfig" base-config="$modal.baseConfig"
+      configuration="$modal.configuration" responder="$modal.responder"></responder-config-form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-default pull-left" type="button" ng-click="$modal.cancel()">Cancel</button>
+    <span class="btn pull-left">
+      <i class="fa fa-asterisk text-danger"></i>&nbsp;Required field</span>
+    <button class="btn btn-primary pull-right" type="submit" ng-disabled="form.$invalid" auto-focus>Save</button>
+  </div>
+</form>
