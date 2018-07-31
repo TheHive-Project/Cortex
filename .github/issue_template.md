@@ -10,7 +10,7 @@ Bug / Feature Request
 |---------------------------|--------------------
 | OS version (server)       | Debian, Ubuntu, CentOS, RedHat, ...
 | OS version (client)       | XP, Seven, 10, Ubuntu, ...
-| Cortex version / git hash   | 1.x, hash of the commit
+| Cortex version / git hash   | 2.x, hash of the commit
 | Package Type              | Docker, Binary, From source
 | Browser type & version    | If applicable
 
@@ -27,4 +27,4 @@ Describe the problem/bug as clearly as possible.
 (keep this section if you have suggestions on how to solve the problem. **Otherwise delete it**)
 
 ### Complementary information
-(add anything that can help identifying the problem such as **logs**, **screenshots**, **configuration dumps** etc.)
+(add anything that can help identifying the problem such as **log** excerpts, **screenshots**, **configuration dumps** etc.)

@@ -1,5 +1,35 @@
 # Change Log
 
+## [2.1.0-RC1](https://github.com/TheHive-Project/Cortex/tree/2.1.0-RC1) (2018-07-31)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.4...2.1.0-RC1)
+
+**Implemented enhancements:**
+
+- New TheHive-Project repository [\#112](https://github.com/TheHive-Project/Cortex/issues/112)
+
+**Fixed bugs:**
+
+- First analyze of a "file" always fail, must re-run the analyze a second time [\#117](https://github.com/TheHive-Project/Cortex/issues/117)
+- Analyzers filter in Jobs History view is limited to 25 analyzers [\#116](https://github.com/TheHive-Project/Cortex/issues/116)
+- Fix redirection from Migration page to login on 401 error [\#114](https://github.com/TheHive-Project/Cortex/issues/114)
+- Analyzer Configuration Only Showing Global Configuration [\#104](https://github.com/TheHive-Project/Cortex/issues/104)
+
+**Closed issues:**
+
+- Automatic observables extraction from analysis reports. [\#111](https://github.com/TheHive-Project/Cortex/issues/111)
+- Automated response via Cortex [\#110](https://github.com/TheHive-Project/Cortex/issues/110)
+- Consider providing checksums for the release files [\#105](https://github.com/TheHive-Project/Cortex/issues/105)
+- ImportError: No module named 'cortexutils' on V2.0.4 [\#102](https://github.com/TheHive-Project/Cortex/issues/102)
+- Error occur from thehive project request to cortex project [\#101](https://github.com/TheHive-Project/Cortex/issues/101)
+- Analyzers disappear after deactivation and can not get enabled [\#98](https://github.com/TheHive-Project/Cortex/issues/98)
+- PAP as an analyzer restriction [\#65](https://github.com/TheHive-Project/Cortex/issues/65)
+- Application.conf doesn't have Yeti config nor allows for API Auth [\#54](https://github.com/TheHive-Project/Cortex/issues/54)
+- endless loop of cortex analyser call [\#36](https://github.com/TheHive-Project/Cortex/issues/36)
+
+**Merged pull requests:**
+
+- Update GitHub path [\#100](https://github.com/TheHive-Project/Cortex/pull/100) ([saadkadhi](https://github.com/saadkadhi))
+
 ## [2.0.4](https://github.com/TheHive-Project/Cortex/tree/2.0.4) (2018-04-13)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.3...2.0.4)
 
