@@ -6,6 +6,7 @@ CONFIG_ES=1
 CONFIG=1
 CONFIG_FILE=/etc/cortex/application.conf
 ANALYZER_PATH=/opt/Cortex-Analyzers/analyzers
+RESPONDER_PATH=/opt/Cortex-Analyzers/responders
 
 function usage {
 	cat <<- _EOF_
@@ -17,6 +18,7 @@ function usage {
 		--es-hostname <host>	| resolve this hostname to find elasticseach instances
 		--secret <secret>	| secret to secure sessions
 		--analyzer-path <path>	| where analyzers are located
+		--responder-path <path> | where responders are located
 	_EOF_
 	exit 1
 }
@@ -32,6 +34,7 @@ do
 		"--es-hostname")	shift; ES_HOSTNAME=$1;;
 		"--secret")		shift; SECRET=$1;;
 		"--analyzer-path")	shift; ANALYZER_PATH=$1;;
+		"--responder-path")	shift; RESPONDER_PATH=$1;;
 		"--")			STOP=1;;
 		*)			usage
 	esac
@@ -79,6 +82,7 @@ then
 	fi
 
 	echo analyzer.path=[\"$ANALYZER_PATH\"] >> $CONFIG_FILE
+	echo responder.path=[\"$RESPONDER_PATH\"] >> $CONFIG_FILE
 
 	echo 'include file("/etc/cortex/application.conf")' >> $CONFIG_FILE
 fi
