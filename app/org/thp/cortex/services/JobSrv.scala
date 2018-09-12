@@ -1,10 +1,10 @@
 package org.thp.cortex.services
 
 import java.io.{ ByteArrayOutputStream, InputStream }
-import java.nio.file.Files
+import java.nio.file.{ Files, Paths }
 import java.util.Date
-import javax.inject.{ Inject, Singleton }
 
+import javax.inject.{ Inject, Singleton }
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
@@ -402,6 +402,11 @@ class JobSrv(
           case NonFatal(_) ⇒
             val errorMessage = (error + output).take(8192)
             endJob(job, JobStatus.Failure, Some(s"Invalid output\n$errorMessage"))
+        }
+        finally {
+          (input \ "file").asOpt[String].foreach { filename ⇒
+            Files.deleteIfExists(Paths.get(filename))
+          }
         }
       }(executionContext)
   }
