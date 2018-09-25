@@ -47,8 +47,9 @@
     <div class="col-sm-12 flex-table">
       <div class="flex-header media">
         <div class="flex-col flex-1">Responders</div>
-        <div class="flex-col flex-w-200 text-center">Max TLP</div>
-        <div class="flex-col flex-w-200 text-center">Rate Limit</div>
+        <div class="flex-col flex-w-100 text-center">Max TLP</div>
+        <div class="flex-col flex-w-100 text-center">Max PAP</div>
+        <div class="flex-col flex-w-100 text-center">Rate Limit</div>        
         <div class="flex-col flex-w-100"></div>
         <div class="flex-col flex-w-100"></div>
       </div>
@@ -70,10 +71,13 @@
           </h4>
           <div class="mt-xs text-muted">{{definition.description}}</div>
         </div>
-        <div class="flex-col flex-w-200 text-center vertical centered" ng-if="$ctrl.activeResponders[def]">
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeResponders[def]">
           <tlp value="$ctrl.activeResponders[def].configuration.check_tlp ? $ctrl.activeResponders[def].configuration.max_tlp : undefined"></tlp>
         </div>
-        <div class="flex-col flex-w-200 text-center vertical centered" ng-if="$ctrl.activeResponders[def]">
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeResponders[def]">
+          <tlp value="$ctrl.activeResponders[def].configuration.check_pap ? $ctrl.activeResponders[def].configuration.max_pap : undefined" namespace="PAP"></tlp>
+        </div>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeResponders[def]">
           <span ng-show="$ctrl.activeResponders[def].rate && $ctrl.activeResponders[def].rateUnit" class="label label-lg label-primary">
             {{$ctrl.activeResponders[def].rate}} per {{$ctrl.activeResponders[def].rateUnit}}
           </span>

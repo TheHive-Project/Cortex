@@ -5,7 +5,7 @@ import _ from 'lodash/core';
 import tpl from './tlp.html';
 import './tlp.scss';
 
-export default function(app) {
+export default function (app) {
   app.directive('tlp', tlp);
 
   function tlp(Tlps) {
@@ -14,7 +14,8 @@ export default function(app) {
     return {
       templateUrl: tpl,
       scope: {
-        value: '='
+        value: '=',
+        namespace: '@'
       },
       replace: true,
       link: linkFn
@@ -26,10 +27,12 @@ export default function(app) {
           scope.tlpClass = 'label-none';
           scope.tlp = 'None';
         } else {
-          const temp = (_.find(Tlps, { value: v }) || {}).key;
+          const temp = (_.find(Tlps, {
+            value: v
+          }) || {}).key;
 
           scope.tlpClass = `label-${(temp || '').toLowerCase()}`;
-          scope.tlp = `TLP:${temp}`;
+          scope.tlp = `${scope.namespace || 'TLP'}:${temp}`;
         }
       });
     }

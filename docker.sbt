@@ -28,8 +28,9 @@ dockerCommands ~= { dc =>
       ExecCmd("RUN", "bash", "-c",
         "apt-get update && " +
           "apt-get install -y --no-install-recommends python-pip python2.7-dev python3-pip python3-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git libssl-dev && " +
-          "pip install -U pip setuptools && " +
+          "pip2 install -U pip setuptools && " +
           "pip3 install -U pip setuptools && " +
+          "hash -r && " +
           "cd /opt && " +
           "git clone https://github.com/TheHive-Project/Cortex-Analyzers.git && " +
           "for I in $(find Cortex-Analyzers -name 'requirements.txt'); do pip2 install -r $I; done && " +

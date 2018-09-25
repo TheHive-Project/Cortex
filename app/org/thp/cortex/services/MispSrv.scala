@@ -17,6 +17,7 @@ import org.apache.commons.codec.binary.Base64
 import org.thp.cortex.models._
 import org.thp.cortex.services.AuditActor.Register
 
+import org.elastic4play.NotFoundError
 import org.elastic4play.services._
 
 @Singleton
@@ -58,12 +59,15 @@ class MispSrv @Inject() (
   }
 
   def query(module: String, mispType: String, data: String)(implicit authContext: AuthContext): Future[JsObject] = {
+    import org.elastic4play.services.QueryDSL._
+
     val artifact: Either[String, Attachment] = toArtifact(mispType, data)
     val duration = 20.minutes // TODO configurable
 
     for {
-      analyzer ← workerSrv.get(module)
-      job ← jobSrv.create(analyzer, mispType2dataType(mispType), artifact, 0, 0, "", JsObject.empty, None, force = false)
+      analyzer ← workerSrv.findAnalyzersForUser(authContext.userId, "name" ~= module, Some("0-1"), Nil)._1.runWith(Sink.headOption)
+      job ← analyzer.map(jobSrv.create(_, mispType2dataType(mispType), artifact, 0, 0, "", JsObject.empty, None, force = false))
+        .getOrElse(Future.failed(NotFoundError(s"Module $module not found")))
       _ ← auditActor.ask(Register(job.id, duration))(Timeout(duration))
       updatedJob ← jobSrv.getForUser(authContext.userId, job.id)
       mispOutput ← toMispOutput(authContext.userId, updatedJob)

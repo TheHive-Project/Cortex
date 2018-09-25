@@ -42,8 +42,10 @@
     <div class="col-sm-12 flex-table">
       <div class="flex-header media">
         <div class="flex-col flex-1">Analyzer</div>
-        <div class="flex-col flex-w-200 text-center">Max TLP</div>
-        <div class="flex-col flex-w-200 text-center">Rate Limit</div>
+        <div class="flex-col flex-w-100 text-center">Max TLP</div>
+        <div class="flex-col flex-w-100 text-center">Max PAP</div>
+        <div class="flex-col flex-w-100 text-center">Rate Limit</div>
+        <div class="flex-col flex-w-100 text-center">Cache</div>
         <div class="flex-col flex-w-100"></div>
         <div class="flex-col flex-w-100"></div>
       </div>
@@ -66,14 +68,21 @@
           </h4>
           <div class="mt-xs text-muted">{{definition.description}}</div>
         </div>
-        <div class="flex-col flex-w-200 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
           <tlp value="$ctrl.activeAnalyzers[def].configuration.check_tlp ? $ctrl.activeAnalyzers[def].configuration.max_tlp : undefined"></tlp>
         </div>
-        <div class="flex-col flex-w-200 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+          <tlp value="$ctrl.activeAnalyzers[def].configuration.check_pap ? $ctrl.activeAnalyzers[def].configuration.max_pap : undefined" namepace="PAP"></tlp>
+        </div>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
           <span ng-show="$ctrl.activeAnalyzers[def].rate && $ctrl.activeAnalyzers[def].rateUnit" class="label label-lg label-primary">
             {{$ctrl.activeAnalyzers[def].rate}} per {{$ctrl.activeAnalyzers[def].rateUnit}}
           </span>
           <span ng-show="!$ctrl.activeAnalyzers[def].rate || !$ctrl.activeAnalyzers[def].rateUnit" class="label label-lg label-default">None</span>
+        </div>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+          <span ng-show="$ctrl.activeAnalyzers[def].jobCache === null" class="label label-lg label-default">Default</span>
+          <span ng-show="$ctrl.activeAnalyzers[def].jobCache !== null" class="label label-lg label-primary">{{$ctrl.activeAnalyzers[def].jobCache}} Minutes</span>
         </div>
         <div class="flex-col flex-icon flex-w-100 text-center" ng-if="$ctrl.activeAnalyzers[def]" ng-click="$ctrl.edit('edit', $ctrl.analyzerDefinitions[def], $ctrl.activeAnalyzers[def])">
           <a href class="text-primary">
