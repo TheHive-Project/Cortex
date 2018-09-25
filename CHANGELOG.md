@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/TheHive-Project/Cortex/tree/HEAD)
-
-[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.0-RC1...HEAD)
+## [2.1.0](https://github.com/TheHive-Project/Cortex/tree/2.1.0) (2018-09-25)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.0-RC1...2.1.0)
 
 **Implemented enhancements:**
 
