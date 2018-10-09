@@ -81,6 +81,7 @@
           <span ng-show="!$ctrl.activeAnalyzers[def].rate || !$ctrl.activeAnalyzers[def].rateUnit" class="label label-lg label-default">None</span>
         </div>
         <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+          <span ng-show="$ctrl.activeAnalyzers[def].jobCache === undefined" class="label label-lg label-default">Default</span>
           <span ng-show="$ctrl.activeAnalyzers[def].jobCache === null" class="label label-lg label-default">Default</span>
           <span ng-show="$ctrl.activeAnalyzers[def].jobCache !== null" class="label label-lg label-primary">{{$ctrl.activeAnalyzers[def].jobCache}} Minutes</span>
         </div>
