@@ -1,7 +1,7 @@
 import Common._
 
 version in Debian := getVersion(version.value) + '-' + getRelease(version.value)
-debianPackageDependencies += "openjdk-8-jre-headless"
+debianPackageDependencies += "java8-runtime | java8-runtime-headless"
 maintainerScripts in Debian := maintainerScriptsFromDirectory(
   baseDirectory.value / "package" / "debian",
   Seq(DebianConstants.Postinst, DebianConstants.Prerm, DebianConstants.Postrm)
