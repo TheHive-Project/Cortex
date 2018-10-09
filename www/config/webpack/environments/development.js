@@ -1,7 +1,7 @@
 'use strict';
 let webpack = require('webpack');
 
-module.exports = function(_path) {
+module.exports = function (_path) {
   return {
     context: _path,
     devtool: 'source-map',

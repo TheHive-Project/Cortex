@@ -1,5 +1,21 @@
 # Change Log
 
+## [2.1.1](https://github.com/TheHive-Project/Cortex/tree/2.1.1) (2018-10-09)
+
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.0...2.1.1)
+
+**Implemented enhancements:**
+
+- Change Debian dependencies [\#141](https://github.com/TheHive-Project/Cortex/issues/141)
+- Allow Cortex to use a custom root context [\#140](https://github.com/TheHive-Project/Cortex/issues/140)
+- Publish stable versions in beta package channels [\#138](https://github.com/TheHive-Project/Cortex/issues/138)
+
+**Fixed bugs:**
+
+- Fix Cache column in analyzers admin page [\#139](https://github.com/TheHive-Project/Cortex/issues/139)
+- RPM update replace configuration file [\#137](https://github.com/TheHive-Project/Cortex/issues/137)
+- Console output should not be logged in syslog [\#136](https://github.com/TheHive-Project/Cortex/issues/136)
+
 ## [2.1.0](https://github.com/TheHive-Project/Cortex/tree/2.1.0) (2018-09-25)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.0-RC1...2.1.0)
 
@@ -10,10 +26,10 @@
 
 **Fixed bugs:**
 
-- Temporary files are not removed at the end of job [\#129](https://github.com/TheHive-Project/Cortex/issues/129)
-- MISP fails to run analyzers [\#128](https://github.com/TheHive-Project/Cortex/issues/128)
 - MISP API fails [\#109](https://github.com/TheHive-Project/Cortex/issues/109)
 - File\_Info issue [\#53](https://github.com/TheHive-Project/Cortex/issues/53)
+- Temporary files are not removed at the end of job [\#129](https://github.com/TheHive-Project/Cortex/issues/129)
+- MISP fails to run analyzers [\#128](https://github.com/TheHive-Project/Cortex/issues/128)
 
 **Merged pull requests:**
 

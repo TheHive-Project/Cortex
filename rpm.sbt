@@ -10,6 +10,7 @@ maintainerScripts in Rpm := maintainerScriptsFromDirectory(
   baseDirectory.value / "package" / "rpm",
   Seq(RpmConstants.Pre, RpmConstants.Preun, RpmConstants.Postun)
 )
+linuxPackageMappings in Rpm := configWithNoReplace((linuxPackageMappings in Rpm).value)
 linuxPackageSymlinks in Rpm := Nil
 rpmPrefix := Some(defaultLinuxInstallLocation.value)
 linuxEtcDefaultTemplate in Rpm := (baseDirectory.value / "package" / "etc_default_cortex").asURL
