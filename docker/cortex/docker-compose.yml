@@ -12,7 +12,7 @@ services:
       - thread_pool.search.queue_size=100000
       - thread_pool.bulk.queue_size=100000
   cortex:
-    image: certbdf/cortex:latest
+    image: thehiveproject/cortex:latest
     depends_on:
       - elasticsearch
     ports:

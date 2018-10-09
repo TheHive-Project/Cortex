@@ -46,8 +46,8 @@ class JobCtrl @Inject() (
     val query = request.body.getValue("query").fold[QueryDef](deleteFilter)(q ⇒ and(q.as[QueryDef], deleteFilter))
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
-    val (users, total) = jobSrv.findForUser(request.userId, query, range, sort)
-    renderer.toOutput(OK, users, total)
+    val (jobs, total) = jobSrv.findForUser(request.userId, query, range, sort)
+    renderer.toOutput(OK, jobs, total)
 
   }
 
