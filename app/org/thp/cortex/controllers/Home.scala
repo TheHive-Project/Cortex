@@ -6,8 +6,8 @@ import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponen
 import javax.inject.{ Inject, Singleton }
 
 @Singleton
-class Default @Inject() (configuration: Configuration, components: ControllerComponents) extends AbstractController(components) {
-  def home: Action[AnyContent] = Action {
+class Home @Inject() (configuration: Configuration, components: ControllerComponents) extends AbstractController(components) {
+  def redirect: Action[AnyContent] = Action {
     Redirect(configuration.get[String]("play.http.context").stripSuffix("/") + "/index.html")
   }
 }

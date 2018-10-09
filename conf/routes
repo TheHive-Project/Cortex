@@ -3,7 +3,7 @@
 # ~~~~
 
 
-GET           /                                                     org.thp.cortex.controllers.Default.home
+GET           /                                                     org.thp.cortex.controllers.Home.redirect
 GET           /api/health                                           org.thp.cortex.controllers.StatusCtrl.health
 GET           /api/logout                                           org.thp.cortex.controllers.AuthenticationCtrl.logout()
 POST          /api/login                                            org.thp.cortex.controllers.AuthenticationCtrl.login()
