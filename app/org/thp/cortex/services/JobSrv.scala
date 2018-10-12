@@ -118,7 +118,7 @@ class JobSrv(
     findForUser(userId, and(
       dataTypeFilter.map("dataType" like _).toList :::
         dataFilter.map("data" like _).toList :::
-        analyzerFilter.map(af ⇒ or("analyzerId" like af, "analyzerName" like af)).toList), range, Nil)
+        analyzerFilter.map(af ⇒ or("workerId" like af, "workerName" like af)).toList), range, Nil)
   }
 
   def findArtifacts(userId: String, jobId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Artifact, NotUsed], Future[Long]) = {
@@ -310,7 +310,7 @@ class JobSrv(
       import org.elastic4play.services.QueryDSL._
       val now = new Date().getTime
       logger.info(s"Checking rate limit on worker ${worker.name()} from ${new Date(now - rateUnit.id.toLong * 24 * 60 * 60 * 1000)}")
-      stats(and("createdAt" ~>= (now - rateUnit.id.toLong * 24 * 60 * 60 * 1000), "analyzerId" ~= worker.id), Seq(selectCount)).map { s ⇒
+      stats(and("createdAt" ~>= (now - rateUnit.id.toLong * 24 * 60 * 60 * 1000), "workerId" ~= worker.id), Seq(selectCount)).map { s ⇒
         val count = (s \ "count").as[Long]
         logger.info(s"$count analysis found (limit is $rate)")
         count < rate
@@ -330,7 +330,7 @@ class JobSrv(
       logger.info(s"Looking for similar job (worker=${worker.id}, dataType=$dataType, data=$dataAttachment, tlp=$tlp, parameters=$parameters")
       val now = new Date().getTime
       find(and(
-        "analyzerId" ~= worker.id,
+        "workerId" ~= worker.id,
         "status" ~!= JobStatus.Failure,
         "status" ~!= JobStatus.Deleted,
         "startDate" ~>= (now - cache.toMillis),
