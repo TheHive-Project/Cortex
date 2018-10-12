@@ -1,7 +1,14 @@
 # Change Log
 
-## [2.1.1](https://github.com/TheHive-Project/Cortex/tree/2.1.1) (2018-10-09)
+## [2.1.2](https://github.com/TheHive-Project/Cortex/tree/2.1.2) (2018-10-12)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.1...HEAD)
 
+**Fixed bugs:**
+
+- GUI Search Function is broken [\#145](https://github.com/TheHive-Project/Cortex/issues/145)
+- findSimilarJob function broken [\#144](https://github.com/TheHive-Project/Cortex/issues/144)
+
+## [2.1.1](https://github.com/TheHive-Project/Cortex/tree/2.1.1) (2018-10-09)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.0...2.1.1)
 
 **Implemented enhancements:**
