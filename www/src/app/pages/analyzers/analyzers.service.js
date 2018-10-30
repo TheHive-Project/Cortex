@@ -60,7 +60,10 @@ export default class AnalyzerService {
 
     this.$http
       .get('./api/analyzer', {
-        params: { range: 'all', sort: '+name' }
+        params: {
+          range: 'all',
+          sort: '+name'
+        }
       })
       .then(
         response => {
@@ -152,7 +155,8 @@ export default class AnalyzerService {
       postData = {
         attachment: artifact.attachment,
         dataType: artifact.dataType,
-        tlp: artifact.tlp
+        tlp: artifact.tlp,
+        pap: artifact.pap
       };
 
       return this.$http({
@@ -189,7 +193,8 @@ export default class AnalyzerService {
         data: artifact.data,
         attributes: {
           dataType: artifact.dataType,
-          tlp: artifact.tlp
+          tlp: artifact.tlp,
+          pap: artifact.pap
         }
       };
 
