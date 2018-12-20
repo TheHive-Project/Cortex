@@ -33,7 +33,7 @@ dockerCommands ~= { dc =>
       Cmd("USER", "root"),
       ExecCmd("RUN", "bash", "-c",
         "apt-get update && " +
-          "apt-get install -y --no-install-recommends python-pip python2.7-dev python3-pip python3-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git libssl-dev dig && " +
+          "apt-get install -y --no-install-recommends python-pip python2.7-dev python3-pip python3-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git libssl-dev dnsutils && " +
           "pip2 install -U pip setuptools && " +
           "pip3 install -U pip setuptools && " +
           "hash -r && " +
