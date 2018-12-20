@@ -42,7 +42,7 @@ class UserCtrl @Inject() (
       if organization.status() == OrganizationStatus.Active &&
         (request.roles.contains(Roles.superAdmin) ||
           (userOrganizationId == organizationId &&
-            !request.body.getStrings("roles").getOrElse(Nil).contains(Roles.superAdmin.toString)))
+            !request.body.getStrings("roles").getOrElse(Nil).contains(Roles.superAdmin.name)))
       user ← userSrv.create(request.body.set("organization", organizationId))
     } yield renderer.toOutput(CREATED, user))
       .recoverWith {
