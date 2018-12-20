@@ -101,7 +101,7 @@ export default class JobsController extends PageController {
     if (!_.isEmpty(this.filters.analyzer)) {
       criteria.push({
         _in: {
-          _field: 'analyzerDefinitionId',
+          _field: 'workerDefinitionId',
           _values: _.map(this.filters.analyzer, 'analyzerDefinitionId')
         }
       });

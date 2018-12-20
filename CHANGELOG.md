@@ -1,11 +1,32 @@
 # Change Log
 
-## [2.1.2](https://github.com/TheHive-Project/Cortex/tree/2.1.2) (2018-10-12)
-[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.1...HEAD)
+## [2.1.3](https://github.com/TheHive-Project/Cortex/tree/2.1.3)
+
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.2...2.1.3)
+
+**Implemented enhancements:**
+
+- Add configuration for drone continuous integration [\#156](https://github.com/TheHive-Project/Cortex/issues/156)
+- Add PAP property to jobs list [\#146](https://github.com/TheHive-Project/Cortex/issues/146)
 
 **Fixed bugs:**
 
+- Wrong checks of role when an user is created [\#158](https://github.com/TheHive-Project/Cortex/issues/158)
+- Unable to disable invalid responders [\#157](https://github.com/TheHive-Project/Cortex/issues/157)
+- PAP field is ignored from job modal [\#152](https://github.com/TheHive-Project/Cortex/issues/152)
+- SinkDB analyzer could not find DIG in the Cortex docker image [\#147](https://github.com/TheHive-Project/Cortex/issues/147)
 - GUI Search Function is broken [\#145](https://github.com/TheHive-Project/Cortex/issues/145)
+
+**Closed issues:**
+
+- Systemd: cortex.service: Failed with result 'exit-code'.  [\#155](https://github.com/TheHive-Project/Cortex/issues/155)
+- conf/logback.xml: Rotate logs [\#62](https://github.com/TheHive-Project/Cortex/issues/62)
+
+## [2.1.2](https://github.com/TheHive-Project/Cortex/tree/2.1.2) (2018-10-12)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.1...2.1.2)
+
+**Fixed bugs:**
+
 - findSimilarJob function broken [\#144](https://github.com/TheHive-Project/Cortex/issues/144)
 
 ## [2.1.1](https://github.com/TheHive-Project/Cortex/tree/2.1.1) (2018-10-09)

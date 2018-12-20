@@ -16,7 +16,8 @@
       <div class="flex-header media">
         <div class="flex-col flex-w-100 text-center">Status</div>        
         <div class="flex-col flex-1">Job details</div>
-        <div class="flex-col flex-w-200 text-center">TLP</div>
+        <div class="flex-col flex-w-120 text-center">TLP</div>
+        <div class="flex-col flex-w-120 text-center">PAP</div>
         <div class="flex-col flex-w-100"></div>
         <div class="flex-col flex-w-100" require-roles="orgadmin,analyze"></div>
       </div>
@@ -53,8 +54,11 @@
             </div>
           </div>
         </div>
-        <div class="flex-col flex-w-200 text-center vertical centered">
+        <div class="flex-col flex-w-120 text-center vertical centered">
           <tlp value="job.tlp"></tlp>
+        </div>
+        <div class="flex-col flex-w-120 text-center vertical centered">
+          <tlp value="job.pap" namespace="PAP"></tlp>
         </div>
         <div class="flex-col flex-icon flex-w-100" ui-sref="main.job-report({id: job.id})">
           <a href class="text-primary">
