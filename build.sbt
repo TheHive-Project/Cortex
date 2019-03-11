@@ -8,12 +8,14 @@ lazy val cortex = (project in file("."))
 libraryDependencies ++= Seq(
   Dependencies.Play.cache,
   Dependencies.Play.ws,
+  Dependencies.Play.ahc,
   Dependencies.Play.specs2 % Test,
   Dependencies.Play.guice,
   Dependencies.scalaGuice,
   Dependencies.elastic4play,
   Dependencies.reflections,
-  Dependencies.zip4j
+  Dependencies.zip4j,
+  Dependencies.dockerClient
 )
 
 resolvers += Resolver.sbtPluginRepo("releases")
