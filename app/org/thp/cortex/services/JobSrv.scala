@@ -1,29 +1,25 @@
 package org.thp.cortex.services
 
-import java.io.{ ByteArrayOutputStream, InputStream }
-import java.nio.file.{ Files, Paths }
 import java.util.Date
 
-import javax.inject.{ Inject, Singleton }
-import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.{ FileIO, Sink, Source }
+import scala.concurrent.duration._
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
-import org.elastic4play._
-import org.elastic4play.controllers._
-import org.elastic4play.database.ModifyConfig
-import org.elastic4play.services._
+import play.api.libs.json._
+import play.api.{ Configuration, Logger }
+
+import akka.NotUsed
+import akka.stream.Materializer
+import akka.stream.scaladsl.{ Sink, Source }
+import javax.inject.{ Inject, Singleton }
 import org.scalactic.Accumulation._
 import org.scalactic.{ Bad, Good, One, Or }
 import org.thp.cortex.models._
-import play.api.libs.json._
-import play.api.{ Configuration, Logger }
-import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.sys.process.{ Process, ProcessIO }
-import scala.util.control.NonFatal
-import scala.util.{ Failure, Success, Try }
+
+import org.elastic4play._
+import org.elastic4play.controllers._
+import org.elastic4play.services._
 
 @Singleton
 class JobSrv(
@@ -33,13 +29,11 @@ class JobSrv(
     artifactModel: ArtifactModel,
     workerSrv: WorkerSrv,
     userSrv: UserSrv,
-    getSrv: GetSrv,
+    jobRunnerSrv: JobRunnerSrv,
     createSrv: CreateSrv,
-    updateSrv: UpdateSrv,
     findSrv: FindSrv,
     deleteSrv: DeleteSrv,
     attachmentSrv: AttachmentSrv,
-    akkaSystem: ActorSystem,
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer) {
 
@@ -50,13 +44,11 @@ class JobSrv(
       artifactModel: ArtifactModel,
       workerSrv: WorkerSrv,
       userSrv: UserSrv,
-      getSrv: GetSrv,
+      jobRunnerSrv: JobRunnerSrv,
       createSrv: CreateSrv,
-      updateSrv: UpdateSrv,
       findSrv: FindSrv,
       deleteSrv: DeleteSrv,
       attachmentSrv: AttachmentSrv,
-      akkaSystem: ActorSystem,
       ec: ExecutionContext,
       mat: Materializer) = this(
     configuration.getOptional[Duration]("cache.job").getOrElse(Duration.Zero),
@@ -65,23 +57,15 @@ class JobSrv(
     artifactModel,
     workerSrv,
     userSrv,
-    getSrv,
+    jobRunnerSrv,
     createSrv,
-    updateSrv,
     findSrv,
     deleteSrv,
     attachmentSrv,
-    akkaSystem,
-    ec, mat)
+    ec,
+    mat)
 
   private lazy val logger = Logger(getClass)
-  private lazy val analyzerExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("analyzer")
-  private lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
-  private val osexec =
-    if (System.getProperty("os.name").toLowerCase.contains("win"))
-      (c: String) ⇒ s"""cmd /c $c"""
-    else
-      (c: String) ⇒ c
 
   runPreviousJobs()
 
@@ -93,14 +77,11 @@ class JobSrv(
         .runForeach { job ⇒
           (for {
             worker ← workerSrv.get(job.workerId())
-            workerDefinition ← workerSrv.getDefinition(job.workerId())
-            updatedJob ← run(workerDefinition, worker, job)
+            updatedJob ← jobRunnerSrv.run(worker, job)
           } yield updatedJob)
             .onComplete {
               case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
-              case Failure(e) ⇒
-                endJob(job, JobStatus.Failure, Some(e.getMessage), None)
-                logger.error(s"Job ${job.id} has failed", e)
+              case Failure(e) ⇒ logger.error(s"Job ${job.id} has failed", e)
             }
         }
     }
@@ -285,15 +266,13 @@ class JobSrv(
             case Left(data)        ⇒ fields.set("data", data)
             case Right(attachment) ⇒ fields.set("attachment", AttachmentInputValue(attachment))
           }
-          workerSrv.getDefinition(worker.workerDefinitionId()).flatMap { workerDefinition ⇒
-            createSrv[JobModel, Job](jobModel, fieldWithData).andThen {
-              case Success(job) ⇒
-                run(workerDefinition, worker, job)
-                  .onComplete {
-                    case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
-                    case Failure(e) ⇒ logger.error(s"Job ${job.id} has failed", e)
-                  }
-            }
+          createSrv[JobModel, Job](jobModel, fieldWithData).andThen {
+            case Success(job) ⇒
+              jobRunnerSrv.run(worker, job)
+                .onComplete {
+                  case Success(j) ⇒ logger.info(s"Job ${job.id} has finished with status ${j.status()}")
+                  case Failure(e) ⇒ logger.error(s"Job ${job.id} has failed", e)
+                }
           }
         case false ⇒
           Future.failed(RateLimitExceeded(worker))
@@ -344,73 +323,6 @@ class JobSrv(
     }
   }
 
-  private def fixArtifact(artifact: Fields): Fields = {
-    def rename(oldName: String, newName: String): Fields ⇒ Fields = fields ⇒
-      fields.getValue(oldName).fold(fields)(v ⇒ fields.unset(oldName).set(newName, v))
-
-    rename("value", "data").andThen(
-      rename("type", "dataType"))(artifact)
-  }
-
-  def run(workerDefinition: WorkerDefinition, worker: Worker, job: Job)(implicit authContext: AuthContext): Future[Job] = {
-    val executionContext = workerDefinition.tpe match {
-      case WorkerType.analyzer  ⇒ analyzerExecutionContext
-      case WorkerType.responder ⇒ responderExecutionContext
-    }
-    buildInput(workerDefinition, worker, job)
-      .flatMap { input ⇒
-        startJob(job)
-        var output = ""
-        var error = ""
-        try {
-          logger.info(s"Execute ${osexec(workerDefinition.command)} in ${workerDefinition.baseDirectory}")
-          Process(osexec(workerDefinition.command), workerDefinition.baseDirectory.toFile).run(
-            new ProcessIO(
-              { stdin ⇒ Try(stdin.write(input.toString.getBytes("UTF-8"))); stdin.close() },
-              { stdout ⇒ output = readStream(stdout) },
-              { stderr ⇒ error = readStream(stderr) }))
-            .exitValue()
-          val report = Json.parse(output).as[JsObject]
-          val success = (report \ "success").asOpt[Boolean].getOrElse(false)
-          if (success) {
-            val fullReport = (report \ "full").as[JsObject].toString
-            val summaryReport = (report \ "summary").asOpt[JsObject].getOrElse(JsObject.empty).toString
-            val artifacts = (report \ "artifacts").asOpt[Seq[JsObject]].getOrElse(Nil)
-            val operations = (report \ "operations").asOpt[Seq[JsObject]].getOrElse(Nil)
-            val reportFields = Fields.empty
-              .set("full", fullReport)
-              .set("summary", summaryReport)
-              .set("operations", JsArray(operations).toString)
-            createSrv[ReportModel, Report, Job](reportModel, job, reportFields)
-              .flatMap { report ⇒
-                Future.traverse(artifacts) { artifact ⇒
-                  createSrv[ArtifactModel, Artifact, Report](artifactModel, report, fixArtifact(Fields(artifact)))
-                }
-              }
-              .transformWith {
-                case Failure(e) ⇒ endJob(job, JobStatus.Failure, Some(s"Report creation failure: $e"))
-                case _          ⇒ endJob(job, JobStatus.Success)
-              }
-          }
-          else {
-            endJob(job, JobStatus.Failure,
-              (report \ "errorMessage").asOpt[String],
-              (report \ "input").asOpt[JsValue].map(_.toString))
-          }
-        }
-        catch {
-          case NonFatal(_) ⇒
-            val errorMessage = (error + output).take(8192)
-            endJob(job, JobStatus.Failure, Some(s"Invalid output\n$errorMessage"))
-        }
-        finally {
-          (input \ "file").asOpt[String].foreach { filename ⇒
-            Files.deleteIfExists(Paths.get(filename))
-          }
-        }
-      }(executionContext)
-  }
-
   def getReport(jobId: String)(implicit authContext: AuthContext): Future[Report] = getForUser(authContext.userId, jobId).flatMap(getReport)
 
   def getReport(job: Job): Future[Report] = {
@@ -418,74 +330,5 @@ class JobSrv(
     findSrv[ReportModel, Report](reportModel, withParent(job), Some("0-1"), Nil)._1
       .runWith(Sink.headOption)
       .map(_.getOrElse(throw NotFoundError(s"Job ${job.id} has no report")))
-  }
-
-  private def buildInput(workerDefinition: WorkerDefinition, worker: Worker, job: Job): Future[JsObject] = {
-    job.attachment()
-      .map { attachment ⇒
-        val tempFile = Files.createTempFile(s"cortex-job-${job.id}-", "")
-        attachmentSrv.source(attachment.id).runWith(FileIO.toPath(tempFile))
-          .flatMap {
-            case ioresult if ioresult.status.isSuccess ⇒ Future.successful(Some(tempFile))
-            case ioresult                              ⇒ Future.failed(ioresult.getError)
-          }
-      }
-      .getOrElse(Future.successful(None))
-      .map {
-        case Some(file) ⇒
-          Json.obj(
-            "file" → file.toString,
-            "filename" → job.attachment().get.name,
-            "contentType" → job.attachment().get.contentType)
-        case None if job.data().nonEmpty && job.tpe() == WorkerType.responder ⇒
-          Json.obj("data" → Json.parse(job.data().get))
-        case None if job.data().nonEmpty && job.tpe() == WorkerType.analyzer ⇒
-          Json.obj("data" → job.data().get)
-      }
-      .map { artifact ⇒
-        (BaseConfig.global(worker.tpe()).items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items ++ workerDefinition.configurationItems)
-          .validatedBy(_.read(worker.config))
-          .map(cfg ⇒ Json.obj("config" → JsObject(cfg).deepMerge(workerDefinition.configuration)))
-          .map { cfg ⇒
-            val proxy_http = (cfg \ "config" \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" → Json.obj("http" → proxy)) }
-            val proxy_https = (cfg \ "config" \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" → Json.obj("https" → proxy)) }
-            cfg.deepMerge(Json.obj("config" → proxy_http.deepMerge(proxy_https)))
-          }
-          .map(_ deepMerge artifact +
-            ("dataType" → JsString(job.dataType())) +
-            ("tlp" → JsNumber(job.tlp())) +
-            ("pap" → JsNumber(job.pap())) +
-            ("message" → JsString(job.message().getOrElse(""))) +
-            ("parameters" → job.params))
-          .badMap(e ⇒ AttributeCheckingError("job", e.toSeq))
-          .toTry
-      }
-      .flatMap(Future.fromTry)
-  }
-
-  //
-  private def startJob(job: Job)(implicit authContext: AuthContext): Future[Job] = {
-    val fields = Fields.empty
-      .set("status", JobStatus.InProgress.toString)
-      .set("startDate", Json.toJson(new Date))
-    updateSrv(job, fields, ModifyConfig(retryOnConflict = 0))
-  }
-
-  private def endJob(job: Job, status: JobStatus.Type, errorMessage: Option[String] = None, input: Option[String] = None)(implicit authContext: AuthContext): Future[Job] = {
-    val fields = Fields.empty
-      .set("status", status.toString)
-      .set("endDate", Json.toJson(new Date))
-      .set("input", input.map(JsString.apply))
-      .set("message", errorMessage.map(JsString.apply))
-    updateSrv(job, fields, ModifyConfig.default)
-  }
-
-  private def readStream(stream: InputStream): String = {
-    val out = new ByteArrayOutputStream()
-    val buffer = Array.ofDim[Byte](4096)
-    Stream.continually(stream.read(buffer))
-      .takeWhile(_ != -1)
-      .foreach(out.write(buffer, 0, _))
-    out.toString("UTF-8")
   }
 }

@@ -55,5 +55,6 @@
 ],
   "description": "Fake analyzer used for functional tests",
   "dataTypeList": ["domain", "thehive:case", "thehive:case_task", "thehive:case_artifact", "thehive:alert", "thehive:case_task_log"],
-  "command": "echoAnalyzer/echoAnalyzer.sh"
+  "command": "echoAnalyzer/echoAnalyzer.sh",
+  "image": "echo_analyzer"
 }
