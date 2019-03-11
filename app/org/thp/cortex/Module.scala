@@ -1,16 +1,18 @@
 package org.thp.cortex
+
 import com.google.inject.AbstractModule
 import net.codingwell.scalaguice.{ ScalaModule, ScalaMultibinder }
 import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.{ Configuration, Environment, Logger, Mode }
-
 import scala.collection.JavaConverters._
+
 import com.google.inject.name.Names
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.util.ConfigurationBuilder
 import org.thp.cortex.models.{ AuditedModel, Migration }
-import org.thp.cortex.services.{ AuditActor, CortexAuthSrv, UserSrv }
+import org.thp.cortex.services._
+
 import org.elastic4play.models.BaseModelDef
 import org.elastic4play.services.auth.MultiAuthSrv
 import org.elastic4play.services.{ AuthSrv, MigrationOperations }

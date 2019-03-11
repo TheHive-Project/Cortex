@@ -1,31 +1,31 @@
 package org.thp.cortex.controllers
 
-import javax.inject.{ Inject, Named, Singleton }
+import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.{ ExecutionContext, Future }
+
+import play.api.http.Status
+import play.api.libs.json.{ JsObject, JsString, JsValue, Json }
+import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
 import akka.actor.{ ActorRef, ActorSystem }
 import akka.pattern.ask
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import akka.util.Timeout
+import javax.inject.{ Inject, Named, Singleton }
+import org.thp.cortex.models.{ Job, JobStatus, Roles }
+import org.thp.cortex.services.AuditActor.{ JobEnded, Register }
+import org.thp.cortex.services.JobSrv
+
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
 import org.elastic4play.services.{ QueryDSL, QueryDef }
 import org.elastic4play.utils.RichFuture
-import org.thp.cortex.models.{ Job, JobStatus, Roles }
-import org.thp.cortex.services.AuditActor.{ JobEnded, Register }
-import org.thp.cortex.services.{ JobSrv, UserSrv }
-import play.api.http.Status
-import play.api.libs.json.{ JsObject, JsString, JsValue, Json }
-import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
-
-import scala.concurrent.duration.{ Duration, FiniteDuration }
-import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
 class JobCtrl @Inject() (
     jobSrv: JobSrv,
-    userSrv: UserSrv,
     @Named("audit") auditActor: ActorRef,
     fieldsBodyParser: FieldsBodyParser,
     authenticated: Authenticated,

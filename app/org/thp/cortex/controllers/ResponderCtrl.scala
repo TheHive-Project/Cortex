@@ -96,12 +96,12 @@ class ResponderCtrl @Inject() (
     } yield renderer.toOutput(CREATED, responderJson(responder, Some(workerDefinition)))
   }
 
-  def listDefinitions: Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
+  def listDefinitions: Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { _ ⇒
     val (responders, responderTotal) = workerSrv.listResponderDefinitions
     renderer.toOutput(OK, responders, responderTotal)
   }
 
-  def scan: Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin) { implicit request ⇒
+  def scan: Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin) { _ ⇒
     workerSrv.rescan()
     NoContent
   }
