@@ -1,13 +1,13 @@
 package org.thp.cortex.controllers
 
-import javax.inject.{ Inject, Singleton }
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.ExecutionContext
 
 import play.api.libs.json.{ JsNumber, JsObject, JsString, Json }
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
+import javax.inject.{ Inject, Singleton }
 import org.thp.cortex.models.{ Roles, Worker, WorkerDefinition }
 import org.thp.cortex.services.{ UserSrv, WorkerSrv }
 
@@ -33,15 +33,13 @@ class AnalyzerCtrl @Inject() (
     val sort = request.body.getStrings("sort").getOrElse(Nil)
     val isAdmin = request.roles.contains(Roles.orgAdmin)
     val (analyzers, analyzerTotal) = workerSrv.findAnalyzersForUser(request.userId, query, range, sort)
-    val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson(isAdmin))
-    renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
+    renderer.toOutput(OK, analyzers.map(analyzerJson(isAdmin)), analyzerTotal)
   }
 
   def get(analyzerId: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
     val isAdmin = request.roles.contains(Roles.orgAdmin)
     workerSrv.getForUser(request.userId, analyzerId)
-      .flatMap(analyzerJson(isAdmin))
-      .map(renderer.toOutput(OK, _))
+      .map(a => renderer.toOutput(OK, analyzerJson(isAdmin)(a)))
   }
 
   private val emptyAnalyzerDefinitionJson = Json.obj(
@@ -66,14 +64,11 @@ class AnalyzerCtrl @Inject() (
     } + ("analyzerDefinitionId" → JsString(analyzer.workerDefinitionId())) // For compatibility reason
   }
 
-  private def analyzerJson(isAdmin: Boolean)(analyzer: Worker): Future[JsObject] = {
-    workerSrv.getDefinition(analyzer.workerDefinitionId())
-      .map(analyzerDefinition ⇒ analyzerJson(analyzer, Some(analyzerDefinition)))
-      .recover { case _ ⇒ analyzerJson(analyzer, None) }
-      .map {
-        case a if isAdmin ⇒ a + ("configuration" → Json.parse(analyzer.configuration()))
-        case a            ⇒ a
-      }
+  private def analyzerJson(isAdmin: Boolean)(analyzer: Worker): JsObject = {
+    if (isAdmin)
+      analyzer.toJson + ("configuration" → Json.parse(analyzer.configuration()))
+    else
+      analyzer.toJson
   }
 
   def listForType(dataType: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
@@ -117,7 +112,6 @@ class AnalyzerCtrl @Inject() (
     for {
       analyzer ← workerSrv.getForUser(request.userId, analyzerId)
       updatedAnalyzer ← workerSrv.update(analyzer, request.body)
-      updatedAnalyzerJson ← analyzerJson(isAdmin = true)(updatedAnalyzer)
-    } yield renderer.toOutput(OK, updatedAnalyzerJson)
+    } yield renderer.toOutput(OK, analyzerJson(isAdmin = true)(updatedAnalyzer))
   }
 }
