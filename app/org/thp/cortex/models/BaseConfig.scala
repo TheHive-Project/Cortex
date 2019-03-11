@@ -7,6 +7,7 @@ import org.elastic4play.utils.Collection.distinctBy
 case class BaseConfig(name: String, workerNames: Seq[String], items: Seq[ConfigurationDefinitionItem], config: Option[WorkerConfig]) {
   def +(other: BaseConfig) = BaseConfig(name, workerNames ++ other.workerNames, distinctBy(items ++ other.items)(_.name), config.orElse(other.config))
 }
+
 object BaseConfig {
   implicit val writes: Writes[BaseConfig] = Writes[BaseConfig] { baseConfig ⇒
     Json.obj(
@@ -15,7 +16,7 @@ object BaseConfig {
       "configurationItems" → baseConfig.items,
       "config" → baseConfig.config.fold(JsObject.empty)(_.jsonConfig))
   }
-  def global(tpe: WorkerType.Type) = {
+  def global(tpe: WorkerType.Type): BaseConfig = {
     val typedItems = tpe match {
       case WorkerType.responder ⇒ Nil
       case WorkerType.analyzer ⇒ Seq(
@@ -23,7 +24,8 @@ object BaseConfig {
     }
     BaseConfig("global", Nil, typedItems ++ Seq(
       ConfigurationDefinitionItem("proxy_http", "url of http proxy", WorkerConfigItemType.string, multi = false, required = false, None),
-      ConfigurationDefinitionItem("proxy_https", "url of https proxy", WorkerConfigItemType.string, multi = false, required = false, None)),
+      ConfigurationDefinitionItem("proxy_https", "url of https proxy", WorkerConfigItemType.string, multi = false, required = false, None),
+      ConfigurationDefinitionItem("cacerts", "Certificate authotities", WorkerConfigItemType.text, multi = false, required = false, None)),
       None)
   }
   val tlp = BaseConfig("tlp", Nil, Seq(

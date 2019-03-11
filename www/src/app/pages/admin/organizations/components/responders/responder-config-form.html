@@ -57,7 +57,7 @@
         <label>Max PAP</label>
         <select class="form-control" style="width: 200px;" ng-model="$ctrl.responder.configuration.max_pap"
           ng-options="tlp.value as tlp.key for tlp in $ctrl.Tlps" ng-required="$ctrl.responder.configuration.check_pap"></select>
-      </div>      
+      </div>
     </div>
   </div>  
   <div class="form-group">
@@ -71,6 +71,12 @@
     <div class="col-sm-9">
       <input class="form-control" type="text" ng-model="$ctrl.responder.configuration.proxy_https">
     </div>    
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">CA Certs</label>
+    <div class="col-sm-9">
+      <textarea class="form-control vertical" rows="5" ng-model="$ctrl.responder.configuration.cacerts"></textarea>
+    </div>
   </div>
   <div class="form-group">
     <label class="col-sm-3 control-label">Rate Limiting</label>

@@ -49,7 +49,8 @@ export default class AnalyzerEditController {
       const globalConfig = [
         'proxy_http',
         'proxy_https',
-        'auto_extract_artifacts'
+        'auto_extract_artifacts',
+        'cacerts'
       ];
       _.forEach(globalConfig, cnf => {
         if (analyzer.configuration[cnf] === undefined) {

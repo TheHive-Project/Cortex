@@ -47,7 +47,8 @@ export default class ResponderEditController {
       // Handle TLP default config
       const globalConfig = [
         'proxy_http',
-        'proxy_https'
+        'proxy_https',
+        'cacerts'
       ];
       _.forEach(globalConfig, cnf => {
         if (responder.configuration[cnf] === undefined) {

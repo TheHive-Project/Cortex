@@ -70,7 +70,13 @@
     <label class="col-sm-3 control-label">HTTPS Proxy</label>
     <div class="col-sm-9">
       <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_https">
-    </div>    
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">CA Certs</label>
+    <div class="col-sm-9">
+      <textarea class="form-control vertical" rows="5" ng-model="$ctrl.analyzer.configuration.cacerts"></textarea>
+    </div>
   </div>
   <div class="form-group">
     <label class="col-sm-3 control-label">Extract observables</label>
