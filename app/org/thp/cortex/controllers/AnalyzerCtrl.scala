@@ -39,7 +39,7 @@ class AnalyzerCtrl @Inject() (
   def get(analyzerId: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
     val isAdmin = request.roles.contains(Roles.orgAdmin)
     workerSrv.getForUser(request.userId, analyzerId)
-      .map(a => renderer.toOutput(OK, analyzerJson(isAdmin)(a)))
+      .map(a ⇒ renderer.toOutput(OK, analyzerJson(isAdmin)(a)))
   }
 
   private val emptyAnalyzerDefinitionJson = Json.obj(
@@ -66,9 +66,9 @@ class AnalyzerCtrl @Inject() (
 
   private def analyzerJson(isAdmin: Boolean)(analyzer: Worker): JsObject = {
     if (isAdmin)
-      analyzer.toJson + ("configuration" → Json.parse(analyzer.configuration()))
+      analyzer.toJson + ("configuration" → Json.parse(analyzer.configuration())) + ("analyzerDefinitionId" → JsString(analyzer.workerDefinitionId()))
     else
-      analyzer.toJson
+      analyzer.toJson + ("analyzerDefinitionId" → JsString(analyzer.workerDefinitionId()))
   }
 
   def listForType(dataType: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
