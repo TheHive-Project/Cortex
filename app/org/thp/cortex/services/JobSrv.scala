@@ -306,7 +306,7 @@ class JobSrv(
     }
     else {
       import org.elastic4play.services.QueryDSL._
-      logger.info(s"Looking for similar job (worker=${worker.id}, dataType=$dataType, data=$dataAttachment, tlp=$tlp, parameters=$parameters")
+      logger.info(s"Looking for similar job in the last ${cache.toMinutes} minutes (worker=${worker.id}, dataType=$dataType, data=$dataAttachment, tlp=$tlp, parameters=$parameters)")
       val now = new Date().getTime
       find(and(
         "workerId" ~= worker.id,

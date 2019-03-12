@@ -6,6 +6,7 @@ import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Date
 
+import scala.concurrent.duration.DurationLong
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Failure
 
@@ -195,7 +196,7 @@ class JobRunnerSrv @Inject() (
           .foldLeft[Option[Future[Unit]]](None) {
             case (None, "docker") ⇒
               worker.dockerImage()
-                .map(dockerImage ⇒ dockerJobRunnerSrv.run(jobFolder, dockerImage, job)(executionContext))
+                .map(dockerImage ⇒ dockerJobRunnerSrv.run(jobFolder, dockerImage, job, worker.jobTimeout().map(_.minutes))(executionContext))
                 .orElse {
                   logger.warn(s"worker ${worker.id} can't be run with docker (doesn't have image)")
                   None
@@ -203,7 +204,7 @@ class JobRunnerSrv @Inject() (
             case (None, "process") ⇒
 
               worker.command()
-                .map(command ⇒ processJobRunnerSrv.run(jobFolder, command, job)(executionContext))
+                .map(command ⇒ processJobRunnerSrv.run(jobFolder, command, job, worker.jobTimeout().map(_.minutes))(executionContext))
                 .orElse {
                   logger.warn(s"worker ${worker.id} can't be run with process (doesn't have image)")
                   None

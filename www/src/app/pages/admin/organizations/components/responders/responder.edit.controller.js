@@ -48,7 +48,9 @@ export default class ResponderEditController {
       const globalConfig = [
         'proxy_http',
         'proxy_https',
-        'cacerts'
+        'cacerts',
+        'jobCache',
+        'jobTimeout'
       ];
       _.forEach(globalConfig, cnf => {
         if (responder.configuration[cnf] === undefined) {

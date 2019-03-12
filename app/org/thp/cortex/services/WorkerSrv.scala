@@ -196,7 +196,7 @@ class WorkerSrv @Inject() (
 
   def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(implicit authContext: AuthContext): Future[Worker] = {
     val rawConfig = workerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
-    val configItems = workerDefinition.configurationItems ++ BaseConfig.global(workerDefinition.tpe).items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items
+    val configItems = workerDefinition.configurationItems ++ BaseConfig.global(workerDefinition.tpe, config).items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items
     val configOrErrors = configItems
       .validatedBy(_.read(rawConfig))
       .map(JsObject.apply)

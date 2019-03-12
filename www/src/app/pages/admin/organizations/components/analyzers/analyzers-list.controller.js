@@ -102,7 +102,8 @@ export default class OrganizationAnalyzersController {
               'rate',
               'rateUnit',
               'name',
-              'jobCache'
+              'jobCache',
+              'jobTimeout'
             )
           );
         }

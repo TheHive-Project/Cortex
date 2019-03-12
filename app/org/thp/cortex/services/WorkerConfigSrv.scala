@@ -2,6 +2,7 @@ package org.thp.cortex.services
 
 import scala.concurrent.{ ExecutionContext, Future }
 
+import play.api.Configuration
 import play.api.libs.json._
 
 import akka.NotUsed
@@ -16,6 +17,7 @@ import org.elastic4play.database.ModifyConfig
 import org.elastic4play.services._
 
 trait WorkerConfigSrv {
+  val configuration: Configuration
   val userSrv: UserSrv
   val createSrv: CreateSrv
   val updateSrv: UpdateSrv
@@ -41,7 +43,7 @@ trait WorkerConfigSrv {
       .mapMaterializedValue(_ ⇒ NotUsed)
       .runWith(Sink.seq)
       .map { baseConfigs ⇒
-        (BaseConfig.global(workerType) +: baseConfigs)
+        (BaseConfig.global(workerType, configuration) +: baseConfigs)
           .map(c ⇒ c.name → c)
           .toMap
       }
