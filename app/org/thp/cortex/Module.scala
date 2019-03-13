@@ -17,6 +17,7 @@ import org.elastic4play.models.BaseModelDef
 import org.elastic4play.services.auth.MultiAuthSrv
 import org.elastic4play.services.{ AuthSrv, MigrationOperations }
 import org.thp.cortex.controllers.{ AssetCtrl, AssetCtrlDev, AssetCtrlProd }
+import services.mappers.{ MultiUserMapperSrv, UserMapper }
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
@@ -55,6 +56,14 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
         authBindings.addBinding.to(authSrvClass)
       }
 
+    val ssoMapperBindings = ScalaMultibinder.newSetBinder[UserMapper](binder)
+    reflectionClasses
+      .getSubTypesOf(classOf[UserMapper])
+      .asScala
+      .filterNot(c ⇒ java.lang.reflect.Modifier.isAbstract(c.getModifiers) || c.isMemberClass)
+      .filterNot(c ⇒ c == classOf[MultiUserMapperSrv])
+      .foreach(mapperCls ⇒ ssoMapperBindings.addBinding.to(mapperCls))
+
     if (environment.mode == Mode.Prod)
       bind[AssetCtrl].to[AssetCtrlProd]
     else
@@ -62,6 +71,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
     bind[org.elastic4play.services.UserSrv].to[UserSrv]
     bind[Int].annotatedWith(Names.named("databaseVersion")).toInstance(models.modelVersion)
+    bind[UserMapper].to[MultiUserMapperSrv]
 
     bind[AuthSrv].to[CortexAuthSrv]
     bind[MigrationOperations].to[Migration]

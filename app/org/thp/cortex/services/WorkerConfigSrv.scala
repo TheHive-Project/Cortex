@@ -44,7 +44,7 @@ trait WorkerConfigSrv {
       .runWith(Sink.seq)
       .map { baseConfigs ⇒
         (BaseConfig.global(workerType, configuration) +: baseConfigs)
-          .map(c ⇒ c.name → c)
+          .map(c ⇒ c.name → (c + BaseConfig.global(workerType, configuration)))
           .toMap
       }
   }
@@ -96,10 +96,9 @@ trait WorkerConfigSrv {
     import org.elastic4play.services.QueryDSL._
     for {
       configItems ← definitions
-      workerConfigItems = configItems
       workerConfigs ← findForUser(userId, any, Some("all"), Nil)
         ._1
-        .runFold(workerConfigItems) { (definitionConfig, workerConfig) ⇒ updateDefinitionConfig(definitionConfig, workerConfig) }
+        .runFold(configItems) { (definitionConfig, workerConfig) ⇒ updateDefinitionConfig(definitionConfig, workerConfig) }
     } yield workerConfigs.values.toSeq
   }
 

@@ -7,6 +7,7 @@ GET           /                                                     org.thp.cort
 GET           /api/health                                           org.thp.cortex.controllers.StatusCtrl.health
 GET           /api/logout                                           org.thp.cortex.controllers.AuthenticationCtrl.logout()
 POST          /api/login                                            org.thp.cortex.controllers.AuthenticationCtrl.login()
+POST          /api/ssoLogin                                         org.thp.cortex.controllers.AuthenticationCtrl.ssoLogin()
 
 ###################
 # API used by TheHive

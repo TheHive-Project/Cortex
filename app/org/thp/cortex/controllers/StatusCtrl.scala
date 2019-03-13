@@ -1,12 +1,11 @@
 package org.thp.cortex.controllers
 
 import javax.inject.{ Inject, Singleton }
-
 import scala.concurrent.ExecutionContext
 
 import play.api.Configuration
 import play.api.http.Status
-import play.api.libs.json.{ JsString, Json }
+import play.api.libs.json.{ JsBoolean, JsString, Json }
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
@@ -42,7 +41,8 @@ class StatusCtrl @Inject() (
             case multiAuthSrv: MultiAuthSrv ⇒ multiAuthSrv.authProviders.map { a ⇒ JsString(a.name) }
             case _                          ⇒ JsString(authSrv.name)
           }),
-          "capabilities" → authSrv.capabilities.map(c ⇒ JsString(c.toString)))))
+          "capabilities" → authSrv.capabilities.map(c ⇒ JsString(c.toString)),
+          "ssoAutoLogin" → JsBoolean(configuration.getOptional[Boolean]("auth.sso.autologin").getOrElse(false)))))
     }
   }
 
