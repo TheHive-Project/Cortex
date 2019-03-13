@@ -6,7 +6,6 @@ import play.api.libs.json.{ JsNumber, JsObject, Json }
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
 import akka.stream.Materializer
-import akka.stream.scaladsl.Sink
 import javax.inject.{ Inject, Singleton }
 import org.thp.cortex.models.{ Roles, Worker, WorkerDefinition }
 import org.thp.cortex.services.{ UserSrv, WorkerSrv }
@@ -33,15 +32,13 @@ class ResponderCtrl @Inject() (
     val sort = request.body.getStrings("sort").getOrElse(Nil)
     val isAdmin = request.roles.contains(Roles.orgAdmin)
     val (responders, responderTotal) = workerSrv.findRespondersForUser(request.userId, query, range, sort)
-    val enrichedResponders = responders.mapAsync(2)(responderJson(isAdmin))
-    renderer.toOutput(OK, enrichedResponders, responderTotal)
+    renderer.toOutput(OK, responders.map(responderJson(isAdmin)), responderTotal)
   }
 
   def get(responderId: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
     val isAdmin = request.roles.contains(Roles.orgAdmin)
     workerSrv.getForUser(request.userId, responderId)
-      .flatMap(responderJson(isAdmin))
-      .map(renderer.toOutput(OK, _))
+      .map(responder ⇒ renderer.toOutput(OK, responderJson(isAdmin)(responder)))
   }
 
   private val emptyResponderDefinitionJson = Json.obj(
@@ -66,32 +63,23 @@ class ResponderCtrl @Inject() (
     }
   }
 
-  private def responderJson(isAdmin: Boolean)(responder: Worker): Future[JsObject] = {
-    workerSrv.getDefinition(responder.workerDefinitionId())
-      .map(responderDefinition ⇒ responderJson(responder, Some(responderDefinition)))
-      .recover { case _ ⇒ responderJson(responder, None) }
-      .map {
-        case a if isAdmin ⇒ a + ("configuration" → Json.parse(responder.configuration()))
-        case a            ⇒ a
-      }
+  private def responderJson(isAdmin: Boolean)(responder: Worker): JsObject = {
+    if (isAdmin)
+      responder.toJson + ("configuration" → Json.parse(responder.configuration()))
+    else
+      responder.toJson
   }
 
   def listForType(dataType: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
     import org.elastic4play.services.QueryDSL._
-    workerSrv.findRespondersForUser(request.userId, "dataTypeList" ~= dataType, Some("all"), Nil)
-      ._1
-      .mapAsyncUnordered(2) { responder ⇒
-        workerSrv.getDefinition(responder.workerDefinitionId())
-          .map(ad ⇒ responderJson(responder, Some(ad)))
-      }
-      .runWith(Sink.seq)
-      .map(responders ⇒ renderer.toOutput(OK, responders))
+    val (responderList, responderCount) = workerSrv.findRespondersForUser(request.userId, "dataTypeList" ~= dataType, Some("all"), Nil)
+    renderer.toOutput(OK, responderList.map(responderJson(false)), responderCount)
   }
 
   def create(responderDefinitionId: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
     for {
       organizationId ← userSrv.getOrganizationId(request.userId)
-      workerDefinition ← workerSrv.getDefinition(responderDefinitionId)
+      workerDefinition ← Future.fromTry(workerSrv.getDefinition(responderDefinitionId))
       responder ← workerSrv.create(organizationId, workerDefinition, request.body)
     } yield renderer.toOutput(CREATED, responderJson(responder, Some(workerDefinition)))
   }
@@ -117,7 +105,6 @@ class ResponderCtrl @Inject() (
     for {
       responder ← workerSrv.getForUser(request.userId, responderId)
       updatedResponder ← workerSrv.update(responder, request.body)
-      updatedResponderJson ← responderJson(isAdmin = true)(updatedResponder)
-    } yield renderer.toOutput(OK, updatedResponderJson)
+    } yield renderer.toOutput(OK, responderJson(isAdmin = true)(updatedResponder))
   }
 }

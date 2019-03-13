@@ -175,22 +175,13 @@ class JobRunnerSrv @Inject() (
     }
   }
 
-  //  private def fixArtifact(artifact: Fields): Fields = {
-  //    def rename(oldName: String, newName: String): Fields ⇒ Fields = fields ⇒
-  //      fields.getValue(oldName).fold(fields)(v ⇒ fields.unset(oldName).set(newName, v))
-  //
-  //    rename("value", "data").andThen(
-  //      rename("type", "dataType"))(artifact)
-  //  }
-
   def run(worker: Worker, job: Job)(implicit authContext: AuthContext): Future[Job] = {
     prepareJobFolder(worker, job).flatMap { jobFolder ⇒
+      val executionContext = worker.tpe match {
+        case WorkerType.analyzer  ⇒ analyzerExecutionContext
+        case WorkerType.responder ⇒ responderExecutionContext
+      }
       val finishedJob = for {
-        workerDefinition ← workerSrv.getDefinition(worker.workerDefinitionId())
-        executionContext = workerDefinition.tpe match {
-          case WorkerType.analyzer  ⇒ analyzerExecutionContext
-          case WorkerType.responder ⇒ responderExecutionContext
-        }
         _ ← startJob(job)
         j ← runners
           .foldLeft[Option[Future[Unit]]](None) {
@@ -223,7 +214,7 @@ class JobRunnerSrv @Inject() (
             error ⇒ endJob(job, JobStatus.Failure, Option(error.getMessage), Some(readFile(jobFolder.resolve("input").resolve("input.json")))),
             _ ⇒ extractReport(jobFolder, job))
         }
-      //.andThen { case _ ⇒ delete(jobFolder) }
+        .andThen { case _ ⇒ delete(jobFolder) }
     }
   }
 
