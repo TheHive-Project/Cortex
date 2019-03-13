@@ -6,7 +6,7 @@ import java.nio.file.{ Files, Path, Paths }
 import javax.inject.{ Inject, Singleton }
 import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 import play.api.libs.json.{ JsObject, JsString, Json }
 import play.api.libs.ws.WSClient
@@ -53,9 +53,9 @@ class WorkerSrv @Inject() (
 
   rescan()
 
-  def getDefinition(workerId: String): Future[WorkerDefinition] = workerMap.get(workerId) match {
-    case Some(worker) ⇒ Future.successful(worker)
-    case None         ⇒ Future.failed(NotFoundError(s"Worker $workerId not found"))
+  def getDefinition(workerId: String): Try[WorkerDefinition] = workerMap.get(workerId) match {
+    case Some(worker) ⇒ Success(worker)
+    case None         ⇒ Failure(NotFoundError(s"Worker $workerId not found"))
   }
 
   //  def listDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = Source(workerMap.values.toList) → Future.successful(workerMap.size.toLong)
