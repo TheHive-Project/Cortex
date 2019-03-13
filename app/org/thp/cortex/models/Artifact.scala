@@ -8,7 +8,7 @@ import org.elastic4play.models.{ AttributeDef, EntityDef, AttributeFormat ⇒ F,
 
 trait ArtifactAttributes { _: AttributeDef ⇒
   val dataType = attribute("dataType", F.stringFmt, "Type of the artifact", O.readonly)
-  val data = optionalAttribute("data", F.stringFmt, "Content of the artifact", O.readonly)
+  val data = optionalAttribute("data", F.rawFmt, "Content of the artifact", O.readonly)
   val attachment = optionalAttribute("attachment", F.attachmentFmt, "Artifact file content", O.readonly)
   val tlp = attribute("tlp", TlpAttributeFormat, "TLP level", 2L)
   val tags = multiAttribute("tags", F.stringFmt, "Artifact tags")

@@ -10,7 +10,7 @@ import org.thp.cortex.models.JsonFormat.workerTypeFormat
 
 trait WorkerConfigAttributes { _: AttributeDef ⇒
   val name = attribute("name", F.stringFmt, "Worker name")
-  val config = attribute("config", F.textFmt, "Configuration of worker", O.sensitive)
+  val config = attribute("config", F.rawFmt, "Configuration of worker", O.sensitive)
   val tpe = attribute("type", F.enumFmt(WorkerType), "", O.readonly)
 }
 
