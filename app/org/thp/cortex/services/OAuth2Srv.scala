@@ -91,7 +91,9 @@ class OAuth2Srv(
   private def getAuthTokenAndAuthenticate(clientId: String, code: String)(implicit request: RequestHeader): Future[AuthContext] = {
     logger.debug("Getting user token with the code from the response!")
     withOAuth2Config { cfg ⇒
+      val acceptHeader = "Accept" → cfg.responseType
       ws.url(cfg.tokenUrl)
+        .addHttpHeaders(acceptHeader)
         .post(Map(
           "code" → code,
           "grant_type" → cfg.grantType,
