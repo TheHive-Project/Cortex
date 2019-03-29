@@ -3,7 +3,7 @@ package org.thp.cortex.services
 import java.net.URL
 import java.nio.file.{ Files, Path, Paths }
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.{ Inject, Provider, Singleton }
 import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
@@ -30,6 +30,7 @@ class WorkerSrv @Inject() (
     config: Configuration,
     workerModel: WorkerModel,
     organizationSrv: OrganizationSrv,
+    jobRunnerSrvProvider: Provider[JobRunnerSrv],
     userSrv: UserSrv,
     createSrv: CreateSrv,
     getSrv: GetSrv,
@@ -43,12 +44,8 @@ class WorkerSrv @Inject() (
   private lazy val logger = Logger(getClass)
   private val analyzersURLs: Seq[String] = config.getDeprecated[Seq[String]]("analyzer.url", "analyzer.path")
   private val respondersURLs: Seq[String] = config.getDeprecated[Seq[String]]("responder.url", "responder.path")
-  private val runners: Seq[String] = config.getOptional[Seq[String]]("runners").getOrElse(Seq("docker", "process"))
-  private val dockerRunnerEnabled: Boolean = runners.contains("docker")
-  private val processRunnerEnabled: Boolean = runners.contains("process")
-
+  private lazy val jobRunnerSrv: JobRunnerSrv = jobRunnerSrvProvider.get
   private var workerMap = Map.empty[String, WorkerDefinition]
-
   private object workerMapLock
 
   rescan()
@@ -126,9 +123,6 @@ class WorkerSrv @Inject() (
     def readUrl(url: URL, workerType: WorkerType.Type): Future[Seq[WorkerDefinition]] = {
       url.getProtocol match {
         case "file" ⇒ Future.successful(readFile(Paths.get(url.toURI), workerType))
-        case "http" | "https" if !dockerRunnerEnabled ⇒
-          logger.warn(s"$workerType URL $url ignored because Docker runner is disabled")
-          Future.successful(Nil)
         case "http" | "https" ⇒
           val reads = WorkerDefinition.reads(workerType)
           ws.url(url.toString).get().map(response ⇒ response.json.as(reads))
@@ -151,8 +145,8 @@ class WorkerSrv @Inject() (
         } yield w.copy(command = command)
       source.close()
       workerDefinitions.filter {
-        case w if w.command.isDefined && processRunnerEnabled ⇒ true
-        case w if w.image.isDefined && dockerRunnerEnabled    ⇒ true
+        case w if w.command.isDefined && jobRunnerSrv.processRunnerIsEnable ⇒ true
+        case w if w.image.isDefined && jobRunnerSrv.dockerRunnerIsEnable    ⇒ true
         case w ⇒
           val reason = if (w.command.isDefined) "process runner is disabled"
           else if (w.image.isDefined) "Docker runner is disabled"

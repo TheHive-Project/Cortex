@@ -46,6 +46,21 @@ class JobRunnerSrv @Inject() (
     .getOptional[Seq[String]]("runners")
     .getOrElse(Seq("docker", "process"))
     .map(_.toLowerCase)
+    .collect {
+      case "docker" if dockerJobRunnerSrv.isAvailable ⇒ "docker"
+      case "process" ⇒
+        Seq("", "2", "3").foreach { pythonVersion ⇒
+          val cortexUtilsVersion = processJobRunnerSrv.checkCortexUtilsVersion(pythonVersion)
+          cortexUtilsVersion.fold(logger.warn(s"The package cortexutils for python$pythonVersion hasn't been found")) {
+            case (major, minor, patch) if major >= 2 ⇒ logger.info(s"The package cortexutils for python$pythonVersion has valid version: $major.$minor.$patch")
+            case (major, minor, patch)               ⇒ logger.error(s"The package cortexutils for python$pythonVersion has invalid version: $major.$minor.$patch. Cortex 2 requires cortexutils >= 2.0")
+          }
+        }
+        "process"
+    }
+
+  lazy val processRunnerIsEnable: Boolean = runners.contains("processs")
+  lazy val dockerRunnerIsEnable: Boolean = runners.contains("docker")
 
   private object deleteVisitor extends SimpleFileVisitor[Path] {
     override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {

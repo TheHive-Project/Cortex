@@ -4,6 +4,7 @@ import java.nio.file._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.Try
 
 import play.api.{ Configuration, Logger }
 
@@ -36,9 +37,15 @@ class DockerJobRunnerSrv(client: DockerClient, autoUpdate: Boolean, implicit val
 
   lazy val logger = Logger(getClass)
 
+  lazy val isAvailable: Boolean =
+    Try {
+      logger.info(s"Docker is available:\n${client.info()}")
+      true
+    }.getOrElse(false)
+
   def run(jobDirectory: Path, dockerImage: String, job: Job, timeout: Option[FiniteDuration])(implicit ec: ExecutionContext): Future[Unit] = {
     import scala.collection.JavaConverters._
-    //    client.pull(dockerImage)
+    if (autoUpdate) client.pull(dockerImage)
     //    ContainerConfig.builder().addVolume()
     val hostConfig = HostConfig.builder()
       .appendBinds(Bind.from(jobDirectory.toAbsolutePath.toString)
