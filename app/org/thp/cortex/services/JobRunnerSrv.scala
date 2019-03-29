@@ -59,7 +59,7 @@ class JobRunnerSrv @Inject() (
         "process"
     }
 
-  lazy val processRunnerIsEnable: Boolean = runners.contains("processs")
+  lazy val processRunnerIsEnable: Boolean = runners.contains("process")
   lazy val dockerRunnerIsEnable: Boolean = runners.contains("docker")
 
   private object deleteVisitor extends SimpleFileVisitor[Path] {
