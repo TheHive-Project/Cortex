@@ -27,8 +27,7 @@ case class ConfigurationDefinitionItem(
     `type`: WorkerConfigItemType.Type,
     multi: Boolean,
     required: Boolean,
-    defaultValue: Option[JsValue],
-    isGlobal: Boolean) {
+    defaultValue: Option[JsValue]) {
   def isRequired: Boolean = required
 
   def isMulti: Boolean = multi
@@ -67,8 +66,7 @@ object ConfigurationDefinitionItem {
     (JsPath \ "type").read[WorkerConfigItemType.Type] and
     (JsPath \ "multi").readWithDefault[Boolean](false) and
     (JsPath \ "required").readWithDefault[Boolean](false) and
-    (JsPath \ "defaultValue").readNullable[JsValue] and
-    Reads.pure(false))(ConfigurationDefinitionItem.apply _)
+    (JsPath \ "defaultValue").readNullable[JsValue])(ConfigurationDefinitionItem.apply _)
   implicit val writes: Writes[ConfigurationDefinitionItem] = Json.writes[ConfigurationDefinitionItem]
 }
 

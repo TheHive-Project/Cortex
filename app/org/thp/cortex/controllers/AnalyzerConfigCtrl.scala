@@ -3,10 +3,10 @@ package org.thp.cortex.controllers
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
-import play.api.libs.json.{ JsObject, Writes }
+import play.api.libs.json.JsObject
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
-import org.thp.cortex.models.{ BaseConfig, Roles, WorkerType }
+import org.thp.cortex.models.{ BaseConfig, Roles }
 import org.thp.cortex.services.{ AnalyzerConfigSrv, UserSrv }
 
 import org.elastic4play.BadRequestError
@@ -21,8 +21,6 @@ class AnalyzerConfigCtrl @Inject() (
     renderer: Renderer,
     components: ControllerComponents,
     implicit val ec: ExecutionContext) extends AbstractController(components) {
-
-  implicit val baseConfigWrites: Writes[BaseConfig] = BaseConfig.writes(WorkerType.analyzer)
 
   def get(analyzerConfigName: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { request ⇒
     analyzerConfigSrv.getForUser(request.userId, analyzerConfigName)
