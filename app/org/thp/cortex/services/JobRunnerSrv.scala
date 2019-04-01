@@ -192,7 +192,7 @@ class JobRunnerSrv @Inject() (
 
   def run(worker: Worker, job: Job)(implicit authContext: AuthContext): Future[Job] = {
     prepareJobFolder(worker, job).flatMap { jobFolder ⇒
-      val executionContext = worker.tpe match {
+      val executionContext = worker.tpe() match {
         case WorkerType.analyzer  ⇒ analyzerExecutionContext
         case WorkerType.responder ⇒ responderExecutionContext
       }
