@@ -42,8 +42,8 @@ class WorkerSrv @Inject() (
     implicit val mat: Materializer) {
 
   private lazy val logger = Logger(getClass)
-  private val analyzersURLs: Seq[String] = config.getDeprecated[Seq[String]]("analyzer.url", "analyzer.path")
-  private val respondersURLs: Seq[String] = config.getDeprecated[Seq[String]]("responder.url", "responder.path")
+  private val analyzersURLs: Seq[String] = config.getDeprecated[Seq[String]]("analyzer.urls", "analyzer.path")
+  private val respondersURLs: Seq[String] = config.getDeprecated[Seq[String]]("responder.urls", "responder.path")
   private lazy val jobRunnerSrv: JobRunnerSrv = jobRunnerSrvProvider.get
   private var workerMap = Map.empty[String, WorkerDefinition]
   private object workerMapLock
