@@ -53,6 +53,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
       .filterNot(c ⇒ java.lang.reflect.Modifier.isAbstract(c.getModifiers) || c.isMemberClass)
       .filterNot(c ⇒ c == classOf[MultiAuthSrv] || c == classOf[CortexAuthSrv])
       .foreach { authSrvClass ⇒
+        logger.info(s"Loading authentication module $authSrvClass")
         authBindings.addBinding.to(authSrvClass)
       }
 
