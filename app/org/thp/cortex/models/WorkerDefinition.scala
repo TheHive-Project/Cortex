@@ -123,6 +123,8 @@ object WorkerDefinition {
       "url" → workerDefinition.url,
       "license" → workerDefinition.license,
       "baseConfig" → workerDefinition.baseConfiguration,
-      "configurationItems" → workerDefinition.configurationItems)
+      "configurationItems" → workerDefinition.configurationItems,
+      "image" → workerDefinition.image,
+      "command" → workerDefinition.command.map(_.getFileName.toString))
   }
 }
