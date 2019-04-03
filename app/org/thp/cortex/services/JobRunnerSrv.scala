@@ -43,7 +43,7 @@ class JobRunnerSrv @Inject() (
   lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
 
   private val runners: Seq[String] = config
-    .getOptional[Seq[String]]("runners")
+    .getOptional[Seq[String]]("job.runners")
     .getOrElse(Seq("docker", "process"))
     .map(_.toLowerCase)
     .collect {
