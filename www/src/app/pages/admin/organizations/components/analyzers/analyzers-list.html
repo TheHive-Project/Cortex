@@ -69,7 +69,7 @@
               <strong>Author:</strong> {{definition.author}}</small>
             <small class="mr-xxs" ng-if="definition.license">
               <strong>License:</strong> {{definition.license}}</small>
-            <small class="mr-xxs">
+            <small class="mr-xxs" ng-if="definition.runners.length > 0">
               <strong>Type:</strong> {{definition.runners.join(', ')}}</small>
           </h4>
           <div class="mt-xs text-muted">{{definition.description}}</div>

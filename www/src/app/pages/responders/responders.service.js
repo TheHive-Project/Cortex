@@ -27,6 +27,21 @@ export default class ResponderService {
         response => {
           this.responderDefinitions = _.keyBy(response.data, 'id');
 
+          // Compute type (process/docker)
+          _.keys(this.responderDefinitions).forEach(key => {
+            let def = this.responderDefinitions[key];
+
+            def.runners = [];
+
+            if (def.command && def.command !== null) {
+              def.runners.push('Process');
+            }
+
+            if (def.image && def.image !== null) {
+              def.runners.push('Docker');
+            }
+          });
+
           defered.resolve(this.responderDefinitions);
         },
         response => {

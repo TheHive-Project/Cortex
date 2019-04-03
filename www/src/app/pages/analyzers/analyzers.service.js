@@ -31,6 +31,7 @@ export default class AnalyzerService {
         response => {
           this.analyzerDefinitions = _.keyBy(response.data, 'id');
 
+          // Compute type (process/docker)
           _.keys(this.analyzerDefinitions).forEach(key => {
             let def = this.analyzerDefinitions[key];
 
