@@ -44,7 +44,7 @@ trait WorkerConfigSrv {
       .runWith(Sink.seq)
       .map { baseConfigs ⇒
         (BaseConfig.global(workerType, configuration) +: baseConfigs)
-          .map(c ⇒ c.name → (c + BaseConfig.global(workerType, configuration)))
+          .map(c ⇒ c.name → c)
           .toMap
       }
   }
