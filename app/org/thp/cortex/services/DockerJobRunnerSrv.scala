@@ -1,14 +1,17 @@
 package org.thp.cortex.services
 
+import java.nio.charset.StandardCharsets
 import java.nio.file._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
+import play.api.libs.json.Json
 import play.api.{ Configuration, Logger }
 
 import akka.actor.ActorSystem
+import com.spotify.docker.client.DockerClient.LogsParam
 import com.spotify.docker.client.messages.HostConfig.Bind
 import com.spotify.docker.client.messages.{ ContainerConfig, HostConfig }
 import com.spotify.docker.client.{ DefaultDockerClient, DockerClient }
@@ -41,7 +44,11 @@ class DockerJobRunnerSrv(client: DockerClient, autoUpdate: Boolean, implicit val
     Try {
       logger.info(s"Docker is available:\n${client.info()}")
       true
-    }.getOrElse(false)
+    }
+      .getOrElse {
+        logger.info(s"Docker is not available")
+        false
+      }
 
   def run(jobDirectory: Path, dockerImage: String, job: Job, timeout: Option[FiniteDuration])(implicit ec: ExecutionContext): Future[Unit] = {
     import scala.collection.JavaConverters._
@@ -70,12 +77,24 @@ class DockerJobRunnerSrv(client: DockerClient, autoUpdate: Boolean, implicit val
       s"  volume : ${jobDirectory.toAbsolutePath}:/job" +
       Option(containerConfig.env()).fold("")(_.asScala.map("\n  env    : " + _).mkString))
 
-    client.startContainer(containerCreation.id())
-
     val execution = Future {
+      client.startContainer(containerCreation.id())
       client.waitContainer(containerCreation.id())
       ()
     }
+      .andThen {
+        case r ⇒
+          if (!Files.exists(jobDirectory.resolve("output").resolve("output.json"))) {
+            val message = r.fold(e ⇒ s"Docker creation error: ${e.getMessage}\n", _ ⇒ "") +
+              Try(client.logs(containerCreation.id(), LogsParam.stdout(), LogsParam.stderr()).readFully())
+              .recover { case e ⇒ s"Container logs can't be read (${e.getMessage}" }
+            val report = Json.obj(
+              "success" -> false,
+              "errorMessage" -> message)
+            Files.write(jobDirectory.resolve("output").resolve("output.json"), report.toString.getBytes(StandardCharsets.UTF_8))
+          }
+          client.removeContainer(containerCreation.id())
+      }
     timeout.fold(execution)(t ⇒ execution.withTimeout(t, client.stopContainer(containerCreation.id(), 3)))
       .andThen {
         case _ ⇒ client.removeContainer(containerCreation.id(), DockerClient.RemoveContainerParam.forceKill())

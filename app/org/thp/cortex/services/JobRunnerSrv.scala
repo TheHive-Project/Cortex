@@ -101,7 +101,7 @@ class JobRunnerSrv @Inject() (
       .map {
         case Some(file) ⇒
           Json.obj(
-            "file" → file.toString, // FIXME set only the temporary file name
+            "file" → file.getFileName.toString,
             "filename" → job.attachment().get.name,
             "contentType" → job.attachment().get.contentType)
         case None if job.data().nonEmpty && job.tpe() == WorkerType.responder ⇒
