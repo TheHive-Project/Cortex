@@ -31,6 +31,20 @@ export default class AnalyzerService {
         response => {
           this.analyzerDefinitions = _.keyBy(response.data, 'id');
 
+          _.keys(this.analyzerDefinitions).forEach(key => {
+            let def = this.analyzerDefinitions[key];
+
+            def.runners = [];
+
+            if (def.command && def.command !== null) {
+              def.runners.push('Process');
+            }
+
+            if (def.image && def.image !== null) {
+              def.runners.push('Docker');
+            }
+          });
+
           defered.resolve(this.analyzerDefinitions);
         },
         response => {

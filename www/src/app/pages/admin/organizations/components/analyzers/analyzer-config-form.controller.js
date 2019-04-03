@@ -4,7 +4,7 @@ import _ from 'lodash/core';
 import omit from 'lodash/omit';
 
 export default class AnalyzerConfigFormController {
-  constructor($Tlps, AnalyzerService) {
+  constructor(Tlps, AnalyzerService) {
     'ngInject';
 
     this.AnalyzerService = AnalyzerService;
