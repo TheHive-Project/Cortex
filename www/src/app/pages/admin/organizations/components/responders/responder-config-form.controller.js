@@ -1,9 +1,10 @@
 'use strict';
 
 import _ from 'lodash/core';
+import omit from 'lodash/omit';
 
 export default class ResponderConfigFormController {
-  constructor($log, Tlps, ResponderService) {
+  constructor(Tlps, ResponderService) {
     'ngInject';
 
     this.ResponderService = ResponderService;
@@ -19,7 +20,12 @@ export default class ResponderConfigFormController {
   }
 
   applyGlobalConfig() {
-    this.applyConfig(this.globalConfig.config);
+    const props = ['jobTimeout'];
+
+    this.applyConfig(omit(this.globalConfig.config, props));
+    _.each(props, prop => {
+      this.responder[prop] = this.globalConfig.config[prop];
+    });
   }
 
   applyBaseConfig() {

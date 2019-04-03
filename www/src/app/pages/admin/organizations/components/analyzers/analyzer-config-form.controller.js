@@ -1,9 +1,10 @@
 'use strict';
 
 import _ from 'lodash/core';
+import omit from 'lodash/omit';
 
 export default class AnalyzerConfigFormController {
-  constructor($log, Tlps, AnalyzerService) {
+  constructor($Tlps, AnalyzerService) {
     'ngInject';
 
     this.AnalyzerService = AnalyzerService;
@@ -24,7 +25,12 @@ export default class AnalyzerConfigFormController {
   }
 
   applyGlobalConfig() {
-    this.applyConfig(this.globalConfig.config);
+    const props = ['jobCache', 'jobTimeout'];
+
+    this.applyConfig(omit(this.globalConfig.config, props));
+    _.each(props, prop => {
+      this.analyzer[prop] = this.globalConfig.config[prop];
+    });
   }
 
   applyBaseConfig() {

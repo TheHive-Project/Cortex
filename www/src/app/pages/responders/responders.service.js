@@ -98,7 +98,23 @@ export default class ResponderService {
   getConfiguration(name) {
     return this.$http
       .get(`./api/responderconfig/${name}`)
-      .then(response => this.$q.resolve(response.data), err => this.$q.reject(err));
+      .then(response => {
+        let cfg = response.data;
+
+        if (name === 'global') {
+          // Prepare the default values of the global config
+          let globalWithDefaults = {};
+          _.each(cfg.configurationItems, item => {
+            globalWithDefaults[item.name] = item.defaultValue;
+          });
+
+          // Set the default value of the global config that are not set
+          _.defaults(cfg.config, globalWithDefaults);
+        }
+
+        return this.$q.resolve(cfg);
+      })
+      .catch(err => this.$q.reject(err));
   }
 
   saveConfiguration(name, values) {
