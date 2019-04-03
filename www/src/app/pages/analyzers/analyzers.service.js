@@ -41,7 +41,7 @@ export default class AnalyzerService {
               def.runners.push('Process');
             }
 
-            if (def.image && def.image !== null) {
+            if (def.dockerImage && def.dockerImage !== null) {
               def.runners.push('Docker');
             }
           });
