@@ -145,11 +145,11 @@ class WorkerSrv @Inject() (
         } yield w.copy(command = command)
       source.close()
       workerDefinitions.filter {
-        case w if w.command.isDefined && jobRunnerSrv.processRunnerIsEnable ⇒ true
-        case w if w.image.isDefined && jobRunnerSrv.dockerRunnerIsEnable    ⇒ true
+        case w if w.command.isDefined && jobRunnerSrv.processRunnerIsEnable    ⇒ true
+        case w if w.dockerImage.isDefined && jobRunnerSrv.dockerRunnerIsEnable ⇒ true
         case w ⇒
           val reason = if (w.command.isDefined) "process runner is disabled"
-          else if (w.image.isDefined) "Docker runner is disabled"
+          else if (w.dockerImage.isDefined) "Docker runner is disabled"
           else "it doesn't have image nor command"
 
           logger.warn(s"$workerType ${w.name} is disabled because $reason")
@@ -208,7 +208,7 @@ class WorkerSrv @Inject() (
           .set("description", workerDefinition.description)
           .set("author", workerDefinition.author)
           .set("version", workerDefinition.version)
-          .set("dockerImage", workerDefinition.image.map(JsString))
+          .set("dockerImage", workerDefinition.dockerImage.map(JsString))
           .set("command", workerDefinition.command.map(p ⇒ JsString(p.toString)))
           .set("url", workerDefinition.url)
           .set("license", workerDefinition.license)

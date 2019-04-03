@@ -79,7 +79,7 @@ class Migration @Inject() (
               ("url" -> JsString(definition.url)) +
               ("license" -> JsString(definition.license)) +
               ("command" -> definition.command.fold[JsValue](JsNull)(c ⇒ JsString(c.toString))) +
-              ("dockerImage" -> definition.image.fold[JsValue](JsNull)(JsString.apply)) +
+              ("dockerImage" -> definition.dockerImage.fold[JsValue](JsNull)(JsString.apply)) +
               ("baseConfig" -> definition.baseConfiguration.fold[JsValue](JsNull)(JsString.apply))
           }
       })

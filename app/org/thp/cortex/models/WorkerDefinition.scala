@@ -78,7 +78,7 @@ case class WorkerDefinition(
     author: String,
     url: String,
     license: String,
-    image: Option[String],
+    dockerImage: Option[String],
     command: Option[Path],
     baseConfiguration: Option[String],
     configurationItems: Seq[ConfigurationDefinitionItem],
@@ -100,7 +100,7 @@ object WorkerDefinition {
     (JsPath \ "author").read[String] and
     (JsPath \ "url").read[String] and
     (JsPath \ "license").read[String] and
-    (JsPath \ "image").readNullable[String] and
+    (JsPath \ "dockerImage").readNullable[String] and
     (JsPath \ "command").readNullable[String].map(_.map(Paths.get(_))) and
     (JsPath \ "baseConfig").readNullable[String] and
     (JsPath \ "configurationItems").read[Seq[ConfigurationDefinitionItem]].orElse(Reads.pure(Nil)) and
@@ -124,7 +124,7 @@ object WorkerDefinition {
       "license" → workerDefinition.license,
       "baseConfig" → workerDefinition.baseConfiguration,
       "configurationItems" → workerDefinition.configurationItems,
-      "image" → workerDefinition.image,
+      "dockerImage" → workerDefinition.dockerImage,
       "command" → workerDefinition.command.map(_.getFileName.toString))
   }
 }
