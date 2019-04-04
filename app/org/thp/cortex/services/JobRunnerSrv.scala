@@ -112,7 +112,11 @@ class JobRunnerSrv @Inject() (
       .map { artifact ⇒
         val proxy_http = (worker.config \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" → Json.obj("http" → proxy)) }
         val proxy_https = (worker.config \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒ Json.obj("proxy" → Json.obj("https" → proxy)) }
-        val config = worker.config.deepMerge(proxy_http).deepMerge(proxy_https)
+        val config = workerSrv.getDefinition(worker.workerDefinitionId())
+          .fold(_ ⇒ JsObject.empty, _.configuration)
+          .deepMerge(worker.config)
+          .deepMerge(proxy_http)
+          .deepMerge(proxy_https)
         (worker.config \ "cacerts").asOpt[String].foreach { cacerts ⇒
           val cacertsFile = jobFolder.resolve("input").resolve("cacerts")
           Files.write(cacertsFile, cacerts.getBytes)

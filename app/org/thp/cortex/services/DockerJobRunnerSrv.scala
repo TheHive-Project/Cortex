@@ -93,7 +93,6 @@ class DockerJobRunnerSrv(client: DockerClient, autoUpdate: Boolean, implicit val
               "errorMessage" -> message)
             Files.write(jobDirectory.resolve("output").resolve("output.json"), report.toString.getBytes(StandardCharsets.UTF_8))
           }
-          client.removeContainer(containerCreation.id())
       }
     timeout.fold(execution)(t ⇒ execution.withTimeout(t, client.stopContainer(containerCreation.id(), 3)))
       .andThen {
