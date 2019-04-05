@@ -28,13 +28,21 @@ object WorkerType extends Enumeration with HiveEnumeration {
 trait WorkerAttributes { _: AttributeDef ⇒
   val workerId = attribute("_id", F.stringFmt, "Worker id", O.model)
   val name = attribute("name", F.stringFmt, "Worker name")
+  val vers = attribute("version", F.stringFmt, "Worker version", O.readonly)
   val workerDefinitionId = attribute("workerDefinitionId", F.stringFmt, "Worker definition id", O.readonly)
-  val description = attribute("description", F.textFmt, "Worker description")
+  val description = attribute("description", F.textFmt, "Worker description", O.readonly)
+  val author = attribute("author", F.textFmt, "Worker author", O.readonly)
+  val url = attribute("url", F.textFmt, "Worker url", O.readonly)
+  val license = attribute("license", F.textFmt, "Worker license", O.readonly)
+  val command = optionalAttribute("command", F.textFmt, "Worker command", O.readonly)
+  val dockerImage = optionalAttribute("dockerImage", F.textFmt, "Worker docker image", O.readonly)
   val dataTypeList = multiAttribute("dataTypeList", F.stringFmt, "List of data type this worker can manage")
-  val configuration = attribute("configuration", F.textFmt, "Configuration of the worker", O.sensitive)
+  val configuration = attribute("configuration", F.rawFmt, "Configuration of the worker", O.sensitive)
+  val baseConfig = attribute("baseConfig", F.stringFmt, "Base configuration key", O.readonly)
   val rate = optionalAttribute("rate", F.numberFmt, "Number ")
   val rateUnit = optionalAttribute("rateUnit", F.enumFmt(RateUnit), "")
   val jobCache = optionalAttribute("jobCache", F.numberFmt, "")
+  val jobTimeout = optionalAttribute("jobTimeout", F.numberFmt, "")
   val tpe = attribute("type", F.enumFmt(WorkerType), "", O.readonly)
 }
 

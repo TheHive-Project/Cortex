@@ -31,7 +31,8 @@ export default class ResponderEditController {
         name: this.definition.id,
         configuration: {},
         rate: undefined,
-        rateUnit: undefined
+        rateUnit: undefined,
+        jobTimeout: undefined
       };
 
       _.forEach(this.definition.configurationItems, item => {
@@ -47,7 +48,9 @@ export default class ResponderEditController {
       // Handle TLP default config
       const globalConfig = [
         'proxy_http',
-        'proxy_https'
+        'proxy_https',
+        'cacerts',
+        'jobTimeout'
       ];
       _.forEach(globalConfig, cnf => {
         if (responder.configuration[cnf] === undefined) {
@@ -69,6 +72,10 @@ export default class ResponderEditController {
       }
       if (responder.configuration.max_pap === undefined) {
         responder.configuration.max_pap = 2;
+      }
+
+      if (responder.jobTimeout === undefined) {
+        responder.jobTimeout = this.globalConfig.config.jobTimeout;
       }
 
       this.responder = responder;

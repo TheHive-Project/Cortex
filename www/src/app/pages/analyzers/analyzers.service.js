@@ -31,6 +31,21 @@ export default class AnalyzerService {
         response => {
           this.analyzerDefinitions = _.keyBy(response.data, 'id');
 
+          // Compute type (process/docker)
+          _.keys(this.analyzerDefinitions).forEach(key => {
+            let def = this.analyzerDefinitions[key];
+
+            def.runners = [];
+
+            if (def.command && def.command !== null) {
+              def.runners.push('Process');
+            }
+
+            if (def.dockerImage && def.dockerImage !== null) {
+              def.runners.push('Docker');
+            }
+          });
+
           defered.resolve(this.analyzerDefinitions);
         },
         response => {
@@ -111,7 +126,23 @@ export default class AnalyzerService {
 
     this.$http
       .get(`./api/analyzerconfig/${name}`)
-      .then(response => defer.resolve(response.data), err => defer.reject(err));
+      .then(response => {
+        let cfg = response.data;
+
+        if (name === 'global') {
+          // Prepare the default values of the global config
+          let globalWithDefaults = {};
+          _.each(cfg.configurationItems, item => {
+            globalWithDefaults[item.name] = item.defaultValue;
+          });
+
+          // Set the default value of the global config that are not set
+          _.defaults(cfg.config, globalWithDefaults);
+        }
+
+        defer.resolve(cfg);
+      })
+      .catch(err => defer.reject(err));
 
     return defer.promise;
   }

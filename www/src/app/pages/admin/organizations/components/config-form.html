@@ -9,6 +9,7 @@
   <div class="col-sm-9" ng-switch="$ctrl.typeOf(config)">
     <input ng-switch-when="string" class="form-control" type="text" ng-required="config.required" ng-model="$ctrl.configuration[config.name]">
     <input ng-switch-when="number" class="form-control" type="number" ng-required="config.required" ng-model="$ctrl.configuration[config.name]">
+    <textarea ng-switch-when="text" class="form-control vertical" rows="5" ng-required="config.required" ng-model="$ctrl.configuration[config.name]"></textarea>
     <div ng-switch-when="boolean">
       <div class="btn-group">
         <label uib-btn-radio="true" class="btn btn-default" ng-model="$ctrl.configuration[config.name]">True</label>

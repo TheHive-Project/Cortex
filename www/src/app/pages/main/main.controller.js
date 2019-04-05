@@ -12,7 +12,9 @@ export default class MainController {
       this.$state.go('maintenance');
       return;
     } else if (!this.currentUser || !this.currentUser.id) {
-      this.$state.go('login');
+      this.$state.go('login', {
+        autoLogin: (this.config || {}).ssoAutoLogin
+      });
       return;
     }
   }

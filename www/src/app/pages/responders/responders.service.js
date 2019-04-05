@@ -27,6 +27,21 @@ export default class ResponderService {
         response => {
           this.responderDefinitions = _.keyBy(response.data, 'id');
 
+          // Compute type (process/docker)
+          _.keys(this.responderDefinitions).forEach(key => {
+            let def = this.responderDefinitions[key];
+
+            def.runners = [];
+
+            if (def.command && def.command !== null) {
+              def.runners.push('Process');
+            }
+
+            if (def.dockerImage && def.dockerImage !== null) {
+              def.runners.push('Docker');
+            }
+          });
+
           defered.resolve(this.responderDefinitions);
         },
         response => {
@@ -98,7 +113,23 @@ export default class ResponderService {
   getConfiguration(name) {
     return this.$http
       .get(`./api/responderconfig/${name}`)
-      .then(response => this.$q.resolve(response.data), err => this.$q.reject(err));
+      .then(response => {
+        let cfg = response.data;
+
+        if (name === 'global') {
+          // Prepare the default values of the global config
+          let globalWithDefaults = {};
+          _.each(cfg.configurationItems, item => {
+            globalWithDefaults[item.name] = item.defaultValue;
+          });
+
+          // Set the default value of the global config that are not set
+          _.defaults(cfg.config, globalWithDefaults);
+        }
+
+        return this.$q.resolve(cfg);
+      })
+      .catch(err => this.$q.reject(err));
   }
 
   saveConfiguration(name, values) {

@@ -35,25 +35,19 @@ class MispSrv @Inject() (
     val (analyzers, analyzerCount) = workerSrv.findAnalyzersForUser(authContext.userId, QueryDSL.any, Some("all"), Nil)
 
     val mispAnalyzers = analyzers
-      .mapAsyncUnordered(1) { analyzer ⇒
-        workerSrv.getDefinition(analyzer.workerDefinitionId())
-          .map(ad ⇒ Some(analyzer → ad))
-          .recover { case _ ⇒ None }
-      }
-      .collect {
-        case Some((analyzer, analyzerDefinition)) ⇒
-          Json.obj(
-            "name" → analyzer.name(),
-            "type" → "cortex",
-            "mispattributes" → Json.obj(
-              "input" → analyzer.dataTypeList().flatMap(dataType2mispType).distinct,
-              "output" → Json.arr()),
-            "meta" → Json.obj(
-              "module-type" → Json.arr("cortex"),
-              "description" → analyzer.description(),
-              "author" → analyzerDefinition.author,
-              "version" → analyzerDefinition.version,
-              "config" → Json.arr()))
+      .map { analyzer ⇒
+        Json.obj(
+          "name" → analyzer.name(),
+          "type" → "cortex",
+          "mispattributes" → Json.obj(
+            "input" → analyzer.dataTypeList().flatMap(dataType2mispType).distinct,
+            "output" → Json.arr()),
+          "meta" → Json.obj(
+            "module-type" → Json.arr("cortex"),
+            "description" → analyzer.description(),
+            "author" → analyzer.author(),
+            "version" → analyzer.vers(),
+            "config" → Json.arr()))
       }
     mispAnalyzers → analyzerCount
   }

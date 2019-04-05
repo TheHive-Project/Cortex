@@ -1,6 +1,6 @@
 <section>
   <h4>Base details</h4>
-  
+
   <div class="form-group">
     <label class="col-sm-3 control-label">Name</label>
     <div class="col-sm-9">
@@ -18,7 +18,7 @@
           <i class="fa fa-copy"></i> Apply defaults</a>
       </small>
     </div>
-  </h4>  
+  </h4>
   <configuration-form items="$ctrl.definition.configurationItems" configuration="$ctrl.analyzer.configuration"></configuration-form>
 </section>
 
@@ -30,7 +30,7 @@
         <a href ng-click="$ctrl.applyGlobalConfig()">
           <i class="fa fa-copy"></i> Apply defaults</a>
       </small>
-    </div>    
+    </div>
   </h4>
   <div class="form-group">
     <label class="col-sm-3 control-label">Enable TLP check</label>
@@ -43,9 +43,9 @@
         <label>Max TLP</label>
         <select class="form-control" style="width: 200px;" ng-model="$ctrl.analyzer.configuration.max_tlp"
           ng-options="tlp.value as tlp.key for tlp in $ctrl.Tlps" ng-required="$ctrl.analyzer.configuration.check_tlp"></select>
-      </div>      
+      </div>
     </div>
-  </div> 
+  </div>
   <div class="form-group">
     <label class="col-sm-3 control-label">Enable PAP check</label>
     <div class="col-sm-9 form-inline">
@@ -64,13 +64,31 @@
     <label class="col-sm-3 control-label">HTTP Proxy</label>
     <div class="col-sm-9">
       <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_http">
-    </div>    
+    </div>
   </div>
   <div class="form-group">
     <label class="col-sm-3 control-label">HTTPS Proxy</label>
     <div class="col-sm-9">
       <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_https">
-    </div>    
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">CA Certs</label>
+    <div class="col-sm-9">
+      <textarea class="form-control vertical" rows="5" ng-model="$ctrl.analyzer.configuration.cacerts"></textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Job cache</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" ng-model="$ctrl.analyzer.jobCache" ui-number-mask="0">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Job timeout</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" ng-model="$ctrl.analyzer.jobTimeout" ui-number-mask="0">
+    </div>
   </div>
   <div class="form-group">
     <label class="col-sm-3 control-label">Extract observables</label>
@@ -83,35 +101,19 @@
     <div class="col-sm-offset-3 col-sm-9">
       <p class="help-block">Set to True to enable automatic observables extraction from analysis reports.</p>
     </div>
-  </div>  
+  </div>
   <div class="form-group">
     <label class="col-sm-3 control-label">Rate Limiting</label>
     <div class="col-sm-4">
       <input class="form-control" type="text" ng-model="$ctrl.analyzer.rate" ui-number-mask="0" ui-hide-group-sep>
     </div>
-    <div class="col-sm-5">      
+    <div class="col-sm-5">
       <select class="form-control" ng-model="$ctrl.analyzer.rateUnit" ng-options="unit for unit in $ctrl.rateUnits">
         <option value="">-- choose unit --</option>
       </select>
-    </div>  
-    <div class="col-sm-offset-3 col-sm-9">
-      <p class="help-block">Define the maximum number of requests and the associated unit if applicable.</p>
-    </div>  
-  </div>
-  <div class="form-group">
-    <label class="col-sm-3 control-label">Cache</label>
-    <div class="col-sm-9 form-inline">
-      <div class="btn-group">
-        <label uib-btn-radio="true" class="btn btn-default" ng-model="$ctrl.useGlobalCache" ng-click="$ctrl.analyzer.jobCache = null">Use global</label>
-        <label uib-btn-radio="false" class="btn btn-default" ng-model="$ctrl.useGlobalCache">Custom</label>
-      </div>
-      <div class="form-group" style="margin-left: 30px;" ng-show="$ctrl.useGlobalCache === false">
-        <label>Number of minutes</label>
-        <input class="form-control" style="width: 200px;" type="text" ng-model="$ctrl.analyzer.jobCache" ui-number-mask="0" ui-hide-group-sep>        
-      </div>
     </div>
     <div class="col-sm-offset-3 col-sm-9">
-      <p class="help-block">Define the number minutes for analysis report caching, or use the globally defined value.</p>
+      <p class="help-block">Define the maximum number of requests and the associated unit if applicable.</p>
     </div>
   </div>
 </section>

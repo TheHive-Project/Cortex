@@ -32,7 +32,8 @@ export default class AnalyzerEditController {
         configuration: {},
         rate: undefined,
         rateUnit: undefined,
-        jobCache: null
+        jobCache: undefined,
+        jobTimeout: undefined
       };
 
       _.forEach(this.definition.configurationItems, item => {
@@ -49,7 +50,8 @@ export default class AnalyzerEditController {
       const globalConfig = [
         'proxy_http',
         'proxy_https',
-        'auto_extract_artifacts'
+        'auto_extract_artifacts',
+        'cacerts'
       ];
       _.forEach(globalConfig, cnf => {
         if (analyzer.configuration[cnf] === undefined) {
@@ -71,6 +73,14 @@ export default class AnalyzerEditController {
       }
       if (analyzer.configuration.max_pap === undefined) {
         analyzer.configuration.max_pap = 2;
+      }
+
+      if (analyzer.jobCache === undefined) {
+        analyzer.jobCache = this.globalConfig.config.jobCache;
+      }
+
+      if (analyzer.jobTimeout === undefined) {
+        analyzer.jobTimeout = this.globalConfig.config.jobTimeout;
       }
 
       this.analyzer = analyzer;

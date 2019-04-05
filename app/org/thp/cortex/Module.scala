@@ -1,20 +1,23 @@
 package org.thp.cortex
+
 import com.google.inject.AbstractModule
 import net.codingwell.scalaguice.{ ScalaModule, ScalaMultibinder }
 import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.{ Configuration, Environment, Logger, Mode }
-
 import scala.collection.JavaConverters._
+
 import com.google.inject.name.Names
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.util.ConfigurationBuilder
 import org.thp.cortex.models.{ AuditedModel, Migration }
-import org.thp.cortex.services.{ AuditActor, CortexAuthSrv, UserSrv }
+import org.thp.cortex.services._
+
 import org.elastic4play.models.BaseModelDef
 import org.elastic4play.services.auth.MultiAuthSrv
 import org.elastic4play.services.{ AuthSrv, MigrationOperations }
 import org.thp.cortex.controllers.{ AssetCtrl, AssetCtrlDev, AssetCtrlProd }
+import services.mappers.{ MultiUserMapperSrv, UserMapper }
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
@@ -50,8 +53,17 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
       .filterNot(c ⇒ java.lang.reflect.Modifier.isAbstract(c.getModifiers) || c.isMemberClass)
       .filterNot(c ⇒ c == classOf[MultiAuthSrv] || c == classOf[CortexAuthSrv])
       .foreach { authSrvClass ⇒
+        logger.info(s"Loading authentication module $authSrvClass")
         authBindings.addBinding.to(authSrvClass)
       }
+
+    val ssoMapperBindings = ScalaMultibinder.newSetBinder[UserMapper](binder)
+    reflectionClasses
+      .getSubTypesOf(classOf[UserMapper])
+      .asScala
+      .filterNot(c ⇒ java.lang.reflect.Modifier.isAbstract(c.getModifiers) || c.isMemberClass)
+      .filterNot(c ⇒ c == classOf[MultiUserMapperSrv])
+      .foreach(mapperCls ⇒ ssoMapperBindings.addBinding.to(mapperCls))
 
     if (environment.mode == Mode.Prod)
       bind[AssetCtrl].to[AssetCtrlProd]
@@ -60,6 +72,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
     bind[org.elastic4play.services.UserSrv].to[UserSrv]
     bind[Int].annotatedWith(Names.named("databaseVersion")).toInstance(models.modelVersion)
+    bind[UserMapper].to[MultiUserMapperSrv]
 
     bind[AuthSrv].to[CortexAuthSrv]
     bind[MigrationOperations].to[Migration]

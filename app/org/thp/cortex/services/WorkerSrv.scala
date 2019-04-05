@@ -1,13 +1,15 @@
 package org.thp.cortex.services
 
+import java.net.URL
 import java.nio.file.{ Files, Path, Paths }
-import javax.inject.{ Inject, Singleton }
 
+import javax.inject.{ Inject, Provider, Singleton }
 import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
-import play.api.libs.json.{ JsObject, JsString }
+import play.api.libs.json.{ JsObject, JsString, Json }
+import play.api.libs.ws.WSClient
 import play.api.{ Configuration, Logger }
 
 import akka.NotUsed
@@ -24,55 +26,33 @@ import org.scalactic.Accumulation._
 import org.elastic4play.database.ModifyConfig
 
 @Singleton
-class WorkerSrv(
-    analyzersPaths: Seq[Path],
-    respondersPaths: Seq[Path],
+class WorkerSrv @Inject() (
+    config: Configuration,
     workerModel: WorkerModel,
     organizationSrv: OrganizationSrv,
+    jobRunnerSrvProvider: Provider[JobRunnerSrv],
     userSrv: UserSrv,
     createSrv: CreateSrv,
     getSrv: GetSrv,
     updateSrv: UpdateSrv,
     deleteSrv: DeleteSrv,
     findSrv: FindSrv,
+    ws: WSClient,
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer) {
 
-  @Inject() def this(
-      config: Configuration,
-      workerModel: WorkerModel,
-      organizationSrv: OrganizationSrv,
-      userSrv: UserSrv,
-      createSrv: CreateSrv,
-      getSrv: GetSrv,
-      updateSrv: UpdateSrv,
-      deleteSrv: DeleteSrv,
-      findSrv: FindSrv,
-      ec: ExecutionContext,
-      mat: Materializer) = this(
-    config.get[Seq[String]]("analyzer.path").map(p ⇒ Paths.get(p)),
-    config.get[Seq[String]]("responder.path").map(p ⇒ Paths.get(p)),
-    workerModel,
-    organizationSrv,
-    userSrv,
-    createSrv,
-    getSrv,
-    updateSrv,
-    deleteSrv,
-    findSrv,
-    ec,
-    mat)
-
   private lazy val logger = Logger(getClass)
+  private val analyzersURLs: Seq[String] = config.getDeprecated[Seq[String]]("analyzer.urls", "analyzer.path")
+  private val respondersURLs: Seq[String] = config.getDeprecated[Seq[String]]("responder.urls", "responder.path")
+  private lazy val jobRunnerSrv: JobRunnerSrv = jobRunnerSrvProvider.get
   private var workerMap = Map.empty[String, WorkerDefinition]
-
   private object workerMapLock
 
   rescan()
 
-  def getDefinition(workerId: String): Future[WorkerDefinition] = workerMap.get(workerId) match {
-    case Some(worker) ⇒ Future.successful(worker)
-    case None         ⇒ Future.failed(NotFoundError(s"Worker $workerId not found"))
+  def getDefinition(workerId: String): Try[WorkerDefinition] = workerMap.get(workerId) match {
+    case Some(worker) ⇒ Success(worker)
+    case None         ⇒ Failure(NotFoundError(s"Worker $workerId not found"))
   }
 
   //  def listDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = Source(workerMap.values.toList) → Future.successful(workerMap.size.toLong)
@@ -135,37 +115,82 @@ class WorkerSrv(
   }
 
   def rescan(): Unit = {
-    scan(analyzersPaths.map(_ → WorkerType.analyzer) ++
-      respondersPaths.map(_ → WorkerType.responder))
+    scan(analyzersURLs.map(_ → WorkerType.analyzer) ++
+      respondersURLs.map(_ → WorkerType.responder))
   }
 
-  def scan(workerPaths: Seq[(Path, WorkerType.Type)]): Unit = {
-    val workers = (for {
-      (workerPath, workerType) ← workerPaths
-      workerDir ← Try(Files.newDirectoryStream(workerPath).asScala).getOrElse {
-        logger.warn(s"Worker directory ($workerPath) is not found")
-        Nil
+  def scan(workerUrls: Seq[(String, WorkerType.Type)]): Unit = {
+    def readUrl(url: URL, workerType: WorkerType.Type): Future[Seq[WorkerDefinition]] = {
+      url.getProtocol match {
+        case "file" ⇒ Future.successful(readFile(Paths.get(url.toURI), workerType))
+        case "http" | "https" ⇒
+          val reads = WorkerDefinition.reads(workerType)
+          ws.url(url.toString).get().map(response ⇒ response.json.as(reads))
+            .map(_.filterNot(_.command.isDefined))
       }
-      if Files.isDirectory(workerDir)
-      infoFile ← Files.newDirectoryStream(workerDir, "*.json").asScala
-      workerDefinition ← WorkerDefinition.fromPath(infoFile, workerType).fold(
-        error ⇒ {
-          logger.warn("Worker definition file read error", error)
-          Nil
-        },
-        ad ⇒ Seq(ad))
-    } yield workerDefinition.id → workerDefinition)
-      .toMap
-
-    workerMapLock.synchronized {
-      workerMap = workers
     }
-    logger.info(s"New worker list:\n\n\t${workerMap.values.map(a ⇒ s"${a.name} ${a.version}").mkString("\n\t")}\n")
+
+    def readFile(path: Path, workerType: WorkerType.Type): Seq[WorkerDefinition] = {
+      val reads = WorkerDefinition.reads(workerType)
+      val source = scala.io.Source.fromFile(path.toFile)
+      lazy val basePath = path.getParent.getParent
+      val workerDefinitions =
+        for {
+          w ← Try(source.mkString).map(Json.parse(_).as(reads)).getOrElse {
+            logger.error(s"File $path has invalid format")
+            Nil
+          }
+          command = w.command.map(cmd ⇒ basePath.resolve(cmd))
+          if command.isEmpty || command.exists(_.normalize().startsWith(basePath))
+        } yield w.copy(command = command)
+      source.close()
+      workerDefinitions.filter {
+        case w if w.command.isDefined && jobRunnerSrv.processRunnerIsEnable    ⇒ true
+        case w if w.dockerImage.isDefined && jobRunnerSrv.dockerRunnerIsEnable ⇒ true
+        case w ⇒
+          val reason = if (w.command.isDefined) "process runner is disabled"
+          else if (w.dockerImage.isDefined) "Docker runner is disabled"
+          else "it doesn't have image nor command"
+
+          logger.warn(s"$workerType ${w.name} is disabled because $reason")
+          false
+      }
+    }
+
+    def readDirectory(path: Path, workerType: WorkerType.Type): Seq[WorkerDefinition] = {
+      for {
+        workerDir ← Files.newDirectoryStream(path).asScala.toSeq
+        infoFile ← Files.newDirectoryStream(workerDir, "*.json").asScala
+        workerDefinition ← readFile(infoFile, workerType)
+      } yield workerDefinition
+    }
+
+    Future
+      .traverse(workerUrls) {
+        case (workerUrl, workerType) ⇒
+          Future(new URL(workerUrl)).flatMap(readUrl(_, workerType))
+            .recover {
+              case _ ⇒
+                val path = Paths.get(workerUrl)
+                if (Files.isRegularFile(path)) readFile(path, workerType)
+                else if (Files.isDirectory(path)) readDirectory(path, workerType)
+                else {
+                  logger.warn(s"Worker path ($workerUrl) is not found")
+                  Nil
+                }
+            }
+      }
+      .foreach { worker ⇒
+        val wmap = worker.flatten.map(w ⇒ w.id -> w).toMap
+        workerMapLock.synchronized(workerMap = wmap)
+        logger.info(s"New worker list:\n\n\t${workerMap.values.map(a ⇒ s"${a.name} ${a.version}").mkString("\n\t")}\n")
+      }
+
   }
 
   def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(implicit authContext: AuthContext): Future[Worker] = {
     val rawConfig = workerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
-    val configItems = workerDefinition.configurationItems ++ BaseConfig.global(workerDefinition.tpe).items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items
+    val configItems = workerDefinition.configurationItems ++ BaseConfig.global(workerDefinition.tpe, config).items ++ BaseConfig.tlp.items ++ BaseConfig.pap.items
     val configOrErrors = configItems
       .validatedBy(_.read(rawConfig))
       .map(JsObject.apply)
@@ -181,6 +206,13 @@ class WorkerSrv(
         createSrv[WorkerModel, Worker, Organization](workerModel, organization, workerFields
           .set("workerDefinitionId", workerDefinition.id)
           .set("description", workerDefinition.description)
+          .set("author", workerDefinition.author)
+          .set("version", workerDefinition.version)
+          .set("dockerImage", workerDefinition.dockerImage.map(JsString))
+          .set("command", workerDefinition.command.map(p ⇒ JsString(p.toString)))
+          .set("url", workerDefinition.url)
+          .set("license", workerDefinition.license)
+          .set("baseConfig", workerDefinition.baseConfiguration.map(JsString.apply))
           .set("configuration", cfg.toString)
           .set("type", workerDefinition.tpe.toString)
           .addIfAbsent("dataTypeList", StringInputValue(workerDefinition.dataTypeList)))

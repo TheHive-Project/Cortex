@@ -101,7 +101,8 @@ export default class OrganizationRespondersController {
               'configuration',
               'rate',
               'rateUnit',
-              'name'
+              'name',
+              'jobTimeout'
             )
           );
         }

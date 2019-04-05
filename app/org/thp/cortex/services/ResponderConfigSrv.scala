@@ -2,6 +2,8 @@ package org.thp.cortex.services
 
 import scala.concurrent.{ ExecutionContext, Future }
 
+import play.api.Configuration
+
 import akka.stream.Materializer
 import javax.inject.{ Inject, Singleton }
 import org.thp.cortex.models.{ BaseConfig, WorkerConfigModel, WorkerType }
@@ -10,6 +12,7 @@ import org.elastic4play.services.{ CreateSrv, FindSrv, UpdateSrv }
 
 @Singleton
 class ResponderConfigSrv @Inject() (
+    val configuration: Configuration,
     val workerConfigModel: WorkerConfigModel,
     val userSrv: UserSrv,
     val organizationSrv: OrganizationSrv,

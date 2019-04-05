@@ -1,6 +1,6 @@
 {
   "name": "cortex",
-  "version": "2.1.2",
+  "version": "3.0.0-RC1",
   "description": "A powerfull observable analysis engine",
   "license": "AGPL-v3",
   "homepage": "https://github.com/TheHive-Project/Cortex",
@@ -53,6 +53,7 @@
     "html-loader": "^0.4.4",
     "html-webpack-plugin": "^2.22.0",
     "jquery": "^3.2.1",
+    "js-url": "^2.3.0",
     "lodash": "^4.17.4",
     "manifest-revision-webpack-plugin": "^0.3.0",
     "moment": "^2.20.1",
