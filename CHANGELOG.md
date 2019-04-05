@@ -1,7 +1,28 @@
 # Change Log
 
-## [2.1.3](https://github.com/TheHive-Project/Cortex/tree/2.1.3)
+## [3.0.0-RC1](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC1) (2019-04-05)
 
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.3...3.0.0-RC1)
+
+**Implemented enhancements:**
+
+- Remove size limitations [\#178](https://github.com/TheHive-Project/Cortex/issues/178)
+- Collapse job error messages by default in job history [\#171](https://github.com/TheHive-Project/Cortex/issues/171)
+- Update Copyright with year 2019 [\#168](https://github.com/TheHive-Project/Cortex/issues/168)
+
+**Fixed bugs:**
+
+- SSO: Authentication module not found  [\#181](https://github.com/TheHive-Project/Cortex/issues/181)
+- Akka Dispatcher Blocked [\#170](https://github.com/TheHive-Project/Cortex/issues/170)
+
+**Closed issues:**
+
+- Use files to communicate with analyzer/responder [\#176](https://github.com/TheHive-Project/Cortex/issues/176)
+- Provide analyzers and responders packaged with docker [\#175](https://github.com/TheHive-Project/Cortex/issues/175)
+- Single sign-on support for Cortex [\#165](https://github.com/TheHive-Project/Cortex/issues/165)
+- File extraction [\#120](https://github.com/TheHive-Project/Cortex/issues/120)
+
+## [2.1.3](https://github.com/TheHive-Project/Cortex/tree/2.1.3) (2018-12-20)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.2...2.1.3)
 
 **Implemented enhancements:**
