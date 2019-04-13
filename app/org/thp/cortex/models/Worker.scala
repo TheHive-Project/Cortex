@@ -37,7 +37,7 @@ trait WorkerAttributes { _: AttributeDef ⇒
   val command = optionalAttribute("command", F.textFmt, "Worker command", O.readonly)
   val dockerImage = optionalAttribute("dockerImage", F.textFmt, "Worker docker image", O.readonly)
   val dataTypeList = multiAttribute("dataTypeList", F.stringFmt, "List of data type this worker can manage")
-  val configuration = attribute("configuration", F.rawFmt, "Configuration of the worker", O.sensitive)
+  val configuration = attribute("configuration", F.stringFmt, "Configuration of the worker", O.sensitive)
   val baseConfig = attribute("baseConfig", F.stringFmt, "Base configuration key", O.readonly)
   val rate = optionalAttribute("rate", F.numberFmt, "Number ")
   val rateUnit = optionalAttribute("rateUnit", F.enumFmt(RateUnit), "")

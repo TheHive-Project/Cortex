@@ -22,7 +22,7 @@ trait UserAttributes { _: AttributeDef ⇒
   val status = attribute("status", F.enumFmt(UserStatus), "Status of the user", UserStatus.Ok)
   val password = optionalAttribute("password", F.stringFmt, "Password", O.sensitive, O.unaudited)
   val avatar = optionalAttribute("avatar", F.rawFmt, "Base64 representation of user avatar image", O.unaudited)
-  val preferences = attribute("preferences", F.rawFmt, "User preferences", "{}", O.sensitive, O.unaudited)
+  val preferences = attribute("preferences", F.stringFmt, "User preferences", "{}", O.sensitive, O.unaudited)
   val organization = attribute("organization", F.stringFmt, "User organization")
 }
 
