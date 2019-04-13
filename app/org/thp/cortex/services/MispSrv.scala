@@ -17,11 +17,12 @@ import org.apache.commons.codec.binary.Base64
 import org.thp.cortex.models._
 import org.thp.cortex.services.AuditActor.Register
 
+import org.elastic4play.NotFoundError
 import org.elastic4play.services._
 
 @Singleton
 class MispSrv @Inject() (
-    analyzerSrv: AnalyzerSrv,
+    workerSrv: WorkerSrv,
     attachmentSrv: AttachmentSrv,
     jobSrv: JobSrv,
     @Named("audit") auditActor: ActorRef,
@@ -30,35 +31,37 @@ class MispSrv @Inject() (
 
   private[MispSrv] lazy val logger = Logger(getClass)
 
-  def moduleList(implicit authContext: AuthContext): ((Source[JsObject, NotUsed], Future[Long])) = {
-    val (analyzers, analyzerCount) = analyzerSrv.findForUser(authContext.userId, QueryDSL.any, Some("all"), Nil)
+  def moduleList(implicit authContext: AuthContext): (Source[JsObject, NotUsed], Future[Long]) = {
+    val (analyzers, analyzerCount) = workerSrv.findAnalyzersForUser(authContext.userId, QueryDSL.any, Some("all"), Nil)
 
-    val mispAnalyzers = analyzers.mapAsyncUnordered(1) { analyzer ⇒ analyzerSrv.getDefinition(analyzer.analyzerId()).map(analyzer -> _) }
-      .map {
-        case (analyzer, analyzerDefinition) ⇒
-          Json.obj(
-            "name" → analyzer.id,
-            "type" → "cortex",
-            "mispattributes" → Json.obj(
-              "input" → analyzer.dataTypeList().flatMap(dataType2mispType).distinct,
-              "output" → Json.arr()),
-            "meta" → Json.obj(
-              "module-type" → Json.arr("cortex"),
-              "description" → analyzer.description(),
-              "author" → analyzerDefinition.author,
-              "version" → analyzerDefinition.version,
-              "config" → Json.arr()))
+    val mispAnalyzers = analyzers
+      .map { analyzer ⇒
+        Json.obj(
+          "name" → analyzer.name(),
+          "type" → "cortex",
+          "mispattributes" → Json.obj(
+            "input" → analyzer.dataTypeList().flatMap(dataType2mispType).distinct,
+            "output" → Json.arr()),
+          "meta" → Json.obj(
+            "module-type" → Json.arr("cortex"),
+            "description" → analyzer.description(),
+            "author" → analyzer.author(),
+            "version" → analyzer.vers(),
+            "config" → Json.arr()))
       }
-    mispAnalyzers -> analyzerCount
+    mispAnalyzers → analyzerCount
   }
 
   def query(module: String, mispType: String, data: String)(implicit authContext: AuthContext): Future[JsObject] = {
+    import org.elastic4play.services.QueryDSL._
+
     val artifact: Either[String, Attachment] = toArtifact(mispType, data)
     val duration = 20.minutes // TODO configurable
 
     for {
-      analyzer ← analyzerSrv.get(module)
-      job ← jobSrv.create(analyzer, mispType2dataType(mispType), artifact, 0, "", JsObject.empty, force = false)
+      analyzer ← workerSrv.findAnalyzersForUser(authContext.userId, "name" ~= module, Some("0-1"), Nil)._1.runWith(Sink.headOption)
+      job ← analyzer.map(jobSrv.create(_, mispType2dataType(mispType), artifact, 0, 0, "", JsObject.empty, None, force = false))
+        .getOrElse(Future.failed(NotFoundError(s"Module $module not found")))
       _ ← auditActor.ask(Register(job.id, duration))(Timeout(duration))
       updatedJob ← jobSrv.getForUser(authContext.userId, job.id)
       mispOutput ← toMispOutput(authContext.userId, updatedJob)
@@ -74,12 +77,12 @@ class MispSrv @Inject() (
             .map { artifact ⇒ toMispOutput(artifact) }
             .runWith(Sink.seq)
           reportJson = Json.obj(
-            "full" -> report.full(),
-            "summary" -> report.summary())
+            "full" → report.full(),
+            "summary" → report.summary())
           cortexAttribute = Json.obj(
-            "types" -> Json.arr("cortex"),
-            "values" -> Json.arr(reportJson.toString))
-        } yield Json.obj("results" -> (artifacts :+ cortexAttribute))
+            "types" → Json.arr("cortex"),
+            "values" → Json.arr(reportJson.toString))
+        } yield Json.obj("results" → (artifacts :+ cortexAttribute))
       case JobStatus.Waiting ⇒ Future.successful(Json.obj("error" → "This job hasn't finished yet"))
       case JobStatus.Deleted ⇒ Future.successful(Json.obj("error" → "This job has been deleted"))
       case JobStatus.Failure ⇒
@@ -102,9 +105,9 @@ class MispSrv @Inject() (
   private def toMispOutput(artifact: Artifact): JsObject = {
     (artifact.data(), artifact.attachment()) match {
       case (Some(data), None) ⇒ Json.obj(
-        "types" -> dataType2mispType(artifact.dataType()),
-        "values" -> Json.arr(data))
-      //case (None, Some(_)) => ???
+        "types" → dataType2mispType(artifact.dataType()),
+        "values" → Json.arr(data))
+      //case (None, Some(_)) ⇒ ???
       case _ ⇒ ???
     }
   }

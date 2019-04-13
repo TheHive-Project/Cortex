@@ -1,7 +1,7 @@
 .paginable-page {
   .box-tools {
     >select {
-      width: 120px;
+      width: 100px;
     }
   }
   .table-toolbar {
@@ -14,8 +14,10 @@
     input.form-control {
       width: 300px;
     }
-    >select {
-      width: 120px;
+    select {
+      &.form-control {
+        width: 100px;
+      }      
     }
     multiselect {
       width: 150px;

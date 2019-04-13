@@ -39,6 +39,12 @@
             <strong>Analyzers</strong>
           </a>
         </li>
+        <li ui-sref-active="active" require-roles="orgadmin,analyze">
+          <a ui-sref="main.responders">
+            <i class="fa fa-forward"></i>
+            <strong>Responders</strong>
+          </a>
+        </li>
         <li ui-sref-active="active" require-roles="orgadmin">
           <a ui-sref="main.organization({id: $ctrl.main.currentUser.organization})">
             <i class="fa fa-file-text"></i>

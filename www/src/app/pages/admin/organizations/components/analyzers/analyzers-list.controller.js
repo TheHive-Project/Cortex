@@ -102,7 +102,8 @@ export default class OrganizationAnalyzersController {
               'rate',
               'rateUnit',
               'name',
-              'jobCache'
+              'jobCache',
+              'jobTimeout'
             )
           );
         }
@@ -139,8 +140,7 @@ export default class OrganizationAnalyzersController {
   disable(analyzerId) {
     let modalInstance = this.ModalService.confirm(
       'Disable analyzer',
-      'Are you sure you want to disable this analyzer? The corresponding configuration will be lost.',
-      {
+      'Are you sure you want to disable this analyzer? The corresponding configuration will be lost.', {
         flavor: 'danger',
         okText: 'Yes, disable it'
       }

@@ -1,6 +1,6 @@
 package org.thp.cortex.services
 
-import org.thp.cortex.models.{ AnalyzerNotFoundError, JobNotFoundError, RateLimitExceeded }
+import org.thp.cortex.models.{ WorkerNotFoundError, JobNotFoundError, RateLimitExceeded }
 import play.api.Logger
 import play.api.http.{ HttpErrorHandler, Status, Writeable }
 import play.api.mvc.{ RequestHeader, ResponseHeader, Result, Results }
@@ -26,7 +26,7 @@ class ErrorHandler extends HttpErrorHandler {
       case AuthenticationError(message)        ⇒ Some(Status.UNAUTHORIZED → Json.obj("type" → "AuthenticationError", "message" → message))
       case AuthorizationError(message)         ⇒ Some(Status.FORBIDDEN → Json.obj("type" → "AuthorizationError", "message" → message))
       case UpdateError(_, message, attributes) ⇒ Some(Status.INTERNAL_SERVER_ERROR → Json.obj("type" → "UpdateError", "message" → message, "object" → attributes))
-      case rle: RateLimitExceeded              ⇒ Some(Status.TOO_MANY_REQUESTS -> Json.obj("type" -> "RateLimitExceeded", "message" -> rle.getMessage))
+      case rle: RateLimitExceeded              ⇒ Some(Status.TOO_MANY_REQUESTS → Json.obj("type" → "RateLimitExceeded", "message" → rle.getMessage))
       case InternalError(message)              ⇒ Some(Status.INTERNAL_SERVER_ERROR → Json.obj("type" → "InternalError", "message" → message))
       case nfe: NumberFormatException          ⇒ Some(Status.BAD_REQUEST → Json.obj("type" → "NumberFormatException", "message" → ("Invalid format " + nfe.getMessage)))
       case NotFoundError(message)              ⇒ Some(Status.NOT_FOUND → Json.obj("type" → "NotFoundError", "message" → message))
@@ -43,11 +43,11 @@ class ErrorHandler extends HttpErrorHandler {
           case Some((_, j)) ⇒ j
         }
         Some(Status.MULTI_STATUS → Json.obj("type" → "MultiError", "error" → message, "suberrors" → suberrors))
-      case JobNotFoundError(jobId)           ⇒ Some(Status.NOT_FOUND -> Json.obj("type" -> "JobNotFoundError", "message" -> s"Job $jobId not found"))
-      case AnalyzerNotFoundError(analyzerId) ⇒ Some(Status.NOT_FOUND -> Json.obj("type" -> "AnalyzerNotFoundError", "message" -> s"analyzer $analyzerId not found"))
-      case _: IndexNotFoundException         ⇒ Some(520 → JsNull)
-      case qse: QueryShardException          ⇒ Some(Status.BAD_REQUEST → Json.obj("type" → "Invalid search query", "message" → qse.getMessage))
-      case t: Throwable                      ⇒ Option(t.getCause).flatMap(toErrorResult)
+      case JobNotFoundError(jobId)         ⇒ Some(Status.NOT_FOUND → Json.obj("type" → "JobNotFoundError", "message" → s"Job $jobId not found"))
+      case WorkerNotFoundError(analyzerId) ⇒ Some(Status.NOT_FOUND → Json.obj("type" → "AnalyzerNotFoundError", "message" → s"analyzer $analyzerId not found"))
+      case _: IndexNotFoundException       ⇒ Some(520 → JsNull)
+      case qse: QueryShardException        ⇒ Some(Status.BAD_REQUEST → Json.obj("type" → "Invalid search query", "message" → qse.getMessage))
+      case t: Throwable                    ⇒ Option(t.getCause).flatMap(toErrorResult)
     }
   }
 

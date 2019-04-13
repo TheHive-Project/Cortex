@@ -1,0 +1,115 @@
+<section>
+
+  <div class="mb-s" ng-if="$ctrl.invalidResponders.length > 0">
+    <div class="callout callout-warning">
+      <h4>You have {{$ctrl.invalidResponders.length}} invalid
+        <ng-pluralize count="$ctrl.invalidResponders.length" when="{'1': 'responder', 'other': 'responders'}">
+        </ng-pluralize>
+      </h4>
+      <p>Invalid responders have no definition and cannot be run on any observable. You have to remove them.</p>
+    </div>
+    <div class="row">
+      <div class="col-sm-12 flex-table">
+        <div class="flex-row media" ng-repeat="r in $ctrl.invalidResponders">
+          <div class="flex-col flex-1">
+            <h4 class="media-heading">
+              <span class="mr-m text-primary">{{r.name}}</span>
+            </h4>
+          </div>
+          <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.disable(r.id)">
+            <a href class="text-danger">
+              <i class="fa fa-ban"></i>Disable</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="lead">Available responders ({{$ctrl.definitionsIds.length || 0}})
+    <a href class="pull-right btn btn-primary" ng-click="$ctrl.refreshResponders()">
+      <i class="fa fa-refresh"></i> Refresh responders</a>
+  </p>
+
+  <div class="row mv-s" ng-if="$ctrl.definitionsIds.length === 0">
+    <div class="col-md-12">
+      <div class="empty-message">No responders available.</div>
+    </div>
+  </div>
+
+  <div class="row mv-s" ng-if="$ctrl.definitionsIds.length > 0">
+    <div class="col-sm-12 mb-s">
+      <div class="input-group">
+        <span class="input-group-addon">
+          <i class="fa fa-search"></i>
+        </span>
+        <input type="text" class="form-control input-lg" ng-model="$ctrl.state.filterAvailable"
+          placeholder="Filter available responders">
+      </div>
+    </div>
+    <div class="col-sm-12 flex-table">
+      <div class="flex-header media">
+        <div class="flex-col flex-1">Responders</div>
+        <div class="flex-col flex-w-100 text-center">Max TLP</div>
+        <div class="flex-col flex-w-100 text-center">Max PAP</div>
+        <div class="flex-col flex-w-100 text-center">Rate Limit</div>
+        <div class="flex-col flex-w-100"></div>
+        <div class="flex-col flex-w-100"></div>
+      </div>
+      <div class="flex-row media" ng-repeat="def in $ctrl.definitionsIds | filter:$ctrl.state.filterAvailable"
+        ng-init="definition = $ctrl.responderDefinitions[def];">
+        <!-- <div class="media-left">
+                <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
+              </div> -->
+        <div class="flex-col flex-1">
+          <h4 class="media-heading">
+            <span class="mr-m text-primary">{{definition.id}}</span>
+          </h4>
+          <h4 class="media-heading">
+            <small class="mr-xxs">
+              <strong>Version:</strong> {{definition.version}}</small>
+            <small class="mr-xxs" ng-if="definition.author">
+              <strong>Author:</strong> {{definition.author}}</small>
+            <small class="mr-xxs" ng-if="definition.license">
+              <strong>License:</strong> {{definition.license}}</small>
+            <small class="mr-xxs" ng-if="definition.runners.length > 0">
+              <strong>Type:</strong> {{definition.runners.join(', ')}}</small>
+          </h4>
+          <div class="mt-xs text-muted">{{definition.description}}</div>
+        </div>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeResponders[def]">
+          <tlp
+            value="$ctrl.activeResponders[def].configuration.check_tlp ? $ctrl.activeResponders[def].configuration.max_tlp : undefined">
+          </tlp>
+        </div>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeResponders[def]">
+          <tlp
+            value="$ctrl.activeResponders[def].configuration.check_pap ? $ctrl.activeResponders[def].configuration.max_pap : undefined"
+            namespace="PAP"></tlp>
+        </div>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeResponders[def]">
+          <span ng-show="$ctrl.activeResponders[def].rate && $ctrl.activeResponders[def].rateUnit"
+            class="label label-lg label-primary">
+            {{$ctrl.activeResponders[def].rate}} per {{$ctrl.activeResponders[def].rateUnit}}
+          </span>
+          <span ng-show="!$ctrl.activeResponders[def].rate || !$ctrl.activeResponders[def].rateUnit"
+            class="label label-lg label-default">None</span>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="$ctrl.activeResponders[def]"
+          ng-click="$ctrl.edit('edit', $ctrl.responderDefinitions[def], $ctrl.activeResponders[def])">
+          <a href class="text-primary">
+            <i class="fa fa-edit"></i>Edit</a>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="$ctrl.activeResponders[def]"
+          ng-click="$ctrl.disable($ctrl.activeResponders[def].id)">
+          <a href class="text-danger">
+            <i class="fa fa-ban"></i>Disable</a>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.enable(def)"
+          ng-if="!$ctrl.activeResponders[def]">
+          <a href class="text-success">
+            <i class="fa fa-plus"></i>Enable</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

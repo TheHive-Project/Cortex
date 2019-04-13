@@ -7,3 +7,15 @@ pre.error-trace {
   white-space: pre-wrap;
   background-color: lighten($color: #a94442, $amount: 50%)
 }
+
+pre.responder-input {
+  color: #367fa9;
+  border: none;
+  font-size: 10px;
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
+  // background-color: lighten($color: #367fa9, $amount: 50%)
+  background-color: transparent;
+
+}

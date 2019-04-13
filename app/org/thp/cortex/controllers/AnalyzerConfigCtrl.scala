@@ -1,14 +1,13 @@
 package org.thp.cortex.controllers
 
 import javax.inject.{ Inject, Singleton }
-
 import scala.concurrent.{ ExecutionContext, Future }
 
 import play.api.libs.json.JsObject
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
-import org.thp.cortex.models.Roles
-import org.thp.cortex.services.{ AnalyzerConfigSrv, BaseConfig, UserSrv }
+import org.thp.cortex.models.{ BaseConfig, Roles }
+import org.thp.cortex.services.{ AnalyzerConfigSrv, UserSrv }
 
 import org.elastic4play.BadRequestError
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
@@ -29,7 +28,7 @@ class AnalyzerConfigCtrl @Inject() (
   }
 
   def list(): Action[AnyContent] = authenticated(Roles.orgAdmin).async { request ⇒
-    analyzerConfigSrv.listForUser(request.userId)
+    analyzerConfigSrv.listConfigForUser(request.userId)
       .map { bc ⇒
         renderer.toOutput(OK, bc.sortWith {
           case (BaseConfig("global", _, _, _), _)               ⇒ true

@@ -1,25 +1,22 @@
 package org.thp.cortex.controllers
 
-import javax.inject.{ Inject, Singleton }
-
 import scala.concurrent.{ ExecutionContext, Future }
 
-import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.json.{ JsObject, JsString, Json }
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
 import akka.stream.Materializer
-import akka.stream.scaladsl.Sink
-import org.thp.cortex.models.{ Analyzer, AnalyzerDefinition, Roles }
-import org.thp.cortex.services.{ AnalyzerSrv, UserSrv }
+import javax.inject.{ Inject, Singleton }
+import org.thp.cortex.models.{ Roles, Worker }
+import org.thp.cortex.services.{ UserSrv, WorkerSrv }
 
 import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
-import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
 import org.elastic4play.services.{ QueryDSL, QueryDef }
 
 @Singleton
 class AnalyzerCtrl @Inject() (
-    analyzerSrv: AnalyzerSrv,
+    workerSrv: WorkerSrv,
     userSrv: UserSrv,
     authenticated: Authenticated,
     fieldsBodyParser: FieldsBodyParser,
@@ -33,88 +30,58 @@ class AnalyzerCtrl @Inject() (
     val range = request.body.getString("range")
     val sort = request.body.getStrings("sort").getOrElse(Nil)
     val isAdmin = request.roles.contains(Roles.orgAdmin)
-    val (analyzers, analyzerTotal) = analyzerSrv.findForUser(request.userId, query, range, sort)
-    val enrichedAnalyzers = analyzers.mapAsync(2)(analyzerJson(isAdmin))
-    renderer.toOutput(OK, enrichedAnalyzers, analyzerTotal)
+    val (analyzers, analyzerTotal) = workerSrv.findAnalyzersForUser(request.userId, query, range, sort)
+    renderer.toOutput(OK, analyzers.map(analyzerJson(isAdmin)), analyzerTotal)
   }
 
   def get(analyzerId: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
     val isAdmin = request.roles.contains(Roles.orgAdmin)
-    analyzerSrv.getForUser(request.userId, analyzerId)
-      .flatMap(analyzerJson(isAdmin))
-      .map(renderer.toOutput(OK, _))
+    workerSrv.getForUser(request.userId, analyzerId)
+      .map(a ⇒ renderer.toOutput(OK, analyzerJson(isAdmin)(a)))
   }
 
-  private val emptyAnalyzerDefinitionJson = Json.obj(
-    "version" -> "0.0",
-    "description" -> "unknown",
-    "dataTypeList" -> Nil,
-    "author" -> "unknown",
-    "url" -> "unknown",
-    "license" -> "unknown")
-
-  private def analyzerJson(analyzer: Analyzer, analyzerDefinition: Option[AnalyzerDefinition]) = {
-    analyzer.toJson ++ analyzerDefinition.fold(emptyAnalyzerDefinitionJson) { ad ⇒
-      Json.obj(
-        "version" -> ad.version,
-        "description" -> ad.description,
-        "author" -> ad.author,
-        "url" -> ad.url,
-        "license" -> ad.license,
-        "baseConfig" -> ad.baseConfiguration)
-    }
-  }
-
-  private def analyzerJson(isAdmin: Boolean)(analyzer: Analyzer): Future[JsObject] = {
-    analyzerSrv.getDefinition(analyzer.analyzerDefinitionId())
-      .map(analyzerDefinition ⇒ analyzerJson(analyzer, Some(analyzerDefinition)))
-      .recover { case _ ⇒ analyzerJson(analyzer, None) }
-      .map {
-        case a if isAdmin ⇒ a + ("configuration" -> Json.parse(analyzer.configuration()))
-        case a            ⇒ a
-      }
+  private def analyzerJson(isAdmin: Boolean)(analyzer: Worker): JsObject = {
+    if (isAdmin)
+      analyzer.toJson + ("configuration" → Json.parse(analyzer.configuration())) + ("analyzerDefinitionId" → JsString(analyzer.workerDefinitionId()))
+    else
+      analyzer.toJson + ("analyzerDefinitionId" → JsString(analyzer.workerDefinitionId()))
   }
 
   def listForType(dataType: String): Action[AnyContent] = authenticated(Roles.read).async { request ⇒
     import org.elastic4play.services.QueryDSL._
-    analyzerSrv.findForUser(request.userId, "dataTypeList" ~= dataType, Some("all"), Nil)
-      ._1
-      .mapAsyncUnordered(2) { analyzer ⇒
-        analyzerSrv.getDefinition(analyzer.analyzerDefinitionId())
-          .map(ad ⇒ analyzerJson(analyzer, Some(ad)))
-      }
-      .runWith(Sink.seq)
-      .map(analyzers ⇒ renderer.toOutput(OK, analyzers))
+    val (responderList, responderCount) = workerSrv.findAnalyzersForUser(request.userId, "dataTypeList" ~= dataType, Some("all"), Nil)
+    renderer.toOutput(OK, responderList.map(analyzerJson(isAdmin = false)), responderCount)
   }
 
   def create(analyzerDefinitionId: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
     for {
       organizationId ← userSrv.getOrganizationId(request.userId)
-      analyzer ← analyzerSrv.create(organizationId, analyzerDefinitionId, request.body)
-    } yield renderer.toOutput(CREATED, analyzer)
+      workerDefinition ← Future.fromTry(workerSrv.getDefinition(analyzerDefinitionId))
+      analyzer ← workerSrv.create(organizationId, workerDefinition, request.body)
+    } yield renderer.toOutput(CREATED, analyzerJson(isAdmin = false)(analyzer))
   }
 
-  def listDefinitions: Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
-    val (analyzers, analyzerTotal) = analyzerSrv.listDefinitions
+  def listDefinitions: Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { _ ⇒
+    val (analyzers, analyzerTotal) = workerSrv.listAnalyzerDefinitions
     renderer.toOutput(OK, analyzers, analyzerTotal)
   }
 
-  def scan: Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin) { implicit request ⇒
-    analyzerSrv.rescan()
+  def scan: Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin) { _ ⇒
+    workerSrv.rescan()
     NoContent
   }
 
   def delete(analyzerId: String): Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { implicit request ⇒
     for {
-      analyzer ← analyzerSrv.getForUser(request.userId, analyzerId)
-      _ ← analyzerSrv.delete(analyzer)
+      analyzer ← workerSrv.getForUser(request.userId, analyzerId)
+      _ ← workerSrv.delete(analyzer)
     } yield NoContent
   }
 
   def update(analyzerId: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request ⇒
     for {
-      analyzer ← analyzerSrv.getForUser(request.userId, analyzerId)
-      updatedAnalyzer ← analyzerSrv.update(analyzer, request.body)
-    } yield renderer.toOutput(OK, updatedAnalyzer)
+      analyzer ← workerSrv.getForUser(request.userId, analyzerId)
+      updatedAnalyzer ← workerSrv.update(analyzer, request.body)
+    } yield renderer.toOutput(OK, analyzerJson(isAdmin = true)(updatedAnalyzer))
   }
 }

@@ -27,9 +27,21 @@ export default class AuthService {
     return defer.promise;
   }
 
+  ssoLogin(code) {
+    let defer = this.$q.defer();
+
+    this.$http
+      .post(angular.isDefined(code) ? './api/ssoLogin?code=' + code : './api/ssoLogin')
+      .then(response => defer.resolve(response))
+      .catch(err => defer.reject(err));
+
+    return defer.promise;
+  }
+
   logout() {
     return this.$http.get('./api/logout').then(
-      /*data*/ () => {
+      /*data*/
+      () => {
         this.currentUser = null;
       }
     );

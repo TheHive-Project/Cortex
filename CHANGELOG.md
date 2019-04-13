@@ -1,5 +1,119 @@
 # Change Log
 
+## [3.0.0-RC1](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC1) (2019-04-05)
+
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.3...3.0.0-RC1)
+
+**Implemented enhancements:**
+
+- Remove size limitations [\#178](https://github.com/TheHive-Project/Cortex/issues/178)
+- Collapse job error messages by default in job history [\#171](https://github.com/TheHive-Project/Cortex/issues/171)
+- Update Copyright with year 2019 [\#168](https://github.com/TheHive-Project/Cortex/issues/168)
+
+**Fixed bugs:**
+
+- SSO: Authentication module not found  [\#181](https://github.com/TheHive-Project/Cortex/issues/181)
+- Akka Dispatcher Blocked [\#170](https://github.com/TheHive-Project/Cortex/issues/170)
+
+**Closed issues:**
+
+- Use files to communicate with analyzer/responder [\#176](https://github.com/TheHive-Project/Cortex/issues/176)
+- Provide analyzers and responders packaged with docker [\#175](https://github.com/TheHive-Project/Cortex/issues/175)
+- Single sign-on support for Cortex [\#165](https://github.com/TheHive-Project/Cortex/issues/165)
+- File extraction [\#120](https://github.com/TheHive-Project/Cortex/issues/120)
+
+## [2.1.3](https://github.com/TheHive-Project/Cortex/tree/2.1.3) (2018-12-20)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.2...2.1.3)
+
+**Implemented enhancements:**
+
+- Add configuration for drone continuous integration [\#156](https://github.com/TheHive-Project/Cortex/issues/156)
+- Add PAP property to jobs list [\#146](https://github.com/TheHive-Project/Cortex/issues/146)
+
+**Fixed bugs:**
+
+- Wrong checks of role when an user is created [\#158](https://github.com/TheHive-Project/Cortex/issues/158)
+- Unable to disable invalid responders [\#157](https://github.com/TheHive-Project/Cortex/issues/157)
+- PAP field is ignored from job modal [\#152](https://github.com/TheHive-Project/Cortex/issues/152)
+- SinkDB analyzer could not find DIG in the Cortex docker image [\#147](https://github.com/TheHive-Project/Cortex/issues/147)
+- GUI Search Function is broken [\#145](https://github.com/TheHive-Project/Cortex/issues/145)
+
+**Closed issues:**
+
+- Systemd: cortex.service: Failed with result 'exit-code'.  [\#155](https://github.com/TheHive-Project/Cortex/issues/155)
+- conf/logback.xml: Rotate logs [\#62](https://github.com/TheHive-Project/Cortex/issues/62)
+
+## [2.1.2](https://github.com/TheHive-Project/Cortex/tree/2.1.2) (2018-10-12)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.1...2.1.2)
+
+**Fixed bugs:**
+
+- findSimilarJob function broken [\#144](https://github.com/TheHive-Project/Cortex/issues/144)
+
+## [2.1.1](https://github.com/TheHive-Project/Cortex/tree/2.1.1) (2018-10-09)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.0...2.1.1)
+
+**Implemented enhancements:**
+
+- Change Debian dependencies [\#141](https://github.com/TheHive-Project/Cortex/issues/141)
+- Allow Cortex to use a custom root context [\#140](https://github.com/TheHive-Project/Cortex/issues/140)
+- Publish stable versions in beta package channels [\#138](https://github.com/TheHive-Project/Cortex/issues/138)
+
+**Fixed bugs:**
+
+- Fix Cache column in analyzers admin page [\#139](https://github.com/TheHive-Project/Cortex/issues/139)
+- RPM update replace configuration file [\#137](https://github.com/TheHive-Project/Cortex/issues/137)
+- Console output should not be logged in syslog [\#136](https://github.com/TheHive-Project/Cortex/issues/136)
+
+## [2.1.0](https://github.com/TheHive-Project/Cortex/tree/2.1.0) (2018-09-25)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.0-RC1...2.1.0)
+
+**Implemented enhancements:**
+
+- Show PAP value in the Org \> Analyzers screen [\#124](https://github.com/TheHive-Project/Cortex/issues/124)
+- Display cache configuration in analyzer admin page [\#123](https://github.com/TheHive-Project/Cortex/issues/123)
+
+**Fixed bugs:**
+
+- MISP API fails [\#109](https://github.com/TheHive-Project/Cortex/issues/109)
+- File\_Info issue [\#53](https://github.com/TheHive-Project/Cortex/issues/53)
+- Temporary files are not removed at the end of job [\#129](https://github.com/TheHive-Project/Cortex/issues/129)
+- MISP fails to run analyzers [\#128](https://github.com/TheHive-Project/Cortex/issues/128)
+
+**Merged pull requests:**
+
+- Update resolvers in build.sbt to contain Maven as a dependency [\#130](https://github.com/TheHive-Project/Cortex/pull/130) ([adl1995](https://github.com/adl1995))
+
+## [2.1.0-RC1](https://github.com/TheHive-Project/Cortex/tree/2.1.0-RC1) (2018-07-31)
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.4...2.1.0-RC1)
+
+**Implemented enhancements:**
+
+- New TheHive-Project repository [\#112](https://github.com/TheHive-Project/Cortex/issues/112)
+
+**Fixed bugs:**
+
+- Analyzer Configuration Only Showing Global Configuration [\#104](https://github.com/TheHive-Project/Cortex/issues/104)
+- First analyze of a "file" always fail, must re-run the analyze a second time [\#117](https://github.com/TheHive-Project/Cortex/issues/117)
+- Analyzers filter in Jobs History view is limited to 25 analyzers [\#116](https://github.com/TheHive-Project/Cortex/issues/116)
+- Fix redirection from Migration page to login on 401 error [\#114](https://github.com/TheHive-Project/Cortex/issues/114)
+
+**Closed issues:**
+
+- Automatic observables extraction from analysis reports. [\#111](https://github.com/TheHive-Project/Cortex/issues/111)
+- ImportError: No module named 'cortexutils' on V2.0.4 [\#102](https://github.com/TheHive-Project/Cortex/issues/102)
+- Error occur from thehive project request to cortex project [\#101](https://github.com/TheHive-Project/Cortex/issues/101)
+- Analyzers disappear after deactivation and can not get enabled [\#98](https://github.com/TheHive-Project/Cortex/issues/98)
+- Application.conf doesn't have Yeti config nor allows for API Auth [\#54](https://github.com/TheHive-Project/Cortex/issues/54)
+- endless loop of cortex analyser call [\#36](https://github.com/TheHive-Project/Cortex/issues/36)
+- Automated response via Cortex [\#110](https://github.com/TheHive-Project/Cortex/issues/110)
+- Consider providing checksums for the release files [\#105](https://github.com/TheHive-Project/Cortex/issues/105)
+- PAP as an analyzer restriction [\#65](https://github.com/TheHive-Project/Cortex/issues/65)
+
+**Merged pull requests:**
+
+- Update GitHub path [\#100](https://github.com/TheHive-Project/Cortex/pull/100) ([saadkadhi](https://github.com/saadkadhi))
+
 ## [2.0.4](https://github.com/TheHive-Project/Cortex/tree/2.0.4) (2018-04-13)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.3...2.0.4)
 

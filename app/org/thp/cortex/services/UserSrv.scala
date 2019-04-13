@@ -63,22 +63,22 @@ class UserSrv(
     cache,
     ec)
 
-  private case class AuthContextImpl(userId: String, userName: String, requestId: String, roles: Seq[Role]) extends AuthContext
+  private case class AuthContextImpl(userId: String, userName: String, requestId: String, roles: Seq[Role], authMethod: String) extends AuthContext
 
   private def invalidateCache(userId: String) = {
     cache.remove(s"user-$userId")
     cache.remove(s"user-org-$userId")
   }
 
-  override def getFromId(request: RequestHeader, userId: String): Future[AuthContext] = {
-    get(userId).flatMap { user ⇒ getFromUser(request, user) }
+  override def getFromId(request: RequestHeader, userId: String, authMethod: String): Future[AuthContext] = {
+    get(userId).flatMap { user ⇒ getFromUser(request, user, authMethod) }
   }
 
-  override def getFromUser(request: RequestHeader, user: org.elastic4play.services.User): Future[AuthContext] = {
+  override def getFromUser(request: RequestHeader, user: org.elastic4play.services.User, authMethod: String): Future[AuthContext] = {
     user match {
       case u: User if u.status() == UserStatus.Ok ⇒
         organizationSrv.get(u.organization()).flatMap {
-          case o if o.status() == OrganizationStatus.Active ⇒ Future.successful(AuthContextImpl(user.id, user.getUserName, Instance.getRequestId(request), user.getRoles))
+          case o if o.status() == OrganizationStatus.Active ⇒ Future.successful(AuthContextImpl(user.id, user.getUserName, Instance.getRequestId(request), user.getRoles, authMethod))
           case _                                            ⇒ Future.failed(AuthorizationError("Your account is locked"))
         }
       case _ ⇒ Future.failed(AuthorizationError("Your account is locked"))
@@ -89,11 +89,11 @@ class UserSrv(
   override def getInitialUser(request: RequestHeader): Future[AuthContext] =
     dbIndex.getSize(userModel.modelName).map {
       case size if size > 0 ⇒ throw AuthenticationError(s"Use of initial user is forbidden because users exist in database")
-      case _                ⇒ AuthContextImpl("init", "", Instance.getRequestId(request), Roles.roles)
+      case _                ⇒ AuthContextImpl("init", "", Instance.getRequestId(request), Roles.roles, "init")
     }
 
   override def inInitAuthContext[A](block: AuthContext ⇒ Future[A]): Future[A] = {
-    val authContext = AuthContextImpl("init", "", Instance.getInternalId, Roles.roles)
+    val authContext = AuthContextImpl("init", "", Instance.getInternalId, Roles.roles, "init")
     eventSrv.publish(StreamActor.Initialize(authContext.requestId))
     block(authContext).andThen {
       case _ ⇒ eventSrv.publish(StreamActor.Commit(authContext.requestId))
@@ -152,10 +152,10 @@ class UserSrv(
       user ← get(userId)
       organizationId = user.organization()
     } yield findForOrganization(organizationId, queryDef, range, sortBy))
-      .recover { case NotFoundError("user init not found") ⇒ Source.empty -> Future.successful(0L) }
+      .recover { case NotFoundError("user init not found") ⇒ Source.empty → Future.successful(0L) }
 
     val userSource = Source.fromFutureSource(users.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val userTotal = users.flatMap(_._2)
-    userSource -> userTotal
+    userSource → userTotal
   }
 }

@@ -1,0 +1,13 @@
+{
+  "name": "testAnalyzer",
+  "version": "1.0",
+  "author": "TheHive-Project",
+  "url": "https://github.com/thehive-project/thehive",
+  "license": "AGPL-V3",
+  "baseConfig": "testAnalyzer",
+  "config": {},
+  "configurationItems": [],
+  "description": "Fake analyzer used for functional tests",
+  "dataTypeList": ["domain"],
+  "command": "testAnalyzer/testAnalyzer.py"
+}

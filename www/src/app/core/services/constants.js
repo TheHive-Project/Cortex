@@ -1,7 +1,8 @@
 'use strict';
 
-export default function(app) {
+export default function (app) {
   app
+    .constant('UrlParser', window.url)
     .constant('ROUTE_ERRORS', {
       auth: 'Authorization has been denied.'
     })
@@ -11,8 +12,7 @@ export default function(app) {
       ANALYZE: 'analyze',
       READ: 'read'
     })
-    .value('Tlps', [
-      {
+    .value('Tlps', [{
         key: 'WHITE',
         value: 0
       },

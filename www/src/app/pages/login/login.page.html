@@ -21,4 +21,11 @@
       </div>
     </form>
   </div>
+  <div class="sso-login-box" ng-if="$ctrl.ssoEnabled()">
+      <div class="row">
+          <div class="col-xs-offset-4 col-xs-4">
+              <button type="button" class="btn btn-success btn-sm btn-block btn-flat" ng-click="$ctrl.ssoLogin()">Sign In with SSO</button>
+          </div>
+      </div>
+  </div>
 </div>

@@ -2,12 +2,12 @@
 let CleanWebpackPlugin = require('clean-webpack-plugin');
 let webpack = require('webpack');
 
-module.exports = function(_path) {
+module.exports = function (_path) {
   return {
     context: _path,
     devtool: 'source-map',
     output: {
-      publicPath: '/',
+      publicPath: './',
       filename: '[name].[chunkhash].js'
     },
     plugins: [

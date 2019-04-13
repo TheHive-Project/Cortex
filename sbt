@@ -2,9 +2,9 @@
 
 # From https://github.com/twitter/util
 
-SBT_VER=1.1.1
+SBT_VER=1.1.6
 SBT_JAR=sbt-launch.jar
-SBT_SHA128=cdd43723a643be701aa99e3fbc4add066946bd1b
+SBT_SHA128=e3dfecc05d04a8b4bfdb43e5246f48ced1570a32
 
 SBT_REPO="https://repo1.maven.org/maven2/org/scala-sbt/sbt-launch"
 

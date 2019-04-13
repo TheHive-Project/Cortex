@@ -48,3 +48,5 @@ import 'angular-input-masks';
 import 'font-awesome/css/font-awesome.css';
 import 'angular-ui-notification/dist/angular-ui-notification.css';
 import 'css-spaces/dist/spaces.css';
+
+import 'js-url';

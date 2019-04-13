@@ -1,0 +1,108 @@
+<section>
+  <h4>Base details</h4>
+
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Name</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" name="name" ng-disabled="true" ng-model="$ctrl.responder.name" />
+    </div>
+  </div>
+</section>
+
+<section ng-show="$ctrl.definition.configurationItems.length > 0">
+  <h4>
+    Configuration
+    <div class="clearfix pull-right">
+      <small>
+        <a href ng-click="$ctrl.applyBaseConfig()">
+          <i class="fa fa-copy"></i> Apply defaults</a>
+      </small>
+    </div>
+  </h4>
+  <configuration-form items="$ctrl.definition.configurationItems" configuration="$ctrl.responder.configuration">
+  </configuration-form>
+</section>
+
+<section>
+  <h4>
+    Options
+    <div class="clearfix pull-right">
+      <small>
+        <a href ng-click="$ctrl.applyGlobalConfig()">
+          <i class="fa fa-copy"></i> Apply defaults</a>
+      </small>
+    </div>
+  </h4>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Enable TLP check</label>
+    <div class="col-sm-9 form-inline">
+      <div class="btn-group">
+        <label uib-btn-radio="true" class="btn btn-default"
+          ng-model="$ctrl.responder.configuration.check_tlp">True</label>
+        <label uib-btn-radio="false" class="btn btn-default"
+          ng-model="$ctrl.responder.configuration.check_tlp">False</label>
+      </div>
+      <div class="form-group" style="margin-left: 30px;" ng-show="$ctrl.responder.configuration.check_tlp">
+        <label>Max TLP</label>
+        <select class="form-control" style="width: 200px;" ng-model="$ctrl.responder.configuration.max_tlp"
+          ng-options="tlp.value as tlp.key for tlp in $ctrl.Tlps"
+          ng-required="$ctrl.responder.configuration.check_tlp"></select>
+      </div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Enable PAP check</label>
+    <div class="col-sm-9 form-inline">
+      <div class="btn-group">
+        <label uib-btn-radio="true" class="btn btn-default"
+          ng-model="$ctrl.responder.configuration.check_pap">True</label>
+        <label uib-btn-radio="false" class="btn btn-default"
+          ng-model="$ctrl.responder.configuration.check_pap">False</label>
+      </div>
+      <div class="form-group" style="margin-left: 30px;" ng-show="$ctrl.responder.configuration.check_pap">
+        <label>Max PAP</label>
+        <select class="form-control" style="width: 200px;" ng-model="$ctrl.responder.configuration.max_pap"
+          ng-options="tlp.value as tlp.key for tlp in $ctrl.Tlps"
+          ng-required="$ctrl.responder.configuration.check_pap"></select>
+      </div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">HTTP Proxy</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" ng-model="$ctrl.responder.configuration.proxy_http">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">HTTPS Proxy</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" ng-model="$ctrl.responder.configuration.proxy_https">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">CA Certs</label>
+    <div class="col-sm-9">
+      <textarea class="form-control vertical" rows="5" ng-model="$ctrl.responder.configuration.cacerts"></textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Job timeout</label>
+    <div class="col-sm-9">
+      <input class="form-control" type="text" ng-model="$ctrl.responder.jobTimeout" ui-number-mask="0">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-3 control-label">Rate Limiting</label>
+    <div class="col-sm-4">
+      <input class="form-control" type="text" ng-model="$ctrl.responder.rate" ui-number-mask="0" ui-hide-group-sep>
+    </div>
+    <div class="col-sm-5">
+      <select class="form-control" ng-model="$ctrl.responder.rateUnit" ng-options="unit for unit in $ctrl.rateUnits">
+        <option value="">-- choose unit --</option>
+      </select>
+    </div>
+    <div class="col-sm-offset-3 col-sm-9">
+      <p class="help-block">Define the maximum number of requests and the associated unit if applicable.</p>
+    </div>
+  </div>
+</section>

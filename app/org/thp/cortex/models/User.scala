@@ -21,8 +21,8 @@ trait UserAttributes { _: AttributeDef ⇒
   val roles = multiAttribute("roles", RoleAttributeFormat, "Comma separated role list (READ, WRITE and ADMIN)")
   val status = attribute("status", F.enumFmt(UserStatus), "Status of the user", UserStatus.Ok)
   val password = optionalAttribute("password", F.stringFmt, "Password", O.sensitive, O.unaudited)
-  val avatar = optionalAttribute("avatar", F.stringFmt, "Base64 representation of user avatar image", O.unaudited)
-  val preferences = attribute("preferences", F.stringFmt, "User preferences", "{}", O.sensitive, O.unaudited)
+  val avatar = optionalAttribute("avatar", F.rawFmt, "Base64 representation of user avatar image", O.unaudited)
+  val preferences = attribute("preferences", F.rawFmt, "User preferences", "{}", O.sensitive, O.unaudited)
   val organization = attribute("organization", F.stringFmt, "User organization")
 }
 
@@ -42,5 +42,5 @@ class User(model: UserModel, attributes: JsObject) extends EntityDef[UserModel, 
   override def toJson: JsObject = super.toJson +
     ("roles" → JsArray(roles().map(r ⇒ JsString(r.name.toLowerCase())))) +
     ("hasKey" → JsBoolean(key().isDefined)) +
-    ("hasPassword" -> JsBoolean(password().isDefined))
+    ("hasPassword" → JsBoolean(password().isDefined))
 }

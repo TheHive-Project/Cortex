@@ -1,0 +1,121 @@
+<section>
+
+  <div class="mb-s" ng-if="$ctrl.invalidAnalyzers.length > 0">
+    <div class="callout callout-warning">
+      <h4>You have {{$ctrl.invalidAnalyzers.length}} invalid <ng-pluralize count="$ctrl.invalidAnalyzers.length"
+          when="{'1': 'analyzer', 'other': 'analyzers'}"></ng-pluralize>
+      </h4>
+      <p>Invalid analyzers have no definition and cannot be run on any observable. You have to remove them.</p>
+    </div>
+    <div class="row">
+      <div class="col-sm-12 flex-table">
+        <div class="flex-row media" ng-repeat="a in $ctrl.invalidAnalyzers">
+          <div class="flex-col flex-1">
+            <h4 class="media-heading">
+              <span class="mr-m text-primary">{{a.name}}</span>
+            </h4>
+          </div>
+          <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.disable(a.id)">
+            <a href class="text-danger">
+              <i class="fa fa-ban"></i>Disable</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="lead">Available analyzers ({{$ctrl.definitionsIds.length || 0}}) <a href class="pull-right btn btn-primary"
+      ng-click="$ctrl.refreshAnalyzers()"><i class="fa fa-refresh"></i> Refresh analyzers</a></p>
+
+  <div class="row mv-s" ng-if="$ctrl.definitionsIds.length === 0">
+    <div class="col-md-12">
+      <div class="empty-message">No analyzer available.</div>
+    </div>
+  </div>
+
+  <div class="row mv-s" ng-if="$ctrl.definitionsIds.length > 0">
+    <div class="col-sm-12 mb-s">
+      <div class="input-group">
+        <span class="input-group-addon">
+          <i class="fa fa-search"></i>
+        </span>
+        <input type="text" class="form-control input-lg" ng-model="$ctrl.state.filterAvailable"
+          placeholder="Filter available analyzers">
+      </div>
+    </div>
+    <div class="col-sm-12 flex-table">
+      <div class="flex-header media">
+        <div class="flex-col flex-1">Analyzer</div>
+        <div class="flex-col flex-w-100 text-center">Max TLP</div>
+        <div class="flex-col flex-w-100 text-center">Max PAP</div>
+        <div class="flex-col flex-w-100 text-center">Rate Limit</div>
+        <div class="flex-col flex-w-100 text-center">Cache</div>
+        <div class="flex-col flex-w-100"></div>
+        <div class="flex-col flex-w-100"></div>
+      </div>
+      <div class="flex-row media" ng-repeat="def in $ctrl.definitionsIds | filter:$ctrl.state.filterAvailable"
+        ng-init="definition = $ctrl.analyzerDefinitions[def];">
+        <!-- <div class="media-left">
+                <span class="label label-default" ng-class="{'Active': 'label-success'}[org.status]">{{org.status}}</span>
+              </div> -->
+        <div class="flex-col flex-1">
+          <h4 class="media-heading">
+            <span class="mr-m text-primary">{{definition.id}}</span>
+          </h4>
+          <h4 class="media-heading">
+            <small class="mr-xxs">
+              <strong>Version:</strong> {{definition.version}}</small>
+            <small class="mr-xxs" ng-if="definition.author">
+              <strong>Author:</strong> {{definition.author}}</small>
+            <small class="mr-xxs" ng-if="definition.license">
+              <strong>License:</strong> {{definition.license}}</small>
+            <small class="mr-xxs" ng-if="definition.runners.length > 0">
+              <strong>Type:</strong> {{definition.runners.join(', ')}}</small>
+          </h4>
+          <div class="mt-xs text-muted">{{definition.description}}</div>
+        </div>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+          <tlp
+            value="$ctrl.activeAnalyzers[def].configuration.check_tlp ? $ctrl.activeAnalyzers[def].configuration.max_tlp : undefined">
+          </tlp>
+        </div>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+          <tlp
+            value="$ctrl.activeAnalyzers[def].configuration.check_pap ? $ctrl.activeAnalyzers[def].configuration.max_pap : undefined"
+            namespace="PAP"></tlp>
+        </div>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+          <span ng-show="$ctrl.activeAnalyzers[def].rate && $ctrl.activeAnalyzers[def].rateUnit"
+            class="label label-lg label-primary">
+            {{$ctrl.activeAnalyzers[def].rate}} per {{$ctrl.activeAnalyzers[def].rateUnit}}
+          </span>
+          <span ng-show="!$ctrl.activeAnalyzers[def].rate || !$ctrl.activeAnalyzers[def].rateUnit"
+            class="label label-lg label-default">None</span>
+        </div>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.activeAnalyzers[def]">
+          <span ng-show="$ctrl.activeAnalyzers[def].jobCache === undefined"
+            class="label label-lg label-default">Default</span>
+          <span ng-show="$ctrl.activeAnalyzers[def].jobCache === null"
+            class="label label-lg label-default">Default</span>
+          <span ng-show="$ctrl.activeAnalyzers[def].jobCache !== null"
+            class="label label-lg label-primary">{{$ctrl.activeAnalyzers[def].jobCache}} Minutes</span>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="$ctrl.activeAnalyzers[def]"
+          ng-click="$ctrl.edit('edit', $ctrl.analyzerDefinitions[def], $ctrl.activeAnalyzers[def])">
+          <a href class="text-primary">
+            <i class="fa fa-edit"></i>Edit</a>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="$ctrl.activeAnalyzers[def]"
+          ng-click="$ctrl.disable($ctrl.activeAnalyzers[def].id)">
+          <a href class="text-danger">
+            <i class="fa fa-ban"></i>Disable</a>
+        </div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.enable(def)"
+          ng-if="!$ctrl.activeAnalyzers[def]">
+          <a href class="text-success">
+            <i class="fa fa-plus"></i>Enable</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,5 +1,5 @@
 package org.thp.cortex
 
 package object models {
-  val modelVersion = 1
+  val modelVersion = 3
 }

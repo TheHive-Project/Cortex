@@ -10,7 +10,6 @@ export default class JobsController extends PageController {
     $scope,
     $state,
     $interval,
-    AnalyzerService,
     JobService,
     SearchService,
     NotificationService,
@@ -39,7 +38,8 @@ export default class JobsController extends PageController {
     this.search = {
       analyzerId: '',
       data: '',
-      dataType: ''
+      dataType: '',
+      jobType: ''
     };
 
     this.state = this.localStorageService.get('jobs-page') || {
@@ -47,6 +47,7 @@ export default class JobsController extends PageController {
         search: null,
         status: [],
         dataType: [],
+        jobType: [],
         analyzer: []
       },
       pagination: {
@@ -88,22 +89,29 @@ export default class JobsController extends PageController {
       });
     }
 
+    if (!_.isEmpty(this.filters.jobType)) {
+      criteria.push({
+        _in: {
+          _field: 'type',
+          _values: this.filters.jobType
+        }
+      });
+    }
+
     if (!_.isEmpty(this.filters.analyzer)) {
       criteria.push({
         _in: {
-          _field: 'analyzerDefinitionId',
+          _field: 'workerDefinitionId',
           _values: _.map(this.filters.analyzer, 'analyzerDefinitionId')
         }
       });
     }
 
-    return _.isEmpty(criteria)
-      ? {}
-      : criteria.length === 1
-        ? criteria[0]
-        : {
-            _and: criteria
-          };
+    return _.isEmpty(criteria) ? {} :
+      criteria.length === 1 ?
+      criteria[0] : {
+        _and: criteria
+      };
   }
 
   load(page) {
@@ -118,11 +126,11 @@ export default class JobsController extends PageController {
     this.localStorageService.set('jobs-page', this.state);
 
     this.SearchService.configure({
-      objectType: 'job',
-      filter: this.buildQuery(),
-      range: this.buildRange(),
-      sort: ['-createdAt']
-    })
+        objectType: 'job',
+        filter: this.buildQuery(),
+        range: this.buildRange(),
+        sort: ['-createdAt']
+      })
       .search()
       .then(response => {
         this.jobs = response.data;

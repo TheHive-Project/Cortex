@@ -4,7 +4,7 @@
   "author": "TheHive-Project",
   "url": "https://github.com/thehive-project/thehive",
   "license": "AGPL-V3",
-  "baseconfig": "echoAnalyzer",
+  "baseConfig": "echoAnalyzer",
   "config": {
 
   },
@@ -54,6 +54,7 @@
   }
 ],
   "description": "Fake analyzer used for functional tests",
-  "dataTypeList": ["domain"],
-  "command": "echoAnalyzer/echoAnalyzer.sh"
+  "dataTypeList": ["domain", "thehive:case", "thehive:case_task", "thehive:case_artifact", "thehive:alert", "thehive:case_task_log"],
+  "command": "echoAnalyzer/echoAnalyzer.sh",
+  "image": "echo_analyzer"
 }

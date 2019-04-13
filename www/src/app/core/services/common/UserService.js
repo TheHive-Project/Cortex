@@ -17,13 +17,9 @@ export default class UserService {
   }
 
   query(config) {
-    let defer = this.$q.defer();
-
-    this.$http.post(`./api/user/_search`, config).then(response => {
-      defer.resolve(response.data);
-    });
-
-    return defer.promise;
+    return this.$http.post(`./api/user/_search`, config)
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
   }
 
   get(user) {
@@ -128,12 +124,10 @@ export default class UserService {
 
   autoComplete(query) {
     return this.list({
-      _and: [
-        {
+        _and: [{
           status: 'Ok'
-        }
-      ]
-    })
+        }]
+      })
       .then(data =>
         lo.map(data, user => ({
           label: user.name,
