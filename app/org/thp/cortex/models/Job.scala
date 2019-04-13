@@ -25,7 +25,7 @@ trait JobAttributes {
   val startDate = optionalAttribute("startDate", F.dateFmt, "Analysis start date")
   val endDate = optionalAttribute("endDate", F.dateFmt, "Analysis end date")
   val dataType = attribute("dataType", F.stringFmt, "Type of the artifact", O.readonly)
-  val data = optionalAttribute("data", F.rawFmt, "Content of the artifact", O.readonly)
+  val data = optionalAttribute("data", F.stringFmt, "Content of the artifact", O.readonly)
   val attachment = optionalAttribute("attachment", F.attachmentFmt, "Artifact file content", O.readonly)
   val tlp = attribute("tlp", TlpAttributeFormat, "TLP level", 2L)
   val pap = attribute("pap", TlpAttributeFormat, "PAP level", 2L)
