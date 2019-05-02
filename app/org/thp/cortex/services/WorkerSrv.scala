@@ -160,6 +160,7 @@ class WorkerSrv @Inject() (
     def readDirectory(path: Path, workerType: WorkerType.Type): Seq[WorkerDefinition] = {
       for {
         workerDir ← Files.newDirectoryStream(path).asScala.toSeq
+        if Files.isDirectory(workerDir)
         infoFile ← Files.newDirectoryStream(workerDir, "*.json").asScala
         workerDefinition ← readFile(infoFile, workerType)
       } yield workerDefinition
