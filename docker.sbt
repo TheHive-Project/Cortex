@@ -11,9 +11,9 @@ version in Docker := {
 }
 defaultLinuxInstallLocation in Docker := "/opt/cortex"
 dockerRepository := Some("thehiveproject")
-dockerUpdateLatest := !version.value.toUpperCase.contains("RC")
+dockerUpdateLatest := !version.value.toUpperCase.contains("RC") && !version.value.contains("SNAPSHOT")
 dockerEntrypoint := Seq("/opt/cortex/entrypoint")
-dockerExposedPorts := Seq(9000)
+dockerExposedPorts := Seq(9001)
 mappings in Docker ++= Seq(
   file("package/docker/entrypoint") -> "/opt/cortex/entrypoint",
   file("package/logback.xml") -> "/etc/cortex/logback.xml",
