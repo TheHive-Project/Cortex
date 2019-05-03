@@ -1,7 +1,16 @@
 # Change Log
 
-## [3.0.0-RC1](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC1) (2019-04-05)
+## [3.0.0-RC2](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC2) (2019-05-03)
 
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/3.0.0-RC1...3.0.0-RC2)
+
+**Fixed bugs:**
+
+- Unable to load Analyzers with 3.0.0 [\#185](https://github.com/TheHive-Project/Cortex/issues/185)
+- Cortex will fail to run analyzers [\#182](https://github.com/TheHive-Project/Cortex/issues/182)
+- Docker container exposes tcp/9000 instead of tcp/9001 [\#166](https://github.com/TheHive-Project/Cortex/issues/166)
+
+## [3.0.0-RC1](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC1) (2019-04-05)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.3...3.0.0-RC1)
 
 **Implemented enhancements:**
