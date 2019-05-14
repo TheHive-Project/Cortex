@@ -38,8 +38,6 @@
     "jquery": "^3.4.1",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
-    "ng-storage": "^0.3.2",
-    "oclazyload": "^1.1.0",
     "url": "^0.11.0"
   },
   "engines": {
