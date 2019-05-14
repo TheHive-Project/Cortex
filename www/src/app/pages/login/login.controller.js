@@ -1,3 +1,4 @@
+import _ from 'lodash';
 export default class LoginController {
   constructor(
     $log,
@@ -26,7 +27,7 @@ export default class LoginController {
   }
 
   login() {
-    this.params.username = angular.lowercase(this.params.username);
+    this.params.username = _.lowerCase(this.params.username);
 
     this.AuthService.login(this.params.username, this.params.password)
       .then(() => this.$state.go('index'))
