@@ -25,7 +25,6 @@ const App = angular.module('cortex', [
   'ngSanitize',
   'ngMessages',
   'ngResource',
-  'oc.lazyLoad',
   'ui.bootstrap',
   'ui-notification',
   'angularUtils.directives.dirPagination',
