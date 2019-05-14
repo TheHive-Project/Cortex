@@ -35,9 +35,7 @@ export default class MaintenanceController {
     this.migrating = true;
     this.$http
       .post(
-        './api/maintenance/migrate',
-        {},
-        {
+        './api/maintenance/migrate', {}, {
           timeout: 10 * 60 * 60 * 1000 // 10 minutes
         }
       )
@@ -61,7 +59,7 @@ export default class MaintenanceController {
 
   createInitialUser() {
     this.UserService.save({
-      login: angular.lowercase(this.newUser.login),
+      login: _.lowerCase(this.newUser.login),
       name: this.newUser.name,
       password: this.newUser.password,
       roles: ['superadmin'],
