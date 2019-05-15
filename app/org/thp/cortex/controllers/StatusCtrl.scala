@@ -9,7 +9,7 @@ import play.api.libs.json.{ JsBoolean, JsString, Json }
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
 
-import com.sksamuel.elastic4s.ElasticDsl
+import com.sksamuel.elastic4s.http.ElasticDsl
 import org.thp.cortex.models.Worker
 
 import org.elastic4play.database.DBIndex
@@ -26,16 +26,14 @@ class StatusCtrl @Inject() (
 
   private[controllers] def getVersion(c: Class[_]) = Option(c.getPackage.getImplementationVersion).getOrElse("SNAPSHOT")
 
-  def get: Action[AnyContent] = Action.async { _ ⇒
-    dbIndex.clusterVersions.map { versions ⇒
+  def get: Action[AnyContent] = Action {
       Ok(Json.obj(
         "versions" → Json.obj(
           "Cortex" → getVersion(classOf[Worker]),
           "Elastic4Play" → getVersion(classOf[AuthSrv]),
           "Play" → getVersion(classOf[AbstractController]),
           "Elastic4s" → getVersion(classOf[ElasticDsl]),
-          "ElasticSearch client" → getVersion(classOf[org.elasticsearch.Build]),
-          "ElasticSearch cluster" → versions.mkString(", ")),
+          "ElasticSearch client" → getVersion(classOf[org.elasticsearch.client.Node])),
         "config" → Json.obj(
           "authType" → (authSrv match {
             case multiAuthSrv: MultiAuthSrv ⇒ multiAuthSrv.authProviders.map { a ⇒ JsString(a.name) }
@@ -44,7 +42,6 @@ class StatusCtrl @Inject() (
           "capabilities" → authSrv.capabilities.map(c ⇒ JsString(c.toString)),
           "ssoAutoLogin" → JsBoolean(configuration.getOptional[Boolean]("auth.sso.autologin").getOrElse(false)))))
     }
-  }
 
   def health: Action[AnyContent] = TODO
 }

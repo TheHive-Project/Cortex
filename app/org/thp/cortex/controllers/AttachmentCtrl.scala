@@ -53,7 +53,7 @@ class AttachmentCtrl(
     * open the document directly. It must be used only for safe file
     */
   @Timed("controllers.AttachmentCtrl.download")
-  def download(hash: String, name: Option[String]): Action[AnyContent] = authenticated(Roles.read) { implicit request ⇒
+  def download(hash: String, name: Option[String]): Action[AnyContent] = authenticated(Roles.read) { _ ⇒
     if (hash.startsWith("{{")) // angularjs hack
       NoContent
     else if (!name.getOrElse("").intersect(AttachmentAttributeFormat.forbiddenChar).isEmpty)
@@ -74,7 +74,7 @@ class AttachmentCtrl(
     * File name can be specified (zip extension is append)
     */
   @Timed("controllers.AttachmentCtrl.downloadZip")
-  def downloadZip(hash: String, name: Option[String]): Action[AnyContent] = authenticated(Roles.read) { implicit request ⇒
+  def downloadZip(hash: String, name: Option[String]): Action[AnyContent] = authenticated(Roles.read) { _ ⇒
     if (!name.getOrElse("").intersect(AttachmentAttributeFormat.forbiddenChar).isEmpty)
       BadRequest("File name is invalid")
     else {

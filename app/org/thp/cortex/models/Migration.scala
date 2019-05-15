@@ -5,13 +5,13 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Success
 
 import play.api.Logger
-import play.api.libs.json.{ JsNull, JsString, JsValue, Json }
+import play.api.libs.json.{ JsNull, JsNumber, JsString, JsValue, Json }
 
 import org.thp.cortex.services.{ OrganizationSrv, UserSrv, WorkerSrv }
 
 import org.elastic4play.controllers.Fields
 import org.elastic4play.services.Operation._
-import org.elastic4play.services.{ DatabaseState, MigrationOperations, Operation }
+import org.elastic4play.services.{ DatabaseState, IndexType, MigrationOperations, Operation }
 import org.elastic4play.utils.Hasher
 
 @Singleton
@@ -33,6 +33,8 @@ class Migration @Inject() (
         .transform(_ ⇒ Success(())) // ignore errors (already exist)
     }
   }
+
+  override def indexType(version: Int): IndexType.Value = if (version > 3) IndexType.indexWithoutMappingTypes else IndexType.indexWithMappingTypes
 
   val operations: PartialFunction[DatabaseState, Seq[Operation]] = {
     case DatabaseState(1) ⇒
@@ -83,5 +85,15 @@ class Migration @Inject() (
               ("baseConfig" -> definition.baseConfiguration.fold[JsValue](JsNull)(JsString.apply))
           }
       })
+
+    case DatabaseState(3) ⇒ Seq(
+        mapEntity("sequence") { seq =>
+          val oldId = (seq \ "_id").as[String]
+          val counter = (seq \ "counter").as[JsNumber]
+          seq - "counter" - "_routing" +
+            ("_id" -> JsString("sequence_" + oldId)) +
+            ("sequenceCounter" -> counter)
+        }
+      )
   }
 }
