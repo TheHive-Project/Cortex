@@ -22,13 +22,13 @@ class DBListCtrl @Inject() (
     fieldsBodyParser: FieldsBodyParser,
     implicit val ec: ExecutionContext) extends AbstractController(components) {
 
-  def list: Action[AnyContent] = authenticated(Roles.read).async { implicit request ⇒
+  def list: Action[AnyContent] = authenticated(Roles.read).async { _ ⇒
     dblists.listAll.map { listNames ⇒
       renderer.toOutput(OK, listNames)
     }
   }
 
-  def listItems(listName: String): Action[AnyContent] = authenticated(Roles.read) { implicit request ⇒
+  def listItems(listName: String): Action[AnyContent] = authenticated(Roles.read) { _ ⇒
     val (src, _) = dblists(listName).getItems[JsValue]
     val items = src.map { case (id, value) ⇒ s""""$id":$value""" }
       .intersperse("{", ",", "}")

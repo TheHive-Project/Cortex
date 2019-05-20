@@ -2,8 +2,8 @@ package org.thp.cortex.models
 
 import play.api.libs.json.{ JsString, JsValue }
 
-import com.sksamuel.elastic4s.ElasticDsl.keywordField
-import com.sksamuel.elastic4s.mappings.KeywordFieldDefinition
+import com.sksamuel.elastic4s.http.ElasticDsl.keywordField
+import com.sksamuel.elastic4s.mappings.KeywordField
 import org.scalactic.{ Every, Good, One, Or }
 
 import org.elastic4play.{ AttributeError, InvalidFormatAttributeError }
@@ -47,5 +47,5 @@ object RoleAttributeFormat extends AttributeFormat[Role]("role") {
 
   }
 
-  override def elasticType(attributeName: String): KeywordFieldDefinition = keywordField(attributeName)
+  override def elasticType(attributeName: String): KeywordField = keywordField(attributeName)
 }
