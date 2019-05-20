@@ -1,6 +1,6 @@
 package org.thp.cortex.models
 
-import java.nio.file.{ Path, Paths }
+import java.nio.file.{Path, Paths}
 
 import play.api.Logger
 import play.api.libs.functional.syntax._
@@ -13,11 +13,11 @@ import org.scalactic._
 import org.elastic4play.controllers.JsonInputValue
 import org.elastic4play.models.HiveEnumeration
 import org.elastic4play.models.JsonFormat.enumFormat
-import org.elastic4play.{ AttributeError, InvalidFormatAttributeError, MissingAttributeError }
+import org.elastic4play.{AttributeError, InvalidFormatAttributeError, MissingAttributeError}
 
 object WorkerConfigItemType extends Enumeration with HiveEnumeration {
   type Type = Value
-  val text, string, number, boolean = Value
+  val text, string, number, boolean                     = Value
   implicit val reads: Format[WorkerConfigItemType.Type] = enumFormat(this)
 }
 
@@ -27,7 +27,8 @@ case class ConfigurationDefinitionItem(
     `type`: WorkerConfigItemType.Type,
     multi: Boolean,
     required: Boolean,
-    defaultValue: Option[JsValue]) {
+    defaultValue: Option[JsValue]
+) {
   def isRequired: Boolean = required
 
   def isMulti: Boolean = multi
@@ -43,8 +44,9 @@ case class ConfigurationDefinitionItem(
     }
   }
 
-  def read(config: JsObject): (String, JsValue) Or Every[AttributeError] = {
-    (config \ name).toOption
+  def read(config: JsObject): (String, JsValue) Or Every[AttributeError] =
+    (config \ name)
+      .toOption
       .orElse(defaultValue)
       .map {
         case JsArray(values) if isMulti ⇒ values.validatedBy(check).map(a ⇒ name → JsArray(a))
@@ -56,12 +58,10 @@ case class ConfigurationDefinitionItem(
         else if (isRequired) Bad(One(MissingAttributeError(name)))
         else Good(name → JsNull)
       }
-  }
 }
 
 object ConfigurationDefinitionItem {
-  implicit val reads: Reads[ConfigurationDefinitionItem] = (
-    (JsPath \ "name").read[String] and
+  implicit val reads: Reads[ConfigurationDefinitionItem] = ((JsPath \ "name").read[String] and
     (JsPath \ "description").read[String] and
     (JsPath \ "type").read[WorkerConfigItemType.Type] and
     (JsPath \ "multi").readWithDefault[Boolean](false) and
@@ -83,7 +83,8 @@ case class WorkerDefinition(
     baseConfiguration: Option[String],
     configurationItems: Seq[ConfigurationDefinitionItem],
     configuration: JsObject,
-    tpe: WorkerType.Type) {
+    tpe: WorkerType.Type
+) {
   val id: String = (name + "_" + version).replaceAll("\\.", "_")
 
   def canProcessDataType(dataType: String): Boolean = dataTypeList.contains(dataType)
@@ -92,20 +93,20 @@ case class WorkerDefinition(
 object WorkerDefinition {
   lazy val logger = Logger(getClass)
 
-  def singleReads(workerType: WorkerType.Type): Reads[WorkerDefinition] = (
-    (JsPath \ "name").read[String] and
-    (JsPath \ "version").read[String] and
-    (JsPath \ "description").read[String] and
-    (JsPath \ "dataTypeList").read[Seq[String]].orElse(Reads.pure(Nil)) and
-    (JsPath \ "author").read[String] and
-    (JsPath \ "url").read[String] and
-    (JsPath \ "license").read[String] and
-    (JsPath \ "dockerImage").readNullable[String] and
-    (JsPath \ "command").readNullable[String].map(_.map(Paths.get(_))) and
-    (JsPath \ "baseConfig").readNullable[String] and
-    (JsPath \ "configurationItems").read[Seq[ConfigurationDefinitionItem]].orElse(Reads.pure(Nil)) and
-    (JsPath \ "config").read[JsObject].orElse(Reads.pure(JsObject.empty)) and
-    Reads.pure(workerType))(WorkerDefinition.apply _)
+  def singleReads(workerType: WorkerType.Type): Reads[WorkerDefinition] =
+    ((JsPath \ "name").read[String] and
+      (JsPath \ "version").read[String] and
+      (JsPath \ "description").read[String] and
+      (JsPath \ "dataTypeList").read[Seq[String]].orElse(Reads.pure(Nil)) and
+      (JsPath \ "author").read[String] and
+      (JsPath \ "url").read[String] and
+      (JsPath \ "license").read[String] and
+      (JsPath \ "dockerImage").readNullable[String] and
+      (JsPath \ "command").readNullable[String].map(_.map(Paths.get(_))) and
+      (JsPath \ "baseConfig").readNullable[String] and
+      (JsPath \ "configurationItems").read[Seq[ConfigurationDefinitionItem]].orElse(Reads.pure(Nil)) and
+      (JsPath \ "config").read[JsObject].orElse(Reads.pure(JsObject.empty)) and
+      Reads.pure(workerType))(WorkerDefinition.apply _)
 
   def reads(workerType: WorkerType.Type): Reads[List[WorkerDefinition]] = {
     val reads = singleReads(workerType)
@@ -114,17 +115,18 @@ object WorkerDefinition {
 
   implicit val writes: Writes[WorkerDefinition] = Writes[WorkerDefinition] { workerDefinition ⇒
     Json.obj(
-      "id" → workerDefinition.id,
-      "name" → workerDefinition.name,
-      "version" → workerDefinition.version,
-      "description" → workerDefinition.description,
-      "dataTypeList" → workerDefinition.dataTypeList,
-      "author" → workerDefinition.author,
-      "url" → workerDefinition.url,
-      "license" → workerDefinition.license,
-      "baseConfig" → workerDefinition.baseConfiguration,
+      "id"                 → workerDefinition.id,
+      "name"               → workerDefinition.name,
+      "version"            → workerDefinition.version,
+      "description"        → workerDefinition.description,
+      "dataTypeList"       → workerDefinition.dataTypeList,
+      "author"             → workerDefinition.author,
+      "url"                → workerDefinition.url,
+      "license"            → workerDefinition.license,
+      "baseConfig"         → workerDefinition.baseConfiguration,
       "configurationItems" → workerDefinition.configurationItems,
-      "dockerImage" → workerDefinition.dockerImage,
-      "command" → workerDefinition.command.map(_.getFileName.toString))
+      "dockerImage"        → workerDefinition.dockerImage,
+      "command"            → workerDefinition.command.map(_.getFileName.toString)
+    )
   }
 }

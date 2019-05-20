@@ -1,23 +1,23 @@
 package org.thp.cortex.services
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.{Inject, Singleton}
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, PoisonPill, actorRef2Scala }
+import akka.actor.{actorRef2Scala, Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, PoisonPill}
 import akka.stream.Materializer
 import org.elastic4play.services._
 import org.elastic4play.utils.Instance
 import play.api.Logger
 import play.api.libs.json.JsObject
-import play.api.mvc.{ Filter, RequestHeader, Result }
+import play.api.mvc.{Filter, RequestHeader, Result}
 
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * This actor monitors dead messages and log them
   */
 @Singleton
-class DeadLetterMonitoringActor @Inject() (system: ActorSystem) extends Actor {
+class DeadLetterMonitoringActor @Inject()(system: ActorSystem) extends Actor {
   private[DeadLetterMonitoringActor] lazy val logger = Logger(getClass)
 
   override def preStart(): Unit = {
@@ -59,46 +59,38 @@ class StreamActor(
     nextItemMaxWait: FiniteDuration,
     globalMaxWait: FiniteDuration,
     eventSrv: EventSrv,
-    auxSrv: AuxSrv) extends Actor with ActorLogging {
+    auxSrv: AuxSrv
+) extends Actor
+    with ActorLogging {
   import context.dispatcher
   import org.thp.cortex.services.StreamActor._
 
   private[StreamActor] lazy val logger = Logger(getClass)
 
   private object FakeCancellable extends Cancellable {
-    def cancel() = true
+    def cancel()    = true
     def isCancelled = true
   }
 
   private class WaitingRequest(senderRef: ActorRef, itemCancellable: Cancellable, globalCancellable: Cancellable, hasResult: Boolean) {
-    def this(senderRef: ActorRef) = this(
-      senderRef,
-      FakeCancellable,
-      context.system.scheduler.scheduleOnce(refresh, self, Submit),
-      false)
+    def this(senderRef: ActorRef) = this(senderRef, FakeCancellable, context.system.scheduler.scheduleOnce(refresh, self, Submit), false)
 
     /**
       * Renew timers
       */
-    def renew: WaitingRequest = {
+    def renew: WaitingRequest =
       if (itemCancellable.cancel()) {
         if (!hasResult && globalCancellable.cancel()) {
           new WaitingRequest(
             senderRef,
             context.system.scheduler.scheduleOnce(nextItemMaxWait, self, Submit),
             context.system.scheduler.scheduleOnce(globalMaxWait, self, Submit),
-            true)
-        }
-        else
-          new WaitingRequest(
-            senderRef,
-            context.system.scheduler.scheduleOnce(nextItemMaxWait, self, Submit),
-            globalCancellable,
-            true)
-      }
-      else
+            true
+          )
+        } else
+          new WaitingRequest(senderRef, context.system.scheduler.scheduleOnce(nextItemMaxWait, self, Submit), globalCancellable, true)
+      } else
         this
-    }
 
     /**
       * Send message
@@ -115,10 +107,9 @@ class StreamActor(
   /**
     * renew global timer and rearm it
     */
-  def renewExpiration(): Unit = {
+  def renewExpiration(): Unit =
     if (killCancel.cancel())
       killCancel = context.system.scheduler.scheduleOnce(cacheExpiration, self, PoisonPill)
-  }
 
   override def preStart(): Unit = {
     renewExpiration()
@@ -169,7 +160,7 @@ class StreamActor(
 
     /* */
     case operation: AuditOperation ⇒
-      val requestId = operation.authContext.requestId
+      val requestId           = operation.authContext.requestId
       val normalizedOperation = normalizeOperation(operation)
       logger.debug(s"Receiving audit operation : $operation ⇒ $normalizedOperation")
       val updatedOperationGroup = currentMessages.get(requestId) match {
@@ -214,12 +205,10 @@ class StreamActor(
 }
 
 @Singleton
-class StreamFilter @Inject() (
-    eventSrv: EventSrv,
-    implicit val mat: Materializer,
-    implicit val ec: ExecutionContext) extends Filter {
+class StreamFilter @Inject()(eventSrv: EventSrv, implicit val mat: Materializer, implicit val ec: ExecutionContext) extends Filter {
 
   private[StreamFilter] lazy val logger = Logger(getClass)
+
   def apply(nextFilter: RequestHeader ⇒ Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val requestId = Instance.getRequestId(requestHeader)
     eventSrv.publish(StreamActor.Initialize(requestId))

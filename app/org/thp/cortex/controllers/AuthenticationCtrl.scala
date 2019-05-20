@@ -1,21 +1,21 @@
 package org.thp.cortex.controllers
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.mvc._
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.{Inject, Singleton}
 import org.thp.cortex.models.UserStatus
 import org.thp.cortex.services.UserSrv
 
-import org.elastic4play.controllers.{ Authenticated, Fields, FieldsBodyParser, Renderer }
+import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
 import org.elastic4play.database.DBIndex
 import org.elastic4play.services.AuthSrv
 import org.elastic4play.services.JsonFormat.authContextWrites
-import org.elastic4play.{ AuthorizationError, MissingAttributeError, OAuth2Redirect, Timed }
+import org.elastic4play.{AuthorizationError, MissingAttributeError, OAuth2Redirect, Timed}
 
 @Singleton
-class AuthenticationCtrl @Inject() (
+class AuthenticationCtrl @Inject()(
     authSrv: AuthSrv,
     userSrv: UserSrv,
     authenticated: Authenticated,
@@ -23,7 +23,8 @@ class AuthenticationCtrl @Inject() (
     renderer: Renderer,
     components: ControllerComponents,
     fieldsBodyParser: FieldsBodyParser,
-    implicit val ec: ExecutionContext) extends AbstractController(components) {
+    implicit val ec: ExecutionContext
+) extends AbstractController(components) {
 
   @Timed
   def login: Action[Fields] = Action.async(fieldsBodyParser) { implicit request ⇒
@@ -31,8 +32,8 @@ class AuthenticationCtrl @Inject() (
       case false ⇒ Future.successful(Results.Status(520))
       case _ ⇒
         for {
-          user ← request.body.getString("user").fold[Future[String]](Future.failed(MissingAttributeError("user")))(Future.successful)
-          password ← request.body.getString("password").fold[Future[String]](Future.failed(MissingAttributeError("password")))(Future.successful)
+          user        ← request.body.getString("user").fold[Future[String]](Future.failed(MissingAttributeError("user")))(Future.successful)
+          password    ← request.body.getString("password").fold[Future[String]](Future.failed(MissingAttributeError("password")))(Future.successful)
           authContext ← authSrv.authenticate(user, password)
         } yield authenticated.setSessingUser(renderer.toOutput(OK, authContext), authContext)
     }
@@ -45,7 +46,7 @@ class AuthenticationCtrl @Inject() (
       case _ ⇒
         (for {
           authContext ← authSrv.authenticate()
-          user ← userSrv.get(authContext.userId)
+          user        ← userSrv.get(authContext.userId)
         } yield {
           if (user.status() == UserStatus.Ok)
             authenticated.setSessingUser(Ok, authContext)
