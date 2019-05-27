@@ -108,15 +108,18 @@ class JobCtrl @Inject()(
                   "tlp"      → artifact.tlp()
                 )
               case artifact if artifact.attachment().isDefined ⇒
-                artifact.attachment().fold(JsObject.empty) { a ⇒
-                  Json.obj(
-                    "attachment" →
-                      Json.obj("contentType" → a.contentType, "id" → a.id, "name" → a.name, "size" → a.size),
-                    "message" → artifact.message(),
-                    "tags"    → artifact.tags(),
-                    "tlp"     → artifact.tlp()
-                  )
-                }
+                val attachment = artifact.attachment().get
+                Json.obj(
+                  "dataType" → artifact.dataType(),
+                  "message"  → artifact.message(),
+                  "tags"     → artifact.tags(),
+                  "tlp"      → artifact.tlp(),
+                  "attachment" → Json.obj(
+                    "contentType" → attachment.contentType,
+                    "id" → attachment.id,
+                    "name" → attachment.name,
+                    "size" → attachment.size)
+                )
             }
             .runWith(Sink.seq)
         } yield Json.obj(
