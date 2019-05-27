@@ -263,7 +263,7 @@ class JobRunnerSrv @Inject()(
       .set("status", status.toString)
       .set("endDate", Json.toJson(new Date))
       .set("input", input.map(JsString.apply))
-      .set("message", errorMessage.map(JsString.apply))
+      .set("errorMessage", errorMessage.map(JsString.apply))
     updateSrv(job, fields, ModifyConfig.default)
   }
 }

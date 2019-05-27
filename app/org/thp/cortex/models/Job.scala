@@ -31,7 +31,7 @@ trait JobAttributes {
   val tlp                = attribute("tlp", TlpAttributeFormat, "TLP level", 2L)
   val pap                = attribute("pap", TlpAttributeFormat, "PAP level", 2L)
   val message            = optionalAttribute("message", F.textFmt, "Message associated to the analysis")
-  val errorMessage       = optionalAttribute("message", F.textFmt, "Message returned by the worker when it fails")
+  val errorMessage       = optionalAttribute("errorMessage", F.textFmt, "Message returned by the worker when it fails")
   val parameters         = attribute("parameters", F.rawFmt, "Parameters for this job", "{}")
   val input              = optionalAttribute("input", F.rawFmt, "Data sent to worker")
   val fromCache          = optionalAttribute("fromCache", F.booleanFmt, "Indicates if cache is used", O.form)
