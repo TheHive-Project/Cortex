@@ -114,11 +114,8 @@ class JobCtrl @Inject()(
                   "message"  → artifact.message(),
                   "tags"     → artifact.tags(),
                   "tlp"      → artifact.tlp(),
-                  "attachment" → Json.obj(
-                    "contentType" → attachment.contentType,
-                    "id" → attachment.id,
-                    "name" → attachment.name,
-                    "size" → attachment.size)
+                  "attachment" → Json
+                    .obj("contentType" → attachment.contentType, "id" → attachment.id, "name" → attachment.name, "size" → attachment.size)
                 )
             }
             .runWith(Sink.seq)

@@ -6,7 +6,10 @@ CONFIG_ES=1
 CONFIG=1
 CONFIG_FILE=/etc/cortex/application.conf
 ANALYZER_PATH=/opt/Cortex-Analyzers/analyzers
+ANALYZER_URLS=()
 RESPONDER_PATH=/opt/Cortex-Analyzers/responders
+RESPONDER_URLS=()
+START_DOCKER=0
 
 function usage {
 	cat <<- _EOF_
@@ -14,11 +17,12 @@ function usage {
 		--no-config		| do not try to configure TheHive (add secret and elasticsearch)
 		--no-config-secret	| do not add random secret to configuration
 		--no-config-es		| do not add elasticsearch hosts to configuration
-		--es-hosts <esconfig>	| use this string to configure elasticsearch hosts (format: ["host1:9300","host2:9300"])
+		--es-uri <uri>		| use this string to configure elasticsearch hosts (format: http(s)://host:port,host:port(/prefix)?querystring)
 		--es-hostname <host>	| resolve this hostname to find elasticseach instances
 		--secret <secret>	| secret to secure sessions
-		--analyzer-path <path>	| where analyzers are located
-		--responder-path <path> | where responders are located
+		--analyzer-url <url>	| where analyzers are located (url or path)
+		--responder-url <url>	| where responders are located (url or path)
+		--start-docker		| start a internal docker (inside container) to run analyzers/responders
 	_EOF_
 	exit 1
 }
@@ -30,13 +34,18 @@ do
 		"--no-config")		CONFIG=0;;
 		"--no-config-secret")	CONFIG_SECRET=0;;
 		"--no-config-es")	CONFIG_ES=0;;
-		"--es-hosts")		shift; ES_HOSTS=$1;;
+		"--es-hosts")		echo "--es-hosts is deprecated, please use --es-uri"
+					usage;;
+		"--es-uri")		shift; ES_URI=$1;;
 		"--es-hostname")	shift; ES_HOSTNAME=$1;;
 		"--secret")		shift; SECRET=$1;;
 		"--analyzer-path")	shift; ANALYZER_PATH=$1;;
 		"--responder-path")	shift; RESPONDER_PATH=$1;;
+		"--analyzer-url")	shift; ANALYZER_URLS+=$1;;
+		"--responder-url")	shift; RESPONDER_URLS+=$1;;
+		"--start-docker")	START_DOCKER=1;;
 		"--")			STOP=1;;
-		*)			usage
+		*)			echo "unrecognized option: $1"; usage;;
 	esac
 	shift
 done
@@ -56,12 +65,12 @@ then
 
 	if test $CONFIG_ES = 1
 	then
-		if test -z "$ES_HOSTS"
+		if test -z "$ES_URI"
 		then
 			function join_es_hosts {
-				echo -n "[\"$1"
+				echo -n $1:9200
 				shift
-				printf "%s:9300\"]" "${@/#/:9300\",\"}"
+				printf "%s," "${@/#/:9200}"
 			}
 
 			ES=$(getent ahostsv4 $ES_HOSTNAME | awk '{ print $1 }' | sort -u)
@@ -69,26 +78,42 @@ then
 			then
 				echo "Warning automatic elasticsearch host config fails"
 			else
-				ES_HOSTS=$(join_es_hosts $ES)
+				ES_URI=http://$(join_es_hosts $ES)
 			fi
 		fi
-		if test -n "$ES_HOSTS"
+		if test -n "$ES_URI"
 		then
-			echo Using elasticsearch host: $ES_HOSTS
-			echo search.host=$ES_HOSTS >> $CONFIG_FILE
+			echo Using elasticsearch uri: $ES_URI
+			echo search.uri=\"$ES_URI\" >> $CONFIG_FILE
 		else
 			echo elasticsearch host not configured
 		fi
 	fi
 
-	echo analyzer.path=[\"$ANALYZER_PATH\"] >> $CONFIG_FILE
-	echo responder.path=[\"$RESPONDER_PATH\"] >> $CONFIG_FILE
+	function join_urls {
+		echo -n \"$1\"
+		shift
+		for U do echo -n ,\"$U\"; done
+#		printf ",\"%s\"" $@
+	}
+	test ${#ANALYZER_URLS} = 0 && ANALYZER_URLS+=$ANALYZER_PATH
+	test ${#RESPONDER_URLS} = 0 && RESPONDER_URLS+=$RESPONDER_PATH
+	
+	echo analyzer.urls=\[$(join_urls ${ANALYZER_URLS[@]})\] >> $CONFIG_FILE
+	echo responder.urls=\[$(join_urls ${RESPONDER_URLS[@]})\] >> $CONFIG_FILE
 
 	echo 'include file("/etc/cortex/application.conf")' >> $CONFIG_FILE
 fi
 
-exec bin/cortex \
+test $START_DOCKER = 1 && dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 &> /dev/null &
+DOCKER_PID=$!
+
+echo config file is:
+cat $CONFIG_FILE
+su -s /bin/sh -c "cd /opt/cortex; bin/cortex \
 	-Dconfig.file=$CONFIG_FILE \
 	-Dlogger.file=/etc/cortex/logback.xml \
 	-Dpidfile.path=/dev/null \
-	$@
+	$@" daemon
+
+test $START_DOCKER = 1 && kill ${DOCKER_PID}
