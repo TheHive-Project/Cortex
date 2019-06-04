@@ -1,5 +1,5 @@
 <section class="content-header">
-  <h1>Job details    
+  <h1>Job details
     <a ui-sref="main.jobs" class="pull-right">
       <small class="text-primary">
         <i class="fa fa-chevron-left fa-lg"></i> Back to list</small>
@@ -22,8 +22,35 @@
             <h5 class="text-primary">Input details</h5>
             <pre>{{$ctrl.job.data | json}}</pre>
           </div>
-          <h5 class="text-primary mt-xs">Report</h5>
-          <pre>{{$ctrl.job.report | json}}</pre>
+
+          <div>
+            <h5 class="text-primary mt-xs">Report</h5>
+            <pre>{{$ctrl.job.report | json}}</pre>
+          </div>
+
+          <div ng-if="$ctrl.job.report.artifacts.length > 0">
+            <h5 class="text-primary mt-xs">Artifacts</h5>
+            <table class="table table-striped">
+              <tr>
+                <th width="20">#</th>
+                <th width="100">Datatype</th>
+                <th>Value</th>
+              </tr>
+              <tr ng-repeat="artifact in $ctrl.job.report.artifacts track by $index">
+                <td>{{$index + 1}}</td>
+                <td>{{artifact.dataType}}</td>
+                <td>
+                  <div class="wrap">
+                    {{(artifact.attachment.name || artifact.data) | fang}}
+                  </div>
+                  <div ng-if="artifact.tags.length > 0">
+                    <span class="label label-primary"
+                      ng-repeat="tag in artifact.tags track by $index">{{tag.text}}</span>&nbsp;
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
         </div>
       </div>
     </div>

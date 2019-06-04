@@ -18,6 +18,7 @@
         [{{$ctrl.job.dataType | uppercase}}]
         {{(($ctrl.job.dataType === 'file') ? $ctrl.job.attachment.name : $ctrl.job.data) | fang}}
       </p>
+      <hr>
     </div>
 
     <div>
@@ -25,6 +26,7 @@
       <p>
         <span am-time-ago="$ctrl.job.date"></span>
       </p>
+      <hr>
     </div>
 
     <div>
@@ -32,6 +34,7 @@
       <p>
         <tlp value="$ctrl.job.tlp"></tlp>
       </p>
+      <hr>
     </div>
 
     <div>
@@ -39,6 +42,7 @@
       <p>
         <tlp value="$ctrl.job.pap" namespace="PAP"></tlp>
       </p>
+      <hr>
     </div>
 
     <div>
@@ -47,6 +51,7 @@
         <span class="label label-default"
           ng-class="{'Success': 'label-success', 'InProgress': 'label-warning', 'Failure': 'label-danger'}[$ctrl.job.status]">{{$ctrl.job.status}}</span>
       </p>
+      <hr>
     </div>
 
     <div ng-if="$ctrl.job.report.summary">
