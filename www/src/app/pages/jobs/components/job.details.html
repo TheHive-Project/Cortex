@@ -5,40 +5,56 @@
   </div>
   <div class="box-body with-border">
 
-    <strong>Artifact</strong>
-    <p>
-      <span>[{{$ctrl.job.dataType | uppercase}}]</span> 
-      <span ng-if="$ctrl.job.type !== 'responder'">{{(($ctrl.job.dataType === 'file') ? $ctrl.job.attachment.name: $ctrl.job.data) | fang}}</span>
-      <span ng-if="$ctrl.job.type === 'responder'">{{$ctrl.job.label || 'No Label'}}</span>
-      
-    </p>
-    <p ng-if="">
-      [{{$ctrl.job.dataType | uppercase}}] {{(($ctrl.job.dataType === 'file') ? $ctrl.job.attachment.name : $ctrl.job.data) | fang}}
-    </p>
-    <hr>
+    <div>
+      <strong>Artifact</strong>
+      <p class="wrap">
+        <span>[{{$ctrl.job.dataType | uppercase}}]</span>
+        <span
+          ng-if="$ctrl.job.type !== 'responder'">{{(($ctrl.job.dataType === 'file') ? $ctrl.job.attachment.name: $ctrl.job.data) | fang}}</span>
+        <span ng-if="$ctrl.job.type === 'responder'">{{$ctrl.job.label || 'No Label'}}</span>
 
-    <strong>Date</strong>
-    <p>
-      <span am-time-ago="$ctrl.job.date"></span>
-    </p>
-    <hr>
+      </p>
+      <p ng-if="">
+        [{{$ctrl.job.dataType | uppercase}}]
+        {{(($ctrl.job.dataType === 'file') ? $ctrl.job.attachment.name : $ctrl.job.data) | fang}}
+      </p>
+    </div>
 
-    <strong>TLP</strong>
-    <p>
-      <tlp value="$ctrl.job.tlp"></tlp>
-    </p>
-    <hr>
+    <div>
+      <strong>Date</strong>
+      <p>
+        <span am-time-ago="$ctrl.job.date"></span>
+      </p>
+    </div>
 
-    <strong>PAP</strong>
-    <p>
-      <tlp value="$ctrl.job.pap" namespace="PAP"></tlp>
-    </p>
-    <hr>
+    <div>
+      <strong>TLP</strong>
+      <p>
+        <tlp value="$ctrl.job.tlp"></tlp>
+      </p>
+    </div>
 
+    <div>
+      <strong>PAP</strong>
+      <p>
+        <tlp value="$ctrl.job.pap" namespace="PAP"></tlp>
+      </p>
+    </div>
 
-    <strong>Status</strong>
-    <p>
-      <span class="label label-default" ng-class="{'Success': 'label-success', 'InProgress': 'label-warning', 'Failure': 'label-danger'}[$ctrl.job.status]">{{$ctrl.job.status}}</span>
-    </p>
+    <div>
+      <strong>Status</strong>
+      <p>
+        <span class="label label-default"
+          ng-class="{'Success': 'label-success', 'InProgress': 'label-warning', 'Failure': 'label-danger'}[$ctrl.job.status]">{{$ctrl.job.status}}</span>
+      </p>
+    </div>
+
+    <div ng-if="$ctrl.job.report.summary">
+      <strong>Report summary</strong>
+      <p>
+        <taxonomie taxonomies="$ctrl.job.report.summary.taxonomies"></taxonomie>
+      </p>
+    </div>
+
   </div>
 </div>

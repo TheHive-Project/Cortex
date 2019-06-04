@@ -8,6 +8,7 @@ import requireRolesDirective from './directives/require-roles/require-roles.dire
 import compareToDirective from './directives/compare-to/compare-to.directive';
 import userAvatarDirective from './directives/user-avatar/user-avatar.directive';
 import tlpDirective from './directives/tlp/tlp.directive';
+import taxonomieDirective from './directives/taxonomie/taxonomie.directive';
 import autofocusDirective from './directives/autofocus/autofocus.directive';
 
 import constants from './services/constants';
@@ -37,8 +38,9 @@ fixedHeightDirective(core);
 fileChooserDirective(core);
 requireRolesDirective(core);
 compareToDirective(core);
-userAvatarDirective(core);
+userAvatarDirective(core)
 tlpDirective(core);
+taxonomieDirective(core);
 autofocusDirective(core);
 
 /* Common services */
