@@ -6,4 +6,9 @@ export default class JobController {
 
     this.$log = $log;
   }
+
+  $onInit() {
+    this.protectDownloadsWith = this.main.config.config.protectDownloadsWith;
+    this.hasFileArtifact = this.job.report.artifacts.find(item => item.dataType === 'file');
+  }
 }

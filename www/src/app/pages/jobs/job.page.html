@@ -30,6 +30,9 @@
 
           <div ng-if="$ctrl.job.report.artifacts.length > 0">
             <h5 class="text-primary mt-xs">Artifacts</h5>
+            <div class="mv-xxs" ng-if="$ctrl.hasFileArtifact">
+              <small class="text-danger">Zip are protected with password "{{$ctrl.protectDownloadsWith}}"</small>
+            </div>
             <table class="table table-striped">
               <tr>
                 <th width="20">#</th>
@@ -40,8 +43,15 @@
                 <td>{{$index + 1}}</td>
                 <td>{{artifact.dataType}}</td>
                 <td>
-                  <div class="wrap">
-                    {{(artifact.attachment.name || artifact.data) | fang}}
+                  <div class="wrap" ng-if="artifact.dataType === 'file'">
+                    {{artifact.attachment.name| fang}}
+                    <a href="./api/datastorezip/{{artifact.attachment.id}}?name={{artifact.attachment.name}}"
+                      target="_blank">
+                      (Download)
+                    </a>
+                  </div>
+                  <div class="wrap" ng-if="artifact.dataType !== 'file'">
+                    {{artifact.data | fang}}
                   </div>
                   <div ng-if="artifact.tags.length > 0">
                     <span class="label label-primary"

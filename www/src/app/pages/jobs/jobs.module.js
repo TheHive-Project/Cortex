@@ -29,11 +29,9 @@ const jobsModule = angular
         url: 'jobs',
         component: 'jobsPage',
         resolve: {
-          datatypes: ($q, AnalyzerService) => {
-            return AnalyzerService.list()
-              .then(() => $q.resolve(AnalyzerService.getTypes()))
-              .catch(err => $q.reject(err));
-          },
+          datatypes: ($q, AnalyzerService) => AnalyzerService.list()
+            .then(() => $q.resolve(AnalyzerService.getTypes()))
+            .catch(err => $q.reject(err)),
           jobtypes: () => ['analyzer', 'responder'],
           analyzers: AnalyzerService =>
             AnalyzerService.list().then(analyzers =>
@@ -97,6 +95,9 @@ const jobsModule = angular
     templateUrl: jobTpl,
     bindings: {
       job: '<'
+    },
+    require: {
+      main: '^^mainPage'
     }
   })
   .component('jobDetails', {
