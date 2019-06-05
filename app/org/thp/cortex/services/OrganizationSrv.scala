@@ -1,6 +1,6 @@
 package org.thp.cortex.services
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.{Inject, Singleton}
 
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
@@ -11,7 +11,7 @@ import play.api.libs.json.JsObject
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source
-import org.thp.cortex.models.{ Organization, OrganizationModel }
+import org.thp.cortex.models.{Organization, OrganizationModel}
 
 import org.elastic4play.controllers.Fields
 import org.elastic4play.database.ModifyConfig
@@ -26,7 +26,8 @@ class OrganizationSrv(
     findSrv: FindSrv,
     deleteSrv: DeleteSrv,
     createSrv: CreateSrv,
-    cache: AsyncCacheApi) {
+    cache: AsyncCacheApi
+) {
 
   @Inject() def this(
       config: Configuration,
@@ -36,19 +37,11 @@ class OrganizationSrv(
       findSrv: FindSrv,
       deleteSrv: DeleteSrv,
       createSrv: CreateSrv,
-      cache: AsyncCacheApi) = this(
-    config.get[Duration]("cache.organization"),
-    organizationModel,
-    getSrv,
-    updateSrv,
-    findSrv,
-    deleteSrv,
-    createSrv,
-    cache)
+      cache: AsyncCacheApi
+  ) = this(config.get[Duration]("cache.organization"), organizationModel, getSrv, updateSrv, findSrv, deleteSrv, createSrv, cache)
 
-  def create(fields: Fields)(implicit authContext: AuthContext): Future[Organization] = {
+  def create(fields: Fields)(implicit authContext: AuthContext): Future[Organization] =
     createSrv[OrganizationModel, Organization](organizationModel, fields)
-  }
 
   def get(orgId: String): Future[Organization] = cache.getOrElseUpdate(s"org-$orgId", cacheExpiration) {
     getSrv[OrganizationModel, Organization](organizationModel, orgId)
@@ -75,9 +68,8 @@ class OrganizationSrv(
     deleteSrv[OrganizationModel, Organization](organizationModel, orgId)
   }
 
-  def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Organization, NotUsed], Future[Long]) = {
+  def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[Organization, NotUsed], Future[Long]) =
     findSrv[OrganizationModel, Organization](organizationModel, queryDef, range, sortBy)
-  }
 
   def stats(queryDef: QueryDef, aggs: Seq[Agg]): Future[JsObject] = findSrv(organizationModel, queryDef, aggs: _*)
 }

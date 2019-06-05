@@ -1,13 +1,13 @@
 package org.thp.cortex.services
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.{Inject, Singleton}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 import play.api.Logger
 
-import akka.actor.{ Actor, ActorRef }
+import akka.actor.{Actor, ActorRef}
 import org.thp.cortex.models.JobStatus
 
 import org.elastic4play.models.BaseEntity
@@ -18,16 +18,16 @@ object AuditActor {
   case class Unregister(jobId: String, actorRef: ActorRef)
   case class JobEnded(jobId: String, status: JobStatus.Type)
 }
+
 @Singleton
-class AuditActor @Inject() (
-    eventSrv: EventSrv,
-    implicit val ec: ExecutionContext) extends Actor {
+class AuditActor @Inject()(eventSrv: EventSrv, implicit val ec: ExecutionContext) extends Actor {
 
   import AuditActor._
+
   object EntityExtractor {
     def unapply(e: BaseEntity) = Some((e.model, e.id, e.routing))
   }
-  var registration = Map.empty[String, Seq[ActorRef]]
+  var registration                    = Map.empty[String, Seq[ActorRef]]
   private[AuditActor] lazy val logger = Logger(getClass)
 
   override def preStart(): Unit = {
@@ -56,7 +56,9 @@ class AuditActor @Inject() (
       if (model.modelName == "job" && action == AuditableAction.Update) {
         logger.info(s"Job $id has be updated (${details \ "status"})")
         val status = (details \ "status").asOpt[JobStatus.Type].getOrElse(JobStatus.InProgress)
-        if (status != JobStatus.InProgress) registration.getOrElse(id, Nil).foreach { aref ⇒ aref ! JobEnded(id, status) }
+        if (status != JobStatus.InProgress) registration.getOrElse(id, Nil).foreach { aref ⇒
+          aref ! JobEnded(id, status)
+        }
       }
   }
 }

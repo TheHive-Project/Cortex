@@ -11,6 +11,6 @@ object JsonFormat {
     case JsString(s) if Roles.isValid(s) ⇒ JsSuccess(Roles.withName(s).get)
     case _                               ⇒ JsError(Seq(JsPath → Seq(JsonValidationError(s"error.expected.role(${Roles.roleNames}"))))
   }
-  implicit val roleFormat: Format[Role] = Format[Role](roleReads, roleWrites)
+  implicit val roleFormat: Format[Role]                   = Format[Role](roleReads, roleWrites)
   implicit val workerTypeFormat: Format[WorkerType.Value] = enumFormat(WorkerType)
 }

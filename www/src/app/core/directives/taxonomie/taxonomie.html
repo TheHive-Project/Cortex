@@ -1,0 +1,15 @@
+<div>
+  <div class="flexwrap mt-xxs" ng-if="taxonomies.length > 0">
+    <span class="label mb-xxxs mr-xxxs label-default" ng-repeat="taxonomy in taxonomies" ng-class="{'info': 'label-info',
+            'safe': 'label-success',
+            'suspicious': 'label-warning',
+            'malicious': 'label-danger'
+        }[taxonomy.level]">
+      {{taxonomy.namespace}}:{{taxonomy.predicate}}{{(taxonomy.value != undefined && taxonomy.value!= null) ? '="'+taxonomy.value+'"': ''}}
+    </span>
+  </div>
+
+  <div ng-if="taxonomies.length === 0">
+    <em class="text-muted mr-xxxs">No summary available</em>
+  </div>
+</div>

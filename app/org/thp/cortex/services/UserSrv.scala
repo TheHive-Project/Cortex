@@ -1,9 +1,9 @@
 package org.thp.cortex.services
 
-import javax.inject.{ Inject, Provider, Singleton }
+import javax.inject.{Inject, Provider, Singleton}
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Configuration
 import play.api.cache.AsyncCacheApi
@@ -14,10 +14,10 @@ import akka.stream.scaladsl.Source
 import org.thp.cortex.models._
 
 import org.elastic4play.controllers.Fields
-import org.elastic4play.database.{ DBIndex, ModifyConfig }
-import org.elastic4play.services.{ User ⇒ _, _ }
+import org.elastic4play.database.{DBIndex, ModifyConfig}
+import org.elastic4play.services.{User ⇒ EUser, UserSrv ⇒ EUserSrv, _}
 import org.elastic4play.utils.Instance
-import org.elastic4play.{ AuthenticationError, AuthorizationError, NotFoundError }
+import org.elastic4play.{AuthenticationError, AuthorizationError, NotFoundError}
 
 @Singleton
 class UserSrv(
@@ -33,7 +33,8 @@ class UserSrv(
     organizationSrv: OrganizationSrv,
     dbIndex: DBIndex,
     cache: AsyncCacheApi,
-    implicit val ec: ExecutionContext) extends org.elastic4play.services.UserSrv {
+    implicit val ec: ExecutionContext
+) extends EUserSrv {
 
   @Inject() def this(
       config: Configuration,
@@ -48,20 +49,23 @@ class UserSrv(
       organizationSrv: OrganizationSrv,
       dbIndex: DBIndex,
       cache: AsyncCacheApi,
-      ec: ExecutionContext) = this(
-    config.get[Duration]("cache.user"),
-    userModel,
-    createSrv,
-    getSrv,
-    updateSrv,
-    deleteSrv,
-    findSrv,
-    eventSrv,
-    authSrv,
-    organizationSrv,
-    dbIndex,
-    cache,
-    ec)
+      ec: ExecutionContext
+  ) =
+    this(
+      config.get[Duration]("cache.user"),
+      userModel,
+      createSrv,
+      getSrv,
+      updateSrv,
+      deleteSrv,
+      findSrv,
+      eventSrv,
+      authSrv,
+      organizationSrv,
+      dbIndex,
+      cache,
+      ec
+    )
 
   private case class AuthContextImpl(userId: String, userName: String, requestId: String, roles: Seq[Role], authMethod: String) extends AuthContext
 
@@ -70,21 +74,21 @@ class UserSrv(
     cache.remove(s"user-org-$userId")
   }
 
-  override def getFromId(request: RequestHeader, userId: String, authMethod: String): Future[AuthContext] = {
-    get(userId).flatMap { user ⇒ getFromUser(request, user, authMethod) }
-  }
+  override def getFromId(request: RequestHeader, userId: String, authMethod: String): Future[AuthContext] =
+    get(userId).flatMap { user ⇒
+      getFromUser(request, user, authMethod)
+    }
 
-  override def getFromUser(request: RequestHeader, user: org.elastic4play.services.User, authMethod: String): Future[AuthContext] = {
+  override def getFromUser(request: RequestHeader, user: EUser, authMethod: String): Future[AuthContext] =
     user match {
       case u: User if u.status() == UserStatus.Ok ⇒
         organizationSrv.get(u.organization()).flatMap {
-          case o if o.status() == OrganizationStatus.Active ⇒ Future.successful(AuthContextImpl(user.id, user.getUserName, Instance.getRequestId(request), user.getRoles, authMethod))
-          case _                                            ⇒ Future.failed(AuthorizationError("Your account is locked"))
+          case o if o.status() == OrganizationStatus.Active ⇒
+            Future.successful(AuthContextImpl(user.id, user.getUserName, Instance.getRequestId(request), user.getRoles, authMethod))
+          case _ ⇒ Future.failed(AuthorizationError("Your account is locked"))
         }
       case _ ⇒ Future.failed(AuthorizationError("Your account is locked"))
     }
-
-  }
 
   override def getInitialUser(request: RequestHeader): Future[AuthContext] =
     dbIndex.getSize(userModel.modelName).map {
@@ -100,14 +104,14 @@ class UserSrv(
     }
   }
 
-  def create(fields: Fields)(implicit authContext: AuthContext): Future[User] = {
+  def create(fields: Fields)(implicit authContext: AuthContext): Future[User] =
     fields.getString("password") match {
       case None ⇒ createSrv[UserModel, User](userModel, fields)
-      case Some(password) ⇒ createSrv[UserModel, User](userModel, fields.unset("password")).flatMap { user ⇒
-        authSrv.get.setPassword(user.userId(), password).map(_ ⇒ user)
-      }
+      case Some(password) ⇒
+        createSrv[UserModel, User](userModel, fields.unset("password")).flatMap { user ⇒
+          authSrv.get.setPassword(user.userId(), password).map(_ ⇒ user)
+        }
     }
-  }
 
   override def get(userId: String): Future[User] = cache.getOrElseUpdate(s"user-$userId", cacheExpiration) {
     getSrv[UserModel, User](userModel, userId)
@@ -138,11 +142,15 @@ class UserSrv(
     deleteSrv[UserModel, User](userModel, userId)
   }
 
-  def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[User, NotUsed], Future[Long]) = {
+  def find(queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[User, NotUsed], Future[Long]) =
     findSrv[UserModel, User](userModel, queryDef, range, sortBy)
-  }
 
-  def findForOrganization(organizationId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[User, NotUsed], Future[Long]) = {
+  def findForOrganization(
+      organizationId: String,
+      queryDef: QueryDef,
+      range: Option[String],
+      sortBy: Seq[String]
+  ): (Source[User, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
     find(and("organization" ~= organizationId, queryDef), range, sortBy)
   }
@@ -155,7 +163,7 @@ class UserSrv(
       .recover { case NotFoundError("user init not found") ⇒ Source.empty → Future.successful(0L) }
 
     val userSource = Source.fromFutureSource(users.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
-    val userTotal = users.flatMap(_._2)
+    val userTotal  = users.flatMap(_._2)
     userSource → userTotal
   }
 }

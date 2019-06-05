@@ -1,16 +1,16 @@
 package org.thp.cortex.services
 
 import java.nio.charset.StandardCharsets
-import java.nio.file.{ Files, Path, Paths }
+import java.nio.file.{Files, Path, Paths}
 
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.sys.process.{ Process, ProcessLogger }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.sys.process.{Process, ProcessLogger}
 
 import play.api.Logger
 
 import akka.actor.ActorSystem
-import javax.inject.{ Inject, Singleton }
+import javax.inject.{Inject, Singleton}
 import org.thp.cortex.models._
 
 import org.elastic4play.utils.RichFuture
@@ -20,11 +20,12 @@ import scala.util.Try
 import play.api.libs.json.Json
 
 @Singleton
-class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
+class ProcessJobRunnerSrv @Inject()(implicit val system: ActorSystem) {
 
   lazy val logger = Logger(getClass)
 
   private val pythonPackageVersionRegex = "^Version: ([0-9]*)\\.([0-9]*)\\.([0-9]*)".r
+
   def checkCortexUtilsVersion(pythonVersion: String): Option[(Int, Int, Int)] =
     Try {
       (s"pip$pythonVersion" :: "show" :: "cortexutils" :: Nil)
@@ -48,9 +49,7 @@ class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
         case error ⇒
           logger.error(s"Execution of command $command failed", error)
           Future.apply {
-            val report = Json.obj(
-              "success" -> false,
-              "errorMessage" -> error.getMessage)
+            val report = Json.obj("success" → false, "errorMessage" → error.getMessage)
             Files.write(jobDirectory.resolve("output").resolve("output.json"), report.toString.getBytes(StandardCharsets.UTF_8))
             ()
           }

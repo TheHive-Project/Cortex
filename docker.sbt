@@ -23,17 +23,26 @@ mappings in Docker ~= (_.filterNot {
 })
 dockerCommands ~= { dc =>
   val (dockerInitCmds, dockerTailCmds) = dc
-    .collect {
-      case ExecCmd("RUN", "chown", _*) => ExecCmd("RUN", "chown", "-R", "daemon:root", ".")
-      case other => other
+    .flatMap {
+      case ExecCmd("RUN", "chown", _*) => Some(ExecCmd("RUN", "chown", "-R", "daemon:root", "."))
+      case Cmd("USER", _) => None
+      case other => Some(other)
     }
     .splitAt(4)
   dockerInitCmds ++
     Seq(
       Cmd("USER", "root"),
       ExecCmd("RUN", "bash", "-c",
-        "apt-get update && " +
-          "apt-get install -y --no-install-recommends python-pip python2.7-dev python3-pip python3-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git libssl-dev dnsutils && " +
+        "wget -q -O - https://download.docker.com/linux/static/stable/x86_64/docker-18.09.0.tgz | " +
+          "tar -xzC /usr/local/bin/ --strip-components 1 && " +
+          "addgroup --system dockremap && " +
+          "adduser --system --ingroup dockremap dockremap && " +
+          "addgroup --system docker && " +
+          "usermod --append --groups docker daemon &&" +
+          "echo 'dockremap:165536:65536' >> /etc/subuid && " +
+          "echo 'dockremap:165536:65536' >> /etc/subgid && " +
+          "apt-get update && " +
+          "apt-get install -y --no-install-recommends python-pip python2.7-dev python3-pip python3-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git libssl-dev dnsutils iptables && " +
           "pip2 install -U pip setuptools && " +
           "pip3 install -U pip setuptools && " +
           "hash -r && " +

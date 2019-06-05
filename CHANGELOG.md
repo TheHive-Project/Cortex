@@ -1,7 +1,20 @@
 # Change Log
 
-## [3.0.0-RC2](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC2) (2019-05-03)
+## [3.0.0-RC3](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC3) (2019-06-05)
 
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/3.0.0-RC2...3.0.0-RC3)
+
+**Implemented enhancements:**
+
+- Improve job details page [\#195](https://github.com/TheHive-Project/Cortex/issues/195)
+- Add support of ElasticSearch 6 [\#191](https://github.com/TheHive-Project/Cortex/issues/191)
+- Upgrade frontend libraries [\#190](https://github.com/TheHive-Project/Cortex/issues/190)
+
+**Fixed bugs:**
+
+- Get user detials via API is available to non-admin users [\#194](https://github.com/TheHive-Project/Cortex/issues/194)
+
+## [3.0.0-RC2](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC2) (2019-05-03)
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/3.0.0-RC1...3.0.0-RC2)
 
 **Fixed bugs:**

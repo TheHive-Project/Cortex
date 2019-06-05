@@ -1,18 +1,18 @@
 package org.thp.cortex.controllers
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.{Inject, Singleton}
 
 import scala.collection.immutable
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.concurrent.duration.{ DurationLong, FiniteDuration }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.{DurationLong, FiniteDuration}
 import scala.util.Random
 
-import play.api.{ Configuration, Logger }
+import play.api.{Configuration, Logger}
 import play.api.http.Status
 import play.api.libs.json.Json
-import play.api.mvc.{ AbstractController, Action, AnyContent, ControllerComponents }
+import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
-import akka.actor.{ ActorSystem, Props }
+import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
 import akka.pattern.ask
 import org.thp.cortex.models.Roles
@@ -21,7 +21,7 @@ import org.thp.cortex.services.StreamActor.StreamMessages
 
 import org.elastic4play.Timed
 import org.elastic4play.controllers._
-import org.elastic4play.services.{ AuxSrv, EventSrv, MigrationSrv }
+import org.elastic4play.services.{AuxSrv, EventSrv, MigrationSrv}
 
 @Singleton
 class StreamCtrl(
@@ -36,7 +36,9 @@ class StreamCtrl(
     migrationSrv: MigrationSrv,
     components: ControllerComponents,
     implicit val system: ActorSystem,
-    implicit val ec: ExecutionContext) extends AbstractController(components) with Status {
+    implicit val ec: ExecutionContext
+) extends AbstractController(components)
+    with Status {
 
   @Inject() def this(
       configuration: Configuration,
@@ -47,7 +49,8 @@ class StreamCtrl(
       migrationSrv: MigrationSrv,
       components: ControllerComponents,
       system: ActorSystem,
-      ec: ExecutionContext) =
+      ec: ExecutionContext
+  ) =
     this(
       configuration.getMillis("stream.longpolling.cache").millis,
       configuration.getMillis("stream.longpolling.refresh").millis,
@@ -60,7 +63,8 @@ class StreamCtrl(
       migrationSrv,
       components,
       system,
-      ec)
+      ec
+    )
   private[StreamCtrl] lazy val logger = Logger(getClass)
 
   /**
@@ -69,22 +73,14 @@ class StreamCtrl(
   @Timed("controllers.StreamCtrl.create")
   def create: Action[AnyContent] = authenticated(Roles.read) {
     val id = generateStreamId()
-    system.actorOf(Props(
-      classOf[StreamActor],
-      cacheExpiration,
-      refresh,
-      nextItemMaxWait,
-      globalMaxWait,
-      eventSrv,
-      auxSrv), s"stream-$id")
+    system.actorOf(Props(classOf[StreamActor], cacheExpiration, refresh, nextItemMaxWait, globalMaxWait, eventSrv, auxSrv), s"stream-$id")
     Ok(id)
   }
 
   val alphanumeric: immutable.IndexedSeq[Char] = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
-  private[controllers] def generateStreamId() = Seq.fill(10)(alphanumeric(Random.nextInt(alphanumeric.size))).mkString
-  private[controllers] def isValidStreamId(streamId: String): Boolean = {
+  private[controllers] def generateStreamId()  = Seq.fill(10)(alphanumeric(Random.nextInt(alphanumeric.size))).mkString
+  private[controllers] def isValidStreamId(streamId: String): Boolean =
     streamId.length == 10 && streamId.forall(alphanumeric.contains)
-  }
 
   /**
     * Get events linked to the identified stream entry
@@ -96,8 +92,7 @@ class StreamCtrl(
 
     if (!isValidStreamId(id)) {
       Future.successful(BadRequest("Invalid stream id"))
-    }
-    else {
+    } else {
       val futureStatus = authenticated.expirationStatus(request) match {
         case ExpirationError if !migrationSrv.isMigrating ⇒ authenticated.getFromApiKey(request).map(_ ⇒ OK)
         case _: ExpirationWarning                         ⇒ Future.successful(220)
@@ -117,7 +112,7 @@ class StreamCtrl(
   def status = Action { implicit request ⇒
     val status = authenticated.expirationStatus(request) match {
       case ExpirationWarning(duration) ⇒ Json.obj("remaining" → duration.toSeconds, "warning" → true)
-      case ExpirationError             ⇒ Json.obj("remaining" → 0, "warning" → true)
+      case ExpirationError             ⇒ Json.obj("remaining" → 0, "warning"                  → true)
       case ExpirationOk(duration)      ⇒ Json.obj("remaining" → duration.toSeconds, "warning" → false)
     }
     Ok(status)

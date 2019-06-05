@@ -35,14 +35,10 @@ export default class UserEditController {
     this.orgId = orgId;
 
     this.formData = _.defaults(
-      _.pick(this.user, 'id', 'name', 'roles', 'organization'),
-      {
+      _.pick(this.user, 'id', 'name', 'roles', 'organization'), {
         id: null,
         name: null,
-        roles:
-          orgId && orgId === 'cortex'
-            ? [Roles.SUPERADMIN]
-            : [Roles.READ, Roles.ANALYZE],
+        roles: orgId && orgId === 'cortex' ? [Roles.SUPERADMIN] : [Roles.READ, Roles.ANALYZE],
         organization: orgId
       }
     );
@@ -58,13 +54,13 @@ export default class UserEditController {
   }
 
   getRolesList(orgId) {
-    return orgId && orgId === 'cortex'
-      ? [[this.Roles.SUPERADMIN]]
-      : [
-          [this.Roles.READ],
-          [this.Roles.READ, this.Roles.ANALYZE],
-          [this.Roles.READ, this.Roles.ANALYZE, this.Roles.ORGADMIN]
-        ];
+    return orgId && orgId === 'cortex' ? [
+      [this.Roles.SUPERADMIN]
+    ] : [
+      [this.Roles.READ],
+      [this.Roles.READ, this.Roles.ANALYZE],
+      [this.Roles.READ, this.Roles.ANALYZE, this.Roles.ORGADMIN]
+    ];
   }
 
   onOrgChange() {
@@ -73,9 +69,7 @@ export default class UserEditController {
     this.rolesList = this.getRolesList(this.formData.organization);
 
     this.formData.roles =
-      this.formData.organization === 'cortex'
-        ? [this.Roles.SUPERADMIN]
-        : [this.Roles.READ, this.Roles.ANALYZE];
+      this.formData.organization === 'cortex' ? [this.Roles.SUPERADMIN] : [this.Roles.READ, this.Roles.ANALYZE];
   }
 
   onSuccess(data) {
@@ -105,14 +99,18 @@ export default class UserEditController {
     if (this.user.id) {
       promise = this.UserService.update(this.user.id, postData);
     } else {
-      postData.login = angular.lowercase(this.formData.id);
+      postData.login = _.lowerCase(this.formData.id);
       promise = this.UserService.save(postData);
     }
 
     return promise
       .then(response => this.onSuccess(response.data))
       .catch(rejection => {
-        const { data: { type } } = rejection;
+        const {
+          data: {
+            type
+          }
+        } = rejection;
         if (type === 'ConflictError') {
           form.login.$setValidity('exists', false);
         } else {

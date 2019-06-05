@@ -10,7 +10,7 @@ class TestAnalyzer(Analyzer):
     def artifacts(self, raw):
         return [
             self.build_artifact("ip", "127.0.0.1", tags=["localhost"]),
-            self.build_artifact("file", "/etc/passwd", tlp=3)
+            self.build_artifact("file", "/etc/issue.net", tlp=3)
         ]
 
     def summary(self, raw):
