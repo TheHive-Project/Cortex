@@ -107,7 +107,7 @@ export default class UserEditController {
     if (this.user.id) {
       promise = this.UserService.update(this.user.id, postData);
     } else {
-      postData.login = _.lowerCase(this.formData.id);
+      postData.login = _.toLower(this.formData.id);
       promise = this.UserService.save(postData);
     }
 
