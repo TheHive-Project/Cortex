@@ -1,4 +1,3 @@
-
 $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 @import '~bootstrap-sass/assets/stylesheets/_bootstrap.scss';
 
@@ -9,7 +8,10 @@ $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 @import './paginable-table.scss';
 
 
-html { height: 100%; }
+html {
+  height: 100%;
+}
+
 body {
   min-height: 100%;
   position: relative;
@@ -18,20 +20,22 @@ body {
 
 .btn.btn-clear {
   &:active {
-    box-shadow: none !important;    
+    box-shadow: none !important;
   }
 
   &:focus {
     outline: none !important;
-  }  
+  }
 
   &.text-danger {
     &:focus {
       color: #a94442;
     }
   }
+
   background-color: #fff;
 }
+
 .btn.btn-clear:active:focus {
   outline: none !important;
 }
@@ -141,6 +145,7 @@ a.text-white:hover {
   .container {
     max-width: 1200px;
   }
+
   /* Remove the padding we set earlier */
   .header,
   .footer {
@@ -199,4 +204,8 @@ a.text-white:hover {
 
 textarea.vertical {
   resize: vertical;
+}
+
+.text-capitalized {
+  text-transform: capitalize;
 }
