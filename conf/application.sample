@@ -12,10 +12,39 @@
 search {
   # Name of the index
   index = cortex
-  # Name of the ElasticSearch cluster
-  cluster = hive
-  # Address of the ElasticSearch instance
-  host = ["127.0.0.1:9300"]
+  # ElasticSearch instance address.
+  uri = "http://127.0.0.1:9200/"
+
+  ## Advanced configuration
+  # Scroll keepalive.
+  #keepalive = 1m
+  # Scroll page size.
+  #pagesize = 50
+  # Number of shards
+  #nbshards = 5
+  # Number of replicas
+  #nbreplicas = 1
+  # Arbitrary settings
+  #settings {
+  #  # Maximum number of nested fields
+  #  mapping.nested_fields.limit = 100
+  #}
+
+  ## Authentication configuration
+  #search.username = ""
+  #search.password = ""
+
+  ## SSL configuration
+  #search.keyStore {
+  #  path = "/path/to/keystore"
+  #  type = "JKS" # or PKCS12
+  #  password = "keystore-password"
+  #}
+  #search.trustStore {
+  #  path = "/path/to/trustStore"
+  #  type = "JKS" # or PKCS12
+  #  password = "trustStore-password"
+  #}
 }
 
 ## Cache
