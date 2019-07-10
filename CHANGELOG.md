@@ -1,5 +1,23 @@
 # Change Log
 
+## [3.0.0-RC4](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC4) (2019-07-10)
+
+[Full Changelog](https://github.com/TheHive-Project/Cortex/compare/3.0.0-RC3...3.0.0-RC4)
+
+**Fixed bugs:**
+
+- Responder run displayed as Analyzer run [\#207](https://github.com/TheHive-Project/Cortex/issues/207)
+- docker version of cortex breaks when you don't create a user immediately [\#204](https://github.com/TheHive-Project/Cortex/issues/204)
+- Login error after Cortex upgrade to 3 [\#199](https://github.com/TheHive-Project/Cortex/issues/199)
+- Yara analyzer configuration dialog broken [\#134](https://github.com/TheHive-Project/Cortex/issues/134)
+
+**Closed issues:**
+
+- docker version of cortex prints a lot of errors for auth failures [\#205](https://github.com/TheHive-Project/Cortex/issues/205)
+- dockerhub sample uses the wrong port [\#203](https://github.com/TheHive-Project/Cortex/issues/203)
+- Custom Responder not showing up in Responders Config Tab [\#201](https://github.com/TheHive-Project/Cortex/issues/201)
+- Can't enable some "free" Analyzers [\#200](https://github.com/TheHive-Project/Cortex/issues/200)
+
 ## [3.0.0-RC3](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC3) (2019-06-05)
 
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/3.0.0-RC2...3.0.0-RC3)
@@ -15,6 +33,7 @@
 - Get user detials via API is available to non-admin users [\#194](https://github.com/TheHive-Project/Cortex/issues/194)
 
 ## [3.0.0-RC2](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC2) (2019-05-03)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/3.0.0-RC1...3.0.0-RC2)
 
 **Fixed bugs:**
@@ -24,6 +43,7 @@
 - Docker container exposes tcp/9000 instead of tcp/9001 [\#166](https://github.com/TheHive-Project/Cortex/issues/166)
 
 ## [3.0.0-RC1](https://github.com/TheHive-Project/Cortex/tree/3.0.0-RC1) (2019-04-05)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.3...3.0.0-RC1)
 
 **Implemented enhancements:**
@@ -34,7 +54,7 @@
 
 **Fixed bugs:**
 
-- SSO: Authentication module not found  [\#181](https://github.com/TheHive-Project/Cortex/issues/181)
+- SSO: Authentication module not found [\#181](https://github.com/TheHive-Project/Cortex/issues/181)
 - Akka Dispatcher Blocked [\#170](https://github.com/TheHive-Project/Cortex/issues/170)
 
 **Closed issues:**
@@ -45,6 +65,7 @@
 - File extraction [\#120](https://github.com/TheHive-Project/Cortex/issues/120)
 
 ## [2.1.3](https://github.com/TheHive-Project/Cortex/tree/2.1.3) (2018-12-20)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.2...2.1.3)
 
 **Implemented enhancements:**
@@ -62,10 +83,11 @@
 
 **Closed issues:**
 
-- Systemd: cortex.service: Failed with result 'exit-code'.  [\#155](https://github.com/TheHive-Project/Cortex/issues/155)
+- Systemd: cortex.service: Failed with result 'exit-code'. [\#155](https://github.com/TheHive-Project/Cortex/issues/155)
 - conf/logback.xml: Rotate logs [\#62](https://github.com/TheHive-Project/Cortex/issues/62)
 
 ## [2.1.2](https://github.com/TheHive-Project/Cortex/tree/2.1.2) (2018-10-12)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.1...2.1.2)
 
 **Fixed bugs:**
@@ -73,6 +95,7 @@
 - findSimilarJob function broken [\#144](https://github.com/TheHive-Project/Cortex/issues/144)
 
 ## [2.1.1](https://github.com/TheHive-Project/Cortex/tree/2.1.1) (2018-10-09)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.0...2.1.1)
 
 **Implemented enhancements:**
@@ -88,6 +111,7 @@
 - Console output should not be logged in syslog [\#136](https://github.com/TheHive-Project/Cortex/issues/136)
 
 ## [2.1.0](https://github.com/TheHive-Project/Cortex/tree/2.1.0) (2018-09-25)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.1.0-RC1...2.1.0)
 
 **Implemented enhancements:**
@@ -98,7 +122,7 @@
 **Fixed bugs:**
 
 - MISP API fails [\#109](https://github.com/TheHive-Project/Cortex/issues/109)
-- File\_Info issue [\#53](https://github.com/TheHive-Project/Cortex/issues/53)
+- File_Info issue [\#53](https://github.com/TheHive-Project/Cortex/issues/53)
 - Temporary files are not removed at the end of job [\#129](https://github.com/TheHive-Project/Cortex/issues/129)
 - MISP fails to run analyzers [\#128](https://github.com/TheHive-Project/Cortex/issues/128)
 
@@ -107,6 +131,7 @@
 - Update resolvers in build.sbt to contain Maven as a dependency [\#130](https://github.com/TheHive-Project/Cortex/pull/130) ([adl1995](https://github.com/adl1995))
 
 ## [2.1.0-RC1](https://github.com/TheHive-Project/Cortex/tree/2.1.0-RC1) (2018-07-31)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.4...2.1.0-RC1)
 
 **Implemented enhancements:**
@@ -137,6 +162,7 @@
 - Update GitHub path [\#100](https://github.com/TheHive-Project/Cortex/pull/100) ([saadkadhi](https://github.com/saadkadhi))
 
 ## [2.0.4](https://github.com/TheHive-Project/Cortex/tree/2.0.4) (2018-04-13)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.3...2.0.4)
 
 **Implemented enhancements:**
@@ -158,6 +184,7 @@
 - Insufficient Rights To Perform This Action [\#87](https://github.com/TheHive-Project/Cortex/issues/87)
 
 ## [2.0.3](https://github.com/TheHive-Project/Cortex/tree/2.0.3) (2018-04-09)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.2...2.0.3)
 
 **Implemented enhancements:**
@@ -177,6 +204,7 @@
 - Allow configuring auto artifacts extraction per analyzer [\#80](https://github.com/TheHive-Project/Cortex/issues/80)
 
 ## [2.0.2](https://github.com/TheHive-Project/Cortex/tree/2.0.2) (2018-04-04)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.1...2.0.2)
 
 **Fixed bugs:**
@@ -188,6 +216,7 @@
 - Session collision when TheHive & Cortex 2 share the same URL [\#70](https://github.com/TheHive-Project/Cortex/issues/70)
 
 ## [2.0.1](https://github.com/TheHive-Project/Cortex/tree/2.0.1) (2018-03-30)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/2.0.0...2.0.1)
 
 **Fixed bugs:**
@@ -197,6 +226,7 @@
 - User can't change his password [\#67](https://github.com/TheHive-Project/Cortex/issues/67)
 
 ## [2.0.0](https://github.com/TheHive-Project/Cortex/tree/2.0.0) (2018-03-30)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.4...2.0.0)
 
 **Implemented enhancements:**
@@ -219,7 +249,7 @@
 - Local, LDAP, AD and API Key Authentication [\#7](https://github.com/TheHive-Project/Cortex/issues/7)
 - Limit Rates and Respect Quotas [\#6](https://github.com/TheHive-Project/Cortex/issues/6)
 - Persistence and Report Caching [\#5](https://github.com/TheHive-Project/Cortex/issues/5)
-- Provide alternative paths for analyzers in addition to standard path.  [\#4](https://github.com/TheHive-Project/Cortex/issues/4)
+- Provide alternative paths for analyzers in addition to standard path. [\#4](https://github.com/TheHive-Project/Cortex/issues/4)
 - Provide way to reload conf file for new API keys without shutdown. [\#3](https://github.com/TheHive-Project/Cortex/issues/3)
 - Provide Secret Key auth to upstream service [\#2](https://github.com/TheHive-Project/Cortex/issues/2)
 
@@ -230,6 +260,7 @@
 - Adding WOT config sample [\#43](https://github.com/TheHive-Project/Cortex/pull/43) ([mthlvt](https://github.com/mthlvt))
 
 ## [1.1.4](https://github.com/TheHive-Project/Cortex/tree/1.1.4) (2017-09-15)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.3...1.1.4)
 
 **Fixed bugs:**
@@ -243,6 +274,7 @@
 - Disable analyzer in configuration file [\#32](https://github.com/TheHive-Project/Cortex/issues/32)
 
 ## [1.1.3](https://github.com/TheHive-Project/Cortex/tree/1.1.3) (2017-06-14)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/debian/1.1.2-2...1.1.3)
 
 **Fixed bugs:**
@@ -251,9 +283,11 @@
 - Error when parsing analyzer failure report [\#33](https://github.com/TheHive-Project/Cortex/issues/33)
 
 ## [debian/1.1.2-2](https://github.com/TheHive-Project/Cortex/tree/debian/1.1.2-2) (2017-05-24)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.2...debian/1.1.2-2)
 
 ## [1.1.2](https://github.com/TheHive-Project/Cortex/tree/1.1.2) (2017-05-24)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/debian/1.1.1-2...1.1.2)
 
 **Implemented enhancements:**
@@ -268,9 +302,11 @@
 - Error 500 in TheHive when a job is submited to Cortex [\#27](https://github.com/TheHive-Project/Cortex/issues/27)
 
 ## [debian/1.1.1-2](https://github.com/TheHive-Project/Cortex/tree/debian/1.1.1-2) (2017-05-19)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/rpm/1.1.1-2...debian/1.1.1-2)
 
 ## [rpm/1.1.1-2](https://github.com/TheHive-Project/Cortex/tree/rpm/1.1.1-2) (2017-05-19)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.1...rpm/1.1.1-2)
 
 **Fixed bugs:**
@@ -278,6 +314,7 @@
 - After Upgrade from Cortex 1.0.2 to 1.1.1 system does not come up [\#26](https://github.com/TheHive-Project/Cortex/issues/26)
 
 ## [1.1.1](https://github.com/TheHive-Project/Cortex/tree/1.1.1) (2017-05-17)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.1.0...1.1.1)
 
 **Fixed bugs:**
@@ -290,6 +327,7 @@
 - MISP integration [\#21](https://github.com/TheHive-Project/Cortex/issues/21)
 
 ## [1.1.0](https://github.com/TheHive-Project/Cortex/tree/1.1.0) (2017-05-12)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.0.2...1.1.0)
 
 **Implemented enhancements:**
@@ -304,6 +342,7 @@
 - Use new logo and favicon [\#22](https://github.com/TheHive-Project/Cortex/issues/22)
 
 ## [1.0.2](https://github.com/TheHive-Project/Cortex/tree/1.0.2) (2017-04-19)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.0.1...1.0.2)
 
 **Fixed bugs:**
@@ -319,6 +358,7 @@
 - Documentation on 'How to create an analyzer' [\#10](https://github.com/TheHive-Project/Cortex/issues/10)
 
 ## [1.0.1](https://github.com/TheHive-Project/Cortex/tree/1.0.1) (2017-03-08)
+
 [Full Changelog](https://github.com/TheHive-Project/Cortex/compare/1.0.0...1.0.1)
 
 **Fixed bugs:**
@@ -331,5 +371,4 @@
 
 ## [1.0.0](https://github.com/TheHive-Project/Cortex/tree/1.0.0) (2017-02-01)
 
-
-\* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*
+\* _This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)_
