@@ -59,7 +59,7 @@ export default class MaintenanceController {
 
   createInitialUser() {
     this.UserService.save({
-      login: _.lowerCase(this.newUser.login),
+      login: _.toLower(this.newUser.login),
       name: this.newUser.name,
       password: this.newUser.password,
       roles: ['superadmin'],

@@ -14,14 +14,15 @@
   <div class="row mv-s" ng-if="$ctrl.jobs.length > 0">
     <div class="col-sm-12 flex-table">
       <div class="flex-header media">
-        <div class="flex-col flex-w-100 text-center">Status</div>        
+        <div class="flex-col flex-w-100 text-center">Status</div>
         <div class="flex-col flex-1">Job details</div>
         <div class="flex-col flex-w-120 text-center">TLP</div>
         <div class="flex-col flex-w-120 text-center">PAP</div>
         <div class="flex-col flex-w-100"></div>
         <div class="flex-col flex-w-100" require-roles="orgadmin,analyze"></div>
       </div>
-      <div class="flex-row media" ng-repeat="job in $ctrl.jobs track by job.id" ng-init="isFile = job.dataType ==='file'">
+      <div class="flex-row media" ng-repeat="job in $ctrl.jobs track by job.id"
+        ng-init="isFile = job.dataType ==='file'">
         <div class="flex-col flex-w-100 vertical centered">
           <span class="label label-lg label-default" ng-class="{
             'Success': 'label-success',
@@ -30,13 +31,14 @@
         </div>
         <div class="flex-col flex-1">
           <h4 class="media-heading text-primary">
-            <strong>[{{job.dataType}}]</strong>            
-            <span ng-if="job.type !== 'responder'">{{(isFile ? job.attachment.name : job.data) | fang | limitTo:200}}</span>
+            <strong>[{{job.dataType}}]</strong>
+            <span
+              ng-if="job.type !== 'responder'">{{(isFile ? job.attachment.name : job.data) | fang | limitTo:200}}</span>
             <span ng-if="job.type === 'responder'">{{job.label || 'No Label'}}</span>
           </h4>
           <div class="row mv-xs text-muted">
             <div class="col-sm-4">
-              <strong>Analyzer:</strong>
+              <strong class="text-capitalized">{{ job.type }}:</strong>
               <span>{{job.analyzerName}}</span>
             </div>
             <div class="col-sm-4">
@@ -46,11 +48,12 @@
             <div class="col-sm-4">
               <strong>User:</strong>
               <span>{{job.organization}}/{{job.createdBy}}</span>
-            </div>            
+            </div>
           </div>
           <div ng-if="job.status === 'Failure'" class="row text-danger wrap">
             <div class="col-sm-12">
-              <a class="text-danger" href ng-click="job.showError = !!!job.showError">{{job.showError ? 'Hide' : 'Show'}} error</a>
+              <a class="text-danger" href
+                ng-click="job.showError = !!!job.showError">{{job.showError ? 'Hide' : 'Show'}} error</a>
               <pre ng-show="job.showError" class="error-trace">{{job.message}}</pre>
             </div>
           </div>
