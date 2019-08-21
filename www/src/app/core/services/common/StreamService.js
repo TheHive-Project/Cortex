@@ -3,7 +3,7 @@
 import lo from 'lodash';
 import angular from 'angular';
 
-export default function(app) {
+export default function (app) {
   function StreamSrv(
     $rootScope,
     $http,
@@ -15,15 +15,15 @@ export default function(app) {
     this.isPolling = false;
     this.streamId = null;
 
-    this.init = function() {
+    this.init = function () {
       this.streamId = null;
       this.requestStream();
     };
-    this.runCallbacks = function(id, objectType, message) {
+    this.runCallbacks = function (id, objectType, message) {
       $rootScope.$broadcast('stream:' + id + '-' + objectType, message);
     };
 
-    this.handleStreamResponse = function(data) {
+    this.handleStreamResponse = function (data) {
       if (!data || data.length === 0) {
         return;
       }
@@ -37,9 +37,8 @@ export default function(app) {
         let rootId = message.base.rootId;
         let objectType = message.base.objectType;
         let rootIdWithObjectType = rootId + '|' + objectType;
-        let secondaryObjectTypes = message.summary
-          ? lo.without(lo.keys(message.summary), objectType)
-          : [];
+        let secondaryObjectTypes = message.summary ?
+          lo.without(lo.keys(message.summary), objectType) : [];
 
         if (rootId in byRootIds) {
           byRootIds[rootId].push(message);
@@ -94,7 +93,7 @@ export default function(app) {
       this.runCallbacks('any', 'any', data);
     };
 
-    this.poll = function() {
+    this.poll = function () {
       // Skip polling is a poll is already running
       if (this.streamId === null || this.isPolling === true) {
         return;
@@ -104,46 +103,46 @@ export default function(app) {
       this.isPolling = true;
 
       // Poll stream changes
-      $http.get('./api/stream/' + this.streamId).then(
-        response => {
-          // Flag polling end
-          this.isPolling = false;
+      $http.get('./api/stream/' + this.streamId)
+        .then(
+          response => {
+            // Flag polling end
+            this.isPolling = false;
 
-          // Handle stream data and callbacks
-          this.handleStreamResponse(response.data);
+            // Handle stream data and callbacks
+            this.handleStreamResponse(response.data);
 
-          // Check if the session will expire soon
-          // TODO
-          // if (status === 220) {
-          //   AfkSrv.prompt().then(function () {
-          //     UserSrv.getUserInfo(AuthService.currentUser.id).then(
-          //       function () {},
-          //       function (response) {
-          //         NotificationService.error('StreamSrv', response.data, response.status);
-          //       }
-          //     );
-          //   });
-          // }
-          this.poll();
-        },
-        (data, status) => {
+            // Check if the session will expire soon
+            // TODO
+            // if (status === 220) {
+            //   AfkSrv.prompt().then(function () {
+            //     UserSrv.getUserInfo(AuthService.currentUser.id).then(
+            //       function () {},
+            //       function (response) {
+            //         NotificationService.error('StreamSrv', response.data, response.status);
+            //       }
+            //     );
+            //   });
+            // }
+            this.poll();
+          })
+        .catch(err => {
           // Initialize the stream;
           this.isPolling = false;
 
-          if (status !== 404) {
-            NotificationService.error('StreamSrv', data, status);
+          if (err.status !== 404) {
+            NotificationService.error('StreamSrv', err.data, err.status);
 
-            if (status === 401) {
+            if (err.status === 401) {
               return;
             }
           }
 
           this.init();
-        }
-      );
+        });
     };
 
-    this.requestStream = function() {
+    this.requestStream = function () {
       if (this.streamId !== null) {
         return;
       }
@@ -166,7 +165,7 @@ export default function(app) {
      * <li>scope {Object}</li>
      * <li>callback {Function}</li>
      */
-    this.addListener = function(config) {
+    this.addListener = function (config) {
       if (!config.scope) {
         $log.error('No scope provided, use the old listen method', config);
         this.listen(config.rootId, config.objectType, config.callback);
