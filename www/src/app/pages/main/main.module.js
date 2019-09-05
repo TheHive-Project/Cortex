@@ -21,7 +21,7 @@ const mainPageModule = angular
       url: '/',
       component: 'mainPage',
       resolve: {
-        currentUser: ($q, $state, AuthService) => {
+        currentUser: ($q, AuthService, NotificationService) => {
           'ngInject';
 
           let deferred = $q.defer();
@@ -29,7 +29,8 @@ const mainPageModule = angular
           AuthService.current()
             .then(userData => deferred.resolve(userData))
             .catch(err => {
-              deferred.reject(err);
+              NotificationService.handleError('Application', err.data, err.status);
+              return deferred.reject(err)
             });
 
           return deferred.promise;
