@@ -13,7 +13,8 @@ search {
   # Name of the index
   index = cortex
   # ElasticSearch instance address.
-  uri = "http://127.0.0.1:9200/"
+  # For cluster, join url with ',': "http://ip1:9200,http://ip2:9200"
+  uri = "http://127.0.0.1:9200"
 
   ## Advanced configuration
   # Scroll keepalive.
@@ -111,18 +112,41 @@ auth {
 ## ANALYZERS
 #
 analyzer {
-  # Absolute path where you have pulled the Cortex-Analyzers repository.
-  path = ["path/to/Cortex-Analyzers/analyzers"]
+  # analyzer location
+  # url can be point to:
+  # - directory where analyzers are installed
+  # - json file containing the list of analyzer descriptions
+  urls = [
+    "https://dl.bintray.com/thehive-project/cortexneurons/analyzers.json"
+    #"/absolute/path/of/analyzers"
+  ]
 
   # Sane defaults. Do not change unless you know what you are doing.
   fork-join-executor {
-
     # Min number of threads available for analysis.
     parallelism-min = 2
-
     # Parallelism (threads) ... ceil(available processors * factor).
     parallelism-factor = 2.0
+    # Max number of threads available for analysis.
+    parallelism-max = 4
+  }
+}
 
+# RESPONDERS
+#
+responder {
+  # responder location (same format as analyzer.urls)
+  urls = [
+    "https://dl.bintray.com/thehive-project/cortexneurons/reponders.json"
+    #"/absolute/path/of/responders"
+  ]
+
+  # Sane defaults. Do not change unless you know what you are doing.
+  fork-join-executor {
+    # Min number of threads available for analysis.
+    parallelism-min = 2
+    # Parallelism (threads) ... ceil(available processors * factor).
+    parallelism-factor = 2.0
     # Max number of threads available for analysis.
     parallelism-max = 4
   }
