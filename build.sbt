@@ -15,7 +15,8 @@ libraryDependencies ++= Seq(
   Dependencies.elastic4play,
   Dependencies.reflections,
   Dependencies.zip4j,
-  Dependencies.dockerClient
+  Dependencies.dockerClient,
+  Dependencies.akkaCluster
 )
 
 resolvers += Resolver.sbtPluginRepo("releases")
