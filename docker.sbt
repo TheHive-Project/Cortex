@@ -42,6 +42,7 @@ dockerCommands ~= { dc =>
           "echo 'dockremap:165536:65536' >> /etc/subuid && " +
           "echo 'dockremap:165536:65536' >> /etc/subgid && " +
           "apt-get update && " +
+          "apt-get upgrade -y && " +
           "apt-get install -y --no-install-recommends python-pip python2.7-dev python3-pip python3-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git libssl-dev dnsutils iptables && " +
           "pip2 install -U pip setuptools && " +
           "pip3 install -U pip setuptools && " +
