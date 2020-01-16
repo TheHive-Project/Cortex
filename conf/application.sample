@@ -13,7 +13,7 @@ search {
   # Name of the index
   index = cortex
   # ElasticSearch instance address.
-  # For cluster, join url with ',': "http://ip1:9200,http://ip2:9200"
+  # For cluster, join address:port with ',': "http://ip1:9200,ip2:9200,ip3:9200"
   uri = "http://127.0.0.1:9200"
 
   ## Advanced configuration
