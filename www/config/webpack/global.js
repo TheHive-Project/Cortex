@@ -15,7 +15,7 @@ let stylesLoader =
   rootPublic +
   '&sourceMap!postcss-loader!sass-loader?outputStyle=expanded&sourceMap=true&sourceMapContents=true';
 
-module.exports = function(_path) {
+module.exports = function (_path) {
   let rootAssetPath = _path + 'src';
 
   let webpackConfig = {
@@ -45,11 +45,9 @@ module.exports = function(_path) {
 
     // modules resolvers
     module: {
-      rules: [
-        {
+      rules: [{
           test: /\.html$/,
-          use: [
-            {
+          use: [{
               loader: 'ngtemplate-loader',
               options: {
                 relativeTo: path.join(_path, '/src')
@@ -76,8 +74,7 @@ module.exports = function(_path) {
         {
           test: /\.js$/,
           exclude: [path.resolve(_path, 'node_modules')],
-          use: [
-            {
+          use: [{
               loader: 'babel-loader',
               options: {
                 cacheDirectory: false
@@ -90,8 +87,7 @@ module.exports = function(_path) {
         },
         {
           test: /\.css$/,
-          use: [
-            {
+          use: [{
               loader: 'style-loader'
             },
             {
@@ -104,35 +100,31 @@ module.exports = function(_path) {
         },
         {
           test: /\.(scss|sass)$/,
-          loader: DEVELOPMENT
-            ? 'style-loader!' + stylesLoader
-            : ExtractTextPlugin.extract({
-                fallbackLoader: 'style-loader',
-                loader: stylesLoader
-              })
+          loader: DEVELOPMENT ?
+            'style-loader!' + stylesLoader :
+            ExtractTextPlugin.extract({
+              fallbackLoader: 'style-loader',
+              loader: stylesLoader
+            })
         },
         {
-          test: /\.(woff2|woff|ttf|eot|svg)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-          use: [
-            {
-              loader: 'url-loader',
-              options: {
-                name: 'assets/fonts/[name]_[hash].[ext]'
-              }
+          test: /\.(woff2|woff|ttf|eot|otf|svg)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+          use: [{
+            loader: 'url-loader',
+            options: {
+              name: 'assets/fonts/[name]_[hash].[ext]'
             }
-          ]
+          }]
         },
         {
           test: /\.(jpe?g|png|gif)$/i,
-          use: [
-            {
-              loader: 'url-loader',
-              options: {
-                name: 'assets/images/[name]_[hash].[ext]',
-                limit: 10000
-              }
+          use: [{
+            loader: 'url-loader',
+            options: {
+              name: 'assets/images/[name]_[hash].[ext]',
+              limit: 10000
             }
-          ]
+          }]
         }
       ]
     },
@@ -142,7 +134,9 @@ module.exports = function(_path) {
       new webpack.LoaderOptionsPlugin({
         options: {
           // PostCSS
-          postcss: [autoprefixer({ browsers: ['last 5 versions'] })],
+          postcss: [autoprefixer({
+            browsers: ['last 5 versions']
+          })],
           debug: true
         }
       }),
@@ -177,8 +171,7 @@ module.exports = function(_path) {
         ignorePaths: ['.DS_Store']
       }),
       new ExtractTextPlugin({
-        filename:
-          'assets/styles/css/[name]' +
+        filename: 'assets/styles/css/[name]' +
           (NODE_ENV === 'development' ? '' : '.[chunkhash]') +
           '.css',
         allChunks: true
