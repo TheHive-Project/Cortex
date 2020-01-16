@@ -20,6 +20,7 @@ import play.api.{Configuration, Logger}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.io.Codec
 import scala.util.{Failure, Success, Try}
 
 @Singleton
@@ -155,7 +156,7 @@ class WorkerSrv @Inject()(
 
     def readFile(path: Path, workerType: WorkerType.Type): Seq[WorkerDefinition] = {
       val reads         = WorkerDefinition.reads(workerType)
-      val source        = scala.io.Source.fromFile(path.toFile)
+      val source        = scala.io.Source.fromFile(path.toFile)(Codec.UTF8)
       lazy val basePath = path.getParent.getParent
       val workerDefinitions =
         for {
