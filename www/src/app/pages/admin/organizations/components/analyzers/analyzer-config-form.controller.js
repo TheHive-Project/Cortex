@@ -9,7 +9,7 @@ export default class AnalyzerConfigFormController {
 
     this.AnalyzerService = AnalyzerService;
     this.Tlps = Tlps;
-    this.rateUnits = ['Day', 'Month'];
+    this.rateUnits = ['Second', 'Minute', 'Hour', 'Day', 'Month'];
   }
 
   $onInit() {
