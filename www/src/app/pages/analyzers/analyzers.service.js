@@ -83,9 +83,9 @@ export default class AnalyzerService {
       .then(
         response => {
           this.analyzers = response.data;
-          this.dataTypes = _.sortBy(
+          this.dataTypes = _.without(_.sortBy(
             _.uniq(_.flatten(_.map(response.data, 'dataTypeList')))
-          );
+          ), undefined);
 
           defered.resolve(response.data);
         },
