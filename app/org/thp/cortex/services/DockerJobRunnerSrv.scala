@@ -92,10 +92,12 @@ class DockerJobRunnerSrv(client: DockerClient, autoUpdate: Boolean, implicit val
       ()
     }.andThen {
       case r ⇒
-        if (!Files.exists(jobDirectory.resolve("output").resolve("output.json"))) {
-          val message = r.fold(e ⇒ s"Docker creation error: ${e.getMessage}\n", _ ⇒ "") +
-            Try(client.logs(containerCreation.id(), LogsParam.stdout(), LogsParam.stderr()).readFully())
-              .recover { case e ⇒ s"Container logs can't be read (${e.getMessage}" }
+        val outputFile = jobDirectory.resolve("output").resolve("output.json")
+        if (!Files.exists(outputFile) || Files.size(outputFile) == 0) {
+          val output = Try(client.logs(containerCreation.id(), LogsParam.stdout(), LogsParam.stderr()).readFully())
+            .fold(e ⇒ s"Container logs can't be read (${e.getMessage})", identity)
+          val message = r.fold(e ⇒ s"Docker creation error: ${e.getMessage}\n$output", _ ⇒ output)
+
           val report = Json.obj("success" → false, "errorMessage" → message)
           Files.write(jobDirectory.resolve("output").resolve("output.json"), report.toString.getBytes(StandardCharsets.UTF_8))
         }

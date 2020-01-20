@@ -327,7 +327,7 @@ class JobSrv(
       import org.elastic4play.services.QueryDSL._
       val now = new Date().getTime
       logger.info(s"Checking rate limit on worker ${worker.name()} from ${new Date(now - rateUnit.id.toLong * 24 * 60 * 60 * 1000)}")
-      stats(and("createdAt" ~>= (now - rateUnit.id.toLong * 24 * 60 * 60 * 1000), "workerId" ~= worker.id), Seq(selectCount)).map { s ⇒
+      stats(and("createdAt" ~>= (now - rateUnit.id.toLong * 1000), "workerId" ~= worker.id), Seq(selectCount)).map { s ⇒
         val count = (s \ "count").as[Long]
         logger.info(s"$count analysis found (limit is $rate)")
         count < rate

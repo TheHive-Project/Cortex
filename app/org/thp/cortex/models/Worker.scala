@@ -1,22 +1,22 @@
 package org.thp.cortex.models
 
 import javax.inject.{Inject, Singleton}
+import org.elastic4play.models.JsonFormat.enumFormat
+import org.elastic4play.models.{AttributeDef, BaseEntity, ChildModelDef, EntityDef, HiveEnumeration, AttributeFormat ⇒ F, AttributeOption ⇒ O}
+import org.elastic4play.utils.Hasher
+import org.thp.cortex.models.JsonFormat.workerTypeFormat
+import play.api.libs.json.{JsObject, JsString, Json}
 
 import scala.concurrent.Future
 import scala.util.Try
 
-import play.api.libs.json.{JsObject, JsString, Json}
-
-import org.elastic4play.models.JsonFormat.enumFormat
-import org.elastic4play.models.{AttributeDef, BaseEntity, ChildModelDef, EntityDef, HiveEnumeration, AttributeFormat ⇒ F, AttributeOption ⇒ O}
-import org.elastic4play.utils.Hasher
-
-import org.thp.cortex.models.JsonFormat.workerTypeFormat
-
 object RateUnit extends Enumeration with HiveEnumeration {
   type Type = Value
-  val Day            = Value(1)
-  val Month          = Value(30)
+  val Second         = Value(1)
+  val Minute         = Value(60)
+  val Hour           = Value(60 * 60)
+  val Day            = Value(60 * 60 * 24)
+  val Month          = Value(60 * 60 * 24 * 30)
   implicit val reads = enumFormat(this)
 }
 

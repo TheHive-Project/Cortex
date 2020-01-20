@@ -54,7 +54,7 @@
             <div class="col-sm-12">
               <a class="text-danger" href
                 ng-click="job.showError = !!!job.showError">{{job.showError ? 'Hide' : 'Show'}} error</a>
-              <pre ng-show="job.showError" class="error-trace">{{job.message}}</pre>
+              <pre ng-show="job.showError" class="error-trace">{{job.errorMessage}}</pre>
             </div>
           </div>
         </div>

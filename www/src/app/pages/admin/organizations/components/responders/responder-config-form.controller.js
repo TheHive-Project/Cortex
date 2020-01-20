@@ -9,7 +9,7 @@ export default class ResponderConfigFormController {
 
     this.ResponderService = ResponderService;
     this.Tlps = Tlps;
-    this.rateUnits = ['Day', 'Month'];
+    this.rateUnits = ['Second', 'Minute', 'Hour', 'Day', 'Month'];
   }
 
   applyConfig(config) {

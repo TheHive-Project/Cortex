@@ -9,6 +9,6 @@ export default class JobController {
 
   $onInit() {
     this.protectDownloadsWith = this.main.config.config.protectDownloadsWith;
-    this.hasFileArtifact = this.job.report.artifacts.find(item => item.dataType === 'file');
+    this.hasFileArtifact = (this.job.report.artifacts || []).find(item => item.dataType === 'file');
   }
 }
