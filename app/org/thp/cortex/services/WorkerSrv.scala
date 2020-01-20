@@ -134,7 +134,7 @@ class WorkerSrv @Inject()(
     )
     userSrv.inInitAuthContext { implicit authContext ⇒
       find(any, Some("all"), Nil)._1.runForeach { worker ⇒
-        workerMap.get(worker.id) match {
+        workerMap.get(worker.workerDefinitionId()) match {
           case Some(wd) ⇒ update(worker, Fields.empty.set("dataTypeList", Json.toJson(wd.dataTypeList)))
           case None     ⇒ update(worker, Fields.empty.set("dataTypeList", JsArray.empty))
         }
