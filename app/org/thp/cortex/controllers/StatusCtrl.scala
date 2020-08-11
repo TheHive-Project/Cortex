@@ -8,12 +8,11 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json.{JsBoolean, JsString, Json}
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
-import com.sksamuel.elastic4s.http.ElasticDsl
+import com.sksamuel.elastic4s.ElasticDsl
 import javax.inject.{Inject, Singleton}
 import org.elasticsearch.client.Node
 import org.thp.cortex.models.Worker
 
-import org.elastic4play.database.DBIndex
 import org.elastic4play.services.AuthSrv
 import org.elastic4play.services.auth.MultiAuthSrv
 
@@ -21,7 +20,6 @@ import org.elastic4play.services.auth.MultiAuthSrv
 class StatusCtrl @Inject()(
     configuration: Configuration,
     authSrv: AuthSrv,
-    dbIndex: DBIndex,
     components: ControllerComponents,
     implicit val ec: ExecutionContext
 ) extends AbstractController(components)

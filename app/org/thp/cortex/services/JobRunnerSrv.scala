@@ -100,10 +100,7 @@ class JobRunnerSrv @Inject()(
         attachmentSrv
           .source(attachment.id)
           .runWith(FileIO.toPath(attachmentFile))
-          .flatMap {
-            case ioresult if ioresult.status.isSuccess ⇒ Future.successful(Some(attachmentFile))
-            case ioresult                              ⇒ Future.failed(ioresult.getError)
-          }
+          .map(_ => Some(attachmentFile))
       }
       .getOrElse(Future.successful(None))
       .map {

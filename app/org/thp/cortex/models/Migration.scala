@@ -11,14 +11,14 @@ import org.thp.cortex.services.{OrganizationSrv, UserSrv, WorkerSrv}
 
 import org.elastic4play.controllers.Fields
 import org.elastic4play.services.Operation._
-import org.elastic4play.services.{DatabaseState, IndexType, MigrationOperations, Operation}
+import org.elastic4play.services.{DatabaseState, MigrationOperations, Operation}
 import org.elastic4play.utils.Hasher
 
 @Singleton
 class Migration @Inject()(userSrv: UserSrv, organizationSrv: OrganizationSrv, workerSrv: WorkerSrv, implicit val ec: ExecutionContext)
     extends MigrationOperations {
 
-  lazy val logger                                = Logger(getClass)
+  lazy val logger: Logger = Logger(getClass)
   def beginMigration(version: Int): Future[Unit] = Future.successful(())
 
   def endMigration(version: Int): Future[Unit] =
@@ -27,8 +27,6 @@ class Migration @Inject()(userSrv: UserSrv, organizationSrv: OrganizationSrv, wo
         .create(Fields(Json.obj("name" → "cortex", "description" → "Default organization", "status" → "Active")))
         .transform(_ ⇒ Success(())) // ignore errors (already exist)
     }
-
-  override def indexType(version: Int): IndexType.Value = if (version > 3) IndexType.indexWithoutMappingTypes else IndexType.indexWithMappingTypes
 
   val operations: PartialFunction[DatabaseState, Seq[Operation]] = {
     case DatabaseState(1) ⇒

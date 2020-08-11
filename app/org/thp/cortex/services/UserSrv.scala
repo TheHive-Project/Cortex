@@ -162,7 +162,7 @@ class UserSrv(
     } yield findForOrganization(organizationId, queryDef, range, sortBy))
       .recover { case NotFoundError("user init not found") ⇒ Source.empty → Future.successful(0L) }
 
-    val userSource = Source.fromFutureSource(users.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val userSource = Source.futureSource(users.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val userTotal  = users.flatMap(_._2)
     userSource → userTotal
   }

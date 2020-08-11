@@ -2,8 +2,8 @@ package org.thp.cortex.models
 
 import play.api.libs.json.{JsString, JsValue}
 
-import com.sksamuel.elastic4s.http.ElasticDsl.keywordField
-import com.sksamuel.elastic4s.mappings.KeywordField
+import com.sksamuel.elastic4s.ElasticDsl.keywordField
+import com.sksamuel.elastic4s.requests.mappings.KeywordField
 import org.scalactic.{Every, Good, One, Or}
 
 import org.elastic4play.{AttributeError, InvalidFormatAttributeError}

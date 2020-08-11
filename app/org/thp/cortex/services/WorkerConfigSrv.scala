@@ -109,7 +109,7 @@ trait WorkerConfigSrv {
     val configs = userSrv
       .getOrganizationId(userId)
       .map(organizationId ⇒ findForOrganization(organizationId, queryDef, range, sortBy))
-    val configSource = Source.fromFutureSource(configs.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val configSource = Source.futureSource(configs.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val configTotal  = configs.flatMap(_._2)
     configSource → configTotal
   }

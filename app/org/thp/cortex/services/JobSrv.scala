@@ -94,7 +94,7 @@ class JobSrv(
 
   private def withUserFilter[A](userId: String)(x: String ⇒ (Source[A, NotUsed], Future[Long])): (Source[A, NotUsed], Future[Long]) = {
     val a       = userSrv.getOrganizationId(userId).map(x)
-    val aSource = Source.fromFutureSource(a.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val aSource = Source.futureSource(a.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val aTotal  = a.flatMap(_._2)
     aSource → aTotal
   }

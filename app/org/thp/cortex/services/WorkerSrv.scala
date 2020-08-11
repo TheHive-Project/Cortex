@@ -94,7 +94,7 @@ class WorkerSrv @Inject()(
       user ← userSrv.get(userId)
       organizationId = user.organization()
     } yield findForOrganization(organizationId, and(queryDef, "type" ~= WorkerType.analyzer), range, sortBy)
-    val analyserSource = Source.fromFutureSource(analyzers.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val analyserSource = Source.futureSource(analyzers.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val analyserTotal  = analyzers.flatMap(_._2)
     analyserSource → analyserTotal
   }
@@ -110,7 +110,7 @@ class WorkerSrv @Inject()(
       user ← userSrv.get(userId)
       organizationId = user.organization()
     } yield findForOrganization(organizationId, and(queryDef, "type" ~= WorkerType.responder), range, sortBy)
-    val analyserSource = Source.fromFutureSource(responders.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val analyserSource = Source.futureSource(responders.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
     val analyserTotal  = responders.flatMap(_._2)
     analyserSource → analyserTotal
   }
