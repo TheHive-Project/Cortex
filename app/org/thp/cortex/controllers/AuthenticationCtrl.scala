@@ -14,7 +14,7 @@ import play.api.mvc._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AuthenticationCtrl @Inject()(
+class AuthenticationCtrl @Inject() (
     configuration: Configuration,
     authSrv: AuthSrv,
     userSrv: UserSrv,
@@ -27,34 +27,34 @@ class AuthenticationCtrl @Inject()(
 ) extends AbstractController(components) {
 
   @Timed
-  def login: Action[Fields] = Action.async(fieldsBodyParser) { implicit request ⇒
+  def login: Action[Fields] = Action.async(fieldsBodyParser) { implicit request =>
     dbIndex.getIndexStatus.flatMap {
-      case false ⇒ Future.successful(Results.Status(520))
-      case _ ⇒
+      case false => Future.successful(Results.Status(520))
+      case _ =>
         for {
-          user        ← request.body.getString("user").fold[Future[String]](Future.failed(MissingAttributeError("user")))(Future.successful)
-          password    ← request.body.getString("password").fold[Future[String]](Future.failed(MissingAttributeError("password")))(Future.successful)
-          authContext ← authSrv.authenticate(user, password)
+          user        <- request.body.getString("user").fold[Future[String]](Future.failed(MissingAttributeError("user")))(Future.successful)
+          password    <- request.body.getString("password").fold[Future[String]](Future.failed(MissingAttributeError("password")))(Future.successful)
+          authContext <- authSrv.authenticate(user, password)
         } yield authenticated.setSessingUser(renderer.toOutput(OK, authContext), authContext)
     }
   }
 
   @Timed
-  def ssoLogin: Action[AnyContent] = Action.async { implicit request ⇒
+  def ssoLogin: Action[AnyContent] = Action.async { implicit request =>
     dbIndex.getIndexStatus.flatMap {
-      case false ⇒ Future.successful(Results.Status(520))
-      case _ ⇒
+      case false => Future.successful(Results.Status(520))
+      case _ =>
         authSrv
           .authenticate()
           .flatMap {
-            case Right(authContext) ⇒
-              userSrv.get(authContext.userId).map { user ⇒
+            case Right(authContext) =>
+              userSrv.get(authContext.userId).map { user =>
                 if (user.status() == UserStatus.Ok)
                   authenticated.setSessingUser(Redirect(configuration.get[String]("play.http.context").stripSuffix("/") + "/index.html"), authContext)
                 else
                   throw AuthorizationError("Your account is locked")
               }
-            case Left(result) ⇒ Future.successful(result)
+            case Left(result) => Future.successful(result)
           }
     }
   }

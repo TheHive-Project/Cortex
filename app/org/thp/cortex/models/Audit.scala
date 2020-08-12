@@ -21,30 +21,30 @@ import org.elastic4play.models.{
   ObjectAttributeFormat,
   OptionalAttributeFormat,
   StringAttributeFormat,
-  AttributeOption ⇒ O
+  AttributeOption => O
 }
 import org.elastic4play.services.AuditableAction
 import org.elastic4play.services.JsonFormat.auditableActionFormat
 
-trait AuditedModel { self: BaseModelDef ⇒
+trait AuditedModel { self: BaseModelDef =>
   def attributes: Seq[Attribute[_]]
 
   lazy val auditedAttributes: Map[String, Attribute[_]] =
-    attributes.collect { case a if !a.isUnaudited ⇒ a.attributeName → a }.toMap
+    attributes.collect { case a if !a.isUnaudited => a.attributeName -> a }.toMap
 
   def selectAuditedAttributes(attrs: JsObject) = JsObject {
     attrs.fields.flatMap {
-      case (attrName, value) ⇒
+      case (attrName, value) =>
         val attrNames = attrName.split("\\.").toSeq
-        auditedAttributes.get(attrNames.head).map { _ ⇒
+        auditedAttributes.get(attrNames.head).map { _ =>
           val reverseNames = attrNames.reverse
-          reverseNames.drop(1).foldLeft(reverseNames.head → value)((jsTuple, name) ⇒ name → JsObject(Seq(jsTuple)))
+          reverseNames.drop(1).foldLeft(reverseNames.head -> value)((jsTuple, name) => name -> JsObject(Seq(jsTuple)))
         }
     }
   }
 }
 
-trait AuditAttributes { _: AttributeDef ⇒
+trait AuditAttributes { _: AttributeDef =>
   def detailsAttributes: Seq[Attribute[_]]
 
   val operation: A[AuditableAction.Value] = attribute("operation", AttributeFormat.enumFmt(AuditableAction), "Operation", O.readonly)
@@ -70,14 +70,14 @@ class AuditModel(auditName: String, auditedModels: immutable.Set[AuditedModel])
 
   def mergeAttributeFormat(context: String, format1: AttributeFormat[_], format2: AttributeFormat[_]): Option[AttributeFormat[_]] =
     (format1, format2) match {
-      case (OptionalAttributeFormat(f1), f2)                                              ⇒ mergeAttributeFormat(context, f1, f2)
-      case (f1, OptionalAttributeFormat(f2))                                              ⇒ mergeAttributeFormat(context, f1, f2)
-      case (MultiAttributeFormat(f1), MultiAttributeFormat(f2))                           ⇒ mergeAttributeFormat(context, f1, f2).map(MultiAttributeFormat(_))
-      case (f1, EnumerationAttributeFormat(_) | ListEnumerationAttributeFormat(_))        ⇒ mergeAttributeFormat(context, f1, StringAttributeFormat)
-      case (EnumerationAttributeFormat(_) | ListEnumerationAttributeFormat(_), f2)        ⇒ mergeAttributeFormat(context, StringAttributeFormat, f2)
-      case (ObjectAttributeFormat(subAttributes1), ObjectAttributeFormat(subAttributes2)) ⇒ mergeAttributes(context, subAttributes1 ++ subAttributes2)
-      case (f1, f2) if f1 == f2                                                           ⇒ Some(f1)
-      case (f1, f2) ⇒
+      case (OptionalAttributeFormat(f1), f2)                                              => mergeAttributeFormat(context, f1, f2)
+      case (f1, OptionalAttributeFormat(f2))                                              => mergeAttributeFormat(context, f1, f2)
+      case (MultiAttributeFormat(f1), MultiAttributeFormat(f2))                           => mergeAttributeFormat(context, f1, f2).map(MultiAttributeFormat(_))
+      case (f1, EnumerationAttributeFormat(_) | ListEnumerationAttributeFormat(_))        => mergeAttributeFormat(context, f1, StringAttributeFormat)
+      case (EnumerationAttributeFormat(_) | ListEnumerationAttributeFormat(_), f2)        => mergeAttributeFormat(context, StringAttributeFormat, f2)
+      case (ObjectAttributeFormat(subAttributes1), ObjectAttributeFormat(subAttributes2)) => mergeAttributes(context, subAttributes1 ++ subAttributes2)
+      case (f1, f2) if f1 == f2                                                           => Some(f1)
+      case (f1, f2) =>
         logger.warn(s"Attribute $f1 != $f2")
         None
 
@@ -87,22 +87,22 @@ class AuditModel(auditName: String, auditedModels: immutable.Set[AuditedModel])
     val mergeAttributes: Iterable[Option[Attribute[_]]] = attributes
       .groupBy(_.attributeName)
       .map {
-        case (_name, _attributes) ⇒
+        case (_name, _attributes) =>
           _attributes
-            .map(a ⇒ Some(a.format))
+            .map(a => Some(a.format))
             .reduce[Option[AttributeFormat[_]]] {
-              case (Some(f1), Some(f2)) ⇒ mergeAttributeFormat(context + "." + _name, f1, f2)
-              case _                    ⇒ None
+              case (Some(f1), Some(f2)) => mergeAttributeFormat(context + "." + _name, f1, f2)
+              case _                    => None
             }
             .map {
-              case oaf: OptionalAttributeFormat[_] ⇒ oaf: AttributeFormat[_]
-              case maf: MultiAttributeFormat[_]    ⇒ maf: AttributeFormat[_]
-              case f                               ⇒ OptionalAttributeFormat(f): AttributeFormat[_]
+              case oaf: OptionalAttributeFormat[_] => oaf: AttributeFormat[_]
+              case maf: MultiAttributeFormat[_]    => maf: AttributeFormat[_]
+              case f                               => OptionalAttributeFormat(f): AttributeFormat[_]
             }
-            .map(format ⇒ Attribute("audit", _name, format, Nil, None, ""))
+            .map(format => Attribute("audit", _name, format, Nil, None, ""))
             .orElse {
               logger.error(
-                s"Mapping is not consistent on attribute $context:\n${_attributes.map(a ⇒ a.modelName + "/" + a.attributeName + ": " + a.format.name).mkString("\n")}"
+                s"Mapping is not consistent on attribute $context:\n${_attributes.map(a => a.modelName + "/" + a.attributeName + ": " + a.format.name).mkString("\n")}"
               )
               None
             }
@@ -119,7 +119,7 @@ class AuditModel(auditName: String, auditedModels: immutable.Set[AuditedModel])
       "audit",
       auditedModels
         .flatMap(_.attributes)
-        .filter(a ⇒ a.isModel && !a.isUnaudited)
+        .filter(a => a.isModel && !a.isUnaudited)
         .toSeq
     ).map(_.subAttributes)
       .getOrElse(Nil)

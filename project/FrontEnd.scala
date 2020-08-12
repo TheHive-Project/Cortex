@@ -13,8 +13,8 @@ object FrontEnd extends AutoPlugin {
 
   override def trigger = allRequirements
 
-  override def projectSettings = Seq[Setting[_]](
-    frontendFiles := {
+  override def projectSettings =
+    Seq[Setting[_]](frontendFiles := {
       val s = streams.value
       s.log.info("Building front-end ...")
       s.log.info("npm install")

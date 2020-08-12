@@ -15,7 +15,7 @@ import org.thp.cortex.models._
 
 import org.elastic4play.controllers.Fields
 import org.elastic4play.database.{DBIndex, ModifyConfig}
-import org.elastic4play.services.{User ⇒ EUser, UserSrv ⇒ EUserSrv, _}
+import org.elastic4play.services.{User => EUser, UserSrv => EUserSrv, _}
 import org.elastic4play.utils.Instance
 import org.elastic4play.{AuthenticationError, AuthorizationError, NotFoundError}
 
@@ -75,41 +75,41 @@ class UserSrv(
   }
 
   override def getFromId(request: RequestHeader, userId: String, authMethod: String): Future[AuthContext] =
-    get(userId).flatMap { user ⇒
+    get(userId).flatMap { user =>
       getFromUser(request, user, authMethod)
     }
 
   override def getFromUser(request: RequestHeader, user: EUser, authMethod: String): Future[AuthContext] =
     user match {
-      case u: User if u.status() == UserStatus.Ok ⇒
+      case u: User if u.status() == UserStatus.Ok =>
         organizationSrv.get(u.organization()).flatMap {
-          case o if o.status() == OrganizationStatus.Active ⇒
+          case o if o.status() == OrganizationStatus.Active =>
             Future.successful(AuthContextImpl(user.id, user.getUserName, Instance.getRequestId(request), user.getRoles, authMethod))
-          case _ ⇒ Future.failed(AuthorizationError("Your account is locked"))
+          case _ => Future.failed(AuthorizationError("Your account is locked"))
         }
-      case _ ⇒ Future.failed(AuthorizationError("Your account is locked"))
+      case _ => Future.failed(AuthorizationError("Your account is locked"))
     }
 
   override def getInitialUser(request: RequestHeader): Future[AuthContext] =
     dbIndex.getSize(userModel.modelName).map {
-      case size if size > 0 ⇒ throw AuthenticationError(s"Use of initial user is forbidden because users exist in database")
-      case _                ⇒ AuthContextImpl("init", "", Instance.getRequestId(request), Roles.roles, "init")
+      case size if size > 0 => throw AuthenticationError(s"Use of initial user is forbidden because users exist in database")
+      case _                => AuthContextImpl("init", "", Instance.getRequestId(request), Roles.roles, "init")
     }
 
-  override def inInitAuthContext[A](block: AuthContext ⇒ Future[A]): Future[A] = {
+  override def inInitAuthContext[A](block: AuthContext => Future[A]): Future[A] = {
     val authContext = AuthContextImpl("init", "", Instance.getInternalId, Roles.roles, "init")
     eventSrv.publish(StreamActor.Initialize(authContext.requestId))
     block(authContext).andThen {
-      case _ ⇒ eventSrv.publish(StreamActor.Commit(authContext.requestId))
+      case _ => eventSrv.publish(StreamActor.Commit(authContext.requestId))
     }
   }
 
   def create(fields: Fields)(implicit authContext: AuthContext): Future[User] =
     fields.getString("password") match {
-      case None ⇒ createSrv[UserModel, User](userModel, fields)
-      case Some(password) ⇒
-        createSrv[UserModel, User](userModel, fields.unset("password")).flatMap { user ⇒
-          authSrv.get.setPassword(user.userId(), password).map(_ ⇒ user)
+      case None => createSrv[UserModel, User](userModel, fields)
+      case Some(password) =>
+        createSrv[UserModel, User](userModel, fields.unset("password")).flatMap { user =>
+          authSrv.get.setPassword(user.userId(), password).map(_ => user)
         }
     }
 
@@ -157,13 +157,13 @@ class UserSrv(
 
   def findForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[User, NotUsed], Future[Long]) = {
     val users = (for {
-      user ← get(userId)
+      user <- get(userId)
       organizationId = user.organization()
     } yield findForOrganization(organizationId, queryDef, range, sortBy))
-      .recover { case NotFoundError("user init not found") ⇒ Source.empty → Future.successful(0L) }
+      .recover { case NotFoundError("user init not found") => Source.empty -> Future.successful(0L) }
 
-    val userSource = Source.futureSource(users.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val userSource = Source.futureSource(users.map(_._1)).mapMaterializedValue(_ => NotUsed)
     val userTotal  = users.flatMap(_._2)
-    userSource → userTotal
+    userSource -> userTotal
   }
 }

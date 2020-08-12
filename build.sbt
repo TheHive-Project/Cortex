@@ -23,7 +23,7 @@ resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 resolvers += "elasticsearch-releases" at "https://artifacts.elastic.co/maven"
 publishArtifact in (Compile, packageDoc) := false
 publishArtifact in packageDoc := false
-sources in (Compile,doc) := Seq.empty
+sources in (Compile, doc) := Seq.empty
 
 // Front-end //
 mappings in packageBin in Assets ++= frontendFiles.value

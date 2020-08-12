@@ -1,12 +1,12 @@
-import Common.{stableVersion, betaVersion, snapshotVersion}
+import Common.{betaVersion, snapshotVersion, stableVersion}
 
 linuxPackageMappings in Debian += packageMapping(file("LICENSE") -> "/usr/share/doc/cortex/copyright").withPerms("644")
 version in Debian := {
   version.value match {
-    case stableVersion(_, _) => version.value
-    case betaVersion(v1, v2) => v1 + "-0.1RC" + v2
+    case stableVersion(_, _)   => version.value
+    case betaVersion(v1, v2)   => v1 + "-0.1RC" + v2
     case snapshotVersion(_, _) => version.value + "-SNAPSHOT"
-    case _ => sys.error("Invalid version: " + version.value)
+    case _                     => sys.error("Invalid version: " + version.value)
   }
 }
 debianPackageRecommends := Seq("elasticsearch")

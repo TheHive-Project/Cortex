@@ -26,7 +26,7 @@ import org.elastic4play.database.ModifyConfig
 import org.elastic4play.services._
 
 @Singleton
-class WorkerSrv @Inject()(
+class WorkerSrv @Inject() (
     config: Configuration,
     workerModel: WorkerModel,
     organizationSrv: OrganizationSrv,
@@ -52,20 +52,20 @@ class WorkerSrv @Inject()(
   rescan()
 
   def getDefinition(workerId: String): Try[WorkerDefinition] = workerMap.get(workerId) match {
-    case Some(worker) ⇒ Success(worker)
-    case None         ⇒ Failure(NotFoundError(s"Worker $workerId not found"))
+    case Some(worker) => Success(worker)
+    case None         => Failure(NotFoundError(s"Worker $workerId not found"))
   }
 
   //  def listDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = Source(workerMap.values.toList) → Future.successful(workerMap.size.toLong)
 
   def listAnalyzerDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = {
     val analyzerDefinitions = workerMap.values.filter(_.tpe == WorkerType.analyzer)
-    Source(analyzerDefinitions.toList) → Future.successful(analyzerDefinitions.size.toLong)
+    Source(analyzerDefinitions.toList) -> Future.successful(analyzerDefinitions.size.toLong)
   }
 
   def listResponderDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = {
     val responderDefinitions = workerMap.values.filter(_.tpe == WorkerType.responder)
-    Source(responderDefinitions.toList) → Future.successful(responderDefinitions.size.toLong)
+    Source(responderDefinitions.toList) -> Future.successful(responderDefinitions.size.toLong)
   }
 
   def get(workerId: String): Future[Worker] = getSrv[WorkerModel, Worker](workerModel, workerId)
@@ -73,7 +73,7 @@ class WorkerSrv @Inject()(
   def getForUser(userId: String, workerId: String): Future[Worker] =
     userSrv
       .getOrganizationId(userId)
-      .flatMap(organization ⇒ getForOrganization(organization, workerId))
+      .flatMap(organization => getForOrganization(organization, workerId))
 
   def getForOrganization(organizationId: String, workerId: String): Future[Worker] = {
     import org.elastic4play.services.QueryDSL._
@@ -91,12 +91,12 @@ class WorkerSrv @Inject()(
   ): (Source[Worker, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
     val analyzers = for {
-      user ← userSrv.get(userId)
+      user <- userSrv.get(userId)
       organizationId = user.organization()
     } yield findForOrganization(organizationId, and(queryDef, "type" ~= WorkerType.analyzer), range, sortBy)
-    val analyserSource = Source.futureSource(analyzers.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val analyserSource = Source.futureSource(analyzers.map(_._1)).mapMaterializedValue(_ => NotUsed)
     val analyserTotal  = analyzers.flatMap(_._2)
-    analyserSource → analyserTotal
+    analyserSource -> analyserTotal
   }
 
   def findRespondersForUser(
@@ -107,12 +107,12 @@ class WorkerSrv @Inject()(
   ): (Source[Worker, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
     val responders = for {
-      user ← userSrv.get(userId)
+      user <- userSrv.get(userId)
       organizationId = user.organization()
     } yield findForOrganization(organizationId, and(queryDef, "type" ~= WorkerType.responder), range, sortBy)
-    val analyserSource = Source.futureSource(responders.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+    val analyserSource = Source.futureSource(responders.map(_._1)).mapMaterializedValue(_ => NotUsed)
     val analyserTotal  = responders.flatMap(_._2)
-    analyserSource → analyserTotal
+    analyserSource -> analyserTotal
   }
 
   private def findForOrganization(
@@ -131,14 +131,14 @@ class WorkerSrv @Inject()(
   def rescan(): Unit = {
     import org.elastic4play.services.QueryDSL._
     scan(
-      analyzersURLs.map(_    → WorkerType.analyzer) ++
-        respondersURLs.map(_ → WorkerType.responder)
-    ).onComplete { _ ⇒
-      userSrv.inInitAuthContext { implicit authContext ⇒
-        find(any, Some("all"), Nil)._1.runForeach { worker ⇒
+      analyzersURLs.map(_    -> WorkerType.analyzer) ++
+        respondersURLs.map(_ -> WorkerType.responder)
+    ).onComplete { _ =>
+      userSrv.inInitAuthContext { implicit authContext =>
+        find(any, Some("all"), Nil)._1.runForeach { worker =>
           workerMap.get(worker.workerDefinitionId()) match {
-            case Some(wd) ⇒ update(worker, Fields.empty.set("dataTypeList", Json.toJson(wd.dataTypeList)))
-            case None     ⇒ update(worker, Fields.empty.set("dataTypeList", JsArray.empty))
+            case Some(wd) => update(worker, Fields.empty.set("dataTypeList", Json.toJson(wd.dataTypeList)))
+            case None     => update(worker, Fields.empty.set("dataTypeList", JsArray.empty))
           }
         }
       }
@@ -148,12 +148,12 @@ class WorkerSrv @Inject()(
   def scan(workerUrls: Seq[(String, WorkerType.Type)]): Future[Unit] = {
     def readUrl(url: URL, workerType: WorkerType.Type): Future[Seq[WorkerDefinition]] =
       url.getProtocol match {
-        case "file" ⇒ Future.successful(readFile(Paths.get(url.toURI), workerType))
-        case "http" | "https" ⇒
+        case "file" => Future.successful(readFile(Paths.get(url.toURI), workerType))
+        case "http" | "https" =>
           val reads = WorkerDefinition.reads(workerType)
           ws.url(url.toString)
             .get()
-            .map(response ⇒ response.json.as(reads))
+            .map(response => response.json.as(reads))
             .map(_.filterNot(_.command.isDefined))
       }
 
@@ -163,18 +163,18 @@ class WorkerSrv @Inject()(
       lazy val basePath = path.getParent.getParent
       val workerDefinitions =
         for {
-          w ← Try(source.mkString).map(Json.parse(_).as(reads)).getOrElse {
+          w <- Try(source.mkString).map(Json.parse(_).as(reads)).getOrElse {
             logger.error(s"File $path has invalid format")
             Nil
           }
-          command = w.command.map(cmd ⇒ basePath.resolve(cmd))
+          command = w.command.map(cmd => basePath.resolve(cmd))
           if command.isEmpty || command.exists(_.normalize().startsWith(basePath))
         } yield w.copy(command = command)
       source.close()
       workerDefinitions.filter {
-        case w if w.command.isDefined && jobRunnerSrv.processRunnerIsEnable    ⇒ true
-        case w if w.dockerImage.isDefined && jobRunnerSrv.dockerRunnerIsEnable ⇒ true
-        case w ⇒
+        case w if w.command.isDefined && jobRunnerSrv.processRunnerIsEnable    => true
+        case w if w.dockerImage.isDefined && jobRunnerSrv.dockerRunnerIsEnable => true
+        case w =>
           val reason =
             if (w.command.isDefined) "process runner is disabled"
             else if (w.dockerImage.isDefined) "Docker runner is disabled"
@@ -187,19 +187,19 @@ class WorkerSrv @Inject()(
 
     def readDirectory(path: Path, workerType: WorkerType.Type): Seq[WorkerDefinition] =
       for {
-        workerDir ← Files.newDirectoryStream(path).asScala.toSeq
+        workerDir <- Files.newDirectoryStream(path).asScala.toSeq
         if Files.isDirectory(workerDir)
-        infoFile         ← Files.newDirectoryStream(workerDir, "*.json").asScala
-        workerDefinition ← readFile(infoFile, workerType)
+        infoFile         <- Files.newDirectoryStream(workerDir, "*.json").asScala
+        workerDefinition <- readFile(infoFile, workerType)
       } yield workerDefinition
 
     Future
       .traverse(workerUrls) {
-        case (workerUrl, workerType) ⇒
+        case (workerUrl, workerType) =>
           Future(new URL(workerUrl))
             .flatMap(readUrl(_, workerType))
             .recover {
-              case _ ⇒
+              case _ =>
                 val path = Paths.get(workerUrl)
                 if (Files.isRegularFile(path)) readFile(path, workerType)
                 else if (Files.isDirectory(path)) readDirectory(path, workerType)
@@ -209,10 +209,10 @@ class WorkerSrv @Inject()(
                 }
             }
       }
-      .map { worker ⇒
-        val wmap = worker.flatten.map(w ⇒ w.id → w).toMap
+      .map { worker =>
+        val wmap = worker.flatten.map(w => w.id -> w).toMap
         workerMapLock.synchronized(workerMap = wmap)
-        logger.info(s"New worker list:\n\n\t${workerMap.values.map(a ⇒ s"${a.name} ${a.version}").mkString("\n\t")}\n")
+        logger.info(s"New worker list:\n\n\t${workerMap.values.map(a => s"${a.name} ${a.version}").mkString("\n\t")}\n")
       }
 
   }
@@ -230,13 +230,13 @@ class WorkerSrv @Inject()(
 
     val unknownConfigItems = (rawConfig.value.keySet -- configItems.map(_.name))
       .foldLeft[Unit Or Every[AttributeError]](Good(())) {
-        case (Good(_), ci) ⇒ Bad(One(UnknownAttributeError("worker.config", JsString(ci))))
-        case (Bad(e), ci)  ⇒ Bad(UnknownAttributeError("worker.config", JsString(ci)) +: e)
+        case (Good(_), ci) => Bad(One(UnknownAttributeError("worker.config", JsString(ci))))
+        case (Bad(e), ci)  => Bad(UnknownAttributeError("worker.config", JsString(ci)) +: e)
       }
 
-    withGood(configOrErrors, unknownConfigItems)((c, _) ⇒ c)
+    withGood(configOrErrors, unknownConfigItems)((c, _) => c)
       .fold(
-        cfg ⇒ {
+        cfg =>
           createSrv[WorkerModel, Worker, Organization](
             workerModel,
             organization,
@@ -246,26 +246,24 @@ class WorkerSrv @Inject()(
               .set("author", workerDefinition.author)
               .set("version", workerDefinition.version)
               .set("dockerImage", workerDefinition.dockerImage.map(JsString))
-              .set("command", workerDefinition.command.map(p ⇒ JsString(p.toString)))
+              .set("command", workerDefinition.command.map(p => JsString(p.toString)))
               .set("url", workerDefinition.url)
               .set("license", workerDefinition.license)
               .set("baseConfig", workerDefinition.baseConfiguration.map(JsString.apply))
               .set("configuration", cfg.toString)
               .set("type", workerDefinition.tpe.toString)
               .addIfAbsent("dataTypeList", StringInputValue(workerDefinition.dataTypeList))
-          )
-
-        }, {
-          case One(e)         ⇒ Future.failed(e)
-          case Every(es @ _*) ⇒ Future.failed(AttributeCheckingError(s"worker(${workerDefinition.name}).configuration", es))
+          ), {
+          case One(e)         => Future.failed(e)
+          case Every(es @ _*) => Future.failed(AttributeCheckingError(s"worker(${workerDefinition.name}).configuration", es))
         }
       )
   }
 
   def create(organizationId: String, workerDefinition: WorkerDefinition, workerFields: Fields)(implicit authContext: AuthContext): Future[Worker] =
     for {
-      organization ← organizationSrv.get(organizationId)
-      worker       ← create(organization, workerDefinition, workerFields)
+      organization <- organizationSrv.get(organizationId)
+      worker       <- create(organization, workerDefinition, workerFields)
     } yield worker
 
   def delete(worker: Worker)(implicit authContext: AuthContext): Future[Unit] =
@@ -277,12 +275,12 @@ class WorkerSrv @Inject()(
   def update(worker: Worker, fields: Fields)(implicit authContext: AuthContext): Future[Worker] = update(worker, fields, ModifyConfig.default)
 
   def update(worker: Worker, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Worker] = {
-    val workerFields = fields.getValue("configuration").fold(fields)(cfg ⇒ fields.set("configuration", cfg.toString))
+    val workerFields = fields.getValue("configuration").fold(fields)(cfg => fields.set("configuration", cfg.toString))
     updateSrv(worker, workerFields, modifyConfig)
   }
 
   def update(workerId: String, fields: Fields)(implicit authContext: AuthContext): Future[Worker] = update(workerId, fields, ModifyConfig.default)
 
   def update(workerId: String, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Worker] =
-    get(workerId).flatMap(worker ⇒ update(worker, fields, modifyConfig))
+    get(workerId).flatMap(worker => update(worker, fields, modifyConfig))
 }
