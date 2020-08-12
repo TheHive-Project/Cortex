@@ -2,6 +2,7 @@ package org.thp.cortex.controllers
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.DurationInt
 
 import play.api.http.Status
 import play.api.libs.json.{JsObject, JsString, JsValue, Json}
@@ -146,7 +147,7 @@ class JobCtrl @Inject()(
       .flatMap {
         case job if job.status() == JobStatus.InProgress || job.status() == JobStatus.Waiting ⇒
           val duration                  = Duration(atMost).asInstanceOf[FiniteDuration]
-          implicit val timeout: Timeout = Timeout(duration)
+          implicit val timeout: Timeout = Timeout(duration + 1.second)
           (auditActor ? Register(jobId, duration))
             .mapTo[JobEnded]
             .map(_ ⇒ ())

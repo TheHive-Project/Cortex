@@ -27,8 +27,8 @@ class GroupUserMapper(
 
   @Inject() def this(configuration: Configuration, ws: WSClient, ec: ExecutionContext) =
     this(
-      configuration.getOptional[String]("auth.sso.attributes.login").getOrElse("name"),
-      configuration.getOptional[String]("auth.sso.attributes.name").getOrElse("username"),
+      configuration.getOptional[String]("auth.sso.attributes.login").getOrElse("login"),
+      configuration.getOptional[String]("auth.sso.attributes.name").getOrElse("name"),
       configuration.getOptional[String]("auth.sso.attributes.roles"),
       configuration.getOptional[String]("auth.sso.attributes.groups").getOrElse(""),
       configuration.getOptional[String]("auth.sso.attributes.organization"),

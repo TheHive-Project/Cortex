@@ -1,21 +1,21 @@
 package org.thp.cortex.controllers
 
-import scala.concurrent.{ExecutionContext, Future}
-
-import play.api.mvc._
-
 import javax.inject.{Inject, Singleton}
-import org.thp.cortex.models.UserStatus
-import org.thp.cortex.services.UserSrv
-
 import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
 import org.elastic4play.database.DBIndex
 import org.elastic4play.services.AuthSrv
 import org.elastic4play.services.JsonFormat.authContextWrites
-import org.elastic4play.{AuthorizationError, MissingAttributeError, OAuth2Redirect, Timed}
+import org.elastic4play.{AuthorizationError, MissingAttributeError, Timed}
+import org.thp.cortex.models.UserStatus
+import org.thp.cortex.services.UserSrv
+import play.api.Configuration
+import play.api.mvc._
+
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AuthenticationCtrl @Inject()(
+    configuration: Configuration,
     authSrv: AuthSrv,
     userSrv: UserSrv,
     authenticated: Authenticated,
@@ -44,24 +44,23 @@ class AuthenticationCtrl @Inject()(
     dbIndex.getIndexStatus.flatMap {
       case false ⇒ Future.successful(Results.Status(520))
       case _ ⇒
-        (for {
-          authContext ← authSrv.authenticate()
-          user        ← userSrv.get(authContext.userId)
-        } yield {
-          if (user.status() == UserStatus.Ok)
-            authenticated.setSessingUser(Ok, authContext)
-          else
-            throw AuthorizationError("Your account is locked")
-        }) recover {
-          // A bit of a hack with the status code, so that Angular doesn't reject the origin
-          case OAuth2Redirect(redirectUrl, qp) ⇒ Redirect(redirectUrl, qp, status = OK)
-          case e                               ⇒ throw e
-        }
+        authSrv
+          .authenticate()
+          .flatMap {
+            case Right(authContext) ⇒
+              userSrv.get(authContext.userId).map { user ⇒
+                if (user.status() == UserStatus.Ok)
+                  authenticated.setSessingUser(Redirect(configuration.get[String]("play.http.context").stripSuffix("/") + "/index.html"), authContext)
+                else
+                  throw AuthorizationError("Your account is locked")
+              }
+            case Left(result) ⇒ Future.successful(result)
+          }
     }
   }
 
   @Timed
-  def logout = Action {
+  def logout: Action[AnyContent] = Action {
     Ok.withNewSession
   }
 }
