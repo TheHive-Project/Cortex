@@ -1,14 +1,16 @@
-import Common.{betaVersion, snapshotVersion, stableVersion}
+import Common.{betaVersion, snapshotVersion, stableVersion, versionUsage}
 
 linuxPackageMappings in Debian += packageMapping(file("LICENSE") -> "/usr/share/doc/cortex/copyright").withPerms("644")
 version in Debian := {
   version.value match {
-    case stableVersion(_, _)   => version.value
-    case betaVersion(v1, v2)   => v1 + "-0.1RC" + v2
-    case snapshotVersion(_, _) => version.value + "-SNAPSHOT"
-    case _                     => sys.error("Invalid version: " + version.value)
+    case stableVersion(_, _)                      => version.value
+    case betaVersion(v1, v2, v3)                  => v1 + "-0." + v3 + "RC" + v2
+    case snapshotVersion(stableVersion(v1, v2))   => v1 + "-" + v2 + "-SNAPSHOT"
+    case snapshotVersion(betaVersion(v1, v2, v3)) => v1 + "-0." + v3 + "RC" + v2 + "-SNAPSHOT"
+    case _                                        => versionUsage(version.value)
   }
 }
+
 debianPackageRecommends := Seq("elasticsearch")
 debianPackageDependencies += "java8-runtime | java8-runtime-headless"
 maintainerScripts in Debian := maintainerScriptsFromDirectory(
