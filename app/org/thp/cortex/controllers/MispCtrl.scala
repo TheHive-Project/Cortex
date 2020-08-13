@@ -10,7 +10,7 @@ import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MispCtrl @Inject()(
+class MispCtrl @Inject() (
     mispSrv: MispSrv,
     analyzerSrv: WorkerSrv,
     authenticated: Authenticated,
@@ -22,25 +22,25 @@ class MispCtrl @Inject()(
 
   private[MispCtrl] lazy val logger = Logger(getClass)
 
-  def modules: Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request ⇒
+  def modules: Action[Fields] = authenticated(Roles.read).async(fieldsBodyParser) { implicit request =>
     val (analyzers, analyzerCount) = mispSrv.moduleList
     renderer.toOutput(OK, analyzers, analyzerCount)
   }
 
-  def query: Action[JsValue] = authenticated(Roles.analyze)(parse.json).async { implicit request ⇒
+  def query: Action[JsValue] = authenticated(Roles.analyze)(parse.json).async { implicit request =>
     (request.body \ "module")
       .asOpt[String]
-      .fold(Future.successful(BadRequest("Module parameter is not present in request"))) { module ⇒
+      .fold(Future.successful(BadRequest("Module parameter is not present in request"))) { module =>
         request
           .body
           .as[JsObject]
           .fields
           .collectFirst {
-            case kv @ (k, _) if k != "module" ⇒ kv
+            case kv @ (k, _) if k != "module" => kv
           }
           .fold(Future.successful(BadRequest("Request doesn't contain data to analyze"))) {
-            case (mispType, dataJson) ⇒
-              dataJson.asOpt[String].fold(Future.successful(BadRequest("Data has invalid type (expected string)"))) { data ⇒
+            case (mispType, dataJson) =>
+              dataJson.asOpt[String].fold(Future.successful(BadRequest("Data has invalid type (expected string)"))) { data =>
                 mispSrv
                   .query(module, mispType, data)
                   .map(Ok(_))

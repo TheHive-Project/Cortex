@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * This actor monitors dead messages and log them
   */
 @Singleton
-class DeadLetterMonitoringActor @Inject()(system: ActorSystem) extends Actor {
+class DeadLetterMonitoringActor @Inject() (system: ActorSystem) extends Actor {
   private[DeadLetterMonitoringActor] lazy val logger = Logger(getClass)
 
   override def preStart(): Unit = {
@@ -31,10 +31,10 @@ class DeadLetterMonitoringActor @Inject()(system: ActorSystem) extends Actor {
   }
 
   override def receive: Receive = {
-    case DeadLetter(StreamActor.GetOperations, sender, recipient) ⇒
+    case DeadLetter(StreamActor.GetOperations, sender, recipient) =>
       logger.warn(s"receive dead GetOperations message, $sender → $recipient")
       sender ! StreamActor.StreamNotFound
-    case other ⇒
+    case other =>
       logger.error(s"receive dead message : $other")
   }
 }
@@ -123,16 +123,16 @@ class StreamActor(
 
   private def normalizeOperation(operation: AuditOperation) = {
     val auditedDetails = operation.details.fields.flatMap {
-      case (attrName, value) ⇒
+      case (attrName, value) =>
         val attrNames = attrName.split("\\.").toSeq
         operation
           .entity
           .model
           .attributes
-          .find(a ⇒ a.attributeName == attrNames.head && !a.isUnaudited)
-          .map { _ ⇒
+          .find(a => a.attributeName == attrNames.head && !a.isUnaudited)
+          .map { _ =>
             val reverseNames = attrNames.reverse
-            reverseNames.drop(1).foldLeft(reverseNames.head → value)((jsTuple, name) ⇒ name → JsObject(Seq(jsTuple)))
+            reverseNames.drop(1).foldLeft(reverseNames.head -> value)((jsTuple, name) => name -> JsObject(Seq(jsTuple)))
           }
     }
     operation.copy(details = JsObject(auditedDetails))
@@ -140,80 +140,80 @@ class StreamActor(
 
   private def receiveWithState(waitingRequest: Option[WaitingRequest], currentMessages: Map[String, Option[StreamMessageGroup[_]]]): Receive = {
     /* End of HTTP request, mark received messages to ready*/
-    case Commit(requestId) ⇒
+    case Commit(requestId) =>
       currentMessages.get(requestId).foreach {
-        case Some(message) ⇒
-          context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + (requestId → Some(message.makeReady))))
-        case None ⇒
+        case Some(message) =>
+          context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + (requestId -> Some(message.makeReady))))
+        case None =>
       }
 
     /* Migration process event */
-    case event: MigrationEvent ⇒
+    case event: MigrationEvent =>
       val newMessages = currentMessages.get(event.modelName).flatten.fold(MigrationEventGroup(event)) {
-        case e: MigrationEventGroup ⇒ e :+ event
+        case e: MigrationEventGroup => e :+ event
       }
-      context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + (event.modelName → Some(newMessages))))
+      context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + (event.modelName -> Some(newMessages))))
 
     /* Database migration has just finished */
-    case EndOfMigrationEvent ⇒
-      context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + ("end" → Some(MigrationEventGroup.endOfMigration))))
+    case EndOfMigrationEvent =>
+      context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + ("end" -> Some(MigrationEventGroup.endOfMigration))))
 
     /* */
-    case operation: AuditOperation ⇒
+    case operation: AuditOperation =>
       val requestId           = operation.authContext.requestId
       val normalizedOperation = normalizeOperation(operation)
       logger.debug(s"Receiving audit operation : $operation ⇒ $normalizedOperation")
       val updatedOperationGroup = currentMessages.get(requestId) match {
-        case None ⇒
+        case None =>
           logger.debug("Operation that comes after the end of request, make operation ready to send")
           AuditOperationGroup(auxSrv, normalizedOperation).makeReady // Operation that comes after the end of request
-        case Some(None) ⇒
+        case Some(None) =>
           logger.debug("First operation of the request, creating operation group")
           AuditOperationGroup(auxSrv, normalizedOperation) // First operation related to the given request
-        case Some(Some(aog: AuditOperationGroup)) ⇒
+        case Some(Some(aog: AuditOperationGroup)) =>
           logger.debug("Operation included in existing group")
           aog :+ normalizedOperation
-        case _ ⇒
+        case _ =>
           logger.debug("Impossible")
           sys.error("")
       }
-      context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + (requestId → Some(updatedOperationGroup))))
+      context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + (requestId -> Some(updatedOperationGroup))))
 
-    case GetOperations ⇒
+    case GetOperations =>
       renewExpiration()
-      waitingRequest.foreach { wr ⇒
+      waitingRequest.foreach { wr =>
         wr.submit(Nil)
         logger.error("Multiple requests !")
       }
       context.become(receiveWithState(Some(new WaitingRequest(sender)), currentMessages))
 
-    case Submit ⇒
+    case Submit =>
       waitingRequest match {
-        case Some(wr) ⇒
+        case Some(wr) =>
           val (readyMessages, pendingMessages) = currentMessages.partition(_._2.fold(false)(_.isReady))
-          Future.sequence(readyMessages.values.map(_.get.toJson)).foreach(messages ⇒ wr.submit(messages.toSeq))
+          Future.sequence(readyMessages.values.map(_.get.toJson)).foreach(messages => wr.submit(messages.toSeq))
           context.become(receiveWithState(None, pendingMessages))
-        case None ⇒
+        case None =>
           logger.error("No request to submit !")
       }
 
-    case Initialize(requestId) ⇒ context.become(receiveWithState(waitingRequest, currentMessages + (requestId → None)))
-    case message               ⇒ logger.warn(s"Unexpected message $message (${message.getClass})")
+    case Initialize(requestId) => context.become(receiveWithState(waitingRequest, currentMessages + (requestId -> None)))
+    case message               => logger.warn(s"Unexpected message $message (${message.getClass})")
   }
 
   def receive: Receive = receiveWithState(None, Map.empty[String, Option[StreamMessageGroup[_]]])
 }
 
 @Singleton
-class StreamFilter @Inject()(eventSrv: EventSrv, implicit val mat: Materializer, implicit val ec: ExecutionContext) extends Filter {
+class StreamFilter @Inject() (eventSrv: EventSrv, implicit val mat: Materializer, implicit val ec: ExecutionContext) extends Filter {
 
   private[StreamFilter] lazy val logger = Logger(getClass)
 
-  def apply(nextFilter: RequestHeader ⇒ Future[Result])(requestHeader: RequestHeader): Future[Result] = {
+  def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val requestId = Instance.getRequestId(requestHeader)
     eventSrv.publish(StreamActor.Initialize(requestId))
     nextFilter(requestHeader).andThen {
-      case _ ⇒ eventSrv.publish(StreamActor.Commit(requestId))
+      case _ => eventSrv.publish(StreamActor.Commit(requestId))
     }
   }
 }

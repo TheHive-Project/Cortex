@@ -34,33 +34,33 @@ trait WorkerConfigSrv {
   protected def buildDefinitionMap(definitionSource: Source[WorkerDefinition, NotUsed]): Future[Map[String, BaseConfig]] =
     definitionSource
       .filter(_.baseConfiguration.isDefined)
-      .map(d ⇒ d.copy(configurationItems = d.configurationItems.map(_.copy(required = false))))
+      .map(d => d.copy(configurationItems = d.configurationItems.map(_.copy(required = false))))
       .groupBy(200, _.baseConfiguration.get) // TODO replace groupBy by fold to prevent "too many streams" error
-      .map(d ⇒ BaseConfig(d.baseConfiguration.get, Seq(d.name), d.configurationItems, None))
+      .map(d => BaseConfig(d.baseConfiguration.get, Seq(d.name), d.configurationItems, None))
       .reduce(_ + _)
       .filterNot(_.items.isEmpty)
       .mergeSubstreams
-      .mapMaterializedValue(_ ⇒ NotUsed)
+      .mapMaterializedValue(_ => NotUsed)
       .runWith(Sink.seq)
-      .map { baseConfigs ⇒
+      .map { baseConfigs =>
         (BaseConfig.global(workerType, configuration) +: baseConfigs)
-          .map(c ⇒ c.name → c)
+          .map(c => c.name -> c)
           .toMap
       }
 
   def getForUser(userId: String, configName: String): Future[BaseConfig] =
     userSrv
       .getOrganizationId(userId)
-      .flatMap(organizationId ⇒ getForOrganization(organizationId, configName))
+      .flatMap(organizationId => getForOrganization(organizationId, configName))
 
   def getForOrganization(organizationId: String, configName: String): Future[BaseConfig] = {
     import org.elastic4play.services.QueryDSL._
     for {
-      workerConfig ← findForOrganization(organizationId, "name" ~= configName, Some("0-1"), Nil)
+      workerConfig <- findForOrganization(organizationId, "name" ~= configName, Some("0-1"), Nil)
         ._1
         .runWith(Sink.headOption)
-      d          ← definitions
-      baseConfig ← d.get(configName).fold[Future[BaseConfig]](Future.failed(NotFoundError(s"config $configName not found")))(Future.successful)
+      d          <- definitions
+      baseConfig <- d.get(configName).fold[Future[BaseConfig]](Future.failed(NotFoundError(s"config $configName not found")))(Future.successful)
     } yield baseConfig.copy(config = workerConfig)
   }
 
@@ -72,34 +72,34 @@ trait WorkerConfigSrv {
 
   def updateOrCreate(userId: String, workerConfigName: String, config: JsObject)(implicit authContext: AuthContext): Future[BaseConfig] =
     for {
-      organizationId ← userSrv.getOrganizationId(userId)
-      organization   ← organizationSrv.get(organizationId)
-      baseConfig     ← getForOrganization(organizationId, workerConfigName)
-      validatedConfig ← baseConfig
+      organizationId <- userSrv.getOrganizationId(userId)
+      organization   <- organizationSrv.get(organizationId)
+      baseConfig     <- getForOrganization(organizationId, workerConfigName)
+      validatedConfig <- baseConfig
         .items
         .validatedBy(_.read(config))
         .map(_.filterNot(_._2 == JsNull))
         .fold(
-          c ⇒ Future.successful(Fields.empty.set("config", JsObject(c).toString).set("name", workerConfigName)),
-          errors ⇒ Future.failed(AttributeCheckingError("workerConfig", errors.toSeq))
+          c => Future.successful(Fields.empty.set("config", JsObject(c).toString).set("name", workerConfigName)),
+          errors => Future.failed(AttributeCheckingError("workerConfig", errors.toSeq))
         )
-      newWorkerConfig ← baseConfig.config.fold(create(organization, validatedConfig))(workerConfig ⇒ update(workerConfig, validatedConfig))
+      newWorkerConfig <- baseConfig.config.fold(create(organization, validatedConfig))(workerConfig => update(workerConfig, validatedConfig))
     } yield baseConfig.copy(config = Some(newWorkerConfig))
 
   private def updateDefinitionConfig(definitionConfig: Map[String, BaseConfig], workerConfig: WorkerConfig): Map[String, BaseConfig] =
     definitionConfig
       .get(workerConfig.name())
-      .fold(definitionConfig) { baseConfig ⇒
-        definitionConfig + (workerConfig.name() → baseConfig.copy(config = Some(workerConfig)))
+      .fold(definitionConfig) { baseConfig =>
+        definitionConfig + (workerConfig.name() -> baseConfig.copy(config = Some(workerConfig)))
       }
 
   def listConfigForUser(userId: String): Future[Seq[BaseConfig]] = {
     import org.elastic4play.services.QueryDSL._
     for {
-      configItems ← definitions
-      workerConfigs ← findForUser(userId, any, Some("all"), Nil)
+      configItems <- definitions
+      workerConfigs <- findForUser(userId, any, Some("all"), Nil)
         ._1
-        .runFold(configItems) { (definitionConfig, workerConfig) ⇒
+        .runFold(configItems) { (definitionConfig, workerConfig) =>
           updateDefinitionConfig(definitionConfig, workerConfig)
         }
     } yield workerConfigs.values.toSeq
@@ -108,10 +108,10 @@ trait WorkerConfigSrv {
   def findForUser(userId: String, queryDef: QueryDef, range: Option[String], sortBy: Seq[String]): (Source[WorkerConfig, NotUsed], Future[Long]) = {
     val configs = userSrv
       .getOrganizationId(userId)
-      .map(organizationId ⇒ findForOrganization(organizationId, queryDef, range, sortBy))
-    val configSource = Source.fromFutureSource(configs.map(_._1)).mapMaterializedValue(_ ⇒ NotUsed)
+      .map(organizationId => findForOrganization(organizationId, queryDef, range, sortBy))
+    val configSource = Source.futureSource(configs.map(_._1)).mapMaterializedValue(_ => NotUsed)
     val configTotal  = configs.flatMap(_._2)
-    configSource → configTotal
+    configSource -> configTotal
   }
 
   def findForOrganization(

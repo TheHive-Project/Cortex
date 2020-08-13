@@ -19,7 +19,7 @@ object MultiUserMapperSrv {
 }
 
 @Singleton
-class MultiUserMapperSrv @Inject()(configuration: Configuration, ssoMapperModules: immutable.Set[UserMapper]) extends UserMapper {
+class MultiUserMapperSrv @Inject() (configuration: Configuration, ssoMapperModules: immutable.Set[UserMapper]) extends UserMapper {
 
   override val name: String           = "usermapper"
   private lazy val mapper: UserMapper = MultiUserMapperSrv.getMapper(configuration, ssoMapperModules)

@@ -1,14 +1,16 @@
 version: "2"
 services:
   elasticsearch:
-    image: elasticsearch:6.8.0
+    image: elasticsearch:7.8.1
     environment:
       - http.host=0.0.0.0
-      - thread_pool.index.queue_size=100000
+      - discovery.type=single-node
+      - script.allowed_types=inline
       - thread_pool.search.queue_size=100000
-      - thread_pool.bulk.queue_size=100000
+      - thread_pool.write.queue_size=10000
+path.repo: backup
   cortex:
-    image: thehiveproject/cortex:3.0.0-RC4
+    image: thehiveproject/cortex:latest
     depends_on:
       - elasticsearch
     ports:

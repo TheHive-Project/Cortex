@@ -49,15 +49,15 @@ class AttachmentCtrl(
     * open the document directly. It must be used only for safe file
     */
   @Timed("controllers.AttachmentCtrl.download")
-  def download(hash: String, name: Option[String]): Action[AnyContent] = authenticated(Roles.read) { _ ⇒
+  def download(hash: String, name: Option[String]): Action[AnyContent] = authenticated(Roles.read) { _ =>
     if (hash.startsWith("{{")) // angularjs hack
       NoContent
     else if (!name.getOrElse("").intersect(AttachmentAttributeFormat.forbiddenChar).isEmpty)
       mvc.Results.BadRequest("File name is invalid")
     else
       Result(
-        header = ResponseHeader(200, Map("Content-Disposition"                     → s"""attachment; filename="${URLEncoder
-          .encode(name.getOrElse(hash), "utf-8")}"""", "Content-Transfer-Encoding" → "binary")),
+        header = ResponseHeader(200, Map("Content-Disposition"                     -> s"""attachment; filename="${URLEncoder
+          .encode(name.getOrElse(hash), "utf-8")}"""", "Content-Transfer-Encoding" -> "binary")),
         body = HttpEntity.Streamed(attachmentSrv.source(hash), None, None)
       )
   }
@@ -68,7 +68,7 @@ class AttachmentCtrl(
     * File name can be specified (zip extension is append)
     */
   @Timed("controllers.AttachmentCtrl.downloadZip")
-  def downloadZip(hash: String, name: Option[String]): Action[AnyContent] = authenticated(Roles.read) { _ ⇒
+  def downloadZip(hash: String, name: Option[String]): Action[AnyContent] = authenticated(Roles.read) { _ =>
     if (!name.getOrElse("").intersect(AttachmentAttributeFormat.forbiddenChar).isEmpty)
       BadRequest("File name is invalid")
     else {
@@ -88,10 +88,10 @@ class AttachmentCtrl(
         header = ResponseHeader(
           200,
           Map(
-            "Content-Disposition"       → s"""attachment; filename="${URLEncoder.encode(name.getOrElse(hash), "utf-8")}.zip"""",
-            "Content-Type"              → "application/zip",
-            "Content-Transfer-Encoding" → "binary",
-            "Content-Length"            → Files.size(f).toString
+            "Content-Disposition"       -> s"""attachment; filename="${URLEncoder.encode(name.getOrElse(hash), "utf-8")}.zip"""",
+            "Content-Type"              -> "application/zip",
+            "Content-Transfer-Encoding" -> "binary",
+            "Content-Length"            -> Files.size(f).toString
           )
         ),
         body = HttpEntity.Streamed(FileIO.fromPath(f), Some(Files.size(f)), Some("application/zip"))

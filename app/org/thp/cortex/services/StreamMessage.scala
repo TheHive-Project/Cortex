@@ -28,29 +28,29 @@ case class AuditOperationGroup(
     val modelSummary = summary.getOrElse(operation.entity.model.modelName, Map.empty[String, Int])
     val actionCount  = modelSummary.getOrElse(operation.action.toString, 0)
     copy(
-      summary = summary + (operation.entity.model.modelName → (modelSummary +
-        (operation.action.toString                          → (actionCount + 1))))
+      summary = summary + (operation.entity.model.modelName -> (modelSummary +
+        (operation.action.toString                          -> (actionCount + 1))))
     )
   }
 
   def makeReady: AuditOperationGroup = copy(isReady = true)
 
-  def toJson(implicit ec: ExecutionContext): Future[JsObject] = obj.map { o ⇒
+  def toJson(implicit ec: ExecutionContext): Future[JsObject] = obj.map { o =>
     Json.obj(
-      "base" → Json.obj(
-        "objectId"   → operation.entity.id,
-        "objectType" → operation.entity.model.modelName,
-        "operation"  → operation.action,
-        "startDate"  → operation.date,
-        "rootId"     → operation.entity.routing,
-        "user"       → operation.authContext.userId,
-        "createdBy"  → operation.authContext.userId,
-        "createdAt"  → operation.date,
-        "requestId"  → operation.authContext.requestId,
-        "object"     → o,
-        "details"    → auditedAttributes
+      "base" -> Json.obj(
+        "objectId"   -> operation.entity.id,
+        "objectType" -> operation.entity.model.modelName,
+        "operation"  -> operation.action,
+        "startDate"  -> operation.date,
+        "rootId"     -> operation.entity.routing,
+        "user"       -> operation.authContext.userId,
+        "createdBy"  -> operation.authContext.userId,
+        "createdAt"  -> operation.date,
+        "requestId"  -> operation.authContext.requestId,
+        "object"     -> o,
+        "details"    -> auditedAttributes
       ),
-      "summary" → summary
+      "summary" -> summary
     )
   }
 }
@@ -64,15 +64,15 @@ object AuditOperationGroup {
         .details
         .fields
         .map {
-          case (name, value) ⇒
+          case (name, value) =>
             val baseName = name.split("\\.").head
             (name, value, operation.entity.model.attributes.find(_.attributeName == baseName))
         }
-        .collect { case (name, value, Some(attr)) if !attr.isUnaudited ⇒ (name, value) }
+        .collect { case (name, value, Some(attr)) if !attr.isUnaudited => (name, value) }
     }
     val obj = auxSrv(operation.entity, 10, withStats = false, removeUnaudited = true)
       .recover {
-        case error ⇒
+        case error =>
           logger.error("auxSrv fails", error)
           JsObject.empty
       }
@@ -81,7 +81,7 @@ object AuditOperationGroup {
       operation,
       auditedAttributes,
       obj,
-      Map(operation.entity.model.modelName → Map(operation.action.toString → 1)),
+      Map(operation.entity.model.modelName -> Map(operation.action.toString -> 1)),
       false
     )
   }
@@ -101,7 +101,7 @@ case class MigrationEventGroup(tableName: String, current: Long, total: Long) ex
 
   def toJson(implicit ec: ExecutionContext): Future[JsObject] =
     Future.successful(
-      Json.obj("base" → Json.obj("rootId" → current, "objectType" → "migration", "tableName" → tableName, "current" → current, "total" → total))
+      Json.obj("base" -> Json.obj("rootId" -> current, "objectType" -> "migration", "tableName" -> tableName, "current" -> current, "total" -> total))
     )
 }
 

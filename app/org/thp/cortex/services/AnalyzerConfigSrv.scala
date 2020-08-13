@@ -11,7 +11,7 @@ import org.thp.cortex.models.{BaseConfig, WorkerConfigModel, WorkerType}
 import org.elastic4play.services.{CreateSrv, FindSrv, UpdateSrv}
 
 @Singleton
-class AnalyzerConfigSrv @Inject()(
+class AnalyzerConfigSrv @Inject() (
     val configuration: Configuration,
     val workerConfigModel: WorkerConfigModel,
     val userSrv: UserSrv,

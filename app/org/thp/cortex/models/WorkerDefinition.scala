@@ -36,11 +36,11 @@ case class ConfigurationDefinitionItem(
   private def check(v: JsValue): JsValue Or Every[AttributeError] = {
     import WorkerConfigItemType._
     v match {
-      case _: JsString if `type` == string || `type` == text ⇒ Good(v)
-      case _: JsNumber if `type` == number                   ⇒ Good(v)
-      case _: JsBoolean if `type` == boolean                 ⇒ Good(v)
-      case JsNull if !isRequired                             ⇒ Good(v)
-      case _                                                 ⇒ Bad(One(InvalidFormatAttributeError(s"$name[]", `type`.toString, JsonInputValue(v))))
+      case _: JsString if `type` == string || `type` == text => Good(v)
+      case _: JsNumber if `type` == number                   => Good(v)
+      case _: JsBoolean if `type` == boolean                 => Good(v)
+      case JsNull if !isRequired                             => Good(v)
+      case _                                                 => Bad(One(InvalidFormatAttributeError(s"$name[]", `type`.toString, JsonInputValue(v))))
     }
   }
 
@@ -49,14 +49,14 @@ case class ConfigurationDefinitionItem(
       .toOption
       .orElse(defaultValue)
       .map {
-        case JsArray(values) if isMulti ⇒ values.validatedBy(check).map(a ⇒ name → JsArray(a))
-        case value if !isMulti          ⇒ check(value).map(name → _)
-        case value                      ⇒ Bad(One(InvalidFormatAttributeError(name, `type`.toString, JsonInputValue(value))))
+        case JsArray(values) if isMulti => values.validatedBy(check).map(a => name -> JsArray(a))
+        case value if !isMulti          => check(value).map(name -> _)
+        case value                      => Bad(One(InvalidFormatAttributeError(name, `type`.toString, JsonInputValue(value))))
       }
       .getOrElse {
-        if (isMulti) Good(name → JsArray.empty)
+        if (isMulti) Good(name -> JsArray.empty)
         else if (isRequired) Bad(One(MissingAttributeError(name)))
-        else Good(name → JsNull)
+        else Good(name -> JsNull)
       }
 }
 
@@ -113,20 +113,20 @@ object WorkerDefinition {
     reads.map(List(_)) orElse Reads.list(reads)
   }
 
-  implicit val writes: Writes[WorkerDefinition] = Writes[WorkerDefinition] { workerDefinition ⇒
+  implicit val writes: Writes[WorkerDefinition] = Writes[WorkerDefinition] { workerDefinition =>
     Json.obj(
-      "id"                 → workerDefinition.id,
-      "name"               → workerDefinition.name,
-      "version"            → workerDefinition.version,
-      "description"        → workerDefinition.description,
-      "dataTypeList"       → workerDefinition.dataTypeList,
-      "author"             → workerDefinition.author,
-      "url"                → workerDefinition.url,
-      "license"            → workerDefinition.license,
-      "baseConfig"         → workerDefinition.baseConfiguration,
-      "configurationItems" → workerDefinition.configurationItems,
-      "dockerImage"        → workerDefinition.dockerImage,
-      "command"            → workerDefinition.command.map(_.getFileName.toString)
+      "id"                 -> workerDefinition.id,
+      "name"               -> workerDefinition.name,
+      "version"            -> workerDefinition.version,
+      "description"        -> workerDefinition.description,
+      "dataTypeList"       -> workerDefinition.dataTypeList,
+      "author"             -> workerDefinition.author,
+      "url"                -> workerDefinition.url,
+      "license"            -> workerDefinition.license,
+      "baseConfig"         -> workerDefinition.baseConfiguration,
+      "configurationItems" -> workerDefinition.configurationItems,
+      "dockerImage"        -> workerDefinition.dockerImage,
+      "command"            -> workerDefinition.command.map(_.getFileName.toString)
     )
   }
 }

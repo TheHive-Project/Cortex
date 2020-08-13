@@ -15,7 +15,7 @@ object CortexAuthSrv {
 
   def getAuthSrv(authTypes: Seq[String], authModules: immutable.Set[AuthSrv]): Seq[AuthSrv] =
     ("key" +: authTypes.filterNot(_ == "key"))
-      .flatMap { authType ⇒
+      .flatMap { authType =>
         authModules
           .find(_.name == authType)
           .orElse {
@@ -26,7 +26,7 @@ object CortexAuthSrv {
 }
 
 @Singleton
-class CortexAuthSrv @Inject()(
+class CortexAuthSrv @Inject() (
     configuration: Configuration,
     authModules: immutable.Set[AuthSrv],
     userSrv: UserSrv,

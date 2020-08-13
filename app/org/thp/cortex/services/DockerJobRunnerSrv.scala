@@ -47,7 +47,7 @@ class DockerJobRunnerSrv(client: DockerClient, autoUpdate: Boolean, implicit val
       logger.info(s"Docker is available:\n${client.info()}")
       true
     }.recover {
-      case error ⇒
+      case error =>
         logger.info(s"Docker is not available", error)
         false
     }.get
@@ -91,21 +91,21 @@ class DockerJobRunnerSrv(client: DockerClient, autoUpdate: Boolean, implicit val
       client.waitContainer(containerCreation.id())
       ()
     }.andThen {
-      case r ⇒
+      case r =>
         val outputFile = jobDirectory.resolve("output").resolve("output.json")
         if (!Files.exists(outputFile) || Files.size(outputFile) == 0) {
           val output = Try(client.logs(containerCreation.id(), LogsParam.stdout(), LogsParam.stderr()).readFully())
-            .fold(e ⇒ s"Container logs can't be read (${e.getMessage})", identity)
-          val message = r.fold(e ⇒ s"Docker creation error: ${e.getMessage}\n$output", _ ⇒ output)
+            .fold(e => s"Container logs can't be read (${e.getMessage})", identity)
+          val message = r.fold(e => s"Docker creation error: ${e.getMessage}\n$output", _ => output)
 
-          val report = Json.obj("success" → false, "errorMessage" → message)
+          val report = Json.obj("success" -> false, "errorMessage" -> message)
           Files.write(jobDirectory.resolve("output").resolve("output.json"), report.toString.getBytes(StandardCharsets.UTF_8))
         }
     }
     timeout
-      .fold(execution)(t ⇒ execution.withTimeout(t, client.stopContainer(containerCreation.id(), 3)))
+      .fold(execution)(t => execution.withTimeout(t, client.stopContainer(containerCreation.id(), 3)))
       .andThen {
-        case _ ⇒ client.removeContainer(containerCreation.id(), DockerClient.RemoveContainerParam.forceKill())
+        case _ => client.removeContainer(containerCreation.id(), DockerClient.RemoveContainerParam.forceKill())
       }
   }
 
