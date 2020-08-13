@@ -65,6 +65,7 @@ auth {
 	#   the "ad" section below.
 	# - ldap : use LDAP to authenticate users. The associated configuration shall be done in the
 	#   "ldap" section below.
+	# - oauth2 : use OAuth/OIDC to authenticate users. Configuration is under "auth.oauth2" and "auth.sso" keys
 	provider = [local]
 
 	ad {
@@ -107,6 +108,64 @@ auth {
 		# If 'true', use SSL to connect to the LDAP directory server.
 		#useSSL = true
 	}
+
+    oauth2 {
+        # URL of the authorization server
+        #clientId = "client-id"
+        #clientSecret = "client-secret"
+        #redirectUri = "https://my-thehive-instance.example/index.html#!/login"
+        #responseType = "code"
+        #grantType = "authorization_code"
+
+        # URL from where to get the access token
+        #authorizationUrl = "https://auth-site.com/OAuth/Authorize"
+        #tokenUrl = "https://auth-site.com/OAuth/Token"
+
+        # The endpoint from which to obtain user details using the OAuth token, after successful login
+        #userUrl = "https://auth-site.com/api/User"
+        #scope = "openid profile"
+        # Type of authorization header
+        #authorizationHeader = "Bearer" # or token
+    }
+
+    # Single-Sign On
+    sso {
+        # Autocreate user in database?
+        #autocreate = false
+
+        # Autoupdate its profile and roles?
+        #autoupdate = false
+
+        # Autologin user using SSO?
+        #autologin = false
+
+        # Attributes mappings
+        #attributes {
+        #  login = "login"
+        #  name = "name"
+        #  groups = "groups"
+        #  roles = "roles" # list of roles, separated with comma
+        #  organisation = "org"
+        #}
+
+        # Name of mapping class from user resource to backend user ('simple' or 'group')
+        #mapper = group
+        # Default roles for users with no groups mapped ("read", "analyze", "orgadmin")
+        #defaultRoles = []
+        # Default organization
+        #defaultOrganization = "MyOrga"
+
+        #groups {
+        #  # URL to retreive groups (leave empty if you are using OIDC)
+        #  #url = "https://auth-site.com/api/Groups"
+        #  # Group mappings, you can have multiple roles for each group: they are merged
+        #  mappings {
+        #    admin-profile-name = ["admin"]
+        #    editor-profile-name = ["write"]
+        #    reader-profile-name = ["read"]
+        #  }
+        #}
+    }
 }
 
 ## ANALYZERS
