@@ -35,8 +35,8 @@ dockerCommands := Seq(
     "apt", "autoremove", "-y", "-q",  "&&",
     "rm", "-rf", "/var/lib/apt/lists/*", "&&",
     "(", "type", "groupadd", "1>/dev/null", "2>&1", "&&",
-      "groupadd", "-g", "1000", "cortex", "||",
-      "addgroup", "-g", "1000", "-S", "cortex",
+      "groupadd", "-g", "999", "cortex", "||",
+      "addgroup", "-g", "999", "-S", "cortex",
     ")", "&&",
     "(", "type", "useradd", "1>/dev/null", "2>&1", "&&",
       "useradd", "--system", "--uid", "1000", "--gid", "1000", "cortex", "||",
@@ -48,7 +48,7 @@ dockerCommands := Seq(
   Cmd("ADD", "--chown=cortex:cortex", "etc", "/etc"),
   ExecCmd("RUN", "chmod", "+x", "/opt/cortex/bin/cortex", "/opt/cortex/entrypoint"),
   Cmd("EXPOSE", "9001"),
-  Cmd("USER", "thehive"),
+  Cmd("USER", "cortex"),
   ExecCmd("ENTRYPOINT", "/opt/cortex/entrypoint"),
   ExecCmd("CMD")
 )
