@@ -113,10 +113,10 @@ DOCKER_PID=$!
 
 echo config file is:
 cat $CONFIG_FILE
-su -s /bin/sh -c "cd /opt/cortex; bin/cortex \
+/bin/sh -c "cd /opt/cortex; bin/cortex \
 	-Dconfig.file=$CONFIG_FILE \
 	-Dlogger.file=/etc/cortex/logback.xml \
 	-Dpidfile.path=/dev/null \
-	$@" daemon
+	$@"
 
 test $START_DOCKER = 1 && kill ${DOCKER_PID}
