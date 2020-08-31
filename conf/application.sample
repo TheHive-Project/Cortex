@@ -196,7 +196,7 @@ analyzer {
 responder {
   # responder location (same format as analyzer.urls)
   urls = [
-    "https://dl.bintray.com/thehive-project/cortexneurons/reponders.json"
+    "https://dl.bintray.com/thehive-project/cortexneurons/responders.json"
     #"/absolute/path/of/responders"
   ]
 
