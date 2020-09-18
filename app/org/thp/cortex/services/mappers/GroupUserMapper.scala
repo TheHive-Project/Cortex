@@ -14,7 +14,6 @@ import org.elastic4play.controllers.Fields
 class GroupUserMapper(
     loginAttrName: String,
     nameAttrName: String,
-    rolesAttrName: Option[String],
     groupAttrName: String,
     organizationAttrName: Option[String],
     defaultRoles: Seq[String],
@@ -29,7 +28,6 @@ class GroupUserMapper(
     this(
       configuration.getOptional[String]("auth.sso.attributes.login").getOrElse("login"),
       configuration.getOptional[String]("auth.sso.attributes.name").getOrElse("name"),
-      configuration.getOptional[String]("auth.sso.attributes.roles"),
       configuration.getOptional[String]("auth.sso.attributes.groups").getOrElse(""),
       configuration.getOptional[String]("auth.sso.attributes.organization"),
       configuration.getOptional[Seq[String]]("auth.sso.defaultRoles").getOrElse(Seq()),
