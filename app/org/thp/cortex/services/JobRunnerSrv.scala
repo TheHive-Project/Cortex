@@ -42,6 +42,7 @@ class JobRunnerSrv @Inject() (
   val logger                                           = Logger(getClass)
   lazy val analyzerExecutionContext: ExecutionContext  = akkaSystem.dispatchers.lookup("analyzer")
   lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
+  val jobDirectory: Path                               = Paths.get(config.get[String]("job.directory"))
 
   private val runners: Seq[String] = config
     .getOptional[Seq[String]]("job.runners")
@@ -89,7 +90,7 @@ class JobRunnerSrv @Inject() (
     }
 
   private def prepareJobFolder(worker: Worker, job: Job): Future[Path] = {
-    val jobFolder      = Files.createTempDirectory(Paths.get(System.getProperty("java.io.tmpdir")), s"cortex-job-${job.id}-")
+    val jobFolder      = Files.createTempDirectory(jobDirectory, s"cortex-job-${job.id}-")
     val inputJobFolder = Files.createDirectories(jobFolder.resolve("input"))
     Files.createDirectories(jobFolder.resolve("output"))
 

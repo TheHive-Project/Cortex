@@ -21,7 +21,13 @@ import org.thp.cortex.models._
 import org.elastic4play.utils.RichFuture
 
 @Singleton
-class DockerJobRunnerSrv(client: DockerClient, autoUpdate: Boolean, implicit val system: ActorSystem) {
+class DockerJobRunnerSrv(
+    client: DockerClient,
+    autoUpdate: Boolean,
+    jobBaseDirectory: Path,
+    dockerJobBaseDirectory: Path,
+    implicit val system: ActorSystem
+) {
 
   @Inject()
   def this(config: Configuration, system: ActorSystem) =
@@ -37,6 +43,8 @@ class DockerJobRunnerSrv(client: DockerClient, autoUpdate: Boolean, implicit val
         .useProxy(config.getOptional[Boolean]("docker.useProxy").getOrElse(false))
         .build(),
       config.getOptional[Boolean]("docker.autoUpdate").getOrElse(true),
+      Paths.get(config.get[String]("job.directory")),
+      Paths.get(config.get[String]("job.dockerDirectory")),
       system: ActorSystem
     )
 
@@ -60,7 +68,7 @@ class DockerJobRunnerSrv(client: DockerClient, autoUpdate: Boolean, implicit val
       .builder()
       .appendBinds(
         Bind
-          .from(jobDirectory.toAbsolutePath.toString)
+          .from(dockerJobBaseDirectory.resolve(jobBaseDirectory.relativize(jobDirectory)).toAbsolutePath.toString)
           .to("/job")
           .readOnly(false)
           .build()

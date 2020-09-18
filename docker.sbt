@@ -29,8 +29,16 @@ dockerCommands := Seq(
   Cmd("WORKDIR", "/opt/cortex"),
   // format: off
   Cmd("RUN",
+    "wget", "-q", "-O", "-", "https://download.docker.com/linux/static/stable/x86_64/docker-18.09.0.tgz", "|",
+      "tar", "-xzC", "/usr/local/bin/", "--strip-components", "1", "&&",
+    "addgroup", "--system", "dockremap", "&&",
+    "adduser", "--system", "--ingroup", "dockremap", "dockremap", "&&",
+    "addgroup", "--system", "docker", "&&",
+    "echo", "dockremap:165536:65536", ">>", "/etc/subuid", "&&",
+    "echo", "dockremap:165536:65536", ">>", "/etc/subgid", "&&",
     "apt", "update", "&&",
     "apt", "upgrade", "-y", "&&",
+    "apt", "install", "-y", "iptables", "lxc", "&&",
     "apt", "autoclean", "-y", "-q",  "&&",
     "apt", "autoremove", "-y", "-q",  "&&",
     "rm", "-rf", "/var/lib/apt/lists/*", "&&",
@@ -46,9 +54,9 @@ dockerCommands := Seq(
   Cmd("ADD", "--chown=root:root", "opt", "/opt"),
   Cmd("ADD", "--chown=cortex:cortex", "var", "/var"),
   Cmd("ADD", "--chown=cortex:cortex", "etc", "/etc"),
+  Cmd("VOLUME", "/var/lib/docker"),
   ExecCmd("RUN", "chmod", "+x", "/opt/cortex/bin/cortex", "/opt/cortex/entrypoint"),
   Cmd("EXPOSE", "9001"),
-  Cmd("USER", "cortex"),
   ExecCmd("ENTRYPOINT", "/opt/cortex/entrypoint"),
   ExecCmd("CMD")
 )
