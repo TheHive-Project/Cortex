@@ -113,7 +113,7 @@ auth {
         # URL of the authorization server
         #clientId = "client-id"
         #clientSecret = "client-secret"
-        #redirectUri = "https://my-thehive-instance.example/index.html#!/login"
+        #redirectUri = "https://my-cortex-instance.example/api/ssoLogin"
         #responseType = "code"
         #grantType = "authorization_code"
 
@@ -124,8 +124,6 @@ auth {
         # The endpoint from which to obtain user details using the OAuth token, after successful login
         #userUrl = "https://auth-site.com/api/User"
         #scope = "openid profile"
-        # Type of authorization header
-        #authorizationHeader = "Bearer" # or token
     }
 
     # Single-Sign On
@@ -139,22 +137,16 @@ auth {
         # Autologin user using SSO?
         #autologin = false
 
-        # Attributes mappings
-        #attributes {
-        #  login = "login"
-        #  name = "name"
-        #  groups = "groups"
-        #  roles = "roles" # list of roles, separated with comma
-        #  organisation = "org"
-        #}
-
         # Name of mapping class from user resource to backend user ('simple' or 'group')
         #mapper = group
-        # Default roles for users with no groups mapped ("read", "analyze", "orgadmin")
-        #defaultRoles = []
-        # Default organization
-        #defaultOrganization = "MyOrga"
-
+        #attributes {
+        #  login = "user"
+        #  name = "name"
+        #  groups = "groups"
+        #  organization = "org"
+        #}
+        #defaultRoles = ["read"]
+        #defaultOrganization = "csirt"
         #groups {
         #  # URL to retreive groups (leave empty if you are using OIDC)
         #  #url = "https://auth-site.com/api/Groups"
@@ -165,6 +157,16 @@ auth {
         #    reader-profile-name = ["read"]
         #  }
         #}
+
+        #mapper = simple
+        #attributes {
+        #  login = "user"
+        #  name = "name"
+        #  roles = "roles"
+        #  organization = "org"
+        #}
+        #defaultRoles = ["read"]
+        #defaultOrganization = "csirt"
     }
 }
 
@@ -210,5 +212,11 @@ responder {
     parallelism-max = 4
   }
 }
+
+# Proxy configuration to retrieve catalogs
+# play.ws.proxy {
+#   host = proxy.example.com
+#   port = 3128
+# }
 
 # It's the end my friend. Happy hunting!
