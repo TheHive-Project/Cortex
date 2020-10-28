@@ -34,11 +34,13 @@ export default class OrganizationConfigsController {
 
           _.forEach(conf.configurationItems, item => {
             if(conf.config[item.name] === undefined) {
+              
               if (item.defaultValue !== undefined) {
                 conf.config[item.name] = item.defaultValue;  
               } else {
                 conf.config[item.name] = item.multi ? [undefined] : undefined;
               }
+            }
           });
 
           return conf;
