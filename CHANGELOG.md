@@ -1,5 +1,17 @@
 # Change Log
 
+## [3.1.0](https://github.com/TheHive-Project/Cortex/milestone/27) (2020-10-30)
+
+**Implemented enhancements:**
+
+- Improve Docker image [\#296](https://github.com/TheHive-Project/Cortex/issues/296)
+- Impossible to load catalog through a proxy [\#297](https://github.com/TheHive-Project/Cortex/issues/297)
+- Update login page design [\#303](https://github.com/TheHive-Project/Cortex/issues/303)
+
+**Fixed bugs:**
+
+- [Bug] Cortex and boolean ConfigurationItems  [\#309](https://github.com/TheHive-Project/Cortex/issues/309)
+
 ## [3.1.0-RC1](https://github.com/TheHive-Project/Cortex/milestone/21) (2020-08-13)
 
 **Implemented enhancements:**

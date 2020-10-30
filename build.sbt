@@ -15,11 +15,12 @@ libraryDependencies ++= Seq(
   Dependencies.reflections,
   Dependencies.zip4j,
   Dependencies.dockerClient,
-  Dependencies.akkaCluster
+  Dependencies.akkaCluster,
+  Dependencies.akkaClusterTyped
 )
 
 resolvers += Resolver.sbtPluginRepo("releases")
-resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 resolvers += "elasticsearch-releases" at "https://artifacts.elastic.co/maven"
 publishArtifact in (Compile, packageDoc) := false
 publishArtifact in packageDoc := false

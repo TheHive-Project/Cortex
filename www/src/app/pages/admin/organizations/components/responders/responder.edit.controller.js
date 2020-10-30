@@ -39,10 +39,13 @@ export default class ResponderEditController {
         const property = item.name,
           configValue = (this.configuration.config || {})[property];
 
-        responder.configuration[property] =
-          configValue ||
-          item.defaultValue ||
-          (item.multi ? [undefined] : undefined);
+          if(configValue !== undefined) {
+            responder.configuration[property] = configValue;
+          } else if (item.defaultValue !== undefined) {
+            responder.configuration[property] = item.defaultValue;
+          } else {
+            responder.configuration[property] = item.multi ? [undefined] : undefined;
+          }
       });
 
       // Handle TLP default config

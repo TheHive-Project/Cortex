@@ -8,9 +8,13 @@ services:
       - script.allowed_types=inline
       - thread_pool.search.queue_size=100000
       - thread_pool.write.queue_size=10000
-path.repo: backup
   cortex:
-    image: thehiveproject/cortex:latest
+    image: thehiveproject/cortex:3.1.0-0.3RC1
+    environment:
+      - job_directory=${job_directory}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${job_directory}:${job_directory}
     depends_on:
       - elasticsearch
     ports:

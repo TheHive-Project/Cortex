@@ -9,7 +9,6 @@ import scala.io.Codec
 import scala.util.{Failure, Success, Try}
 
 import play.api.libs.json.{JsArray, JsObject, JsString, Json}
-import play.api.libs.ws.WSClient
 import play.api.{Configuration, Logger}
 
 import akka.NotUsed
@@ -37,7 +36,7 @@ class WorkerSrv @Inject() (
     updateSrv: UpdateSrv,
     deleteSrv: DeleteSrv,
     findSrv: FindSrv,
-    ws: WSClient,
+    ws: CustomWSAPI,
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer
 ) {

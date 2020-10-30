@@ -84,5 +84,6 @@ class Migration @Inject() (userSrv: UserSrv, organizationSrv: OrganizationSrv, w
             ("sequenceCounter" -> counter)
         }
       )
+    case DatabaseState(4) => Nil
   }
 }

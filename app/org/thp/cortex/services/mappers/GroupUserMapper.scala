@@ -14,7 +14,6 @@ import org.elastic4play.controllers.Fields
 class GroupUserMapper(
     loginAttrName: String,
     nameAttrName: String,
-    rolesAttrName: Option[String],
     groupAttrName: String,
     organizationAttrName: Option[String],
     defaultRoles: Seq[String],
@@ -29,7 +28,6 @@ class GroupUserMapper(
     this(
       configuration.getOptional[String]("auth.sso.attributes.login").getOrElse("login"),
       configuration.getOptional[String]("auth.sso.attributes.name").getOrElse("name"),
-      configuration.getOptional[String]("auth.sso.attributes.roles"),
       configuration.getOptional[String]("auth.sso.attributes.groups").getOrElse(""),
       configuration.getOptional[String]("auth.sso.attributes.organization"),
       configuration.getOptional[Seq[String]]("auth.sso.defaultRoles").getOrElse(Seq()),
@@ -57,7 +55,7 @@ class GroupUserMapper(
           .flatMap(o => (jsValue \ o).asOpt[String])
           .orElse(defaultOrganization)
           .fold[JsResult[String]](JsError())(o => JsSuccess(o))
-      } yield Fields(Json.obj("login" -> login, "name" -> name, "roles" -> roles, "organization" -> organization))
+      } yield Fields(Json.obj("login" -> login.toLowerCase, "name" -> name, "roles" -> roles, "organization" -> organization))
       fields match {
         case JsSuccess(f, _) => Future.successful(f)
         case JsError(errors) => Future.failed(AuthenticationError(s"User info fails: ${errors.map(_._1).mkString}"))
