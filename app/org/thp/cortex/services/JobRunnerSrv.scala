@@ -24,7 +24,7 @@ import org.elastic4play.controllers.{Fields, FileInputValue}
 import org.elastic4play.database.ModifyConfig
 import org.elastic4play.services.{AttachmentSrv, AuthContext, CreateSrv, UpdateSrv}
 
-class JobRunnerSrv @Inject()(
+class JobRunnerSrv @Inject() (
     config: Configuration,
     reportModel: ReportModel,
     artifactModel: ArtifactModel,
@@ -42,20 +42,21 @@ class JobRunnerSrv @Inject()(
   val logger                                           = Logger(getClass)
   lazy val analyzerExecutionContext: ExecutionContext  = akkaSystem.dispatchers.lookup("analyzer")
   lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
+  val jobDirectory: Path                               = Paths.get(config.get[String]("job.directory"))
 
   private val runners: Seq[String] = config
     .getOptional[Seq[String]]("job.runners")
     .getOrElse(Seq("docker", "process"))
     .map(_.toLowerCase)
     .collect {
-      case "docker" if dockerJobRunnerSrv.isAvailable ⇒ "docker"
-      case "process" ⇒
-        Seq("", "2", "3").foreach { pythonVersion ⇒
+      case "docker" if dockerJobRunnerSrv.isAvailable => "docker"
+      case "process" =>
+        Seq("", "2", "3").foreach { pythonVersion =>
           val cortexUtilsVersion = processJobRunnerSrv.checkCortexUtilsVersion(pythonVersion)
           cortexUtilsVersion.fold(logger.warn(s"The package cortexutils for python$pythonVersion hasn't been found")) {
-            case (major, minor, patch) if major >= 2 ⇒
+            case (major, minor, patch) if major >= 2 =>
               logger.info(s"The package cortexutils for python$pythonVersion has valid version: $major.$minor.$patch")
-            case (major, minor, patch) ⇒
+            case (major, minor, patch) =>
               logger.error(
                 s"The package cortexutils for python$pythonVersion has invalid version: $major.$minor.$patch. Cortex 2 requires cortexutils >= 2.0"
               )
@@ -85,66 +86,63 @@ class JobRunnerSrv @Inject()(
         Files.walkFileTree(directory, deleteVisitor)
       ()
     } catch {
-      case t: Throwable ⇒ logger.warn(s"Fail to remove temporary files ($directory) : $t")
+      case t: Throwable => logger.warn(s"Fail to remove temporary files ($directory) : $t")
     }
 
   private def prepareJobFolder(worker: Worker, job: Job): Future[Path] = {
-    val jobFolder      = Files.createTempDirectory(Paths.get(System.getProperty("java.io.tmpdir")), s"cortex-job-${job.id}-")
+    val jobFolder      = Files.createTempDirectory(jobDirectory, s"cortex-job-${job.id}-")
     val inputJobFolder = Files.createDirectories(jobFolder.resolve("input"))
     Files.createDirectories(jobFolder.resolve("output"))
 
     job
       .attachment()
-      .map { attachment ⇒
+      .map { attachment =>
         val attachmentFile = Files.createTempFile(inputJobFolder, "attachment", "")
         attachmentSrv
           .source(attachment.id)
           .runWith(FileIO.toPath(attachmentFile))
-          .flatMap {
-            case ioresult if ioresult.status.isSuccess ⇒ Future.successful(Some(attachmentFile))
-            case ioresult                              ⇒ Future.failed(ioresult.getError)
-          }
+          .map(_ => Some(attachmentFile))
       }
       .getOrElse(Future.successful(None))
       .map {
-        case Some(file) ⇒
-          Json.obj("file" → file.getFileName.toString, "filename" → job.attachment().get.name, "contentType" → job.attachment().get.contentType)
-        case None if job.data().nonEmpty && job.tpe() == WorkerType.responder ⇒
-          Json.obj("data" → Json.parse(job.data().get))
-        case None if job.data().nonEmpty && job.tpe() == WorkerType.analyzer ⇒
-          Json.obj("data" → job.data().get)
+        case Some(file) =>
+          Json.obj("file" -> file.getFileName.toString, "filename" -> job.attachment().get.name, "contentType" -> job.attachment().get.contentType)
+        case None if job.data().nonEmpty && job.tpe() == WorkerType.responder =>
+          Json.obj("data" -> Json.parse(job.data().get))
+        case None if job.data().nonEmpty && job.tpe() == WorkerType.analyzer =>
+          Json.obj("data" -> job.data().get)
       }
-      .map { artifact ⇒
-        val proxy_http = (worker.config \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy ⇒
-          Json.obj("proxy" → Json.obj("http" → proxy))
+      .map { artifact =>
+        val proxy_http = (worker.config \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy =>
+          Json.obj("proxy" -> Json.obj("http" -> proxy))
         }
-        val proxy_https = (worker.config \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy ⇒
-          Json.obj("proxy" → Json.obj("https" → proxy))
+        val proxy_https = (worker.config \ "proxy_https").asOpt[String].fold(JsObject.empty) { proxy =>
+          Json.obj("proxy" -> Json.obj("https" -> proxy))
         }
         val config = workerSrv
           .getDefinition(worker.workerDefinitionId())
-          .fold(_ ⇒ JsObject.empty, _.configuration)
+          .fold(_ => JsObject.empty, _.configuration)
           .deepMerge(worker.config)
           .deepMerge(proxy_http)
           .deepMerge(proxy_https)
-        (worker.config \ "cacerts").asOpt[String].foreach { cacerts ⇒
+        (worker.config \ "cacerts").asOpt[String].foreach { cacerts =>
           val cacertsFile = jobFolder.resolve("input").resolve("cacerts")
           Files.write(cacertsFile, cacerts.getBytes)
         }
         artifact +
-          ("dataType"   → JsString(job.dataType())) +
-          ("tlp"        → JsNumber(job.tlp())) +
-          ("pap"        → JsNumber(job.pap())) +
-          ("message"    → JsString(job.message().getOrElse(""))) +
-          ("parameters" → job.params) +
-          ("config"     → config)
+          ("dataType"   -> JsString(job.dataType())) +
+          ("tlp"        -> JsNumber(job.tlp())) +
+          ("pap"        -> JsNumber(job.pap())) +
+          ("message"    -> JsString(job.message().getOrElse(""))) +
+          ("parameters" -> job.params) +
+          ("config"     -> config)
       }
-      .map { input ⇒
+      .map { input =>
         Files.write(inputJobFolder.resolve("input.json"), input.toString.getBytes(StandardCharsets.UTF_8))
         jobFolder
       }
       .recoverWith {
-        case error ⇒
+        case error =>
           delete(jobFolder)
           Future.failed(error)
       }
@@ -169,29 +167,29 @@ class JobRunnerSrv @Inject()(
           .set("summary", summaryReport)
           .set("operations", JsArray(operations).toString)
         createSrv[ReportModel, Report, Job](reportModel, job, reportFields)
-          .flatMap { report ⇒
+          .flatMap { report =>
             Future.sequence {
               for {
-                artifact ← artifacts
-                dataType ← (artifact \ "dataType").asOpt[String]
-                fields ← dataType match {
-                  case "file" ⇒
+                artifact <- artifacts
+                dataType <- (artifact \ "dataType").asOpt[String]
+                fields <- dataType match {
+                  case "file" =>
                     for {
-                      name ← (artifact \ "filename").asOpt[String]
-                      file ← (artifact \ "file").asOpt[String]
+                      name <- (artifact \ "filename").asOpt[String]
+                      file <- (artifact \ "file").asOpt[String]
                       path = jobFolder.resolve("output").resolve(file)
                       if Files.exists(path) && path.getParent == jobFolder.resolve("output")
                       contentType = (artifact \ "contentType").asOpt[String].getOrElse("application/octet-stream")
                       fiv         = FileInputValue(name, path, contentType)
                     } yield Fields(artifact - "filename" - "file" - "contentType").set("attachment", fiv)
-                  case _ ⇒ Some(Fields(artifact))
+                  case _ => Some(Fields(artifact))
                 }
               } yield createSrv[ArtifactModel, Artifact, Report](artifactModel, report, fields)
             }
           }
           .transformWith {
-            case Failure(e) ⇒ endJob(job, JobStatus.Failure, Some(s"Report creation failure: $e"))
-            case _          ⇒ endJob(job, JobStatus.Success)
+            case Failure(e) => endJob(job, JobStatus.Failure, Some(s"Report creation failure: $e"))
+            case _          => endJob(job, JobStatus.Success)
           }
       } else {
         endJob(job, JobStatus.Failure, (report \ "errorMessage").asOpt[String], (report \ "input").asOpt[JsValue].map(_.toString))
@@ -202,33 +200,33 @@ class JobRunnerSrv @Inject()(
   }
 
   def run(worker: Worker, job: Job)(implicit authContext: AuthContext): Future[Job] =
-    prepareJobFolder(worker, job).flatMap { jobFolder ⇒
+    prepareJobFolder(worker, job).flatMap { jobFolder =>
       val executionContext = worker.tpe() match {
-        case WorkerType.analyzer  ⇒ analyzerExecutionContext
-        case WorkerType.responder ⇒ responderExecutionContext
+        case WorkerType.analyzer  => analyzerExecutionContext
+        case WorkerType.responder => responderExecutionContext
       }
       val finishedJob = for {
-        _ ← startJob(job)
-        j ← runners
+        _ <- startJob(job)
+        j <- runners
           .foldLeft[Option[Future[Unit]]](None) {
-            case (None, "docker") ⇒
+            case (None, "docker") =>
               worker
                 .dockerImage()
-                .map(dockerImage ⇒ dockerJobRunnerSrv.run(jobFolder, dockerImage, job, worker.jobTimeout().map(_.minutes))(executionContext))
+                .map(dockerImage => dockerJobRunnerSrv.run(jobFolder, dockerImage, job, worker.jobTimeout().map(_.minutes))(executionContext))
                 .orElse {
                   logger.warn(s"worker ${worker.id} can't be run with docker (doesn't have image)")
                   None
                 }
-            case (None, "process") ⇒
+            case (None, "process") =>
               worker
                 .command()
-                .map(command ⇒ processJobRunnerSrv.run(jobFolder, command, job, worker.jobTimeout().map(_.minutes))(executionContext))
+                .map(command => processJobRunnerSrv.run(jobFolder, command, job, worker.jobTimeout().map(_.minutes))(executionContext))
                 .orElse {
                   logger.warn(s"worker ${worker.id} can't be run with process (doesn't have image)")
                   None
                 }
-            case (j: Some[_], _) ⇒ j
-            case (None, runner) ⇒
+            case (j: Some[_], _) => j
+            case (None, runner) =>
               logger.warn(s"Unknown job runner: $runner")
               None
 
@@ -236,13 +234,13 @@ class JobRunnerSrv @Inject()(
           .getOrElse(Future.failed(BadRequestError("Worker cannot be run")))
       } yield j
       finishedJob
-        .transformWith { r ⇒
+        .transformWith { r =>
           r.fold(
-            error ⇒ endJob(job, JobStatus.Failure, Option(error.getMessage), Some(readFile(jobFolder.resolve("input").resolve("input.json")))),
-            _ ⇒ extractReport(jobFolder, job)
+            error => endJob(job, JobStatus.Failure, Option(error.getMessage), Some(readFile(jobFolder.resolve("input").resolve("input.json")))),
+            _ => extractReport(jobFolder, job)
           )
         }
-        .andThen { case _ ⇒ delete(jobFolder) }
+        .andThen { case _ => delete(jobFolder) }
     }
 
   private def readFile(input: Path): String = new String(Files.readAllBytes(input), StandardCharsets.UTF_8)

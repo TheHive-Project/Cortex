@@ -90,33 +90,34 @@ class StreamCtrl(
     * This call waits up to "refresh", if there is no event, return empty response
     */
   @Timed("controllers.StreamCtrl.get")
-  def get(id: String): Action[AnyContent] = Action.async { implicit request ⇒
+  def get(id: String): Action[AnyContent] = Action.async { implicit request =>
     implicit val timeout: Timeout = Timeout(refresh + globalMaxWait + 1.second)
 
     if (!isValidStreamId(id)) {
       Future.successful(BadRequest("Invalid stream id"))
     } else {
       val futureStatus = authenticated.expirationStatus(request) match {
-        case ExpirationError if !migrationSrv.isMigrating ⇒ userSrv.getInitialUser(request).recoverWith { case _ => authenticated.getFromApiKey(request)}.map(_ ⇒ OK)
-        case _: ExpirationWarning                         ⇒ Future.successful(220)
-        case _                                            ⇒ Future.successful(OK)
+        case ExpirationError if !migrationSrv.isMigrating =>
+          userSrv.getInitialUser(request).recoverWith { case _ => authenticated.getFromApiKey(request) }.map(_ => OK)
+        case _: ExpirationWarning => Future.successful(220)
+        case _                    => Future.successful(OK)
       }
 
-      futureStatus.flatMap { status ⇒
+      futureStatus.flatMap { status =>
         (system.actorSelection(s"/user/stream-$id") ? StreamActor.GetOperations) map {
-          case StreamMessages(operations) ⇒ renderer.toOutput(status, operations)
-          case m                          ⇒ InternalServerError(s"Unexpected message : $m (${m.getClass})")
+          case StreamMessages(operations) => renderer.toOutput(status, operations)
+          case m                          => InternalServerError(s"Unexpected message : $m (${m.getClass})")
         }
       }
     }
   }
 
   @Timed("controllers.StreamCtrl.status")
-  def status = Action { implicit request ⇒
+  def status = Action { implicit request =>
     val status = authenticated.expirationStatus(request) match {
-      case ExpirationWarning(duration) ⇒ Json.obj("remaining" → duration.toSeconds, "warning" → true)
-      case ExpirationError             ⇒ Json.obj("remaining" → 0, "warning"                  → true)
-      case ExpirationOk(duration)      ⇒ Json.obj("remaining" → duration.toSeconds, "warning" → false)
+      case ExpirationWarning(duration) => Json.obj("remaining" -> duration.toSeconds, "warning" -> true)
+      case ExpirationError             => Json.obj("remaining" -> 0, "warning"                  -> true)
+      case ExpirationOk(duration)      => Json.obj("remaining" -> duration.toSeconds, "warning" -> false)
     }
     Ok(status)
   }

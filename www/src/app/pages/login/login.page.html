@@ -2,7 +2,7 @@
   <div class="mv-m text-center">
     <img src="../../../assets/images/logo-dark.svg" height="50" alt="">
   </div>
-  <div class="login-box-body">        
+  <div class="login-box-body">
     <p class="login-box-msg">Sign in to start your session</p>
     <form name="loginForm" ng-submit="$ctrl.login()">
       <div class="form-group has-feedback has-feedback-left">
@@ -15,17 +15,19 @@
       </div>
 
       <div class="row">
-        <div class="col-xs-offset-8 col-xs-4">
-          <button type="submit" class="btn btn-primary btn-sm btn-block btn-flat" ng-disabled="loginForm.$invalid">Sign In</button>
+        <div class="col-xs-12">
+          <button type="submit" class="btn btn-primary btn-m btn-block" ng-disabled="loginForm.$invalid">Sign In</button>
         </div>
       </div>
-    </form>
-  </div>
-  <div class="sso-login-box" ng-if="$ctrl.ssoEnabled()">
-      <div class="row">
-          <div class="col-xs-offset-4 col-xs-4">
-              <button type="button" class="btn btn-success btn-sm btn-block btn-flat" ng-click="$ctrl.ssoLogin()">Sign In with SSO</button>
-          </div>
+
+      <div class="sso-login-box" ng-if="$ctrl.ssoEnabled()">
+        <div class="mt-s or-separator">OR</div>
+    
+        <div class="mv-xs">
+          <a class="btn btn-success btn-m btn-block" href="./api/ssoLogin">Sign In with SSO</a>
+        </div>
       </div>
+
+    </form>
   </div>
 </div>

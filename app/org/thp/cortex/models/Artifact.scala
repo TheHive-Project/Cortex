@@ -4,9 +4,9 @@ import javax.inject.{Inject, Singleton}
 
 import play.api.libs.json.JsObject
 
-import org.elastic4play.models.{AttributeDef, EntityDef, AttributeFormat ⇒ F, AttributeOption ⇒ O, ChildModelDef}
+import org.elastic4play.models.{AttributeDef, EntityDef, AttributeFormat => F, AttributeOption => O, ChildModelDef}
 
-trait ArtifactAttributes { _: AttributeDef ⇒
+trait ArtifactAttributes { _: AttributeDef =>
   val dataType   = attribute("dataType", F.stringFmt, "Type of the artifact", O.readonly)
   val data       = optionalAttribute("data", F.rawFmt, "Content of the artifact", O.readonly)
   val attachment = optionalAttribute("attachment", F.attachmentFmt, "Artifact file content", O.readonly)
@@ -16,7 +16,7 @@ trait ArtifactAttributes { _: AttributeDef ⇒
 }
 
 @Singleton
-class ArtifactModel @Inject()(reportModel: ReportModel)
+class ArtifactModel @Inject() (reportModel: ReportModel)
     extends ChildModelDef[ArtifactModel, Artifact, ReportModel, Report](reportModel, "artifact", "Artifact", "/artifact")
     with ArtifactAttributes {}
 

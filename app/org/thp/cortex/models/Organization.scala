@@ -8,7 +8,7 @@ import play.api.Logger
 import play.api.libs.json.{JsNumber, JsObject, JsString, Json}
 
 import org.elastic4play.models.JsonFormat.enumFormat
-import org.elastic4play.models.{AttributeDef, BaseEntity, EntityDef, HiveEnumeration, ModelDef, AttributeFormat ⇒ F, AttributeOption ⇒ O}
+import org.elastic4play.models.{AttributeDef, BaseEntity, EntityDef, HiveEnumeration, ModelDef, AttributeFormat => F, AttributeOption => O}
 import org.elastic4play.services.FindSrv
 
 object OrganizationStatus extends Enumeration with HiveEnumeration {
@@ -17,7 +17,7 @@ object OrganizationStatus extends Enumeration with HiveEnumeration {
   implicit val reads = enumFormat(this)
 }
 
-trait OrganizationAttributes { _: AttributeDef ⇒
+trait OrganizationAttributes { _: AttributeDef =>
   val name        = attribute("name", F.stringFmt, "Organization name", O.form)
   val _id         = attribute("_id", F.stringFmt, "Organization name", O.model)
   val description = attribute("description", F.textFmt, "Organization description")
@@ -25,7 +25,7 @@ trait OrganizationAttributes { _: AttributeDef ⇒
 }
 
 @Singleton
-class OrganizationModel @Inject()(
+class OrganizationModel @Inject() (
     findSrv: FindSrv,
     userModelProvider: Provider[UserModel],
     workerModelProvider: Provider[WorkerModel],
@@ -37,49 +37,49 @@ class OrganizationModel @Inject()(
   private lazy val logger      = Logger(getClass)
   lazy val userModel           = userModelProvider.get
   lazy val workerModel         = workerModelProvider.get
-  override def removeAttribute = Json.obj("status" → "Locked")
+  override def removeAttribute = Json.obj("status" -> "Locked")
 
   override def creationHook(parent: Option[BaseEntity], attrs: JsObject): Future[JsObject] =
     Future.successful {
-      (attrs \ "name").asOpt[JsString].fold(attrs) { orgName ⇒
-        attrs - "name" + ("_id" → orgName)
+      (attrs \ "name").asOpt[JsString].fold(attrs) { orgName =>
+        attrs - "name" + ("_id" -> orgName)
       }
     }
 
   private def buildUserStats(organization: Organization): Future[JsObject] = {
     import org.elastic4play.services.QueryDSL._
     findSrv(userModel, "organization" ~= organization.id, groupByField("status", selectCount))
-      .map { userStatsJson ⇒
+      .map { userStatsJson =>
         val (userCount, userStats) = userStatsJson.value.foldLeft((0L, JsObject.empty)) {
-          case ((total, s), (key, value)) ⇒
+          case ((total, s), (key, value)) =>
             val count = (value \ "count").as[Long]
-            (total + count, s + (key → JsNumber(count)))
+            (total + count, s + (key -> JsNumber(count)))
         }
-        Json.obj("users" → (userStats + ("total" → JsNumber(userCount))))
+        Json.obj("users" -> (userStats + ("total" -> JsNumber(userCount))))
       }
   }
 
   private def buildWorkerStats(organization: Organization): Future[JsObject] = {
     import org.elastic4play.services.QueryDSL._
     findSrv(workerModel, withParent(organization), groupByField("status", selectCount))
-      .map { workerStatsJson ⇒
+      .map { workerStatsJson =>
         val (workerCount, workerStats) = workerStatsJson.value.foldLeft((0L, JsObject.empty)) {
-          case ((total, s), (key, value)) ⇒
+          case ((total, s), (key, value)) =>
             val count = (value \ "count").as[Long]
-            (total + count, s + (key → JsNumber(count)))
+            (total + count, s + (key -> JsNumber(count)))
         }
-        Json.obj("workers" → (workerStats + ("total" → JsNumber(workerCount))))
+        Json.obj("workers" -> (workerStats + ("total" -> JsNumber(workerCount))))
       }
   }
 
   override def getStats(entity: BaseEntity): Future[JsObject] =
     entity match {
-      case organization: Organization ⇒
+      case organization: Organization =>
         for {
-          userStats   ← buildUserStats(organization)
-          workerStats ← buildWorkerStats(organization)
+          userStats   <- buildUserStats(organization)
+          workerStats <- buildWorkerStats(organization)
         } yield userStats ++ workerStats
-      case other ⇒
+      case other =>
         logger.warn(s"Request caseStats from a non-case entity ?! ${other.getClass}:$other")
         Future.successful(Json.obj())
     }
@@ -89,5 +89,5 @@ class OrganizationModel @Inject()(
 class Organization(model: OrganizationModel, attributes: JsObject)
     extends EntityDef[OrganizationModel, Organization](model, attributes)
     with OrganizationAttributes {
-  override def toJson: JsObject = super.toJson + ("name" → JsString(id))
+  override def toJson: JsObject = super.toJson + ("name" -> JsString(id))
 }

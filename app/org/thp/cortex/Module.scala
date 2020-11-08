@@ -17,7 +17,7 @@ import org.thp.cortex.services._
 
 import org.elastic4play.models.BaseModelDef
 import org.elastic4play.services.auth.MultiAuthSrv
-import org.elastic4play.services.{UserSrv ⇒ EUserSrv, AuthSrv, MigrationOperations}
+import org.elastic4play.services.{UserSrv => EUserSrv, AuthSrv, MigrationOperations}
 import org.thp.cortex.controllers.{AssetCtrl, AssetCtrlDev, AssetCtrlProd}
 import services.mappers.{MultiUserMapperSrv, UserMapper}
 
@@ -41,8 +41,8 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     reflectionClasses
       .getSubTypesOf(classOf[BaseModelDef])
       .asScala
-      .filterNot(c ⇒ Modifier.isAbstract(c.getModifiers))
-      .foreach { modelClass ⇒
+      .filterNot(c => Modifier.isAbstract(c.getModifiers))
+      .foreach { modelClass =>
         logger.info(s"Loading model $modelClass")
         modelBindings.addBinding.to(modelClass)
         if (classOf[AuditedModel].isAssignableFrom(modelClass)) {
@@ -54,9 +54,9 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     reflectionClasses
       .getSubTypesOf(classOf[AuthSrv])
       .asScala
-      .filterNot(c ⇒ Modifier.isAbstract(c.getModifiers) || c.isMemberClass)
-      .filterNot(c ⇒ c == classOf[MultiAuthSrv] || c == classOf[CortexAuthSrv])
-      .foreach { authSrvClass ⇒
+      .filterNot(c => Modifier.isAbstract(c.getModifiers) || c.isMemberClass)
+      .filterNot(c => c == classOf[MultiAuthSrv] || c == classOf[CortexAuthSrv])
+      .foreach { authSrvClass =>
         logger.info(s"Loading authentication module $authSrvClass")
         authBindings.addBinding.to(authSrvClass)
       }
@@ -65,9 +65,9 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     reflectionClasses
       .getSubTypesOf(classOf[UserMapper])
       .asScala
-      .filterNot(c ⇒ Modifier.isAbstract(c.getModifiers) || c.isMemberClass)
-      .filterNot(c ⇒ c == classOf[MultiUserMapperSrv])
-      .foreach(mapperCls ⇒ ssoMapperBindings.addBinding.to(mapperCls))
+      .filterNot(c => Modifier.isAbstract(c.getModifiers) || c.isMemberClass)
+      .filterNot(c => c == classOf[MultiUserMapperSrv])
+      .foreach(mapperCls => ssoMapperBindings.addBinding.to(mapperCls))
 
     if (environment.mode == Mode.Prod)
       bind[AssetCtrl].to[AssetCtrlProd]

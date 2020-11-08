@@ -8,7 +8,7 @@ import javax.inject.{Inject, Singleton}
 import org.thp.cortex.models.JsonFormat.workerTypeFormat
 
 import org.elastic4play.models.JsonFormat.enumFormat
-import org.elastic4play.models.{AttributeDef, EntityDef, HiveEnumeration, ModelDef, AttributeFormat ⇒ F, AttributeOption ⇒ O}
+import org.elastic4play.models.{AttributeDef, EntityDef, HiveEnumeration, ModelDef, AttributeFormat => F, AttributeOption => O}
 
 object JobStatus extends Enumeration with HiveEnumeration {
   type Type = Value
@@ -17,7 +17,7 @@ object JobStatus extends Enumeration with HiveEnumeration {
 }
 
 trait JobAttributes {
-  _: AttributeDef ⇒
+  _: AttributeDef =>
   val workerDefinitionId = attribute("workerDefinitionId", F.stringFmt, "Worker definition id", O.readonly)
   val workerId           = attribute("workerId", F.stringFmt, "Worker id", O.readonly)
   val workerName         = attribute("workerName", F.stringFmt, "Worker name", O.readonly)
@@ -41,9 +41,9 @@ trait JobAttributes {
 }
 
 @Singleton
-class JobModel @Inject()() extends ModelDef[JobModel, Job]("job", "Job", "/job") with JobAttributes with AuditedModel {
+class JobModel @Inject() () extends ModelDef[JobModel, Job]("job", "Job", "/job") with JobAttributes with AuditedModel {
 
-  override val removeAttribute: JsObject = Json.obj("status" → JobStatus.Deleted)
+  override val removeAttribute: JsObject = Json.obj("status" -> JobStatus.Deleted)
 
   override def defaultSortBy: Seq[String] = Seq("-createdAt")
 }
@@ -52,19 +52,18 @@ class Job(model: JobModel, attributes: JsObject) extends EntityDef[JobModel, Job
   val params: JsObject = Try(Json.parse(parameters()).as[JsObject]).getOrElse(JsObject.empty)
 
   override def toJson: JsObject = {
-    val output = input().fold(super.toJson)(
-      i ⇒
-        super.toJson +
-          ("input" → Json.parse(i))
+    val output = input().fold(super.toJson)(i =>
+      super.toJson +
+        ("input" -> Json.parse(i))
     ) +
-      ("parameters"           → params) +
-      ("analyzerId"           → JsString(workerId())) +
-      ("analyzerName"         → JsString(workerName())) +
-      ("analyzerDefinitionId" → JsString(workerDefinitionId())) +
-      ("date"                 → Json.toJson(createdAt))
+      ("parameters"           -> params) +
+      ("analyzerId"           -> JsString(workerId())) +
+      ("analyzerName"         -> JsString(workerName())) +
+      ("analyzerDefinitionId" -> JsString(workerDefinitionId())) +
+      ("date"                 -> Json.toJson(createdAt))
     data() match {
-      case Some(d) if tpe() == WorkerType.responder ⇒ output + ("data" → Json.parse(d))
-      case _                                        ⇒ output
+      case Some(d) if tpe() == WorkerType.responder => output + ("data" -> Json.parse(d))
+      case _                                        => output
     }
   }
 }

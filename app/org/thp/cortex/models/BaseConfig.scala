@@ -12,19 +12,19 @@ case class BaseConfig(name: String, workerNames: Seq[String], items: Seq[Configu
 }
 
 object BaseConfig {
-  implicit val writes: Writes[BaseConfig] = Writes[BaseConfig] { baseConfig ⇒
+  implicit val writes: Writes[BaseConfig] = Writes[BaseConfig] { baseConfig =>
     Json.obj(
-      "name"               → baseConfig.name,
-      "workers"            → baseConfig.workerNames,
-      "configurationItems" → baseConfig.items,
-      "config"             → baseConfig.config.fold(JsObject.empty)(_.jsonConfig)
+      "name"               -> baseConfig.name,
+      "workers"            -> baseConfig.workerNames,
+      "configurationItems" -> baseConfig.items,
+      "config"             -> baseConfig.config.fold(JsObject.empty)(_.jsonConfig)
     )
   }
 
   def global(tpe: WorkerType.Type, configuration: Configuration): BaseConfig = {
     val typedItems = tpe match {
-      case WorkerType.responder ⇒ Nil
-      case WorkerType.analyzer ⇒
+      case WorkerType.responder => Nil
+      case WorkerType.analyzer =>
         Seq(
           ConfigurationDefinitionItem(
             "auto_extract_artifacts",
@@ -40,7 +40,7 @@ object BaseConfig {
             WorkerConfigItemType.number,
             multi = false,
             required = false,
-            configuration.getOptional[Duration]("cache.job").map(d ⇒ JsNumber(d.toMinutes))
+            configuration.getOptional[Duration]("cache.job").map(d => JsNumber(d.toMinutes))
           )
         )
     }
@@ -57,7 +57,7 @@ object BaseConfig {
           WorkerConfigItemType.number,
           multi = false,
           required = false,
-          configuration.getOptional[Duration]("job.timeout").map(d ⇒ JsNumber(d.toMinutes))
+          configuration.getOptional[Duration]("job.timeout").map(d => JsNumber(d.toMinutes))
         )
       ),
       None

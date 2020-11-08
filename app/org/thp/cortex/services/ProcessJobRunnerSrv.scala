@@ -16,7 +16,7 @@ import scala.sys.process.{Process, ProcessLogger, _}
 import scala.util.Try
 
 @Singleton
-class ProcessJobRunnerSrv @Inject()(implicit val system: ActorSystem) {
+class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
 
   lazy val logger = Logger(getClass)
 
@@ -27,7 +27,7 @@ class ProcessJobRunnerSrv @Inject()(implicit val system: ActorSystem) {
       (s"pip$pythonVersion" :: "show" :: "cortexutils" :: Nil)
         .lineStream
         .collectFirst {
-          case pythonPackageVersionRegex(major, minor, patch) ⇒ (major.toInt, minor.toInt, patch.toInt)
+          case pythonPackageVersionRegex(major, minor, patch) => (major.toInt, minor.toInt, patch.toInt)
         }
     }.getOrElse(None)
 
@@ -36,7 +36,7 @@ class ProcessJobRunnerSrv @Inject()(implicit val system: ActorSystem) {
     val output        = StringBuilder.newBuilder
     logger.info(s"Execute $command in $baseDirectory, timeout is ${timeout.fold("none")(_.toString)}")
     val process = Process(Seq(command, jobDirectory.toString), baseDirectory.toFile)
-      .run(ProcessLogger { s ⇒
+      .run(ProcessLogger { s =>
         logger.info(s"  Job ${job.id}: $s")
         output ++= s
       })
@@ -45,24 +45,24 @@ class ProcessJobRunnerSrv @Inject()(implicit val system: ActorSystem) {
         process.exitValue()
         ()
       }
-      .map { _ ⇒
+      .map { _ =>
         val outputFile = jobDirectory.resolve("output").resolve("output.json")
         if (!Files.exists(outputFile) || Files.size(outputFile) == 0) {
-          val report = Json.obj("success" → false, "errorMessage" → output.toString)
+          val report = Json.obj("success" -> false, "errorMessage" -> output.toString)
           Files.write(outputFile, report.toString.getBytes(StandardCharsets.UTF_8))
         }
         ()
       }
       .recoverWith {
-        case error ⇒
+        case error =>
           logger.error(s"Execution of command $command failed", error)
           Future.apply {
-            val report = Json.obj("success" → false, "errorMessage" → s"${error.getMessage}\n$output")
+            val report = Json.obj("success" -> false, "errorMessage" -> s"${error.getMessage}\n$output")
             Files.write(jobDirectory.resolve("output").resolve("output.json"), report.toString.getBytes(StandardCharsets.UTF_8))
             ()
           }
       }
-    timeout.fold(execution)(t ⇒ execution.withTimeout(t, killProcess(process)))
+    timeout.fold(execution)(t => execution.withTimeout(t, killProcess(process)))
   }
 
   def killProcess(process: Process): Unit = {

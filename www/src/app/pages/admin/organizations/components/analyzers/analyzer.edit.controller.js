@@ -40,10 +40,13 @@ export default class AnalyzerEditController {
         const property = item.name,
           configValue = (this.configuration.config || {})[property];
 
-        analyzer.configuration[property] =
-          configValue ||
-          item.defaultValue ||
-          (item.multi ? [undefined] : undefined);
+        if(configValue !== undefined) {
+          analyzer.configuration[property] = configValue;
+        } else if (item.defaultValue !== undefined) {
+          analyzer.configuration[property] = item.defaultValue;
+        } else {
+          analyzer.configuration[property] = item.multi ? [undefined] : undefined;
+        }
       });
 
       // Handle TLP default config
