@@ -85,5 +85,6 @@ class Migration @Inject() (userSrv: UserSrv, organizationSrv: OrganizationSrv, w
         }
       )
     case DatabaseState(4) => Nil
+    case DatabaseState(5) => Nil
   }
 }
