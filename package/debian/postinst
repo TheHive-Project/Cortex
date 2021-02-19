@@ -83,7 +83,8 @@ case "$1" in
 
     # Chown definitions created by SBT Native Packager
 
-    chown cortex:cortex /var/log/cortex
+    touch /var/log/cortex/application.log
+    chown -R cortex:cortex /var/log/cortex
     chown root:cortex /etc/cortex/application.conf /etc/cortex/logback.xml
     chmod 0640 /etc/cortex/application.conf /etc/cortex/logback.xml
 
