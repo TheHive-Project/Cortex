@@ -10,6 +10,8 @@ test "${no_config_es:-0}" == 1
 CONFIG_ES=$?
 ES_URI=${es_uri:-}
 ES_HOSTNAME=${es_hostname:-elasticsearch}
+ES_USERNAME=${es_username:-}
+ES_PASSWORD=${es_password:-}
 CONFIG_FILE=${config_file:-/etc/cortex/application.conf}
 DEFAULT_ANALYZER_URL="https://download.thehive-project.org/analyzers.json"
 ANALYZER_URLS=()
@@ -32,6 +34,8 @@ function usage {
     --es-uri <uri>               | use this string to configure elasticsearch hosts (format: http(s)://host:port,host:port(/prefix)?querystring)
     --es-trust-ca-cert <file.pem>| trust a CA for outbound Elasticsearch TLS connections (can use multiple times)
     --es-hostname <host>         | resolve this hostname to find elasticsearch instances
+    --es-username <name>         | username for Elasticsearch authentication
+    --es-password <pass>         | password for Elasticsearch authentication
     --secret <secret>            | secret to secure sessions
     --show-secret                | show the generated secret
     --job-directory <dir>        | use this directory to store job files
@@ -56,6 +60,8 @@ do
     "--es-uri")               shift; ES_URI=$1;;
     "--es-trust-ca-cert")        shift; ES_TRUSTED_CA_CERT_FILES+=($1);;
     "--es-hostname")          shift; ES_HOSTNAME=$1;;
+    "--es-username")          shift; ES_USERNAME=$1;;
+    "--es-password")          shift; ES_PASSWORD=$1;;
     "--secret")               shift; SECRET=$1;;
     "--show-secret")          SHOW_SECRET=1;;
     "--job-directory")        shift; JOB_DIRECTORY=$1;;
@@ -143,6 +149,14 @@ then
       echo "search.trustStore.type=\"JKS\"" >> "$CONFIG_FILE"
       echo "search.trustStore.password=\"$ES_TRUST_STORE_PASSWORD\"" >> "$CONFIG_FILE"
     fi
+  fi
+  if test -n "$ES_USERNAME"
+  then
+    echo "search.user=\"$ES_USERNAME\"" >> "$CONFIG_FILE"
+  fi
+  if test -n "$ES_PASSWORD"
+  then
+    echo "search.password=\"$ES_PASSWORD\"" >> "$CONFIG_FILE"
   fi
 
   test -n "$JOB_DIRECTORY" && echo "job.directory=\"$JOB_DIRECTORY\"" >> "$CONFIG_FILE"
