@@ -26,7 +26,7 @@ rpmRequirements += "java-1.8.0-openjdk-headless"
 
 maintainerScripts in Rpm := maintainerScriptsFromDirectory(
   baseDirectory.value / "package" / "rpm",
-  Seq(RpmConstants.Pre, RpmConstants.Preun, RpmConstants.Postun)
+  Seq(RpmConstants.Pre, RpmConstants.Preun, RpmConstants.Post, RpmConstants.Postun)
 )
 
 linuxPackageSymlinks in Rpm := Nil

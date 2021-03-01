@@ -1,0 +1,3 @@
+mkdir -p /var/log/cortex
+touch /var/log/cortex/application.log
+chown -R cortex:cortex /var/log/cortex
