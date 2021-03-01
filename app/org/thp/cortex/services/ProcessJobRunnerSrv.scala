@@ -35,7 +35,9 @@ class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
     val baseDirectory = Paths.get(command).getParent.getParent
     val output        = StringBuilder.newBuilder
     logger.info(s"Execute $command in $baseDirectory, timeout is ${timeout.fold("none")(_.toString)}")
-    val process = Process(Seq(command, jobDirectory.toString), baseDirectory.toFile)
+    val cacertsFile = jobDirectory.resolve("input").resolve("cacerts")
+    val env         = if (Files.exists(cacertsFile)) Seq("REQUESTS_CA_BUNDLE" -> cacertsFile.toString) else Nil
+    val process = Process(Seq(command, jobDirectory.toString), baseDirectory.toFile, env: _*)
       .run(ProcessLogger { s =>
         logger.info(s"  Job ${job.id}: $s")
         output ++= s

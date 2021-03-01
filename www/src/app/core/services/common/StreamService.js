@@ -130,12 +130,11 @@ export default function (app) {
           // Initialize the stream;
           this.isPolling = false;
 
+          if (err.status === 401) {
+            return;
+          }
           if (err.status !== 404) {
             NotificationService.error('StreamSrv', err.data, err.status);
-
-            if (err.status === 401) {
-              return;
-            }
           }
 
           this.init();

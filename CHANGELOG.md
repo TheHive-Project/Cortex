@@ -1,5 +1,16 @@
 # Change Log
 
+## [3.1.1](https://github.com/TheHive-Project/Cortex/milestone/28) (2021-03-01)
+
+**Implemented enhancements:**
+
+- [Improvement] Create logfile after installation [\#341](https://github.com/TheHive-Project/Cortex/issues/341)
+
+**Fixed bugs:**
+
+- [BUG] Certificate not taken into account when running neurons with process [\#317](https://github.com/TheHive-Project/Cortex/issues/317)
+- [Bug] Update doesn't work on Elasticsearch 7.11 [\#346](https://github.com/TheHive-Project/Cortex/issues/346)
+
 ## [3.1.0](https://github.com/TheHive-Project/Cortex/milestone/27) (2020-10-30)
 
 **Implemented enhancements:**
