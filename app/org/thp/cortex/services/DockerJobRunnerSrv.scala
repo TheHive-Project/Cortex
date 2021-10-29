@@ -23,6 +23,7 @@ import org.elastic4play.utils.RichFuture
 @Singleton
 class DockerJobRunnerSrv(
     client: DockerClient,
+    config: Configuration,
     autoUpdate: Boolean,
     jobBaseDirectory: Path,
     dockerJobBaseDirectory: Path,
@@ -42,6 +43,7 @@ class DockerJobRunnerSrv(
         .uri(config.getOptional[String]("docker.uri").getOrElse("unix:///var/run/docker.sock"))
         .useProxy(config.getOptional[Boolean]("docker.useProxy").getOrElse(false))
         .build(),
+      config,
       config.getOptional[Boolean]("docker.autoUpdate").getOrElse(true),
       Paths.get(config.get[String]("job.directory")),
       Paths.get(config.get[String]("job.dockerDirectory")),
@@ -64,20 +66,33 @@ class DockerJobRunnerSrv(
     import scala.collection.JavaConverters._
     if (autoUpdate) client.pull(dockerImage)
     //    ContainerConfig.builder().addVolume()
-    val hostConfig = HostConfig
-      .builder()
-      .appendBinds(
-        Bind
-          .from(dockerJobBaseDirectory.resolve(jobBaseDirectory.relativize(jobDirectory)).toAbsolutePath.toString)
-          .to("/job")
-          .readOnly(false)
-          .build()
-      )
-      .build()
+    val hostConfigBuilder = HostConfig.builder()
+    config.getOptional[Seq[String]]("docker.container.capAdd").map(_.asJava).foreach(hostConfigBuilder.capAdd)
+    config.getOptional[Seq[String]]("docker.container.capDrop").map(_.asJava).foreach(hostConfigBuilder.capDrop)
+    config.getOptional[String]("docker.container.cgroupParent").foreach(hostConfigBuilder.cgroupParent)
+    config.getOptional[Long]("docker.container.cpuPeriod").foreach(hostConfigBuilder.cpuPeriod(_))
+    config.getOptional[Long]("docker.container.cpuQuota").foreach(hostConfigBuilder.cpuQuota(_))
+    config.getOptional[Seq[String]]("docker.container.dns").map(_.asJava).foreach(hostConfigBuilder.dns)
+    config.getOptional[Seq[String]]("docker.container.dnsSearch").map(_.asJava).foreach(hostConfigBuilder.dnsSearch)
+    config.getOptional[Seq[String]]("docker.container.extraHosts").map(_.asJava).foreach(hostConfigBuilder.extraHosts)
+    config.getOptional[Long]("docker.container.kernelMemory").foreach(hostConfigBuilder.kernelMemory(_))
+    config.getOptional[Long]("docker.container.memoryReservation").foreach(hostConfigBuilder.memoryReservation(_))
+    config.getOptional[Long]("docker.container.memory").foreach(hostConfigBuilder.memory(_))
+    config.getOptional[Long]("docker.container.memorySwap").foreach(hostConfigBuilder.memorySwap(_))
+    config.getOptional[Int]("docker.container.memorySwappiness").foreach(hostConfigBuilder.memorySwappiness(_))
+    config.getOptional[String]("docker.container.networkMode").foreach(hostConfigBuilder.networkMode)
+    config.getOptional[Boolean]("docker.container.privileged").foreach(hostConfigBuilder.privileged(_))
+    hostConfigBuilder.appendBinds(
+      Bind
+        .from(dockerJobBaseDirectory.resolve(jobBaseDirectory.relativize(jobDirectory)).toAbsolutePath.toString)
+        .to("/job")
+        .readOnly(false)
+        .build()
+    )
     val cacertsFile = jobDirectory.resolve("input").resolve("cacerts")
     val containerConfigBuilder = ContainerConfig
       .builder()
-      .hostConfig(hostConfig)
+      .hostConfig(hostConfigBuilder.build())
       .image(dockerImage)
       .cmd("/job")
 
