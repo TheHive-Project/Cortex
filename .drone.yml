@@ -36,7 +36,7 @@ steps:
         fi
         . ~/.nvm/nvm.sh
         [ -n "$PLUGIN_PGP_KEY" ] && gpg --batch --import - <<< $PLUGIN_PGP_KEY
-        sbt -Duser.home=$PWD docker:stage debian:packageBin rpm:packageBin universal:packageBin
+        sbt -Duser.home=$PWD Docker/stage Debian/packageBin Rpm/packageBin Universal/packageBin cortexWithDeps/Docker/stage
         if ( echo $V | grep -qi rc )
         then
           echo $( echo $V | sed -re 's/([0-9]+.[0-9]+.[0-9]+)-RC([0-9]+)-([0-9]+)/\1-RC\2,\1-RC\2-\3/' ) > .tags
@@ -98,6 +98,22 @@ steps:
     settings:
       context: target/docker/stage
       dockerfile: target/docker/stage/Dockerfile
+      repo: thehiveproject/cortex
+      username: {from_secret: docker_username}
+      password: {from_secret: docker_password}
+    when:
+      event: [tag]
+
+  - name: update docker tags
+    image: thehiveproject/drone-scala-node
+    commands: sed -i -e 's/,/-withdeps,/g; s/$/-withdeps/' .tags
+
+  # Publish docker image on Docker Hub
+  - name: docker
+    image: plugins/docker
+    settings:
+      context: target/docker-withdeps/target/docker/stage
+      dockerfile: target/docker-withdeps/target/docker/stage/Dockerfile
       repo: thehiveproject/cortex
       username: {from_secret: docker_username}
       password: {from_secret: docker_password}
