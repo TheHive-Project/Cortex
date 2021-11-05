@@ -10,7 +10,6 @@ object Common {
     organization := "org.thehive-project",
     licenses += "AGPL-V3" -> url("https://www.gnu.org/licenses/agpl-3.0.html"),
     organizationHomepage := Some(url("http://thehive-project.org/")),
-    resolvers += Resolver.bintrayRepo("thehive-project", "maven"),
     resolvers += "elasticsearch-releases" at "https://artifacts.elastic.co/maven",
     scalaVersion := Dependencies.scalaVersion,
     scalacOptions ++= Seq(
@@ -25,16 +24,16 @@ object Common {
       "-Ywarn-nullary-override", // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
       "-Ywarn-numeric-widen"     // Warn when numerics are widened.
     ),
-    scalacOptions in Test ~= { options =>
+    Test / scalacOptions ~= { options =>
       options filterNot (_ == "-Ywarn-dead-code") // Allow dead code in tests (to support using mockito).
     },
-    parallelExecution in Test := false,
-    fork in Test := true,
+    Test / parallelExecution := false,
+    Test / fork := true,
     javaOptions += "-Xmx1G",
     // Redirect logs from ElasticSearch (which uses log4j2) to slf4j
     libraryDependencies += "org.apache.logging.log4j" % "log4j-to-slf4j" % "2.9.1",
     excludeDependencies += "org.apache.logging.log4j" % "log4j-core",
-    dependencyOverrides += "com.typesafe.akka"        %% "akka-actor" % play.core.PlayVersion.akkaVersion
+    dependencyOverrides += "com.typesafe.akka"       %% "akka-actor"     % play.core.PlayVersion.akkaVersion
   )
 
   val stableVersion: Regex = "(\\d+\\.\\d+\\.\\d+)-(\\d+)".r
