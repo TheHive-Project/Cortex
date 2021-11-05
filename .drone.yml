@@ -104,12 +104,26 @@ steps:
     when:
       event: [tag]
 
+  # Publish docker image on Harbor
+  - name: harbor
+    image: plugins/docker
+    settings:
+      context: target/docker/stage
+      dockerfile: target/docker/stage/Dockerfile
+      registry: {from_secret: harbor_registry}
+      repo: {from_secret: harbor_repo}
+      username: {from_secret: harbor_username}
+      password: {from_secret: harbor_password}
+    when:
+      event: [tag]
+
   - name: update docker tags
     image: thehiveproject/drone-scala-node
-    commands: sed -i -e 's/,/-withdeps,/g; s/$/-withdeps/' .tags
+    commands:
+      - sed -i -e 's/,/-withdeps,/g; s/$/-withdeps/' .tags
 
   # Publish docker image on Docker Hub
-  - name: docker
+  - name: docker fat
     image: plugins/docker
     settings:
       context: target/docker-withdeps/target/docker/stage
@@ -121,11 +135,11 @@ steps:
       event: [tag]
 
   # Publish docker image on Harbor
-  - name: harbor
+  - name: harbor fat
     image: plugins/docker
     settings:
-      context: target/docker/stage
-      dockerfile: target/docker/stage/Dockerfile
+      context: target/docker-withdeps/target/docker/stage
+      dockerfile: target/docker-withdeps/target/docker/stage/Dockerfile
       registry: {from_secret: harbor_registry}
       repo: {from_secret: harbor_repo}
       username: {from_secret: harbor_username}
