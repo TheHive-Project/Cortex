@@ -1,15 +1,25 @@
 # Change Log
 
-## [3.1.1](https://github.com/TheHive-Project/Cortex/milestone/28) (2021-03-01)
+## [3.1.2](https://github.com/TheHive-Project/Cortex/milestone/30) (2021-11-05)
+
+**Closed issues:**
+
+- More settings on docker containers instantiated by Cortex [\#387](https://github.com/TheHive-Project/Cortex/issues/387)
 
 **Implemented enhancements:**
 
-- [Improvement] Create logfile after installation [\#341](https://github.com/TheHive-Project/Cortex/issues/341)
+- Create a docker image with all dependencies [\#388](https://github.com/TheHive-Project/Cortex/issues/388)
+
+## [3.1.1](https://github.com/TheHive-Project/Cortex/milestone/28) (2021-03-01)
 
 **Fixed bugs:**
 
 - [BUG] Certificate not taken into account when running neurons with process [\#317](https://github.com/TheHive-Project/Cortex/issues/317)
 - [Bug] Update doesn't work on Elasticsearch 7.11 [\#346](https://github.com/TheHive-Project/Cortex/issues/346)
+
+**Implemented enhancements:**
+
+- [Improvement] Create logfile after installation [\#341](https://github.com/TheHive-Project/Cortex/issues/341)
 
 ## [3.1.0](https://github.com/TheHive-Project/Cortex/milestone/27) (2020-10-30)
 
@@ -25,13 +35,13 @@
 
 ## [3.1.0-RC1](https://github.com/TheHive-Project/Cortex/milestone/21) (2020-08-13)
 
-**Implemented enhancements:**
-
-- Support of ElasticSearch 7  [\#279](https://github.com/TheHive-Project/Cortex/issues/279)
-
 **Fixed bugs:**
 
 - OAuth2 SSO Login Broken [\#264](https://github.com/TheHive-Project/Cortex/issues/264)
+
+**Implemented enhancements:**
+
+- Support of ElasticSearch 7  [\#279](https://github.com/TheHive-Project/Cortex/issues/279)
 
 ## [3.0.1](https://github.com/TheHive-Project/Cortex/milestone/24) (2020-04-24)
 
@@ -58,16 +68,16 @@
 
 ## [3.0.0-RC4](https://github.com/TheHive-Project/Cortex/milestone/22) (2019-07-11)
 
-**Closed issues:**
-
-- dockerhub sample uses the wrong port [\#203](https://github.com/TheHive-Project/Cortex/issues/203)
-- docker version of cortex prints a lot of errors for auth failures [\#205](https://github.com/TheHive-Project/Cortex/issues/205)
-
 **Fixed bugs:**
 
 - Login error after Cortex upgrade to 3 [\#199](https://github.com/TheHive-Project/Cortex/issues/199)
 - docker version of cortex breaks when you don't create a user immediately [\#204](https://github.com/TheHive-Project/Cortex/issues/204)
 - Responder run displayed as Analyzer run [\#207](https://github.com/TheHive-Project/Cortex/issues/207)
+
+**Closed issues:**
+
+- dockerhub sample uses the wrong port [\#203](https://github.com/TheHive-Project/Cortex/issues/203)
+- docker version of cortex prints a lot of errors for auth failures [\#205](https://github.com/TheHive-Project/Cortex/issues/205)
 
 ## [3.0.0-RC3](https://github.com/TheHive-Project/Cortex/milestone/20) (2019-06-28)
 
@@ -108,11 +118,6 @@
 
 ## [2.1.3](https://github.com/TheHive-Project/Cortex/milestone/18) (2019-02-05)
 
-**Implemented enhancements:**
-
-- Add PAP property to jobs list [\#146](https://github.com/TheHive-Project/Cortex/issues/146)
-- Add configuration for drone continuous integration [\#156](https://github.com/TheHive-Project/Cortex/issues/156)
-
 **Closed issues:**
 
 - conf/logback.xml: Rotate logs [\#62](https://github.com/TheHive-Project/Cortex/issues/62)
@@ -126,6 +131,11 @@
 - Unable to disable invalid responders [\#157](https://github.com/TheHive-Project/Cortex/issues/157)
 - Wrong checks of role when an user is created [\#158](https://github.com/TheHive-Project/Cortex/issues/158)
 
+**Implemented enhancements:**
+
+- Add PAP property to jobs list [\#146](https://github.com/TheHive-Project/Cortex/issues/146)
+- Add configuration for drone continuous integration [\#156](https://github.com/TheHive-Project/Cortex/issues/156)
+
 ## [2.1.2](https://github.com/TheHive-Project/Cortex/milestone/17) (2018-10-12)
 
 **Fixed bugs:**
@@ -134,17 +144,17 @@
 
 ## [2.1.1](https://github.com/TheHive-Project/Cortex/milestone/16) (2018-10-12)
 
-**Implemented enhancements:**
-
-- Publish stable versions in beta package channels [\#138](https://github.com/TheHive-Project/Cortex/issues/138)
-- Allow Cortex to use a custom root context [\#140](https://github.com/TheHive-Project/Cortex/issues/140)
-- Change Debian dependencies [\#141](https://github.com/TheHive-Project/Cortex/issues/141)
-
 **Fixed bugs:**
 
 - Console output should not be logged in syslog [\#136](https://github.com/TheHive-Project/Cortex/issues/136)
 - RPM update replace configuration file [\#137](https://github.com/TheHive-Project/Cortex/issues/137)
 - Fix Cache column in analyzers admin page [\#139](https://github.com/TheHive-Project/Cortex/issues/139)
+
+**Implemented enhancements:**
+
+- Publish stable versions in beta package channels [\#138](https://github.com/TheHive-Project/Cortex/issues/138)
+- Allow Cortex to use a custom root context [\#140](https://github.com/TheHive-Project/Cortex/issues/140)
+- Change Debian dependencies [\#141](https://github.com/TheHive-Project/Cortex/issues/141)
 
 ## [2.1.0](https://github.com/TheHive-Project/Cortex/milestone/15) (2018-09-25)
 
@@ -180,10 +190,6 @@
 
 ## [2.0.4](https://github.com/TheHive-Project/Cortex/milestone/13) (2018-04-13)
 
-**Implemented enhancements:**
-
-- Let a Read/Analyze User Display/Change their API Key [\#89](https://github.com/TheHive-Project/Cortex/issues/89)
-
 **Fixed bugs:**
 
 - Install python3 requirements for analyzers in public docker image [\#58](https://github.com/TheHive-Project/Cortex/issues/58)
@@ -194,7 +200,16 @@
 - Updating users by orgAdmin users fails silently [\#94](https://github.com/TheHive-Project/Cortex/issues/94)
 - Strictly filter the list of analyzers in the run dialog [\#95](https://github.com/TheHive-Project/Cortex/issues/95)
 
+**Implemented enhancements:**
+
+- Let a Read/Analyze User Display/Change their API Key [\#89](https://github.com/TheHive-Project/Cortex/issues/89)
+
 ## [2.0.3](https://github.com/TheHive-Project/Cortex/milestone/12) (2018-04-12)
+
+**Fixed bugs:**
+
+- Version Upgrade of Analyzer makes all Analyzers invisible for TheHive (Cortex2) [\#75](https://github.com/TheHive-Project/Cortex/issues/75)
+- Refresh Analyzers button not working [\#83](https://github.com/TheHive-Project/Cortex/issues/83)
 
 **Implemented enhancements:**
 
@@ -203,11 +218,6 @@
 - Display existing analyzers with invalid definition [\#82](https://github.com/TheHive-Project/Cortex/issues/82)
 - Allow specifying a cache period per analyzer [\#85](https://github.com/TheHive-Project/Cortex/issues/85)
 - Allow arbitrary parameters for a job [\#86](https://github.com/TheHive-Project/Cortex/issues/86)
-
-**Fixed bugs:**
-
-- Version Upgrade of Analyzer makes all Analyzers invisible for TheHive (Cortex2) [\#75](https://github.com/TheHive-Project/Cortex/issues/75)
-- Refresh Analyzers button not working [\#83](https://github.com/TheHive-Project/Cortex/issues/83)
 
 ## [2.0.2](https://github.com/TheHive-Project/Cortex/milestone/11) (2018-04-04)
 
@@ -263,16 +273,16 @@
 
 ## [1.1.2](https://github.com/TheHive-Project/Cortex/milestone/6) (2017-06-12)
 
-**Implemented enhancements:**
-
-- Initialize MISP modules at startup [\#28](https://github.com/TheHive-Project/Cortex/issues/28)
-- Add page loader [\#30](https://github.com/TheHive-Project/Cortex/issues/30)
-
 **Fixed bugs:**
 
 - Error 500 in TheHive when a job is submited to Cortex [\#27](https://github.com/TheHive-Project/Cortex/issues/27)
 - Cortex and MISP unclear and error-loop [\#29](https://github.com/TheHive-Project/Cortex/issues/29)
 - jobstatus from jobs within cortex are not updated when status changes [\#31](https://github.com/TheHive-Project/Cortex/issues/31)
+
+**Implemented enhancements:**
+
+- Initialize MISP modules at startup [\#28](https://github.com/TheHive-Project/Cortex/issues/28)
+- Add page loader [\#30](https://github.com/TheHive-Project/Cortex/issues/30)
 
 ## [1.1.1](https://github.com/TheHive-Project/Cortex/milestone/5) (2017-05-17)
 

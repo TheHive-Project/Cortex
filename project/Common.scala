@@ -24,11 +24,11 @@ object Common {
       "-Ywarn-nullary-override", // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
       "-Ywarn-numeric-widen"     // Warn when numerics are widened.
     ),
-    scalacOptions in Test ~= { options =>
+    Test / scalacOptions ~= { options =>
       options filterNot (_ == "-Ywarn-dead-code") // Allow dead code in tests (to support using mockito).
     },
-    parallelExecution in Test := false,
-    fork in Test := true,
+    Test / parallelExecution := false,
+    Test / fork := true,
     javaOptions += "-Xmx1G",
     // Redirect logs from ElasticSearch (which uses log4j2) to slf4j
     libraryDependencies += "org.apache.logging.log4j" % "log4j-to-slf4j" % "2.9.1",
