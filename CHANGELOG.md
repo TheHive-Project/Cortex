@@ -1,5 +1,11 @@
 # Change Log
 
+## [3.1.3](https://github.com/TheHive-Project/Cortex/milestone/31) (2021-11-10)
+
+**Fixed bugs:**
+
+- The build of frontend fails [\#389](https://github.com/TheHive-Project/Cortex/issues/389)
+
 ## [3.1.2](https://github.com/TheHive-Project/Cortex/milestone/30) (2021-11-05)
 
 **Closed issues:**
