@@ -23,6 +23,7 @@ steps:
       - |
         . ~/.nvm/nvm.sh
         nvm install 12.18
+        npm install -g bower
         sbt -Duser.home=$PWD test:compile test Universal/packageBin
 
   # Build packages
@@ -39,6 +40,7 @@ steps:
         fi
         . ~/.nvm/nvm.sh
         nvm install 12.18
+        npm install -g bower
         [ -n "$PLUGIN_PGP_KEY" ] && gpg --batch --import - <<< $PLUGIN_PGP_KEY
         sbt -Duser.home=$PWD Docker/stage Debian/packageBin Rpm/packageBin Universal/packageBin cortexWithDeps/Docker/stage
         if ( echo $V | grep -qi rc )
