@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.1.4 (2021-12-20)
+
+**Dependency update**:
+
+- Update library `log4j-to-slf4j` to version 2.17.0
+
 ## [3.1.3](https://github.com/TheHive-Project/Cortex/milestone/31) (2021-11-10)
 
 **Fixed bugs:**
