@@ -11,6 +11,7 @@ target
 .DS_Store
 *.py[cod]
 /report-templates/*.zip
+/.bsp
 
 /bin/
 !/bin/activator
