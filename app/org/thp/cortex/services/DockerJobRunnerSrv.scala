@@ -62,7 +62,9 @@ class DockerJobRunnerSrv(
         false
     }.get
 
-  def run(jobDirectory: Path, dockerImage: String, job: Job, timeout: Option[FiniteDuration])(implicit ec: ExecutionContext): Future[Unit] = {
+  def run(jobDirectory: Path, dockerImage: String, job: Job, timeout: Option[FiniteDuration], jobExecutor: ExecutionContext)(implicit
+      ec: ExecutionContext
+  ): Future[Unit] = {
     import scala.collection.JavaConverters._
     if (autoUpdate) client.pull(dockerImage)
     //    ContainerConfig.builder().addVolume()
@@ -113,7 +115,7 @@ class DockerJobRunnerSrv(
       client.startContainer(containerCreation.id())
       client.waitContainer(containerCreation.id())
       ()
-    }.andThen {
+    }(jobExecutor).andThen {
       case r =>
         val outputFile = jobDirectory.resolve("output").resolve("output.json")
         if (!Files.exists(outputFile) || Files.size(outputFile) == 0) {

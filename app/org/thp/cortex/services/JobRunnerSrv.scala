@@ -191,12 +191,10 @@ class JobRunnerSrv @Inject() (
             case Failure(e) => endJob(job, JobStatus.Failure, Some(s"Report creation failure: $e"))
             case _          => endJob(job, JobStatus.Success)
           }
-      } else {
+      } else
         endJob(job, JobStatus.Failure, (report \ "errorMessage").asOpt[String], (report \ "input").asOpt[JsValue].map(_.toString))
-      }
-    } else {
+    } else
       endJob(job, JobStatus.Failure, Some(s"no output"))
-    }
   }
 
   def run(worker: Worker, job: Job)(implicit authContext: AuthContext): Future[Job] =
@@ -207,31 +205,32 @@ class JobRunnerSrv @Inject() (
       }
       val finishedJob = for {
         _ <- startJob(job)
-        j <- runners
-          .foldLeft[Option[Future[Unit]]](None) {
-            case (None, "docker") =>
-              worker
-                .dockerImage()
-                .map(dockerImage => dockerJobRunnerSrv.run(jobFolder, dockerImage, job, worker.jobTimeout().map(_.minutes))(executionContext))
-                .orElse {
-                  logger.warn(s"worker ${worker.id} can't be run with docker (doesn't have image)")
-                  None
-                }
-            case (None, "process") =>
-              worker
-                .command()
-                .map(command => processJobRunnerSrv.run(jobFolder, command, job, worker.jobTimeout().map(_.minutes))(executionContext))
-                .orElse {
-                  logger.warn(s"worker ${worker.id} can't be run with process (doesn't have image)")
-                  None
-                }
-            case (j: Some[_], _) => j
-            case (None, runner) =>
-              logger.warn(s"Unknown job runner: $runner")
-              None
+        j <-
+          runners
+            .foldLeft[Option[Future[Unit]]](None) {
+              case (None, "docker") =>
+                worker
+                  .dockerImage()
+                  .map(dockerImage => dockerJobRunnerSrv.run(jobFolder, dockerImage, job, worker.jobTimeout().map(_.minutes), executionContext))
+                  .orElse {
+                    logger.warn(s"worker ${worker.id} can't be run with docker (doesn't have image)")
+                    None
+                  }
+              case (None, "process") =>
+                worker
+                  .command()
+                  .map(command => processJobRunnerSrv.run(jobFolder, command, job, worker.jobTimeout().map(_.minutes), executionContext))
+                  .orElse {
+                    logger.warn(s"worker ${worker.id} can't be run with process (doesn't have image)")
+                    None
+                  }
+              case (j: Some[_], _) => j
+              case (None, runner) =>
+                logger.warn(s"Unknown job runner: $runner")
+                None
 
-          }
-          .getOrElse(Future.failed(BadRequestError("Worker cannot be run")))
+            }
+            .getOrElse(Future.failed(BadRequestError("Worker cannot be run")))
       } yield j
       finishedJob
         .transformWith { r =>
@@ -253,8 +252,8 @@ class JobRunnerSrv @Inject() (
     updateSrv(job, fields, ModifyConfig(retryOnConflict = 0))
   }
 
-  private def endJob(job: Job, status: JobStatus.Type, errorMessage: Option[String] = None, input: Option[String] = None)(
-      implicit authContext: AuthContext
+  private def endJob(job: Job, status: JobStatus.Type, errorMessage: Option[String] = None, input: Option[String] = None)(implicit
+      authContext: AuthContext
   ): Future[Job] = {
     val fields = Fields
       .empty

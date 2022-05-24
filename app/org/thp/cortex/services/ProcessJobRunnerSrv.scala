@@ -31,7 +31,10 @@ class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
         }
     }.getOrElse(None)
 
-  def run(jobDirectory: Path, command: String, job: Job, timeout: Option[FiniteDuration])(implicit ec: ExecutionContext): Future[Unit] = {
+  def run(jobDirectory: Path, command: String, job: Job, timeout: Option[FiniteDuration], jobExecutor: ExecutionContext)(
+      implicit
+      ec: ExecutionContext
+  ): Future[Unit] = {
     val baseDirectory = Paths.get(command).getParent.getParent
     val output        = StringBuilder.newBuilder
     logger.info(s"Execute $command in $baseDirectory, timeout is ${timeout.fold("none")(_.toString)}")
@@ -46,7 +49,7 @@ class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
       .apply {
         process.exitValue()
         ()
-      }
+      }(jobExecutor)
       .map { _ =>
         val outputFile = jobDirectory.resolve("output").resolve("output.json")
         if (!Files.exists(outputFile) || Files.size(outputFile) == 0) {
