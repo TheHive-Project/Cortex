@@ -50,10 +50,11 @@ class DockerJobRunnerSrv(
       system: ActorSystem
     )
 
-  lazy val logger = Logger(getClass)
+  lazy val logger: Logger = Logger(getClass)
 
   lazy val isAvailable: Boolean =
     Try {
+      logger.debug(s"Retrieve docker information ...")
       logger.info(s"Docker is available:\n${client.info()}")
       true
     }.recover {
@@ -103,6 +104,8 @@ class DockerJobRunnerSrv(
       else containerConfigBuilder.build()
     val containerCreation = client.createContainer(containerConfig)
     //          Option(containerCreation.warnings()).flatMap(_.asScala).foreach(logger.warn)
+
+    logger.debug(s"Container configuration: $containerConfig")
     logger.info(
       s"Execute container ${containerCreation.id()}\n" +
         s"  timeout: ${timeout.fold("none")(_.toString)}\n" +
@@ -119,6 +122,7 @@ class DockerJobRunnerSrv(
       case r =>
         val outputFile = jobDirectory.resolve("output").resolve("output.json")
         if (!Files.exists(outputFile) || Files.size(outputFile) == 0) {
+          logger.warn(s"The worker didn't generate output file, use output stream.")
           val output = Try(client.logs(containerCreation.id(), LogsParam.stdout(), LogsParam.stderr()).readFully())
             .fold(e => s"Container logs can't be read (${e.getMessage})", identity)
           val message = r.fold(e => s"Docker creation error: ${e.getMessage}\n$output", _ => output)

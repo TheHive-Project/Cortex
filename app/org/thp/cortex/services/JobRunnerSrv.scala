@@ -5,20 +5,17 @@ import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Date
-
 import scala.concurrent.duration.DurationLong
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Failure
-
+import scala.util.{Failure, Success}
 import play.api.libs.json._
 import play.api.{Configuration, Logger}
-
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.FileIO
+
 import javax.inject.Inject
 import org.thp.cortex.models._
-
 import org.elastic4play.BadRequestError
 import org.elastic4play.controllers.{Fields, FileInputValue}
 import org.elastic4play.database.ModifyConfig
@@ -39,10 +36,11 @@ class JobRunnerSrv @Inject() (
     implicit val mat: Materializer
 ) {
 
-  val logger                                           = Logger(getClass)
+  val logger: Logger                                   = Logger(getClass)
   lazy val analyzerExecutionContext: ExecutionContext  = akkaSystem.dispatchers.lookup("analyzer")
   lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
   val jobDirectory: Path                               = Paths.get(config.get[String]("job.directory"))
+  private val globalKeepJobFolder: Boolean             = config.get[Boolean]("job.keepJobFolder")
 
   private val runners: Seq[String] = config
     .getOptional[Seq[String]]("job.runners")
@@ -90,7 +88,8 @@ class JobRunnerSrv @Inject() (
     }
 
   private def prepareJobFolder(worker: Worker, job: Job): Future[Path] = {
-    val jobFolder      = Files.createTempDirectory(jobDirectory, s"cortex-job-${job.id}-")
+    val jobFolder = Files.createTempDirectory(jobDirectory, s"cortex-job-${job.id}-")
+    logger.debug(s"Job folder is $jobFolder")
     val inputJobFolder = Files.createDirectories(jobFolder.resolve("input"))
     Files.createDirectories(jobFolder.resolve("output"))
 
@@ -138,22 +137,26 @@ class JobRunnerSrv @Inject() (
           ("config"     -> config)
       }
       .map { input =>
+        logger.debug(s"Write worker input: $input")
         Files.write(inputJobFolder.resolve("input.json"), input.toString.getBytes(StandardCharsets.UTF_8))
         jobFolder
       }
       .recoverWith {
         case error =>
-          delete(jobFolder)
+          if (!(job.params \ "keepJobFolder").asOpt[Boolean].contains(true) || globalKeepJobFolder)
+            delete(jobFolder)
           Future.failed(error)
       }
   }
 
-  private def extractReport(jobFolder: Path, job: Job)(implicit authContext: AuthContext) = {
+  private def extractReport(jobFolder: Path, job: Job)(implicit authContext: AuthContext): Future[Job] = {
     val outputFile = jobFolder.resolve("output").resolve("output.json")
     if (Files.exists(outputFile)) {
-      val is     = Files.newInputStream(outputFile)
-      val report = Json.parse(is)
-      is.close()
+      logger.debug(s"Job output: ${new String(Files.readAllBytes(outputFile))}")
+      val is = Files.newInputStream(outputFile)
+      val report =
+        try Json.parse(is)
+        finally is.close()
 
       val success = (report \ "success").asOpt[Boolean].getOrElse(false)
       if (success) {
@@ -233,13 +236,18 @@ class JobRunnerSrv @Inject() (
             .getOrElse(Future.failed(BadRequestError("Worker cannot be run")))
       } yield j
       finishedJob
-        .transformWith { r =>
-          r.fold(
-            error => endJob(job, JobStatus.Failure, Option(error.getMessage), Some(readFile(jobFolder.resolve("input").resolve("input.json")))),
-            _ => extractReport(jobFolder, job)
-          )
+        .transformWith {
+          case _: Success[_] =>
+            extractReport(jobFolder, job)
+          case Failure(error) =>
+            endJob(job, JobStatus.Failure, Option(error.getMessage), Some(readFile(jobFolder.resolve("input").resolve("input.json"))))
+
         }
-        .andThen { case _ => delete(jobFolder) }
+        .andThen {
+          case _ =>
+            if (!(job.params \ "keepJobFolder").asOpt[Boolean].contains(true) || globalKeepJobFolder)
+              delete(jobFolder)
+        }
     }
 
   private def readFile(input: Path): String = new String(Files.readAllBytes(input), StandardCharsets.UTF_8)

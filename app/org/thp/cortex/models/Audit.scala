@@ -70,13 +70,14 @@ class AuditModel(auditName: String, auditedModels: immutable.Set[AuditedModel])
 
   def mergeAttributeFormat(context: String, format1: AttributeFormat[_], format2: AttributeFormat[_]): Option[AttributeFormat[_]] =
     (format1, format2) match {
-      case (OptionalAttributeFormat(f1), f2)                                              => mergeAttributeFormat(context, f1, f2)
-      case (f1, OptionalAttributeFormat(f2))                                              => mergeAttributeFormat(context, f1, f2)
-      case (MultiAttributeFormat(f1), MultiAttributeFormat(f2))                           => mergeAttributeFormat(context, f1, f2).map(MultiAttributeFormat(_))
-      case (f1, EnumerationAttributeFormat(_) | ListEnumerationAttributeFormat(_))        => mergeAttributeFormat(context, f1, StringAttributeFormat)
-      case (EnumerationAttributeFormat(_) | ListEnumerationAttributeFormat(_), f2)        => mergeAttributeFormat(context, StringAttributeFormat, f2)
-      case (ObjectAttributeFormat(subAttributes1), ObjectAttributeFormat(subAttributes2)) => mergeAttributes(context, subAttributes1 ++ subAttributes2)
-      case (f1, f2) if f1 == f2                                                           => Some(f1)
+      case (OptionalAttributeFormat(f1), f2)                                       => mergeAttributeFormat(context, f1, f2)
+      case (f1, OptionalAttributeFormat(f2))                                       => mergeAttributeFormat(context, f1, f2)
+      case (MultiAttributeFormat(f1), MultiAttributeFormat(f2))                    => mergeAttributeFormat(context, f1, f2).map(MultiAttributeFormat(_))
+      case (f1, EnumerationAttributeFormat(_) | ListEnumerationAttributeFormat(_)) => mergeAttributeFormat(context, f1, StringAttributeFormat)
+      case (EnumerationAttributeFormat(_) | ListEnumerationAttributeFormat(_), f2) => mergeAttributeFormat(context, StringAttributeFormat, f2)
+      case (ObjectAttributeFormat(subAttributes1), ObjectAttributeFormat(subAttributes2)) =>
+        mergeAttributes(context, subAttributes1 ++ subAttributes2)
+      case (f1, f2) if f1 == f2 => Some(f1)
       case (f1, f2) =>
         logger.warn(s"Attribute $f1 != $f2")
         None

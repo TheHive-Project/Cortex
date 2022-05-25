@@ -2,14 +2,15 @@ package org.thp.cortex.services
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
-
 import akka.actor.ActorSystem
+
 import javax.inject.{Inject, Singleton}
 import org.elastic4play.utils.RichFuture
 import org.thp.cortex.models._
 import play.api.Logger
 import play.api.libs.json.Json
 
+import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.sys.process.{Process, ProcessLogger, _}
@@ -18,9 +19,9 @@ import scala.util.Try
 @Singleton
 class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
 
-  lazy val logger = Logger(getClass)
+  lazy val logger: Logger = Logger(getClass)
 
-  private val pythonPackageVersionRegex = "^Version: ([0-9]*)\\.([0-9]*)\\.([0-9]*)".r
+  private val pythonPackageVersionRegex = "^Version: (\\d*)\\.(\\d*)\\.(\\d*)".r
 
   def checkCortexUtilsVersion(pythonVersion: String): Option[(Int, Int, Int)] =
     Try {
@@ -31,12 +32,11 @@ class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
         }
     }.getOrElse(None)
 
-  def run(jobDirectory: Path, command: String, job: Job, timeout: Option[FiniteDuration], jobExecutor: ExecutionContext)(
-      implicit
+  def run(jobDirectory: Path, command: String, job: Job, timeout: Option[FiniteDuration], jobExecutor: ExecutionContext)(implicit
       ec: ExecutionContext
   ): Future[Unit] = {
     val baseDirectory = Paths.get(command).getParent.getParent
-    val output        = StringBuilder.newBuilder
+    val output        = mutable.StringBuilder.newBuilder
     logger.info(s"Execute $command in $baseDirectory, timeout is ${timeout.fold("none")(_.toString)}")
     val cacertsFile = jobDirectory.resolve("input").resolve("cacerts")
     val env         = if (Files.exists(cacertsFile)) Seq("REQUESTS_CA_BUNDLE" -> cacertsFile.toString) else Nil

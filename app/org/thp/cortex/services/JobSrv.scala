@@ -190,7 +190,8 @@ class JobSrv(
       case (dt, Right(fiv)) => dt -> attachmentSrv.save(fiv).map(Right.apply)
       case (dt, Left(data)) => dt -> Future.successful(Left(data))
     }.fold(
-      typeDataAttachment => typeDataAttachment._2.flatMap(da => create(worker, typeDataAttachment._1, da, tlp, pap, message, parameters, label, force)),
+      typeDataAttachment =>
+        typeDataAttachment._2.flatMap(da => create(worker, typeDataAttachment._1, da, tlp, pap, message, parameters, label, force)),
       errors => {
         val attributeError = AttributeCheckingError("job", errors)
         logger.error("legacy job create fails", attributeError)

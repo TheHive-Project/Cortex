@@ -1,20 +1,17 @@
 package org.thp.cortex.services
 
-import java.util.Base64
-import javax.inject.{Inject, Singleton}
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Random
-
-import play.api.libs.json.JsArray
-import play.api.mvc.RequestHeader
-
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
-
 import org.elastic4play.controllers.Fields
 import org.elastic4play.services.{AuthCapability, AuthContext, AuthSrv}
 import org.elastic4play.{AuthenticationError, BadRequestError}
+import play.api.libs.json.JsArray
+import play.api.mvc.RequestHeader
+
+import java.util.Base64
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Random
 
 @Singleton
 class KeyAuthSrv @Inject() (userSrv: UserSrv, implicit val ec: ExecutionContext, implicit val mat: Materializer) extends AuthSrv {
@@ -26,7 +23,7 @@ class KeyAuthSrv @Inject() (userSrv: UserSrv, implicit val ec: ExecutionContext,
     Base64.getEncoder.encodeToString(bytes)
   }
 
-  override val capabilities = Set(AuthCapability.authByKey)
+  override val capabilities: Set[AuthCapability.Type] = Set(AuthCapability.authByKey)
 
   override def authenticate(key: String)(implicit request: RequestHeader): Future[AuthContext] = {
     import org.elastic4play.services.QueryDSL._

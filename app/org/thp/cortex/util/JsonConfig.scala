@@ -19,7 +19,7 @@ object JsonConfig {
     }
   )
 
-  implicit def configWrites = OWrites { (cfg: Configuration) =>
+  implicit def configWrites: OWrites[Configuration] = OWrites { (cfg: Configuration) =>
     JsObject(cfg.subKeys.map(key => key -> configValueWrites.writes(cfg.underlying.getValue(key))).toSeq)
   }
 }

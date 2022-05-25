@@ -18,8 +18,7 @@ import play.api.libs.Files.DefaultTemporaryFileCreator
 import play.api.mvc._
 import play.api.{mvc, Configuration}
 
-/**
-  * Controller used to access stored attachments (plain or zipped)
+/** Controller used to access stored attachments (plain or zipped)
   */
 @Singleton
 class AttachmentCtrl(
@@ -41,8 +40,7 @@ class AttachmentCtrl(
   ) =
     this(configuration.get[String]("datastore.attachment.password"), tempFileCreator, attachmentSrv, authenticated, components, executionContextSrv)
 
-  /**
-    * Download an attachment, identified by its hash, in plain format
+  /** Download an attachment, identified by its hash, in plain format
     * File name can be specified. This method is not protected : browser will
     * open the document directly. It must be used only for safe file
     */
@@ -51,7 +49,7 @@ class AttachmentCtrl(
     executionContextSrv.withDefault { implicit ec =>
       if (hash.startsWith("{{")) // angularjs hack
         NoContent
-      else if (!name.getOrElse("").intersect(AttachmentAttributeFormat.forbiddenChar).isEmpty)
+      else if (name.getOrElse("").intersect(AttachmentAttributeFormat.forbiddenChar).nonEmpty)
         mvc.Results.BadRequest("File name is invalid")
       else
         Result(
@@ -69,15 +67,14 @@ class AttachmentCtrl(
     }
   }
 
-  /**
-    * Download an attachment, identified by its hash, in zip format.
+  /** Download an attachment, identified by its hash, in zip format.
     * Zip file is protected by the password "malware"
     * File name can be specified (zip extension is append)
     */
   @Timed("controllers.AttachmentCtrl.downloadZip")
   def downloadZip(hash: String, name: Option[String]): Action[AnyContent] = authenticated(Roles.read) { _ =>
     executionContextSrv.withDefault { implicit ec =>
-      if (!name.getOrElse("").intersect(AttachmentAttributeFormat.forbiddenChar).isEmpty)
+      if (name.getOrElse("").intersect(AttachmentAttributeFormat.forbiddenChar).nonEmpty)
         BadRequest("File name is invalid")
       else {
         val f = tempFileCreator.create("zip", hash).path

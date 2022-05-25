@@ -50,10 +50,11 @@ class WorkerSrv @Inject() (
 
   rescan()
 
-  def getDefinition(workerId: String): Try[WorkerDefinition] = workerMap.get(workerId) match {
-    case Some(worker) => Success(worker)
-    case None         => Failure(NotFoundError(s"Worker $workerId not found"))
-  }
+  def getDefinition(workerId: String): Try[WorkerDefinition] =
+    workerMap.get(workerId) match {
+      case Some(worker) => Success(worker)
+      case None         => Failure(NotFoundError(s"Worker $workerId not found"))
+    }
 
   //  def listDefinitions: (Source[WorkerDefinition, NotUsed], Future[Long]) = Source(workerMap.values.toList) → Future.successful(workerMap.size.toLong)
 
@@ -150,8 +151,9 @@ class WorkerSrv @Inject() (
         case "file" => Future.successful(readFile(Paths.get(url.toURI), workerType))
         case "http" | "https" =>
           val reads = WorkerDefinition.reads(workerType)
-          ws.url(url.toString)
-            .get()
+          val query = ws.url(url.toString).get()
+          logger.debug(s"Read catalog using query $query")
+          query
             .map(response => response.json.as(reads))
             .map(_.filterNot(_.command.isDefined))
       }
@@ -198,12 +200,12 @@ class WorkerSrv @Inject() (
           Future(new URL(workerUrl))
             .flatMap(readUrl(_, workerType))
             .recover {
-              case _ =>
+              case error =>
                 val path = Paths.get(workerUrl)
                 if (Files.isRegularFile(path)) readFile(path, workerType)
                 else if (Files.isDirectory(path)) readDirectory(path, workerType)
                 else {
-                  logger.warn(s"Worker path ($workerUrl) is not found")
+                  logger.warn(s"Worker path ($workerUrl) is not found", error)
                   Nil
                 }
             }
@@ -216,8 +218,8 @@ class WorkerSrv @Inject() (
 
   }
 
-  def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(
-      implicit authContext: AuthContext
+  def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(implicit
+      authContext: AuthContext
   ): Future[Worker] = {
     val rawConfig = workerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
     val configItems = workerDefinition.configurationItems ++ BaseConfig.global(workerDefinition.tpe, config).items ++ BaseConfig
@@ -252,7 +254,8 @@ class WorkerSrv @Inject() (
               .set("configuration", cfg.toString)
               .set("type", workerDefinition.tpe.toString)
               .addIfAbsent("dataTypeList", StringInputValue(workerDefinition.dataTypeList))
-          ), {
+          ),
+        {
           case One(e)         => Future.failed(e)
           case Every(es @ _*) => Future.failed(AttributeCheckingError(s"worker(${workerDefinition.name}).configuration", es))
         }
