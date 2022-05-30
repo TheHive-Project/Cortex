@@ -63,9 +63,9 @@ class DockerJobRunnerSrv(
         false
     }.get
 
-  def run(jobDirectory: Path, dockerImage: String, job: Job, timeout: Option[FiniteDuration], jobExecutor: ExecutionContext)(implicit
+  def run(jobDirectory: Path, dockerImage: String, timeout: Option[FiniteDuration])(implicit
       ec: ExecutionContext
-  ): Future[Unit] = {
+  ): Try[Unit] = {
     import scala.collection.JavaConverters._
     if (autoUpdate) client.pull(dockerImage)
     //    ContainerConfig.builder().addVolume()
@@ -114,28 +114,30 @@ class DockerJobRunnerSrv(
         Option(containerConfig.env()).fold("")(_.asScala.map("\n  env    : " + _).mkString)
     )
 
-    val execution = Future {
+    val timeoutSched = timeout.map(to =>
+      system.scheduler.scheduleOnce(to) {
+        logger.info("Timeout reached, stopping the container")
+        client.removeContainer(containerCreation.id(), DockerClient.RemoveContainerParam.forceKill())
+      }
+    )
+    val execution = Try {
       client.startContainer(containerCreation.id())
       client.waitContainer(containerCreation.id())
       ()
-    }(jobExecutor).andThen {
-      case r =>
-        val outputFile = jobDirectory.resolve("output").resolve("output.json")
-        if (!Files.exists(outputFile) || Files.size(outputFile) == 0) {
-          logger.warn(s"The worker didn't generate output file, use output stream.")
-          val output = Try(client.logs(containerCreation.id(), LogsParam.stdout(), LogsParam.stderr()).readFully())
-            .fold(e => s"Container logs can't be read (${e.getMessage})", identity)
-          val message = r.fold(e => s"Docker creation error: ${e.getMessage}\n$output", _ => output)
-
-          val report = Json.obj("success" -> false, "errorMessage" -> message)
-          Files.write(jobDirectory.resolve("output").resolve("output.json"), report.toString.getBytes(StandardCharsets.UTF_8))
-        }
     }
-    timeout
-      .fold(execution)(t => execution.withTimeout(t, client.stopContainer(containerCreation.id(), 3)))
-      .andThen {
-        case _ => client.removeContainer(containerCreation.id(), DockerClient.RemoveContainerParam.forceKill())
-      }
+    timeoutSched.foreach(_.cancel())
+    val outputFile = jobDirectory.resolve("output").resolve("output.json")
+    if (!Files.exists(outputFile) || Files.size(outputFile) == 0) {
+      logger.warn(s"The worker didn't generate output file.")
+      val output = Try(client.logs(containerCreation.id(), LogsParam.stdout(), LogsParam.stderr()).readFully())
+        .fold(e => s"Container logs can't be read (${e.getMessage})", identity)
+      val message = execution.fold(e => s"Docker creation error: ${e.getMessage}\n$output", _ => output)
+
+      val report = Json.obj("success" -> false, "errorMessage" -> message)
+      Files.write(outputFile, report.toString.getBytes(StandardCharsets.UTF_8))
+    }
+    client.removeContainer(containerCreation.id(), DockerClient.RemoveContainerParam.forceKill())
+    execution
   }
 
 }
