@@ -1,25 +1,23 @@
 package org.thp.cortex
 
-import java.lang.reflect.Modifier
-
 import com.google.inject.AbstractModule
-import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
-import play.api.libs.concurrent.AkkaGuiceSupport
-import play.api.{Configuration, Environment, Logger, Mode}
-import scala.collection.JavaConverters._
-
 import com.google.inject.name.Names
-import org.reflections.Reflections
-import org.reflections.scanners.SubTypesScanner
-import org.reflections.util.ConfigurationBuilder
-import org.thp.cortex.models.{AuditedModel, Migration}
-import org.thp.cortex.services._
-
+import net.codingwell.scalaguice.{ScalaModule, ScalaMultibinder}
 import org.elastic4play.models.BaseModelDef
 import org.elastic4play.services.auth.MultiAuthSrv
-import org.elastic4play.services.{UserSrv => EUserSrv, AuthSrv, MigrationOperations}
+import org.elastic4play.services.{AuthSrv, MigrationOperations, UserSrv => EUserSrv}
+import org.reflections.Reflections
+import org.reflections.scanners.Scanners
+import org.reflections.util.ConfigurationBuilder
 import org.thp.cortex.controllers.{AssetCtrl, AssetCtrlDev, AssetCtrlProd}
-import services.mappers.{MultiUserMapperSrv, UserMapper}
+import org.thp.cortex.models.{AuditedModel, Migration}
+import org.thp.cortex.services._
+import org.thp.cortex.services.mappers.{MultiUserMapperSrv, UserMapper}
+import play.api.libs.concurrent.AkkaGuiceSupport
+import play.api.{Configuration, Environment, Logger, Mode}
+
+import java.lang.reflect.Modifier
+import scala.collection.JavaConverters._
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
@@ -31,11 +29,11 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     val reflectionClasses = new Reflections(
       new ConfigurationBuilder()
         .forPackages("org.elastic4play")
-        .addClassLoader(getClass.getClassLoader)
-        .addClassLoader(environment.getClass.getClassLoader)
+        .addClassLoaders(getClass.getClassLoader)
+        .addClassLoaders(environment.getClass.getClassLoader)
         .forPackages("org.thp.cortex")
         .setExpandSuperTypes(false)
-        .setScanners(new SubTypesScanner(false))
+        .setScanners(Scanners.SubTypes)
     )
 
     reflectionClasses

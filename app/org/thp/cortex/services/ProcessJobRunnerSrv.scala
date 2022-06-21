@@ -1,18 +1,16 @@
 package org.thp.cortex.services
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, Paths}
 import akka.actor.ActorSystem
-
-import javax.inject.{Inject, Singleton}
-import org.elastic4play.utils.RichFuture
 import org.thp.cortex.models._
 import play.api.Logger
 import play.api.libs.json.Json
 
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path, Paths}
+import javax.inject.{Inject, Singleton}
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ExecutionContext, Future}
 import scala.sys.process.{Process, ProcessLogger, _}
 import scala.util.Try
 

@@ -2,12 +2,12 @@ package org.thp.cortex.controllers
 
 import java.net.URLEncoder
 import java.nio.file.Files
-
 import akka.stream.scaladsl.FileIO
+
 import javax.inject.{Inject, Singleton}
-import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
-import net.lingala.zip4j.util.Zip4jConstants
+import net.lingala.zip4j.model.enums.{CompressionLevel, EncryptionMethod}
 import org.elastic4play.Timed
 import org.elastic4play.controllers.Authenticated
 import org.elastic4play.models.AttachmentAttributeFormat
@@ -79,14 +79,13 @@ class AttachmentCtrl(
       else {
         val f = tempFileCreator.create("zip", hash).path
         Files.delete(f)
-        val zipFile   = new ZipFile(f.toFile)
+        val zipFile = new ZipFile(f.toFile)
+        zipFile.setPassword(password.toCharArray)
         val zipParams = new ZipParameters
-        zipParams.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_FASTEST)
+        zipParams.setCompressionLevel(CompressionLevel.FASTEST)
         zipParams.setEncryptFiles(true)
-        zipParams.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD)
-        zipParams.setPassword(password)
+        zipParams.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD)
         zipParams.setFileNameInZip(name.getOrElse(hash))
-        zipParams.setSourceExternalStream(true)
         zipFile.addStream(attachmentSrv.stream(hash), zipParams)
 
         Result(

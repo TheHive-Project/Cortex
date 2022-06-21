@@ -1,24 +1,19 @@
 package org.thp.cortex.services
 
-import java.nio.charset.StandardCharsets
-import java.nio.file._
-
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
-
-import play.api.libs.json.Json
-import play.api.{Configuration, Logger}
-
 import akka.actor.ActorSystem
 import com.spotify.docker.client.DockerClient.LogsParam
 import com.spotify.docker.client.messages.HostConfig.Bind
 import com.spotify.docker.client.messages.{ContainerConfig, HostConfig}
 import com.spotify.docker.client.{DefaultDockerClient, DockerClient}
-import javax.inject.{Inject, Singleton}
-import org.thp.cortex.models._
+import play.api.libs.json.Json
+import play.api.{Configuration, Logger}
 
-import org.elastic4play.utils.RichFuture
+import java.nio.charset.StandardCharsets
+import java.nio.file._
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
+import scala.util.Try
 
 @Singleton
 class DockerJobRunnerSrv(
