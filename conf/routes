@@ -65,6 +65,7 @@ POST          /api/job/_search                                      org.thp.cort
 DELETE        /api/job/:id                                          org.thp.cortex.controllers.JobCtrl.delete(id)
 GET           /api/job/:id                                          org.thp.cortex.controllers.JobCtrl.get(id)
 GET           /api/job/:id/report                                   org.thp.cortex.controllers.JobCtrl.report(id)
+POST          /api/job/status                                       org.thp.cortex.controllers.JobCtrl.getJobStatus
 
 
 POST          /api/stream                                           org.thp.cortex.controllers.StreamCtrl.create()
