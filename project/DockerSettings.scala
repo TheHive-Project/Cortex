@@ -29,11 +29,16 @@ object DockerSettings {
       case (_, filepath) => filepath == "/opt/cortex/conf/application.conf"
     }),
     dockerCommands := Seq(
-      Cmd("FROM", "openjdk:8"),
+      Cmd("FROM", "openjdk:8-slim"),
       Cmd("LABEL", "MAINTAINER=\"TheHive Project <support@thehive-project.org>\"", "repository=\"https://github.com/TheHive-Project/TheHive\""),
       Cmd("WORKDIR", "/opt/cortex"),
       // format: off
       Cmd("RUN",
+        "apt", "update", "&&",
+        "apt", "upgrade", "-y", "&&",
+        "apt", "install", "-y", "iptables", "lxc", "wget", "&&",
+        "apt", "autoclean", "-y", "-q",  "&&",
+        "apt", "autoremove", "-y", "-q",  "&&",
         "wget", "-q", "-O", "-", "https://download.docker.com/linux/static/stable/x86_64/docker-18.09.0.tgz", "|",
         "tar", "-xzC", "/usr/local/bin/", "--strip-components", "1", "&&",
         "addgroup", "--system", "dockremap", "&&",
@@ -41,11 +46,6 @@ object DockerSettings {
         "addgroup", "--system", "docker", "&&",
         "echo", "dockremap:165536:65536", ">>", "/etc/subuid", "&&",
         "echo", "dockremap:165536:65536", ">>", "/etc/subgid", "&&",
-        "apt", "update", "&&",
-        "apt", "upgrade", "-y", "&&",
-        "apt", "install", "-y", "iptables", "lxc", "&&",
-        "apt", "autoclean", "-y", "-q",  "&&",
-        "apt", "autoremove", "-y", "-q",  "&&",
         "rm", "-rf", "/var/lib/apt/lists/*", "&&",
         "(", "type", "groupadd", "1>/dev/null", "2>&1", "&&",
         "groupadd", "-g", "1001", "cortex", "||",
@@ -111,6 +111,11 @@ object DockerSettings {
           | do
           |   pip2 install $I || true &&
           |   pip3 install $I || true ;
+          | done &&
+          | for I in $(find /tmp/analyzers -name requirements.txt) ;
+          | do
+          |   pip2 install -r $I || true &&
+          |   pip3 install -r $I || true ;
           | done &&
           | rm -rf /tmp/analyzers
         """.stripMargin.split("\\s").filter(_.nonEmpty): _*
