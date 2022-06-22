@@ -1,16 +1,13 @@
 package org.thp.cortex.models
 
 import play.api.libs.json.{JsString, JsValue}
-
 import com.sksamuel.elastic4s.ElasticDsl.keywordField
-import com.sksamuel.elastic4s.requests.mappings.KeywordField
+import com.sksamuel.elastic4s.fields.KeywordField
 import org.scalactic.{Every, Good, One, Or}
-
 import org.elastic4play.{AttributeError, InvalidFormatAttributeError}
 import org.elastic4play.controllers.{InputValue, JsonInputValue, StringInputValue}
 import org.elastic4play.models.AttributeFormat
 import org.elastic4play.services.Role
-
 import org.thp.cortex.models.JsonFormat.roleFormat
 
 object Roles {

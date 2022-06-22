@@ -5,20 +5,17 @@ import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Date
-
 import scala.concurrent.duration.DurationLong
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Failure
-
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 import play.api.libs.json._
 import play.api.{Configuration, Logger}
-
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.FileIO
+
 import javax.inject.Inject
 import org.thp.cortex.models._
-
 import org.elastic4play.BadRequestError
 import org.elastic4play.controllers.{Fields, FileInputValue}
 import org.elastic4play.database.ModifyConfig
@@ -39,10 +36,11 @@ class JobRunnerSrv @Inject() (
     implicit val mat: Materializer
 ) {
 
-  val logger                                           = Logger(getClass)
+  val logger: Logger                                   = Logger(getClass)
   lazy val analyzerExecutionContext: ExecutionContext  = akkaSystem.dispatchers.lookup("analyzer")
   lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
   val jobDirectory: Path                               = Paths.get(config.get[String]("job.directory"))
+  private val globalKeepJobFolder: Boolean             = config.get[Boolean]("job.keepJobFolder")
 
   private val runners: Seq[String] = config
     .getOptional[Seq[String]]("job.runners")
@@ -89,8 +87,9 @@ class JobRunnerSrv @Inject() (
       case t: Throwable => logger.warn(s"Fail to remove temporary files ($directory) : $t")
     }
 
-  private def prepareJobFolder(worker: Worker, job: Job): Future[Path] = {
-    val jobFolder      = Files.createTempDirectory(jobDirectory, s"cortex-job-${job.id}-")
+  private def prepareJobFolder(worker: Worker, job: Job): Try[Path] = {
+    val jobFolder = Files.createTempDirectory(jobDirectory, s"cortex-job-${job.id}-")
+    logger.debug(s"Job folder is $jobFolder")
     val inputJobFolder = Files.createDirectories(jobFolder.resolve("input"))
     Files.createDirectories(jobFolder.resolve("output"))
 
@@ -98,12 +97,17 @@ class JobRunnerSrv @Inject() (
       .attachment()
       .map { attachment =>
         val attachmentFile = Files.createTempFile(inputJobFolder, "attachment", "")
-        attachmentSrv
-          .source(attachment.id)
-          .runWith(FileIO.toPath(attachmentFile))
+        Try(
+          Await.result(
+            attachmentSrv
+              .source(attachment.id)
+              .runWith(FileIO.toPath(attachmentFile)),
+            10.minutes
+          )
+        )
           .map(_ => Some(attachmentFile))
       }
-      .getOrElse(Future.successful(None))
+      .getOrElse(Success(None))
       .map {
         case Some(file) =>
           Json.obj("file" -> file.getFileName.toString, "filename" -> job.attachment().get.name, "contentType" -> job.attachment().get.contentType)
@@ -138,22 +142,26 @@ class JobRunnerSrv @Inject() (
           ("config"     -> config)
       }
       .map { input =>
+        logger.debug(s"Write worker input: $input")
         Files.write(inputJobFolder.resolve("input.json"), input.toString.getBytes(StandardCharsets.UTF_8))
         jobFolder
       }
       .recoverWith {
         case error =>
-          delete(jobFolder)
-          Future.failed(error)
+          if (!(job.params \ "keepJobFolder").asOpt[Boolean].contains(true) || globalKeepJobFolder)
+            delete(jobFolder)
+          Failure(error)
       }
   }
 
-  private def extractReport(jobFolder: Path, job: Job)(implicit authContext: AuthContext) = {
+  private def extractReport(jobFolder: Path, job: Job)(implicit authContext: AuthContext): Future[Job] = {
     val outputFile = jobFolder.resolve("output").resolve("output.json")
     if (Files.exists(outputFile)) {
-      val is     = Files.newInputStream(outputFile)
-      val report = Json.parse(is)
-      is.close()
+      logger.debug(s"Job output: ${new String(Files.readAllBytes(outputFile))}")
+      val is = Files.newInputStream(outputFile)
+      val report =
+        try Json.parse(is)
+        finally is.close()
 
       val success = (report \ "success").asOpt[Boolean].getOrElse(false)
       if (success) {
@@ -191,70 +199,77 @@ class JobRunnerSrv @Inject() (
             case Failure(e) => endJob(job, JobStatus.Failure, Some(s"Report creation failure: $e"))
             case _          => endJob(job, JobStatus.Success)
           }
-      } else {
+      } else
         endJob(job, JobStatus.Failure, (report \ "errorMessage").asOpt[String], (report \ "input").asOpt[JsValue].map(_.toString))
-      }
-    } else {
+    } else
       endJob(job, JobStatus.Failure, Some(s"no output"))
-    }
   }
 
-  def run(worker: Worker, job: Job)(implicit authContext: AuthContext): Future[Job] =
-    prepareJobFolder(worker, job).flatMap { jobFolder =>
-      val executionContext = worker.tpe() match {
-        case WorkerType.analyzer  => analyzerExecutionContext
-        case WorkerType.responder => responderExecutionContext
-      }
-      val finishedJob = for {
-        _ <- startJob(job)
-        j <- runners
-          .foldLeft[Option[Future[Unit]]](None) {
-            case (None, "docker") =>
-              worker
-                .dockerImage()
-                .map(dockerImage => dockerJobRunnerSrv.run(jobFolder, dockerImage, job, worker.jobTimeout().map(_.minutes))(executionContext))
-                .orElse {
-                  logger.warn(s"worker ${worker.id} can't be run with docker (doesn't have image)")
-                  None
-                }
-            case (None, "process") =>
-              worker
-                .command()
-                .map(command => processJobRunnerSrv.run(jobFolder, command, job, worker.jobTimeout().map(_.minutes))(executionContext))
-                .orElse {
-                  logger.warn(s"worker ${worker.id} can't be run with process (doesn't have image)")
-                  None
-                }
-            case (j: Some[_], _) => j
-            case (None, runner) =>
-              logger.warn(s"Unknown job runner: $runner")
-              None
-
-          }
-          .getOrElse(Future.failed(BadRequestError("Worker cannot be run")))
-      } yield j
-      finishedJob
-        .transformWith { r =>
-          r.fold(
-            error => endJob(job, JobStatus.Failure, Option(error.getMessage), Some(readFile(jobFolder.resolve("input").resolve("input.json")))),
-            _ => extractReport(jobFolder, job)
-          )
-        }
-        .andThen { case _ => delete(jobFolder) }
+  def run(worker: Worker, job: Job)(implicit authContext: AuthContext): Future[Job] = {
+    val executionContext = worker.tpe() match {
+      case WorkerType.analyzer  => analyzerExecutionContext
+      case WorkerType.responder => responderExecutionContext
     }
+    var maybeJobFolder: Option[Path] = None
+
+    Future {
+      syncStartJob(job).get
+      val jobFolder = prepareJobFolder(worker, job).get
+      maybeJobFolder = Some(jobFolder)
+      runners
+        .foldLeft[Option[Try[Unit]]](None) {
+          case (None, "docker") =>
+            worker
+              .dockerImage()
+              .map(dockerImage => dockerJobRunnerSrv.run(jobFolder, dockerImage, worker.jobTimeout().map(_.minutes)))
+              .orElse {
+                logger.warn(s"worker ${worker.id} can't be run with docker (doesn't have image)")
+                None
+              }
+          case (None, "process") =>
+            worker
+              .command()
+              .map(command => processJobRunnerSrv.run(jobFolder, command, job, worker.jobTimeout().map(_.minutes)))
+              .orElse {
+                logger.warn(s"worker ${worker.id} can't be run with process (doesn't have command)")
+                None
+              }
+          case (j: Some[_], _) => j
+          case (None, runner) =>
+            logger.warn(s"Unknown job runner: $runner")
+            None
+
+        }
+        .getOrElse(throw BadRequestError("Worker cannot be run"))
+    }(executionContext)
+      .transformWith {
+        case _: Success[_] =>
+          extractReport(maybeJobFolder.get /* can't be none */, job)
+        case Failure(error) =>
+          endJob(job, JobStatus.Failure, Option(error.getMessage), maybeJobFolder.map(jf => readFile(jf.resolve("input").resolve("input.json"))))
+
+      }
+      .andThen {
+        case _ =>
+          if (!(job.params \ "keepJobFolder").asOpt[Boolean].contains(true) || globalKeepJobFolder)
+            maybeJobFolder.foreach(delete)
+      }
+  }
 
   private def readFile(input: Path): String = new String(Files.readAllBytes(input), StandardCharsets.UTF_8)
 
-  private def startJob(job: Job)(implicit authContext: AuthContext): Future[Job] = {
+  private def syncStartJob(job: Job)(implicit authContext: AuthContext): Try[Job] = {
     val fields = Fields
       .empty
       .set("status", JobStatus.InProgress.toString)
       .set("startDate", Json.toJson(new Date))
-    updateSrv(job, fields, ModifyConfig(retryOnConflict = 0))
+    Try(
+      Await.result(updateSrv(job, fields, ModifyConfig(retryOnConflict = 0, seqNoAndPrimaryTerm = Some((job.seqNo, job.primaryTerm)))), 1.minute)
+    )
   }
 
-  private def endJob(job: Job, status: JobStatus.Type, errorMessage: Option[String] = None, input: Option[String] = None)(
-      implicit authContext: AuthContext
+  private def endJob(job: Job, status: JobStatus.Type, errorMessage: Option[String] = None, input: Option[String] = None)(implicit
+      authContext: AuthContext
   ): Future[Job] = {
     val fields = Fields
       .empty

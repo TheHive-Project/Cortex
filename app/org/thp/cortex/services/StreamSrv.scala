@@ -1,8 +1,6 @@
 package org.thp.cortex.services
 
-import javax.inject.{Inject, Singleton}
-
-import akka.actor.{actorRef2Scala, Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, PoisonPill}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, PoisonPill}
 import akka.stream.Materializer
 import org.elastic4play.services._
 import org.elastic4play.utils.Instance
@@ -10,11 +8,11 @@ import play.api.Logger
 import play.api.libs.json.JsObject
 import play.api.mvc.{Filter, RequestHeader, Result}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
-/**
-  * This actor monitors dead messages and log them
+/** This actor monitors dead messages and log them
   */
 @Singleton
 class DeadLetterMonitoringActor @Inject() (system: ActorSystem) extends Actor {
@@ -75,8 +73,7 @@ class StreamActor(
   private class WaitingRequest(senderRef: ActorRef, itemCancellable: Cancellable, globalCancellable: Cancellable, hasResult: Boolean) {
     def this(senderRef: ActorRef) = this(senderRef, FakeCancellable, context.system.scheduler.scheduleOnce(refresh, self, Submit), false)
 
-    /**
-      * Renew timers
+    /** Renew timers
       */
     def renew: WaitingRequest =
       if (itemCancellable.cancel()) {
@@ -92,8 +89,7 @@ class StreamActor(
       } else
         this
 
-    /**
-      * Send message
+    /** Send message
       */
     def submit(messages: Seq[JsObject]): Unit = {
       itemCancellable.cancel()
@@ -104,8 +100,7 @@ class StreamActor(
 
   var killCancel: Cancellable = FakeCancellable
 
-  /**
-    * renew global timer and rearm it
+  /** renew global timer and rearm it
     */
   def renewExpiration(): Unit =
     if (killCancel.cancel())

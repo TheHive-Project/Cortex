@@ -44,7 +44,9 @@ class AnalyzerCtrl @Inject() (
 
   private def analyzerJson(isAdmin: Boolean)(analyzer: Worker): JsObject =
     if (isAdmin)
-      analyzer.toJson + ("configuration" -> Json.parse(analyzer.configuration())) + ("analyzerDefinitionId" -> JsString(analyzer.workerDefinitionId()))
+      analyzer.toJson + ("configuration" -> Json.parse(analyzer.configuration())) + ("analyzerDefinitionId" -> JsString(
+        analyzer.workerDefinitionId()
+      ))
     else
       analyzer.toJson + ("analyzerDefinitionId" -> JsString(analyzer.workerDefinitionId()))
 

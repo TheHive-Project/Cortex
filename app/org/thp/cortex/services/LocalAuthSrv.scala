@@ -1,15 +1,11 @@
 package org.thp.cortex.services
 
 import javax.inject.{Inject, Singleton}
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
-
 import play.api.mvc.RequestHeader
-
 import akka.stream.Materializer
 import org.thp.cortex.models.User
-
 import org.elastic4play.controllers.Fields
 import org.elastic4play.services.{AuthCapability, AuthContext, AuthSrv}
 import org.elastic4play.utils.Hasher
@@ -18,8 +14,8 @@ import org.elastic4play.{AuthenticationError, AuthorizationError}
 @Singleton
 class LocalAuthSrv @Inject() (userSrv: UserSrv, implicit val ec: ExecutionContext, implicit val mat: Materializer) extends AuthSrv {
 
-  val name                  = "local"
-  override val capabilities = Set(AuthCapability.changePassword, AuthCapability.setPassword)
+  val name: String                                    = "local"
+  override val capabilities: Set[AuthCapability.Type] = Set(AuthCapability.changePassword, AuthCapability.setPassword)
 
   private[services] def doAuthenticate(user: User, password: String): Boolean =
     user.password().map(_.split(",", 2)).fold(false) {
