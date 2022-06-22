@@ -69,7 +69,7 @@ class ResponderCtrl @Inject() (
   def listForType(dataType: String): Action[AnyContent] = authenticated(Roles.read).async { request =>
     import org.elastic4play.services.QueryDSL._
     val (responderList, responderCount) = workerSrv.findRespondersForUser(request.userId, "dataTypeList" ~= dataType, Some("all"), Nil)
-    renderer.toOutput(OK, responderList.map(responderJson(false)), responderCount)
+    renderer.toOutput(OK, responderList.map(responderJson(isAdmin = false)), responderCount)
   }
 
   def create(responderDefinitionId: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request =>

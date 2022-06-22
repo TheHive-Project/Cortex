@@ -70,8 +70,7 @@ class StreamCtrl(
     )
   private[StreamCtrl] lazy val logger = Logger(getClass)
 
-  /**
-    * Create a new stream entry with the event head
+  /** Create a new stream entry with the event head
     */
   @Timed("controllers.StreamCtrl.create")
   def create: Action[AnyContent] = authenticated(Roles.read) {
@@ -85,8 +84,7 @@ class StreamCtrl(
   private[controllers] def isValidStreamId(streamId: String): Boolean =
     streamId.length == 10 && streamId.forall(alphanumeric.contains)
 
-  /**
-    * Get events linked to the identified stream entry
+  /** Get events linked to the identified stream entry
     * This call waits up to "refresh", if there is no event, return empty response
     */
   @Timed("controllers.StreamCtrl.get")
@@ -113,10 +111,10 @@ class StreamCtrl(
   }
 
   @Timed("controllers.StreamCtrl.status")
-  def status = Action { implicit request =>
+  def status: Action[AnyContent] = Action { implicit request =>
     val status = authenticated.expirationStatus(request) match {
       case ExpirationWarning(duration) => Json.obj("remaining" -> duration.toSeconds, "warning" -> true)
-      case ExpirationError             => Json.obj("remaining" -> 0, "warning"                  -> true)
+      case ExpirationError             => Json.obj("remaining" -> 0, "warning" -> true)
       case ExpirationOk(duration)      => Json.obj("remaining" -> duration.toSeconds, "warning" -> false)
     }
     Ok(status)

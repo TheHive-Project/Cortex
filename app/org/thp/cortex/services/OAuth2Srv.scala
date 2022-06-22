@@ -87,7 +87,7 @@ class OAuth2Srv(
       if (!isSecuredAuthCode(request)) {
         logger.debug("Code or state is not provided, redirect to authorizationUrl")
         Future.successful(Left(authRedirect(oauth2Config)))
-      } else {
+      } else
         (for {
           token       <- getToken(oauth2Config, request)
           userData    <- getUserData(oauth2Config, token)
@@ -95,14 +95,12 @@ class OAuth2Srv(
         } yield Right(authContext)).recoverWith {
           case error => Future.failed(AuthenticationError(s"OAuth2 authentication failure: ${error.getMessage}"))
         }
-      }
     }
 
   private def isSecuredAuthCode(request: RequestHeader): Boolean =
     request.queryString.contains("code") && request.queryString.contains("state")
 
-  /**
-    * Filter checking whether we initiate the OAuth2 process
+  /** Filter checking whether we initiate the OAuth2 process
     * and redirecting to OAuth2 server if necessary
     * @return
     */
@@ -122,12 +120,11 @@ class OAuth2Srv(
       .withSession("state" -> state)
   }
 
-  /**
-    * Enriching the initial request with OAuth2 token gotten
+  /** Enriching the initial request with OAuth2 token gotten
     * from OAuth2 code
     * @return
     */
-  private def getToken[A](oauth2Config: OAuth2Config, request: RequestHeader): Future[String] = {
+  private def getToken(oauth2Config: OAuth2Config, request: RequestHeader): Future[String] = {
     val token =
       for {
         state   <- request.session.get("state")
@@ -147,8 +144,7 @@ class OAuth2Srv(
     token.getOrElse(Future.failed(BadRequestError("OAuth2 states mismatch")))
   }
 
-  /**
-    * Querying the OAuth2 server for a token
+  /** Querying the OAuth2 server for a token
     * @param code the previously obtained code
     * @return
     */
@@ -181,8 +177,7 @@ class OAuth2Srv(
       }
   }
 
-  /**
-    * Client query for user data with OAuth2 token
+  /** Client query for user data with OAuth2 token
     * @param token the token
     * @return
     */
