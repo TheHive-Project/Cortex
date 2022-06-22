@@ -1,5 +1,11 @@
 # Change Log
 
+## [3.1.6](https://github.com/TheHive-Project/Cortex/milestone/32) (2022-06-22)
+
+**Fixed bugs:**
+
+- Web frontend doesn't work [\#419](https://github.com/TheHive-Project/Cortex/issues/419)
+
 ## [3.1.5](https://github.com/TheHive-Project/Cortex/milestone/29) (2022-06-22)
 
 **Implemented enhancements:**
