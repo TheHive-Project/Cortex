@@ -75,7 +75,7 @@ object DockerSettings {
           | apt update &&
           | apt upgrade -y &&
           | apt install -y -q --no-install-recommends --no-install-suggests
-          |   wkhtmltopdf libfuzzy-dev libimage-exiftool-perl curl
+          |   wkhtmltopdf libfuzzy-dev libimage-exiftool-perl curl unzip
           |   libboost-regex-dev
           |   libboost-program-options-dev
           |   libboost-system-dev libboost-filesystem-dev libssl-dev
