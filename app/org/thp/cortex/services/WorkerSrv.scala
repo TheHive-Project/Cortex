@@ -175,10 +175,14 @@ class WorkerSrv @Inject() (
       workerDefinitions.filter {
         case w if w.command.isDefined && jobRunnerSrv.processRunnerIsEnable    => true
         case w if w.dockerImage.isDefined && jobRunnerSrv.dockerRunnerIsEnable => true
+        case w if w.dockerImage.isDefined && jobRunnerSrv.k8sRunnerIsEnable    => true
         case w =>
           val reason =
             if (w.command.isDefined) "process runner is disabled"
-            else if (w.dockerImage.isDefined) "Docker runner is disabled"
+            else if (w.dockerImage.isDefined && !jobRunnerSrv.dockerRunnerIsEnable)
+              "Docker runner is disabled"
+            else if (w.dockerImage.isDefined && !jobRunnerSrv.k8sRunnerIsEnable)
+              "Kubernetes runner is disabled"
             else "it doesn't have image nor command"
 
           logger.warn(s"$workerType ${w.name} is disabled because $reason")
