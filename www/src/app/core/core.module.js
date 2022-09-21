@@ -16,6 +16,7 @@ import constants from './services/constants';
 import notificationService from './services/common/NotificationService';
 import streamService from './services/common/StreamService';
 import versionService from './services/common/VersionService';
+import AlertService from './services/common/AlertService';
 import utilsService from './services/common/UtilsService';
 
 import fangFilter from './filters/fang';
@@ -32,7 +33,8 @@ core
   .service('HtmlSanitizer', HtmlSanitizer)
   .service('SearchService', SearchService)
   .service('UserService', UserService)
-  .service('ModalService', ModalService);
+  .service('ModalService', ModalService)
+  .service('AlertService', AlertService);
 
 fixedHeightDirective(core);
 fileChooserDirective(core);

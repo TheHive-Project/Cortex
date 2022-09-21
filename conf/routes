@@ -13,6 +13,7 @@ POST          /api/ssoLogin                                         org.thp.cort
 ###################
 # API used by TheHive
 GET           /api/status                                           org.thp.cortex.controllers.StatusCtrl.get
+GET           /api/alert                                            org.thp.cortex.controllers.StatusCtrl.getAlerts
 GET           /api/analyzer                                         org.thp.cortex.controllers.AnalyzerCtrl.find
 POST          /api/analyzer/_search                                 org.thp.cortex.controllers.AnalyzerCtrl.find
 GET           /api/analyzer/:id                                     org.thp.cortex.controllers.AnalyzerCtrl.get(id)
