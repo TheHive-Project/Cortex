@@ -32,7 +32,7 @@ export default class AlertService {
             response => {
                 self.alerts = response.data;
             },
-            rejection => {
+            () => {
                 self.alerts = [];
             }
         );
@@ -47,6 +47,6 @@ export default class AlertService {
     }
 
     isEmpty() {
-        return this.alerts.length == 0;
+        return this.alerts.length === 0;
     }
 }
