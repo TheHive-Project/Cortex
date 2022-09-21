@@ -15,7 +15,7 @@ export default class AlertService {
     startUpdate() {
         this.update += 1;
         if (!this.timer) {
-            this.timer = this.$interval(this.updateAlerts, 1000, 0, true, this);
+            this.timer = this.$interval(this.updateAlerts, 10000, 0, true, this);
         }
     }
 
