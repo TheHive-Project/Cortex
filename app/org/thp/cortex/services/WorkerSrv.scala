@@ -250,7 +250,7 @@ class WorkerSrv @Inject() (
               .set("command", workerDefinition.command.map(p => JsString(p.toString)))
               .set("url", workerDefinition.url)
               .set("license", workerDefinition.license)
-              .set("baseConfig", workerDefinition.baseConfiguration.map(JsString.apply))
+              .set("baseConfig", workerDefinition.baseConfiguration.fold(JsString(workerDefinition.name))(JsString.apply))
               .set("configuration", cfg.toString)
               .set("type", workerDefinition.tpe.toString)
               .addIfAbsent("dataTypeList", StringInputValue(workerDefinition.dataTypeList))

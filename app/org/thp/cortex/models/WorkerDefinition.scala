@@ -110,7 +110,23 @@ object WorkerDefinition {
 
   def reads(workerType: WorkerType.Type): Reads[List[WorkerDefinition]] = {
     val reads = singleReads(workerType)
-    reads.map(List(_)) orElse Reads.list(reads)
+    implicitly[Reads[JsArray]]
+    reads.map(List(_)) orElse JsArrayReads.map(array =>
+      array
+        .value
+        .toList
+        .flatMap { js =>
+          reads
+            .reads(js)
+            .fold(
+              invalid => {
+                logger.warn(s"The catalog contains an invalid entry\n  entry:$js\n  $invalid")
+                Seq.empty
+              },
+              Seq(_)
+            )
+        }
+    )
   }
 
   implicit val writes: Writes[WorkerDefinition] = Writes[WorkerDefinition] { workerDefinition =>
