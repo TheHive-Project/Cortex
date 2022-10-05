@@ -62,7 +62,7 @@ class DockerJobRunnerSrv(
       ec: ExecutionContext
   ): Try[Unit] = {
     import scala.collection.JavaConverters._
-    if (autoUpdate) client.pull(dockerImage)
+    if (autoUpdate) Try(client.pull(dockerImage))
     //    ContainerConfig.builder().addVolume()
     val hostConfigBuilder = HostConfig.builder()
     config.getOptional[Seq[String]]("docker.container.capAdd").map(_.asJava).foreach(hostConfigBuilder.capAdd)
