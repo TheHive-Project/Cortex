@@ -129,7 +129,7 @@ class JobRunnerSrv @Inject() (
           .deepMerge(worker.config)
           .deepMerge(proxy_http)
           .deepMerge(proxy_https)
-        (worker.config \ "cacerts").asOpt[String].foreach { cacerts =>
+        (worker.config \ "cacerts").asOpt[String].filterNot(_.isBlank).foreach { cacerts =>
           val cacertsFile = jobFolder.resolve("input").resolve("cacerts")
           Files.write(cacertsFile, cacerts.getBytes)
         }
