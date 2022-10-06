@@ -1,39 +1,53 @@
 <section class="content-header">
-  <h1>Organization: 
+  <h1>Organization:
     <strong>{{$ctrl.organization.id}}</strong>
-    <a require-roles="superadmin" ui-sref="main.organizations" class="pull-right"><small class="text-primary"><i class="fa fa-chevron-left"></i> Back to list</small></a>
+    <a require-roles="superadmin" ui-sref="main.organizations" class="pull-right"><small class="text-primary"><i
+          class="fa fa-chevron-left"></i> Back to list</small></a>
   </h1>
 </section>
 
 <section class="content">
   <uib-tabset class="nav-tabs-custom">
-    <uib-tab index="0">      
+    <uib-tab index="0">
       <uib-tab-heading>
-        <i class="fa fa-user"></i> Users</uib-tab-heading>
-        <organization-users-list organization="$ctrl.organization"></organization-users-list>        
+        <i class="fa fa-user"></i> Users
+      </uib-tab-heading>
+      <organization-users-list organization="$ctrl.organization"></organization-users-list>
     </uib-tab>
     <uib-tab index="1" require-roles="orgadmin">
       <uib-tab-heading>
-        <i class="fa fa-cog"></i> Analyzers Config</uib-tab-heading>      
-        <organization-config-list organization="$ctrl.organization" configurations="$ctrl.analyzersConfigurations"></organization-config-list>
+        <i class="fa fa-cog"></i> Analyzers Config
+      </uib-tab-heading>
+      <organization-config-list organization="$ctrl.organization" configurations="$ctrl.analyzersConfigurations">
+      </organization-config-list>
     </uib-tab>
     <uib-tab index="2" require-roles="orgadmin">
       <uib-tab-heading>
-        <i class="fa fa-cogs"></i> Analyzers</uib-tab-heading>
-      <organization-analyzers-list organization="$ctrl.organization" analyzer-definitions="$ctrl.analyzerDefinitions" analyzers="$ctrl.analyzers"></organization-analyzers-list>      
+        <i class="fa fa-cogs notif-badge" ng-if="$ctrl.AlertService.contains('ObsoleteAnalyzers')"></i>
+        <i class="fa fa-cogs" ng-if="!$ctrl.AlertService.contains('ObsoleteAnalyzers')"></i>
+        Analyzers
+      </uib-tab-heading>
+      <organization-analyzers-list organization="$ctrl.organization" analyzer-definitions="$ctrl.analyzerDefinitions"
+        analyzers="$ctrl.analyzers"></organization-analyzers-list>
     </uib-tab>
 
     <uib-tab index="3" require-roles="orgadmin">
       <uib-tab-heading>
-        <i class="fa fa-cog"></i> Responders Config</uib-tab-heading>
-        <organization-responder-config-list organization="$ctrl.organization" configurations="$ctrl.respondersConfigurations"></organization-responder-config-list>
+        <i class="fa fa-cog"></i> Responders Config
+      </uib-tab-heading>
+      <organization-responder-config-list organization="$ctrl.organization"
+        configurations="$ctrl.respondersConfigurations"></organization-responder-config-list>
     </uib-tab>
     <uib-tab index="4" require-roles="orgadmin">
       <uib-tab-heading>
-        <i class="fa fa-forward"></i> Responders</uib-tab-heading>
-        <organization-responders-list organization="$ctrl.organization" responder-definitions="$ctrl.responderDefinitions" responders="$ctrl.responders"></organization-responders-list>
+        <i class="fa fa-forward notif-badge" ng-if="$ctrl.AlertService.contains('ObsoleteResponders')"></i>
+        <i class="fa fa-forward" ng-if="!$ctrl.AlertService.contains('ObsoleteResponders')"></i>
+        Responders
+      </uib-tab-heading>
+      <organization-responders-list organization="$ctrl.organization" responder-definitions="$ctrl.responderDefinitions"
+        responders="$ctrl.responders"></organization-responders-list>
     </uib-tab>
-    
+
   </uib-tabset>
 
 </section>

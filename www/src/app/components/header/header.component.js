@@ -13,22 +13,24 @@ class HeaderController {
   constructor(
     $state,
     $log,
-    $q,
     $uibModal,
+    $scope,
     AuthService,
     AnalyzerService,
-    NotificationService
+    NotificationService,
+    AlertService
   ) {
     'ngInject';
 
     this.$state = $state;
     this.$log = $log;
     this.$uibModal = $uibModal;
-    this.$q = $q;
+    this.$scope = $scope;
 
     this.AuthService = AuthService;
     this.AnalyzerService = AnalyzerService;
     this.NotificationService = NotificationService;
+    this.AlertService = AlertService;
   }
 
   logout() {
@@ -44,6 +46,11 @@ class HeaderController {
   $onInit() {
     this.isOrgAdmin = this.AuthService.isOrgAdmin(this.main.currentUser);
     this.isSuperAdmin = this.AuthService.isSuperAdmin(this.main.currentUser);
+
+    this.AlertService.startUpdate();
+    this.$scope.$on('$destroy', () => {
+      this.AlertService.stopUpdate();
+    });
   }
 
   newAnalysis() {
@@ -67,8 +74,8 @@ class HeaderController {
         if (!_.isString(err)) {
           this.NotificationService.error(
             err.data.message ||
-              `An error occurred: ${err.statusText}` ||
-              'An unexpected error occurred'
+            `An error occurred: ${err.statusText}` ||
+            'An unexpected error occurred'
           );
         }
       });

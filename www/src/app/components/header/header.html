@@ -47,7 +47,8 @@
         </li>
         <li ui-sref-active="active" require-roles="orgadmin">
           <a ui-sref="main.organization({id: $ctrl.main.currentUser.organization})">
-            <i class="fa fa-file-text"></i>
+            <i class="fa fa-file-text" ng-if="$ctrl.AlertService.isEmpty()"></i>
+            <i class="fa fa-file-text notif-badge" ng-if="$ctrl.AlertService.nonEmpty()"></i>
             <strong>Organization</strong>
           </a>
         </li>
