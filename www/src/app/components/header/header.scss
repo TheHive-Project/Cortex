@@ -1,14 +1,16 @@
 .navbar {
   .avatar.avatar-xs {
     line-height: 20px;
+
     span {
       line-height: 20px;
       font-weight: bold;
     }
+
     .avatar-icon {
       margin-top: -5px;
     }
-  }   
+  }
 }
 
 .profile-dropdown {
@@ -18,4 +20,19 @@
       right: 0;
     }
   }
+}
+
+.notif-badge {
+  position: relative;
+}
+
+.notif-badge:after {
+  position: absolute;
+  content: "";
+  width: 10px;
+  height: 10px;
+  left: -5px;
+  top: -5px;
+  background-color: rgb(240, 43, 43);
+  border-radius: 50%;
 }

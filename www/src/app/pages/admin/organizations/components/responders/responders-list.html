@@ -1,16 +1,17 @@
 <section>
 
-  <div class="mb-s" ng-if="$ctrl.invalidResponders.length > 0">
+  <div class="mb-s" ng-if="$ctrl.obsoleteResponders.length > 0">
     <div class="callout callout-warning">
-      <h4>You have {{$ctrl.invalidResponders.length}} invalid
-        <ng-pluralize count="$ctrl.invalidResponders.length" when="{'1': 'responder', 'other': 'responders'}">
+      <h4>You have {{$ctrl.obsoleteResponders.length}} Obsolete
+        <ng-pluralize count="$ctrl.obsoleteResponders.length" when="{'1': 'responder', 'other': 'responders'}">
         </ng-pluralize>
       </h4>
-      <p>Invalid responders have no definition and cannot be run on any observable. You have to remove them.</p>
+      <p>Obsolete responders have been removed from the catalog. They have most likely been updated. You have to remove
+        them and enable the new version.</p>
     </div>
     <div class="row">
       <div class="col-sm-12 flex-table">
-        <div class="flex-row media" ng-repeat="r in $ctrl.invalidResponders">
+        <div class="flex-row media" ng-repeat="r in $ctrl.obsoleteResponders">
           <div class="flex-col flex-1">
             <h4 class="media-heading">
               <span class="mr-m text-primary">{{r.name}}</span>

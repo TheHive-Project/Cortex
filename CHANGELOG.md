@@ -1,5 +1,19 @@
 # Change Log
 
+## [3.1.7](https://github.com/TheHive-Project/Cortex/milestone/34) (2022-10-07)
+
+**Implemented enhancements:**
+
+- Prevent invalid analyzer when a new version is available [\#426](https://github.com/TheHive-Project/Cortex/issues/426)
+- Display job parameters in the report page [\#430](https://github.com/TheHive-Project/Cortex/issues/430)
+- An error in docker pull should not stop the analysis [\#431](https://github.com/TheHive-Project/Cortex/issues/431)
+- Improve catalog parsing [\#432](https://github.com/TheHive-Project/Cortex/issues/432)
+
+**Closed issues:**
+
+- [BUG] CA Certs parameter can't be set back to null [\#377](https://github.com/TheHive-Project/Cortex/issues/377)
+- [FR] See user and organisation who triggered a responder in Cortex WebUI [\#394](https://github.com/TheHive-Project/Cortex/issues/394)
+
 ## [3.1.6](https://github.com/TheHive-Project/Cortex/milestone/32) (2022-06-22)
 
 **Fixed bugs:**

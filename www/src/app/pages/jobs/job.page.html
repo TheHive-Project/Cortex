@@ -18,6 +18,9 @@
           <h3 class="box-title">Job report</h3>
         </div>
         <div class="box-body job-report">
+          <h5 class="text-primary">Parameters</h5>
+          <pre>{{$ctrl.job.parameters | json}}</pre>
+          
           <div ng-if="$ctrl.job.type === 'responder'">
             <h5 class="text-primary">Input details</h5>
             <pre>{{$ctrl.job.data | json}}</pre>
