@@ -1,0 +1,124 @@
+name: Build
+on:
+  push:
+    tags: ["*"]
+
+jobs:
+  build:
+    name: Build
+    runs-on: [ ubuntu-latest ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        timeout-minutes: 15
+        continue-on-error: true
+        with:
+          node-version: 18.15.0
+      - name: Install bower
+        run: npm install -g bower
+      - name: Import PGP Key
+        run: gpg --batch --import - <<< ${{ secrets.PGP_KEY }}
+      - name: Write version
+        id: version
+        run: |
+          V=$(sbt -no-colors --error "print version" | awk 'END{print $1}')
+          echo "version=$V"
+          echo "version=$V" >> $GITHUB_OUTPUT
+      - name: Build packages
+        run: sbt Docker/stage Debian/packageBin Rpm/packageBin Universal/packageBin cortexWithDeps/Docker/stage
+      - name: Move packages
+        run: |
+          mv target/rpm/RPMS/noarch/cortex*.rpm target/
+          mv target/universal/cortex*.zip target/
+
+      - name: Upload packages
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          source: "target/cortex*.deb,target/cortex*.rpm,target/cortex*.zip"
+          target: ${{ secrets.INCOMING_PATH }}
+          host: ${{ secrets.PACKAGE_HOST }}
+          username: ${{ secrets.PACKAGE_USER }}
+          key: ${{ secrets.PACKAGE_SSH_KEY }}
+          strip_components: 1
+
+      - name: Publish packages
+        if: inputs.build_packages
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.PACKAGE_HOST }}
+          username: ${{ secrets.PACKAGE_USER }}
+          key: ${{ secrets.PACKAGE_SSH_KEY }}
+          script: bash /srv/bin/publish.sh cortex ${{ steps.version.outputs.version }}
+
+      - name: Write docker tags from version
+        id: tags
+        run: |
+          V=${{ steps.version.outputs.version }}
+          if ( echo $V | grep -qi rc )
+          then
+            echo $( echo $V | sed -re 's/([0-9]+.[0-9]+.[0-9]+)-RC([0-9]+)-([0-9]+)/\1-RC\2,\1-RC\2-\3/' ) > target/tags
+          else
+            echo $( echo $V | sed -re 's/([0-9]+).([0-9]+).([0-9]+)-([0-9]+)/\1,\1.\2,\1.\2.\3,\1.\2.\3-\4,latest/' ) > target/tags
+          fi
+          echo "tags=$(cat target/tags)" >> $GITHUB_OUTPUT
+
+      - name: Build list of additional tags
+        id: additional-tags
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.setOutput('tags', `${{ steps.tags.outputs.tags }}`.split(",").join("\n"))
+
+      - name: Generate full docker tags
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            name=${{ secrets.HARBOR_REGISTRY }}/thehiveproject/cortex
+            name=thehiveproject/cortex
+          tags: |
+            ${{ steps.additional-tags.outputs.tags }}
+
+      - name: Login to Harbor
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Login to Dockerhub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push docker
+        uses: docker/build-push-action@v3
+        with:
+          context: target/docker/stage
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Build and push fat docker
+        uses: docker/build-push-action@v3
+        with:
+          context: target/docker-withdeps/target/docker/stage
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+
+
+  notify:
+    needs: [ build ]
+    runs-on: [ ubuntu-latest ]
+    if: always()
+    steps:
+      - name: Slack notification
+        uses: Gamesight/slack-workflow-status@master
+        with:
+          repo_token: ${{secrets.GITHUB_TOKEN}}
+          slack_webhook_url: ${{secrets.SLACK_WEBHOOK_URL}}
+          channel: "#ci-cortex"
+          name: Cortex build
+          include_commit_message: true
+          include_jobs: true
