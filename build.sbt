@@ -23,6 +23,12 @@ lazy val cortex = (project in file("."))
         Dependencies.akkaCluster,
         Dependencies.akkaClusterTyped
       ),
+      dependencyOverrides ++= Seq(
+        "com.github.jnr" % "jffi" % "1.3.11",
+        "com.github.jnr" % "jnr-ffi" % "2.2.13",
+        "com.github.jnr" % "jnr-enxio" % "0.32.14",
+        "com.github.jnr" % "jnr-unixsocket" % "0.38.19"
+      ),
       resolvers += Resolver.sbtPluginRepo("releases"),
       resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
       resolvers += "elasticsearch-releases" at "https://artifacts.elastic.co/maven",
