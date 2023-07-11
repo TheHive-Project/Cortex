@@ -14,7 +14,7 @@ jobs:
         timeout-minutes: 15
         continue-on-error: true
         with:
-          node-version: 18.15.0
+          node-version: 12.18
       - name: Install bower
         run: npm install -g bower
       - name: Import PGP Key
@@ -26,30 +26,11 @@ jobs:
           echo "version=$V"
           echo "version=$V" >> $GITHUB_OUTPUT
       - name: Build packages
-        run: sbt Docker/stage Debian/packageBin Rpm/packageBin Universal/packageBin cortexWithDeps/Docker/stage
+        run: sbt Docker/stage Debian/packageBin Rpm/packageBin Universal/packageBin cortexWithDeps/Docker/stage makeBom
       - name: Move packages
         run: |
           mv target/rpm/RPMS/noarch/cortex*.rpm target/
           mv target/universal/cortex*.zip target/
-
-      - name: Upload packages
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          source: "target/cortex*.deb,target/cortex*.rpm,target/cortex*.zip"
-          target: ${{ secrets.INCOMING_PATH }}
-          host: ${{ secrets.PACKAGE_HOST }}
-          username: ${{ secrets.PACKAGE_USER }}
-          key: ${{ secrets.PACKAGE_SSH_KEY }}
-          strip_components: 1
-
-      - name: Publish packages
-        if: inputs.build_packages
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.PACKAGE_HOST }}
-          username: ${{ secrets.PACKAGE_USER }}
-          key: ${{ secrets.PACKAGE_SSH_KEY }}
-          script: bash /srv/bin/publish.sh cortex ${{ steps.version.outputs.version }}
 
       - name: Write docker tags from version
         id: tags
@@ -107,6 +88,16 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
 
+      - name: Make github release
+        uses: "softprops/action-gh-release@v1"
+        id: make-release
+        with:
+          generate_release_notes: true
+          files: |
+            target/cortex*.deb
+            target/cortex*.rpm
+            target/cortex*.zip
+            target/cortex*.bom.xml
 
   notify:
     needs: [ build ]
