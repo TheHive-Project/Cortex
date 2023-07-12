@@ -15,7 +15,7 @@ jobs:
         timeout-minutes: 15
         continue-on-error: true
         with:
-          node-version: 18.15.0
+          node-version: 18.16
       - name: Install bower
         run: npm install -g bower
       - name: Run tests
