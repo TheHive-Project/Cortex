@@ -1,5 +1,14 @@
 import Common._
 
+ThisBuild / scalaVersion := Dependencies.scalaVersion
+ThisBuild / evictionErrorLevel := util.Level.Warn
+
+ThisBuild / dependencyOverrides ++= Seq(
+  Dependencies.Play.twirl,
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.13.5",
+  "org.apache.commons"         % "commons-compress" % "1.23.0",
+  "com.google.guava"           % "guava"            % "32.1.1-jre"
+)
 lazy val cortex = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(projectSettings)
