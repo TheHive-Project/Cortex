@@ -23,4 +23,7 @@ object Dependencies {
   val dockerClient     = "com.spotify"         % "docker-client"       % "8.16.0"
   val akkaCluster      = "com.typesafe.akka"   %% "akka-cluster"       % play.core.PlayVersion.akkaVersion
   val akkaClusterTyped = "com.typesafe.akka"   %% "akka-cluster-typed" % play.core.PlayVersion.akkaVersion
+
+  val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.9.5"
+  val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.9.5"
 }

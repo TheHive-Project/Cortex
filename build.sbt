@@ -63,3 +63,14 @@ lazy val cortexWithDeps = (project in file("target/docker-withdeps"))
     Docker / version := version.value + "-withdeps",
     Docker / packageName := "cortex"
   )
+
+lazy val benchmark = (project in file("benchmark"))
+  .enablePlugins(GatlingPlugin)
+  .settings(
+    scalaVersion := "2.13.11",
+    dependencyOverrides := Seq.empty,
+    libraryDependencies ++= Seq(
+      Dependencies.gatlingHighcharts    % Test,
+      Dependencies.gatlingTestFramework % Test
+    )
+  )
