@@ -13,20 +13,24 @@ export default function (app) {
       READ: 'read'
     })
     .value('Tlps', [{
-        key: 'WHITE',
-        value: 0
-      },
-      {
-        key: 'GREEN',
-        value: 1
-      },
-      {
-        key: 'AMBER',
-        value: 2
-      },
-      {
-        key: 'RED',
-        value: 3
-      }
+      key: 'CLEAR',
+      value: 0
+    },
+    {
+      key: 'GREEN',
+      value: 1
+    },
+    {
+      key: 'AMBER',
+      value: 2
+    },
+    {
+      key: 'AMBER-STRICT',
+      value: 3
+    },
+    {
+      key: 'RED',
+      value: 4
+    }
     ]);
 }
