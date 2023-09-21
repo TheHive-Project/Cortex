@@ -2,6 +2,7 @@ name: Build
 on:
   push:
     tags: ["*"]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,7 +19,11 @@ jobs:
       - name: Install bower
         run: npm install -g bower
       - name: Import PGP Key
-        run: gpg --batch --import - <<< ${{ secrets.PGP_KEY }}
+        run: |
+          export GPG_TTY=$(tty)
+          gpg --batch --import - <<< $PGP_KEY
+        env:
+          PGP_KEY: ${{ secrets.PGP_KEY }}
       - name: Write version
         id: version
         run: |
