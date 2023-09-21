@@ -29,9 +29,8 @@ class KeyAuthSrv @Inject() (userSrv: UserSrv, implicit val ec: ExecutionContext,
     import org.elastic4play.services.QueryDSL._
     // key attribute is sensitive so it is not possible to search on that field
     userSrv
-      .find("status" ~= "Ok", Some("all"), Nil)
+      .find(and("status" ~= "Ok", "key" ~= key), Some("0-1"), Nil)
       ._1
-      .filter(_.key().contains(key))
       .runWith(Sink.headOption)
       .flatMap {
         case Some(user) => userSrv.getFromUser(request, user, name)

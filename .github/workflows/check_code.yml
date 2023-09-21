@@ -1,0 +1,22 @@
+name: Check Code
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches: [master, develop]
+jobs:
+  check:
+    name: Check
+    runs-on: [ ubuntu-latest  ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        timeout-minutes: 15
+        continue-on-error: true
+        with:
+          node-version: 18.16
+      - name: Install bower
+        run: npm install -g bower
+      - name: Run tests
+        run: sbt test Universal/packageBin
