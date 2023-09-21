@@ -1,5 +1,16 @@
 # Change Log
 
+## [3.1.8](https://github.com/TheHive-Project/Cortex/milestone/35) (2023-09-21)
+
+**Pull requests:**
+
+- Fixed user parameter name in application config sample [\#315](https://github.com/TheHive-Project/Cortex/pull/315)
+- Update cortex.service [\#361](https://github.com/TheHive-Project/Cortex/pull/361)
+- GroupUserMapper.scala: Backport fix from TheHive for group mapper functionality [\#438](https://github.com/TheHive-Project/Cortex/pull/438)
+- [CTX-16] fix: don't use Elasticsearch scroll to find user by its API key [\#447](https://github.com/TheHive-Project/Cortex/pull/447)
+- [CTX-17] fix: Update version of JFFI [\#448](https://github.com/TheHive-Project/Cortex/pull/448)
+- Update deps [\#449](https://github.com/TheHive-Project/Cortex/pull/449)
+
 ## [3.1.7](https://github.com/TheHive-Project/Cortex/milestone/34) (2022-10-07)
 
 **Implemented enhancements:**
