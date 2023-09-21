@@ -94,6 +94,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
 
       - name: Make github release
+        if: github.ref_type == 'tag'
         uses: "softprops/action-gh-release@v1"
         id: make-release
         with:
@@ -103,6 +104,18 @@ jobs:
             target/cortex*.rpm
             target/cortex*.zip
             target/cortex*.bom.xml
+
+      - name: Store artifacts
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v3
+        with:
+          name: packages
+          path: |
+            target/cortex*.deb
+            target/cortex*.rpm
+            target/cortex*.zip
+            target/cortex*.bom.xml
+          retention-days: 5
 
   notify:
     needs: [ build ]
