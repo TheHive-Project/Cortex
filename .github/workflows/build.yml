@@ -50,6 +50,7 @@ jobs:
         with:
           script: |
             core.setOutput('tags', `${{ steps.tags.outputs.tags }}`.split(",").join("\n"))
+            core.setOutput('tags-withdeps', `${{ steps.tags.outputs.tags }}`.split(",").map(t => t + "-withdeps").join("\n"))
 
       - name: Generate full docker tags
         id: meta
@@ -60,6 +61,16 @@ jobs:
             name=thehiveproject/cortex
           tags: |
             ${{ steps.additional-tags.outputs.tags }}
+
+      - name: Generate full docker tags-withdeps
+        id: meta-withdeps
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            name=${{ secrets.HARBOR_REGISTRY }}/thehiveproject/cortex
+            name=thehiveproject/cortex
+          tags: |
+            ${{ steps.additional-tags.outputs.tags-withdeps }}
 
       - name: Login to Harbor
         uses: docker/login-action@v2
@@ -86,7 +97,7 @@ jobs:
         with:
           context: target/docker-withdeps/target/docker/stage
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta-withdeps.outputs.tags }}
 
       - name: Make github release
         uses: "softprops/action-gh-release@v1"
