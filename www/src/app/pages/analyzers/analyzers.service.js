@@ -43,6 +43,7 @@ export default class AnalyzerService {
 
             if (def.dockerImage && def.dockerImage !== null) {
               def.runners.push('Docker');
+              def.runners.push('Kubernetes');
             }
           });
 
