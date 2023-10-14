@@ -45,7 +45,7 @@ class SimpleUserMapper(
     } yield Fields(Json.obj("login" -> login.toLowerCase, "name" -> name, "roles" -> roles, "organization" -> organization))
     fields match {
       case JsSuccess(f, _) => Future.successful(f)
-      case JsError(errors) => Future.failed(AuthenticationError(s"User info fails: ${errors.map(_._1).mkString}"))
+      case JsError(errors) => Future.failed(AuthenticationError(s"User info fails: ${JsError.toJson(errors)}"))
     }
   }
 }

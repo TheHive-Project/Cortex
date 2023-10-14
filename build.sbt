@@ -1,5 +1,14 @@
 import Common._
 
+ThisBuild / scalaVersion := Dependencies.scalaVersion
+ThisBuild / evictionErrorLevel := util.Level.Warn
+
+ThisBuild / dependencyOverrides ++= Seq(
+  Dependencies.Play.twirl,
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.13.5",
+  "org.apache.commons"         % "commons-compress" % "1.23.0",
+  "com.google.guava"           % "guava"            % "32.1.1-jre"
+)
 lazy val cortex = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(projectSettings)
@@ -23,6 +32,12 @@ lazy val cortex = (project in file("."))
         Dependencies.k8sClient,
         Dependencies.akkaCluster,
         Dependencies.akkaClusterTyped
+      ),
+      dependencyOverrides ++= Seq(
+        "com.github.jnr" % "jffi" % "1.3.11",
+        "com.github.jnr" % "jnr-ffi" % "2.2.13",
+        "com.github.jnr" % "jnr-enxio" % "0.32.14",
+        "com.github.jnr" % "jnr-unixsocket" % "0.38.19"
       ),
       resolvers += Resolver.sbtPluginRepo("releases"),
       resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
