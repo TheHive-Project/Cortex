@@ -19,7 +19,7 @@ object Dependencies {
   val reflections      = "org.reflections"      % "reflections"        % "0.10.2"
   val zip4j            = "net.lingala.zip4j"    % "zip4j"              % "2.10.0"
   val elastic4play     = "org.thehive-project" %% "elastic4play"       % "1.13.6"
-  val dockerClient     = "com.spotify"          % "docker-client"      % "8.14.4"
+  val dockerClient     = "com.spotify"         % "docker-client"       % "8.16.0"
   val k8sClient        = "io.fabric8"          % "kubernetes-client"   % "5.0.2"
   val akkaCluster      = "com.typesafe.akka"   %% "akka-cluster"       % play.core.PlayVersion.akkaVersion
   val akkaClusterTyped = "com.typesafe.akka"   %% "akka-cluster-typed" % play.core.PlayVersion.akkaVersion
