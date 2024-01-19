@@ -33,7 +33,7 @@
     "angular-ui-bootstrap": "^2.5.6",
     "angular-ui-notification": "^0.3.6",
     "angular-utils-pagination": "^0.11.1",
-    "bootstrap-sass": "3.4.1",
+    "bootstrap-sass": "3.4.3",
     "dropzone": "^5.5.1",
     "es6-promise": "^4.2.6",
     "font-awesome": "^4.7.0",
