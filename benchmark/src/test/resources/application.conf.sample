@@ -1,0 +1,11 @@
+user {
+    login = "gatling@cortex.io"
+    password = gatling
+    # Set value
+    apiKey = ""
+}
+
+baseUrl = "http://localhost:9000"
+
+# Id of an analyzer
+analyzer = ""
