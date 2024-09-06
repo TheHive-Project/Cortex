@@ -4,10 +4,14 @@ test "${no_config:-0}" == 1
 CONFIG=$?
 test "${no_config_secret:-0}" == 1
 CONFIG_SECRET=$?
+ES_TRUSTED_CA_CERT_FILES=()
+IFS=',' read -r -a ES_TRUSTED_CA_CERT_FILES <<< "${es_trusted_ca_cert_files:-$es_trusted_ca_cert_file}"
 test "${no_config_es:-0}" == 1
 CONFIG_ES=$?
 ES_URI=${es_uri:-}
 ES_HOSTNAME=${es_hostname:-elasticsearch}
+ES_USERNAME=${es_username:-}
+ES_PASSWORD=${es_password:-}
 CONFIG_FILE=${config_file:-/etc/cortex/application.conf}
 DEFAULT_ANALYZER_URL="https://download.thehive-project.org/analyzers.json"
 ANALYZER_URLS=()
@@ -28,7 +32,10 @@ function usage {
     --no-config-secret           | do not add random secret to configuration
     --no-config-es               | do not add elasticsearch hosts to configuration
     --es-uri <uri>               | use this string to configure elasticsearch hosts (format: http(s)://host:port,host:port(/prefix)?querystring)
+    --es-trust-ca-cert <file.pem>| trust a CA for outbound Elasticsearch TLS connections (can use multiple times)
     --es-hostname <host>         | resolve this hostname to find elasticsearch instances
+    --es-username <name>         | username for Elasticsearch authentication
+    --es-password <pass>         | password for Elasticsearch authentication
     --secret <secret>            | secret to secure sessions
     --show-secret                | show the generated secret
     --job-directory <dir>        | use this directory to store job files
@@ -51,7 +58,10 @@ do
     "--es-hosts")             echo "--es-hosts is deprecated, please use --es-uri"
                               usage;;
     "--es-uri")               shift; ES_URI=$1;;
+    "--es-trust-ca-cert")        shift; ES_TRUSTED_CA_CERT_FILES+=($1);;
     "--es-hostname")          shift; ES_HOSTNAME=$1;;
+    "--es-username")          shift; ES_USERNAME=$1;;
+    "--es-password")          shift; ES_PASSWORD=$1;;
     "--secret")               shift; SECRET=$1;;
     "--show-secret")          SHOW_SECRET=1;;
     "--job-directory")        shift; JOB_DIRECTORY=$1;;
@@ -108,6 +118,45 @@ then
     else
       echo elasticsearch host not configured
     fi
+
+    if test ${#ES_TRUSTED_CA_CERT_FILES} -gt 0
+    then
+      # elastic4play only lets us specify one truststore, so let's
+      # make it a JKS with whatever is needed inside it
+      echo "Creating trust store"
+      ES_TRUST_STORE_PASSWORD=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 64 | head -n 1)
+      ES_TRUST_STORE=$(mktemp --tmpdir cortex-XXXXXX.ts)
+      # yes, removing this temp file could cause a race condition, but
+      # keytool won't work if the file exists
+      rm -f $ES_TRUST_STORE
+      for cacert_pem_file in "${ES_TRUSTED_CA_CERT_FILES[@]}"
+      do
+          keytool -importcert -keystore $ES_TRUST_STORE \
+                  -file $cacert_pem_file \
+                  -alias $(basename $cacert_pem_file) \
+                  -storepass $ES_TRUST_STORE_PASSWORD -noprompt
+      done
+      # ssl context is only set up if keyStore given: see
+      # sslContextMaybe,
+      # .../app/org/elastic4play/database/DBConfiguration.scala. we
+      # won't have any certs with private keys in this trust store,
+      # but that's ok. change this if ES client cert support is added
+      # to this script.
+      echo "search.keyStore.path=\"$ES_TRUST_STORE\"" >> "$CONFIG_FILE"
+      echo "search.keyStore.type=\"JKS\"" >> "$CONFIG_FILE"
+      echo "search.keyStore.password=\"$ES_TRUST_STORE_PASSWORD\"" >> "$CONFIG_FILE"
+      echo "search.trustStore.path=\"$ES_TRUST_STORE\"" >> "$CONFIG_FILE"
+      echo "search.trustStore.type=\"JKS\"" >> "$CONFIG_FILE"
+      echo "search.trustStore.password=\"$ES_TRUST_STORE_PASSWORD\"" >> "$CONFIG_FILE"
+    fi
+  fi
+  if test -n "$ES_USERNAME"
+  then
+    echo "search.user=\"$ES_USERNAME\"" >> "$CONFIG_FILE"
+  fi
+  if test -n "$ES_PASSWORD"
+  then
+    echo "search.password=\"$ES_PASSWORD\"" >> "$CONFIG_FILE"
   fi
 
   test -n "$JOB_DIRECTORY" && echo "job.directory=\"$JOB_DIRECTORY\"" >> "$CONFIG_FILE"
@@ -141,6 +190,7 @@ touch /var/log/cortex/application.log
 chown -R "$DAEMON_USER" /var/log/cortex
 chown -R "$DAEMON_USER" /etc/cortex
 chown -R "$DAEMON_USER" "$CONFIG_FILE"
+test -n "$ES_TRUST_STORE" && chown "$DAEMON_USER" "$ES_TRUST_STORE"
 test -e /var/run/docker.sock && chown "$DAEMON_USER" /var/run/docker.sock
 if test -n "$JOB_DIRECTORY"
 then
