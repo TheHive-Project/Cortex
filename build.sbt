@@ -11,6 +11,7 @@ ThisBuild / dependencyOverrides ++= Seq(
 )
 lazy val cortex = (project in file("."))
   .enablePlugins(PlayScala)
+  .dependsOn(elastic4play)
   .settings(projectSettings)
   .settings(PackageSettings.packageSettings)
   .settings(PackageSettings.rpmSettings)
@@ -25,7 +26,6 @@ lazy val cortex = (project in file("."))
         Dependencies.Play.specs2 % Test,
         Dependencies.Play.guice,
         Dependencies.scalaGuice,
-        Dependencies.elastic4play,
         Dependencies.reflections,
         Dependencies.zip4j,
         Dependencies.dockerClient,
@@ -54,6 +54,25 @@ lazy val cortex = (project in file("."))
       }
     )
   )
+
+val elastic4sVersion = "7.17.2"
+
+lazy val elastic4play = (project in file("elastic4play"))
+  .enablePlugins(PlayScala)
+  .settings(
+libraryDependencies ++= Seq(
+  cacheApi,
+  "com.sksamuel.elastic4s" %% "elastic4s-core"          % elastic4sVersion,
+  "com.sksamuel.elastic4s" %% "elastic4s-http-streams"  % elastic4sVersion,
+  "com.sksamuel.elastic4s" %% "elastic4s-client-esjava" % elastic4sVersion,
+  "com.typesafe.akka"      %% "akka-stream-testkit"     % play.core.PlayVersion.akkaVersion % Test,
+  "org.scalactic"          %% "scalactic"               % "3.2.12",
+  "org.bouncycastle"        % "bcprov-jdk15on"          % "1.61",
+  specs2                    % Test
+)
+
+)
+
 
 lazy val cortexWithDeps = (project in file("target/docker-withdeps"))
   .dependsOn(cortex)
