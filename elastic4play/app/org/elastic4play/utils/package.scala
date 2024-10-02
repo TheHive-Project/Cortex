@@ -1,6 +1,5 @@
 package org.elastic4play
 
-import scala.collection.TraversableLike
 import scala.collection.generic.CanBuildFrom
 import scala.concurrent.duration.{span, Duration, DurationInt, FiniteDuration}
 import scala.concurrent.{Await, ExecutionContext, Future, Promise}
@@ -68,34 +67,34 @@ package object utils {
     def toFuture(implicit evidence: B <:< Throwable): Future[G] = or.fold(g => Future.successful(g), b => Future.failed(b))
   }
 
-  implicit class RichTryIterable[A, Repr](xs: TraversableLike[Try[A], Repr]) {
-
-    def partitionTry[ThatA, ThatB](implicit cbfa: CanBuildFrom[Repr, A, ThatA], cbfb: CanBuildFrom[Repr, Throwable, ThatB]): (ThatA, ThatB) = {
-      val aBuilder = cbfa()
-      val bBuilder = cbfb()
-      xs.foreach {
-        case Success(a) => aBuilder += a
-        case Failure(b) => bBuilder += b
-      }
-      (aBuilder.result(), bBuilder.result())
-    }
-
-  }
-  implicit class RichOrIterable[A, B, Repr](xs: TraversableLike[A Or B, Repr]) {
-
-    def partitionOr[ThatA, ThatB](implicit cbfa: CanBuildFrom[Repr, A, ThatA], cbfb: CanBuildFrom[Repr, B, ThatB]): (ThatA, ThatB) = {
-      val aBuilder = cbfa()
-      val bBuilder = cbfb()
-      xs.foreach {
-        case Good(a) => aBuilder += a
-        case Bad(b)  => bBuilder += b
-      }
-      (aBuilder.result(), bBuilder.result())
-    }
-  }
-
-  implicit class RichTuble[A, B](t: (A, B)) {
-    def map1[C](f: A => C): (C, B) = (f(t._1), t._2)
-    def map2[C](f: B => C): (A, C) = (t._1, f(t._2))
-  }
+//  implicit class RichTryIterable[A, Repr](xs: TraversableLike[Try[A], Repr]) {
+//
+//    def partitionTry[ThatA, ThatB](implicit cbfa: CanBuildFrom[Repr, A, ThatA], cbfb: CanBuildFrom[Repr, Throwable, ThatB]): (ThatA, ThatB) = {
+//      val aBuilder = cbfa()
+//      val bBuilder = cbfb()
+//      xs.foreach {
+//        case Success(a) => aBuilder += a
+//        case Failure(b) => bBuilder += b
+//      }
+//      (aBuilder.result(), bBuilder.result())
+//    }
+//
+//  }
+//  implicit class RichOrIterable[A, B, Repr](xs: TraversableLike[A Or B, Repr]) {
+//
+//    def partitionOr[ThatA, ThatB](implicit cbfa: CanBuildFrom[Repr, A, ThatA], cbfb: CanBuildFrom[Repr, B, ThatB]): (ThatA, ThatB) = {
+//      val aBuilder = cbfa()
+//      val bBuilder = cbfb()
+//      xs.foreach {
+//        case Good(a) => aBuilder += a
+//        case Bad(b)  => bBuilder += b
+//      }
+//      (aBuilder.result(), bBuilder.result())
+//    }
+//  }
+//
+//  implicit class RichTuble[A, B](t: (A, B)) {
+//    def map1[C](f: A => C): (C, B) = (f(t._1), t._2)
+//    def map2[C](f: B => C): (A, C) = (t._1, f(t._2))
+//  }
 }

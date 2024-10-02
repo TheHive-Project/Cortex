@@ -1,6 +1,6 @@
 package org.elastic4play.services
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 import play.api.libs.json._
 import play.api.{Configuration, Logger}
@@ -151,10 +151,10 @@ object JsonFormat {
 
   implicit val queryReads: Reads[QueryDef] = {
     Reads {
-      case JsObjOne(("_and", JsArray(v)))                 => JsSuccess(and(v.map(_.as[QueryDef]): _*))
-      case JsObjOne(("_or", JsArray(v)))                  => JsSuccess(or(v.map(_.as[QueryDef]): _*))
+      case JsObjOne(("_and", JsArray(v)))                 => JsSuccess(and(v.map(_.as[QueryDef](queryReads)).toSeq: _*))
+      case JsObjOne(("_or", JsArray(v)))                  => JsSuccess(or(v.map(_.as[QueryDef](queryReads)).toSeq: _*))
       case JsObjOne(("_contains", JsString(v)))           => JsSuccess(contains(v))
-      case JsObjOne(("_not", v: JsObject))                => JsSuccess(not(v.as[QueryDef]))
+      case JsObjOne(("_not", v: JsObject))                => JsSuccess(not(v.as[QueryDef](queryReads)))
       case JsObjOne(("_any", _))                          => JsSuccess(any)
       case j: JsObject if j.fields.isEmpty                => JsSuccess(any)
       case JsObjOne(("_gt", JsObjOne(n, JsVal(v))))       => JsSuccess(n ~> v)

@@ -46,7 +46,7 @@ class TempSrv @Inject() (lifecycle: ApplicationLifecycle) {
     }
 
   private def requestTempDir(requestId: String): Path =
-    tempDir.resolve(requestId.replaceAllLiterally(":", "_"))
+    tempDir.resolve(requestId.replace(":", "_"))
 
   def newTemporaryFile(prefix: String, suffix: String)(implicit authContext: AuthContext): Path = {
     val td = requestTempDir(authContext.requestId)

@@ -136,7 +136,9 @@ abstract class BaseModelDef(modelName: String, val label: String, val path: Stri
       case MultiAttributeFormat(fmt) if fmt == AttachmentAttributeFormat    => true
       case _                                                                => false
     })
+    .view
     .mapValues(_.isRequired)
+    .toMap
 
   /* this hook, executed on creation can be override by subclass in order to transform entity attributes */
   def creationHook(parent: Option[BaseEntity], attrs: JsObject): Future[JsObject] = Future.successful(attrs)

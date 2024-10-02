@@ -10,8 +10,7 @@ import javax.inject.{Inject, Singleton}
 import org.elastic4play.models.BaseEntity
 import play.api.Logger
 import play.api.libs.json._
-
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import java.util.{Map => JMap}
 
@@ -33,9 +32,8 @@ class DBModify @Inject() (db: DBConfiguration) {
     * Convert JSON value to java native value
     */
   private[database] def jsonToAny(json: JsValue): Any = {
-    import scala.collection.JavaConverters._
     json match {
-      case v: JsObject  => v.fields.toMap.mapValues(jsonToAny).asJava
+      case v: JsObject  => v.fields.map { case (k, v) => k -> jsonToAny(v) }.toMap.asJava
       case v: JsArray   => v.value.map(jsonToAny).toArray
       case v: JsNumber  => v.value.toLong
       case v: JsString  => v.value
@@ -70,7 +68,7 @@ class DBModify @Inject() (db: DBConfiguration) {
       case ((_, value), index) if value != JsArray(Nil) && value != JsNull => s"param$index" -> value
     })).asInstanceOf[JMap[String, Any]].asScala.toMap
 
-    script(updateScript).params(parameters)
+    Script(updateScript).params(parameters)
   }
 
   /**

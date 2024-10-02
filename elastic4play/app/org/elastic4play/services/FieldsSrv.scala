@@ -18,7 +18,7 @@ class FieldsSrv {
     fields
       .map {
         case (name, value) =>
-          val names = name.split("\\.")
+          val names = name.split("\\.").toSeq
           (name, names, value, model.formAttributes.get(names.head))
       }
       .validatedBy {

@@ -7,7 +7,7 @@ import javax.naming.ldap.LdapName
 
 import scala.concurrent.duration.{DurationLong, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 import play.api.{Configuration, Logger}

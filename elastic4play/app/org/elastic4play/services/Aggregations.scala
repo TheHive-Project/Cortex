@@ -130,7 +130,7 @@ class SelectSum(aggregationName: String, fieldName: String, query: Option[QueryD
 class SelectCount(aggregationName: String, query: Option[QueryDef]) extends FieldAgg("", aggregationName, query) {
   def script(s: String): Aggregation = ???
 
-  def field(f: String): Aggregation = filterAgg(aggregationName, matchAllQuery)
+  def field(f: String): Aggregation = filterAgg(aggregationName, matchAllQuery())
 
   def processResult(model: BaseModelDef, aggregations: HasAggregations): JsObject = {
     val count = aggregations.filter(aggregationName)
@@ -165,7 +165,7 @@ class SelectTop(aggregationName: String, size: Int, sortBy: Seq[String], query: 
 class GroupByCategory(aggregationName: String, categories: Map[String, QueryDef], subAggs: Seq[Agg]) extends Agg(aggregationName) {
 
   def apply(model: BaseModelDef): Seq[KeyedFiltersAggregation] = {
-    val filters         = categories.mapValues(_.query)
+    val filters         = categories.view.mapValues(_.query).toMap
     val subAggregations = subAggs.flatMap(_.apply(model))
     Seq(KeyedFiltersAggregation(aggregationName, filters).subAggregations(subAggregations))
   }

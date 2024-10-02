@@ -26,7 +26,7 @@ class DBFind(pageSize: Int, keepAlive: FiniteDuration, db: DBConfiguration, impl
   @Inject def this(configuration: Configuration, db: DBConfiguration, mat: Materializer) =
     this(configuration.get[Int]("search.pagesize"), configuration.getMillis("search.keepalive").millis, db, mat)
 
-  val keepAliveStr: String        = keepAlive.toMillis + "ms"
+  val keepAliveStr: String        = s"${keepAlive.toMillis}ms"
   private[DBFind] lazy val logger = Logger(getClass)
 
   /**

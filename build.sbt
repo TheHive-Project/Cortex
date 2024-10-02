@@ -28,7 +28,6 @@ lazy val cortex = (project in file("."))
         Dependencies.scalaGuice,
         Dependencies.reflections,
         Dependencies.zip4j,
-        Dependencies.dockerClient,
         Dependencies.dockerJavaClient,
         Dependencies.dockerJavaTransport,
         Dependencies.akkaCluster,
@@ -55,7 +54,7 @@ lazy val cortex = (project in file("."))
     )
   )
 
-val elastic4sVersion = "7.17.2"
+val elastic4sVersion = "7.17.4"
 
 lazy val elastic4play = (project in file("elastic4play"))
   .enablePlugins(PlayScala)

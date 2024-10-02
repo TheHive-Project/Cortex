@@ -139,7 +139,7 @@ class DBFindSpec extends PlaySpecification with Mockito {
         .expectNextN(hits.slice(2, 12).toList)
         .request(15)
         .expectNextN(hits.drop(12).toList)
-        .expectComplete
+        .expectComplete()
 
       total.await must_== 42
       there was one(db).execute(searchDef)

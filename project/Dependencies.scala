@@ -1,7 +1,7 @@
-import sbt.*
+import sbt._
 
 object Dependencies {
-  val scalaVersion      = "2.12.16"
+  val scalaVersion      = "2.13.15"
   val dockerJavaVersion = "3.4.0"
 
   object Play {
@@ -21,7 +21,6 @@ object Dependencies {
   val reflections         = "org.reflections"        % "reflections"                   % "0.10.2"
   val zip4j               = "net.lingala.zip4j"      % "zip4j"                         % "2.11.5"
   val elastic4play        = "org.thehive-project"    %% "elastic4play"                 % "1.13.6"
-  val dockerClient        = "com.spotify"            % "docker-client"                 % "8.16.0"
   val dockerJavaClient    = "com.github.docker-java" % "docker-java"                   % dockerJavaVersion
   val dockerJavaTransport = "com.github.docker-java" % "docker-java-transport-zerodep" % dockerJavaVersion
   val akkaCluster         = "com.typesafe.akka"      %% "akka-cluster"                 % play.core.PlayVersion.akkaVersion

@@ -35,7 +35,7 @@ case class MultiAttributeFormat[T](attributeFormat: AttributeFormat[T])
   }
 
   override def fromInputValue(subNames: Seq[String], value: InputValue): Seq[T] Or Every[AttributeError] = value match {
-    case JsonInputValue(JsArray(xs)) => xs.map(JsonInputValue).validatedBy(i => attributeFormat.fromInputValue(subNames, i))
+    case JsonInputValue(JsArray(xs)) => xs.map(JsonInputValue).toSeq.validatedBy(i => attributeFormat.fromInputValue(subNames, i))
     case StringInputValue(xs) =>
       xs.filterNot(_.isEmpty).map(x => StringInputValue(x :: Nil)).validatedBy(i => attributeFormat.fromInputValue(subNames, i))
     case _ => formatError(value)

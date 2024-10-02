@@ -1,25 +1,22 @@
 package org.elastic4play.controllers
 
-import java.nio.file.Path
-import java.util.Locale
-import javax.inject.Inject
-
-import scala.collection.{immutable, GenTraversableOnce}
-import scala.concurrent.ExecutionContext
-import scala.util.Try
-
+import akka.util.ByteString
+import org.elastic4play.BadRequestError
+import org.elastic4play.controllers.JsonFormat.{fieldsReader, pathFormat}
+import org.elastic4play.services.Attachment
+import org.elastic4play.utils.Hash
 import play.api.Logger
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import play.api.libs.streams.Accumulator
 import play.api.mvc._
 
-import akka.util.ByteString
-
-import org.elastic4play.BadRequestError
-import org.elastic4play.controllers.JsonFormat.{fieldsReader, pathFormat}
-import org.elastic4play.services.Attachment
-import org.elastic4play.utils.Hash
+import java.nio.file.Path
+import java.util.Locale
+import javax.inject.Inject
+import scala.collection.immutable
+import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 /**
   * Define a data value from HTTP request. It can be simple string, json, file or null (maybe xml in future)
@@ -150,7 +147,7 @@ class Fields(private val fields: Map[String, InputValue]) {
   /**
     * Extract all field values
     */
-  def mapValues(f: InputValue => InputValue) = new Fields(fields.mapValues(f))
+  def mapValues(f: InputValue => InputValue) = new Fields(fields.view.mapValues(f).toMap)
 
   /**
     * Returns a copy of this class with a new field (or replacing existing field)
@@ -190,7 +187,7 @@ class Fields(private val fields: Map[String, InputValue]) {
 
   def addIfAbsent(name: String, value: InputValue): Fields = get(name).fold(set(name, value))(_ => this)
 
-  def ++(other: GenTraversableOnce[(String, InputValue)]) = new Fields(fields ++ other)
+  def ++(other: IterableOnce[(String, InputValue)]) = new Fields(fields ++ other)
 
   override def toString: String = fields.toString()
 }
@@ -202,8 +199,8 @@ object Fields {
     * Create an instance of Fields from a JSON object
     */
   def apply(obj: JsObject): Fields = {
-    val fields = obj.value.mapValues(v => JsonInputValue(v))
-    new Fields(fields.toMap)
+    val fields = obj.value.view.mapValues(v => JsonInputValue(v)).toMap
+    new Fields(fields)
   }
 
   def apply(fields: Map[String, InputValue]): Fields = {
@@ -218,7 +215,7 @@ class FieldsBodyParser @Inject() (playBodyParsers: PlayBodyParsers, implicit val
   private[FieldsBodyParser] lazy val logger = Logger(getClass)
 
   def apply(request: RequestHeader): Accumulator[ByteString, Either[Result, Fields]] = {
-    def queryFields = request.queryString.mapValues(v => StringInputValue(v))
+    def queryFields = request.queryString.view.mapValues(v => StringInputValue(v)).toMap
 
     request.contentType.map(_.toLowerCase(Locale.ENGLISH)) match {
 
@@ -228,7 +225,7 @@ class FieldsBodyParser @Inject() (playBodyParsers: PlayBodyParsers, implicit val
         playBodyParsers
           .tolerantFormUrlEncoded
           .map { form =>
-            Fields(form.mapValues(v => StringInputValue(v)))
+            Fields(form.view.mapValues(v => StringInputValue(v)).toMap)
           }
           .map(f => f ++ queryFields)
           .apply(request)
@@ -246,8 +243,9 @@ class FieldsBodyParser @Inject() (playBodyParsers: PlayBodyParsers, implicit val
                     .parse(s)
                     .as[JsObject]
                     .value
-                    .toMap
+                    .view
                     .mapValues(v => JsonInputValue(v))
+                    .toMap
                 }
                 .getOrElse(Map.empty)
               val fileFields = files.map { f =>

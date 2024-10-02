@@ -22,8 +22,8 @@ class DBIndex(db: DBConfiguration, nbShards: Int, nbReplicas: Int, settings: Map
         .fold(Map.empty[String, Any]) { settings =>
           settings
             .entrySet
+            .map { case (k, v) => k -> v.unwrapped()}
             .toMap
-            .mapValues(_.unwrapped)
         }
     )
 
@@ -35,8 +35,8 @@ class DBIndex(db: DBConfiguration, nbShards: Int, nbReplicas: Int, settings: Map
     * @return a future which is completed when index creation is finished
     */
   def createIndex(models: Iterable[ModelAttributes])(implicit ec: ExecutionContext): Future[Unit] = {
-    val mappingTemplates = Collection.distinctBy(models.flatMap(_.attributes).flatMap(_.elasticTemplate()))(_.name)
-    val fields           = Collection.distinctBy(models.flatMap(_.attributes.filterNot(_.attributeName == "_id")))(_.attributeName).map(_.elasticMapping).toSeq
+    val mappingTemplates = models.flatMap(_.attributes).flatMap(_.elasticTemplate()).toSeq.distinctBy(_.name)
+    val fields           = models.flatMap(_.attributes.filterNot(_.attributeName == "_id")).toSeq.distinctBy(_.attributeName).map(_.elasticMapping)
     val relationsField = models
       .map {
         case child: ChildModelDef[_, _, _, _] => child.parentModel.modelName -> Seq(child.modelName)
@@ -57,7 +57,6 @@ class DBIndex(db: DBConfiguration, nbShards: Int, nbReplicas: Int, settings: Map
         .mapping(modelMapping)
         .shards(nbShards)
         .replicas(nbReplicas)
-        .includeTypeName(false)
       createIndexRequestWithSettings = majorVersion match {
         case 5 => createIndexRequest.indexSetting("mapping.single_type", true)
         case _ => createIndexRequest

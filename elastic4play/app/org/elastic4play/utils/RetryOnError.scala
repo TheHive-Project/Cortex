@@ -36,7 +36,7 @@ object Retry {
     body.recoverWith {
       case e: Throwable if maxRetry > 0 && exceptionCheck(exceptions)(e) =>
         logger.warn(s"An error occurs (${e.getMessage}), retrying ($maxRetry)")
-        val resultPromise = Promise[T]
+        val resultPromise = Promise[T]()
         system.scheduler.scheduleOnce(initialDelay) {
           resultPromise.completeWith(apply(maxRetry - 1, initialDelay * 2)(exceptions: _*)(body))
         }

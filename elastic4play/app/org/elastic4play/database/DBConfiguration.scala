@@ -25,7 +25,7 @@ import play.api.inject.ApplicationLifecycle
 import play.api.libs.json.JsObject
 import play.api.{Configuration, Logger}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
@@ -181,7 +181,7 @@ class DBConfiguration @Inject() (
       override def onFailure(resp: BulkResponseItem, original: T): Unit =
         logger.warn(s"Document index failure ${resp.id}: ${resp.error.fold("unexpected")(_.toString)}\n$original")
     }
-    val end = Promise[Unit]
+    val end = Promise[Unit]()
     val complete = () => {
       if (!end.isCompleted)
         end.success(())

@@ -9,7 +9,7 @@ import org.elastic4play.utils
 object DBUtils {
 
   def sortDefinition(sortBy: Seq[String]): Seq[Sort] = {
-    val byFieldList: Seq[(String, Sort)] = sortBy
+    sortBy
       .map {
         case f if f.startsWith("+") => f.drop(1) -> fieldSort(f.drop(1)).order(SortOrder.ASC)
         case f if f.startsWith("-") => f.drop(1) -> fieldSort(f.drop(1)).order(SortOrder.DESC)
@@ -17,9 +17,7 @@ object DBUtils {
       }
     // then remove duplicates
     // Same as : val fieldSortDefs = byFieldList.groupBy(_._1).map(_._2.head).values.toSeq
-    utils
-      .Collection
-      .distinctBy(byFieldList)(_._1)
+    .distinctBy(_._1)
       .map(_._2) :+ fieldSort("_doc").order(SortOrder.DESC)
   }
 

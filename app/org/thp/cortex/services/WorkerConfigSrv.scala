@@ -14,7 +14,7 @@ import org.scalactic.Accumulation._
 import org.elastic4play.{AttributeCheckingError, NotFoundError}
 import org.elastic4play.controllers.Fields
 import org.elastic4play.database.ModifyConfig
-import org.elastic4play.services._
+import org.elastic4play.services.{UserSrv => _, _}
 
 trait WorkerConfigSrv {
   val configuration: Configuration

@@ -37,7 +37,7 @@ class UpdateSrv @Inject() (
       .fields
       .map {
         case (name, value) =>
-          val names = name.split("\\.")
+          val names = name.split("\\.").toSeq
           (name, names, value, model.modelAttributes.get(names.head))
       }
       .validatedBy {
