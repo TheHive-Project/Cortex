@@ -16,7 +16,7 @@ object Dependencies {
     val twirl   = "com.typesafe.play" %% "twirl-api" % "1.6.8"
   }
 
-  val scalaGuice = "net.codingwell" %% "scala-guice" % "7.0.0"
+  val scalaGuice = "net.codingwell" %% "scala-guice" % "6.0.0"
 
   val reflections         = "org.reflections"        % "reflections"                   % "0.10.2"
   val zip4j               = "net.lingala.zip4j"      % "zip4j"                         % "2.11.5"
