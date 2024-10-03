@@ -13,14 +13,13 @@ object Dependencies {
     val specs2  = "com.typesafe.play" %% "play-specs2" % version
     val filters = "com.typesafe.play" %% "filters-helpers" % version
     val guice   = "com.typesafe.play" %% "play-guice" % version
-    val twirl   = "com.typesafe.play" %% "twirl-api" % "1.5.2"
+    val twirl   = "com.typesafe.play" %% "twirl-api" % "1.6.8"
   }
 
-  val scalaGuice = "net.codingwell" %% "scala-guice" % "5.1.1"
+  val scalaGuice = "net.codingwell" %% "scala-guice" % "7.0.0"
 
   val reflections         = "org.reflections"        % "reflections"                   % "0.10.2"
   val zip4j               = "net.lingala.zip4j"      % "zip4j"                         % "2.11.5"
-  val elastic4play        = "org.thehive-project"    %% "elastic4play"                 % "1.13.6"
   val dockerJavaClient    = "com.github.docker-java" % "docker-java"                   % dockerJavaVersion
   val dockerJavaTransport = "com.github.docker-java" % "docker-java-transport-zerodep" % dockerJavaVersion
   val akkaCluster         = "com.typesafe.akka"      %% "akka-cluster"                 % play.core.PlayVersion.akkaVersion

@@ -5,7 +5,7 @@ ThisBuild / evictionErrorLevel := util.Level.Warn
 
 ThisBuild / dependencyOverrides ++= Seq(
   Dependencies.Play.twirl,
-  "com.fasterxml.jackson.core" % "jackson-databind" % "2.13.5",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.14.3",
   "org.apache.commons"         % "commons-compress" % "1.23.0",
   "com.google.guava"           % "guava"            % "32.1.1-jre"
 )
@@ -39,9 +39,6 @@ lazy val cortex = (project in file("."))
         "com.github.jnr" % "jnr-enxio" % "0.32.14",
         "com.github.jnr" % "jnr-unixsocket" % "0.38.19"
       ),
-      resolvers += Resolver.sbtPluginRepo("releases"),
-      resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
-      resolvers += "elasticsearch-releases" at "https://artifacts.elastic.co/maven",
       Compile / packageDoc / publishArtifact := false,
       Compile / doc / sources := Seq.empty,
       // Front-end //
@@ -65,8 +62,8 @@ libraryDependencies ++= Seq(
   "com.sksamuel.elastic4s" %% "elastic4s-http-streams"  % elastic4sVersion,
   "com.sksamuel.elastic4s" %% "elastic4s-client-esjava" % elastic4sVersion,
   "com.typesafe.akka"      %% "akka-stream-testkit"     % play.core.PlayVersion.akkaVersion % Test,
-  "org.scalactic"          %% "scalactic"               % "3.2.12",
-  "org.bouncycastle"        % "bcprov-jdk15on"          % "1.61",
+  "org.scalactic"          %% "scalactic"               % "3.2.19",
+  "org.bouncycastle"        % "bcprov-jdk15on"          % "1.70",
   specs2                    % Test
 )
 
