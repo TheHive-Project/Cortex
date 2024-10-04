@@ -63,7 +63,6 @@ libraryDependencies ++= Seq(
   "com.sksamuel.elastic4s" %% "elastic4s-client-esjava" % elastic4sVersion,
   "com.typesafe.akka"      %% "akka-stream-testkit"     % play.core.PlayVersion.akkaVersion % Test,
   "org.scalactic"          %% "scalactic"               % "3.2.19",
-  "org.bouncycastle"        % "bcprov-jdk15on"          % "1.70",
   specs2                    % Test
 )
 
