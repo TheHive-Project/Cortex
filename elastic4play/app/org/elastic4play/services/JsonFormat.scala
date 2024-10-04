@@ -203,6 +203,7 @@ object JsonFormat {
       val categories  = (json \ "_categories").as[Map[String, QueryDef]]
       val selectables = (json \ "_select").as[Seq[Agg]]
       JsSuccess(groupByCaterogy(aggregationName, categories, selectables: _*))
+    case unexpected: JsValue => JsError(s"Unexpected JsValue $unexpected")
   }
 
   implicit val authContextWrites: OWrites[AuthContext] = OWrites[AuthContext] { authContext =>

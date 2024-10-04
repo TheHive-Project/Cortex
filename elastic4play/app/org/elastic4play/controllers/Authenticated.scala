@@ -162,7 +162,7 @@ class Authenticated(
       .foldLeft[Future[Either[Seq[(String, Throwable)], AuthContext]]](Future.successful(Left(Nil))) {
         case (acc, (authMethodName, authMethod)) =>
           acc.flatMap {
-            case authContext if authContext.isRight => Future.successful(authContext)
+            case authContext @ Right(_) => Future.successful(authContext)
             case Left(errors) =>
               authMethod(request)
                 .map(authContext => Right(authContext))
