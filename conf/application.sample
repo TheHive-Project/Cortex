@@ -219,4 +219,41 @@ responder {
 #   port = 3128
 # }
 
+# Docker
+docker {
+  host = "tcp://docker.somewhere.tld:2376"
+  tlsVerify = false
+  certPath = "/home/user/.docker"
+  registry {
+    user = "username"
+    password = "pwdReg"
+    email = "user@docker.com"
+    url = "https://www.docker-registry.com"
+  }
+  httpClient {
+    maxConnections = 100
+    connectionTimeout = 30000 # millis
+    responseTimeout = 45000
+  }
+  container {
+    capAdd = ["ALL"]
+    capDrop = ["NET_ADMIN", "SYS_ADMIN"]
+    cgroupParent = "m-executor-abcd"
+    privileged = false
+
+    dns = ["8.8.8.8", "9.9.9.9"]
+    dnsSearch = ["dc1.example.com", "dc2.example.com"]
+    extraHosts = ["somehost=162.242.195.82", "otherhost=50.31.209.229", "myhostv6=::1"]
+    networkMode = "host"
+
+    cpuPeriod = 100000
+    cpuQuota = 50000
+    kernelMemory = 2147483648
+    memoryReservation = 1024
+    memory = 4294967296
+    memorySwap = 1073741824
+    memorySwappiness = 0
+  }
+}
+
 # It's the end my friend. Happy hunting!
