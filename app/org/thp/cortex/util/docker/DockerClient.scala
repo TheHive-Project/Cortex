@@ -8,7 +8,8 @@ import play.api.{Configuration, Logger}
 
 import java.nio.file.{Files, Path}
 import java.time.Duration
-import java.util.concurrent.Executors
+import java.util.concurrent.{Executors, TimeUnit}
+import scala.concurrent.blocking
 import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters._
 import scala.util.Try
@@ -18,20 +19,26 @@ class DockerClient(config: Configuration) {
   private lazy val (dockerConf, httpClient) = getHttpClient
   private lazy val underlyingClient         = DockerClientImpl.getInstance(dockerConf, httpClient)
 
-  def execute(containerId: String): Try[String] = Try {
-    val startContainerCmd = underlyingClient.startContainerCmd(containerId)
-    startContainerCmd.exec()
-    val waitResult = underlyingClient
-      .waitContainerCmd(containerId)
-      .start()
-      .awaitStatusCode()
-    logger.info(s"container $containerId started and awaited with code: $waitResult")
+  def execute(containerId: String): Try[Int] =
+    Try {
+      val startContainerCmd = underlyingClient.startContainerCmd(containerId)
+      startContainerCmd.exec()
+      val waitResult = underlyingClient
+        .waitContainerCmd(containerId)
+        .start()
+        .awaitStatusCode()
+      logger.info(s"container $containerId started and awaited with code: $waitResult")
 
-    containerId
-  }
+      0
+    } recover {
+      case e =>
+        logger.error(s"execute container $containerId failed", e)
+
+        1
+    }
 
   def prepare(image: String, jobDirectory: Path, jobBaseDirectory: Path, dockerJobBaseDirectory: Path, timeout: FiniteDuration): Try[String] = Try {
-    logger.info(s"image $image pull result: ${pullImage(image, timeout)}")
+    logger.info(s"image $image pull result: ${pullImage(image)}")
     val containerCmd = underlyingClient
       .createContainerCmd(image)
       .withHostConfig(configure(jobDirectory, jobBaseDirectory, dockerJobBaseDirectory))
@@ -83,16 +90,20 @@ class DockerClient(config: Configuration) {
   }
 
   def info: Info = underlyingClient.infoCmd().exec()
-  def pullImage(image: String, timeout: FiniteDuration): Boolean = {
+  def pullImage(image: String): Boolean = blocking {
     val pullImageResultCbk = underlyingClient // Blocking
       .pullImageCmd(image)
       .start()
       .awaitCompletion()
+    val timeout = config.getOptional[Long]("docker.pullImageTimeout")
 
-    pullImageResultCbk.awaitCompletion(timeout.length, timeout.unit)
+    pullImageResultCbk.awaitCompletion(timeout.getOrElse(10000), TimeUnit.MILLISECONDS)
   }
 
   def clean(containerId: String): Try[Unit] = Try {
+    underlyingClient
+      .killContainerCmd(containerId)
+      .exec()
     underlyingClient
       .removeContainerCmd(containerId)
       .withForce(true)
@@ -129,38 +140,32 @@ class DockerClient(config: Configuration) {
 
   private def getHttpClient: (DockerClientConfig, DockerHttpClient) = {
     val dockerConf = getBaseConfig
+    val dockerClient = new ZerodepDockerHttpClient.Builder()
+      .dockerHost(dockerConf.getDockerHost)
+      .sslConfig(dockerConf.getSSLConfig)
+      .maxConnections(if (config.has("docker.httpClient.maxConnections")) config.get[Int]("docker.httpClient.maxConnections") else 100)
+      .connectionTimeout(
+        if (config.has("docker.httpClient.connectionTimeout")) Duration.ofMillis(config.get[Long]("docker.httpClient.connectionTimeout"))
+        else Duration.ofSeconds(30)
+      )
+      .responseTimeout(
+        if (config.has("docker.httpClient.responseTimeout")) Duration.ofMillis(config.get[Long]("docker.httpClient.responseTimeout"))
+        else Duration.ofSeconds(45)
+      )
+      .build()
 
-    (
-      dockerConf,
-      new ZerodepDockerHttpClient.Builder()
-        .dockerHost(dockerConf.getDockerHost)
-        .sslConfig(dockerConf.getSSLConfig)
-        .maxConnections(if (config.has("docker.httpClient.maxConnections")) config.get[Int]("docker.httpClient.maxConnections") else 100)
-        .connectionTimeout(
-          if (config.has("docker.httpClient.connectionTimeout")) Duration.ofMillis(config.get[Long]("docker.httpClient.connectionTimeout"))
-          else Duration.ofSeconds(30)
-        )
-        .responseTimeout(
-          if (config.has("docker.httpClient.responseTimeout")) Duration.ofMillis(config.get[Long]("docker.httpClient.responseTimeout"))
-          else Duration.ofSeconds(45)
-        )
-        .build()
-    )
+    (dockerConf, dockerClient)
   }
 
   private def getBaseConfig: DockerClientConfig = {
     val confBuilder = DefaultDockerClientConfig.createDefaultConfigBuilder()
-    if (config.has("docker")) {
-      if (config.has("docker.host")) confBuilder.withDockerHost(config.get[String]("docker.host"))
-      if (config.has("docker.tlsVerify")) confBuilder.withDockerTlsVerify(config.get[Boolean]("docker.tlsVerify"))
-      if (config.has("docker.certPath")) confBuilder.withDockerCertPath(config.get[String]("docker.certPath"))
-      if (config.has("docker.registry")) {
-        if (config.has("docker.registry.user")) confBuilder.withRegistryUsername(config.get[String]("docker.registry.user"))
-        if (config.has("docker.registry.password")) confBuilder.withRegistryPassword(config.get[String]("docker.registry.password"))
-        if (config.has("docker.registry.email")) confBuilder.withRegistryEmail(config.get[String]("docker.registry.email"))
-        if (config.has("docker.registry.url")) confBuilder.withRegistryUrl(config.get[String]("docker.registry.url"))
-      }
-    }
+    config.getOptional[String]("docker.host").foreach(confBuilder.withDockerHost)
+    config.getOptional[Boolean]("docker.tlsVerify").foreach(confBuilder.withDockerTlsVerify(_))
+    config.getOptional[String]("docker.certPath").foreach(confBuilder.withDockerCertPath)
+    config.getOptional[String]("docker.registry.user").foreach(confBuilder.withRegistryUsername)
+    config.getOptional[String]("docker.registry.password").foreach(confBuilder.withRegistryPassword)
+    config.getOptional[String]("docker.registry.email").foreach(confBuilder.withRegistryEmail)
+    config.getOptional[String]("docker.registry.url").foreach(confBuilder.withRegistryUrl)
 
     confBuilder.build()
   }
