@@ -29,6 +29,8 @@ lazy val cortex = (project in file("."))
         Dependencies.reflections,
         Dependencies.zip4j,
         Dependencies.dockerClient,
+        Dependencies.dockerJavaClient,
+        Dependencies.dockerJavaTransport,
         Dependencies.akkaCluster,
         Dependencies.akkaClusterTyped
       ),
