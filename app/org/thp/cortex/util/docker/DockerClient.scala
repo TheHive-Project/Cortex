@@ -29,12 +29,7 @@ class DockerClient(config: Configuration) {
         .awaitStatusCode()
       logger.info(s"container $containerId started and awaited with code: $waitResult")
 
-      0
-    } recover {
-      case e =>
-        logger.error(s"execute container $containerId failed", e)
-
-        1
+      waitResult
     }
 
   def prepare(image: String, jobDirectory: Path, jobBaseDirectory: Path, dockerJobBaseDirectory: Path, timeout: FiniteDuration): Try[String] = Try {
@@ -95,9 +90,9 @@ class DockerClient(config: Configuration) {
       .pullImageCmd(image)
       .start()
       .awaitCompletion()
-    val timeout = config.getOptional[Long]("docker.pullImageTimeout")
+    val timeout = config.get[FiniteDuration]("docker.pullImageTimeout")
 
-    pullImageResultCbk.awaitCompletion(timeout.getOrElse(10000), TimeUnit.MILLISECONDS)
+    pullImageResultCbk.awaitCompletion(timeout.toMillis, TimeUnit.MILLISECONDS)
   }
 
   def clean(containerId: String): Try[Unit] = Try {

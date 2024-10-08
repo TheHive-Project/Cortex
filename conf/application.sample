@@ -255,7 +255,7 @@ docker {
     memorySwappiness = 0
   }
   autoUpdate = false
-  pullImageTimeout = 10000
+  pullImageTimeout = 10 minutes
 }
 
 # It's the end my friend. Happy hunting!
