@@ -19,7 +19,7 @@ import org.thp.cortex.models._
 
 import org.elastic4play._
 import org.elastic4play.controllers._
-import org.elastic4play.services._
+import org.elastic4play.services.{UserSrv => _, _}
 import org.elastic4play.utils.Hasher
 
 @Singleton

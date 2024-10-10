@@ -1,0 +1,73 @@
+---
+kind: pipeline
+name: default
+type: docker
+
+steps:
+  # Restore cache of downloaded dependencies
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    settings:
+      restore: true
+      mount:
+        - .sbt
+        - .ivy2
+    volumes: [{name: cache, path: /cache}]
+
+  # Run project tests
+  - name: run-tests
+    image: thehiveproject/drone-scala-node
+    commands:
+      - sbt -Duser.home=$PWD test
+
+  # Publish package
+  - name: publish-package
+    image: thehiveproject/drone-scala-node
+    settings:
+      bintray_user: {from_secret: bintray_user}
+      bintray_key: {from_secret: bintray_key}
+    commands:
+      - mkdir -p .bintray
+      - echo realm = Bintray API Realm       > .bintray/.credentials
+      - echo host = api.bintray.com         >> .bintray/.credentials
+      - echo user = $PLUGIN_BINTRAY_USER    >> .bintray/.credentials
+      - echo password = $PLUGIN_BINTRAY_KEY >> .bintray/.credentials
+      - sbt -Duser.home=$PWD publish
+    when:
+      event: [tag]
+
+  # Save external libraries in cache
+  - name: save-cache
+    image: drillster/drone-volume-cache
+    settings:
+      rebuild: true
+      mount:
+        - .sbt
+        - .ivy2
+    volumes: [{name: cache, path: /cache}]
+
+  - name: send message
+    image: thehiveproject/drone_keybase
+    settings:
+      username: {from_secret: keybase_username}
+      paperkey: {from_secret: keybase_paperkey}
+      channel: {from_secret: keybase_channel}
+    commands:
+      - |
+        keybase oneshot -u "$PLUGIN_USERNAME" --paperkey "$PLUGIN_PAPERKEY"
+        URL="$DRONE_SYSTEM_PROTO://$DRONE_SYSTEM_HOST/$DRONE_REPO/$DRONE_BUILD_NUMBER"
+        if [ $DRONE_BUILD_STATUS = "success" ]
+        then
+          keybase chat send "$PLUGIN_CHANNEL" ":white_check_mark: $DRONE_REPO: build succeeded $URL"
+        else
+          keybase chat send "$PLUGIN_CHANNEL" ":x: $DRONE_REPO: build failed $URL"
+        fi
+    when:
+      status:
+      - success
+      - failure
+
+volumes:
+  - name: cache
+    host:
+      path: /opt/drone/cache

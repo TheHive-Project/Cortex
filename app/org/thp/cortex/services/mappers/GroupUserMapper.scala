@@ -66,7 +66,7 @@ class GroupUserMapper(
       case Some(groupsEndpointUrl) =>
         logger.debug(s"Retreiving groups from $groupsEndpointUrl")
         val apiCall = authHeader.fold(ws.url(groupsEndpointUrl))(headers => ws.url(groupsEndpointUrl).addHttpHeaders(headers))
-        apiCall.get.flatMap { r =>
+        apiCall.get().flatMap { r =>
           extractGroupsThenBuildUserFields(jsValue, r.json)
         }
       case None =>

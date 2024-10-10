@@ -1,20 +1,20 @@
 package org.thp.cortex.controllers
 
-import scala.concurrent.{ExecutionContext, Future}
+import com.sksamuel.elastic4s.ElasticDsl
+import org.elastic4play.controllers.Authenticated
+import org.elastic4play.services.AuthSrv
+import org.elastic4play.services.auth.MultiAuthSrv
+import org.elasticsearch.client.Node
+import org.thp.cortex.models.{Roles, Worker, WorkerType}
+import org.thp.cortex.services.WorkerSrv
 import play.api.Configuration
 import play.api.http.Status
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
-import play.api.libs.json.{JsBoolean, JsNull, JsString, Json}
+import play.api.libs.json.{JsBoolean, JsString, Json}
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
-import com.sksamuel.elastic4s.ElasticDsl
-import org.elastic4play.controllers.Authenticated
 
 import javax.inject.{Inject, Singleton}
-import org.elasticsearch.client.Node
-import org.thp.cortex.models.{Roles, Worker, WorkerType}
-import org.elastic4play.services.AuthSrv
-import org.elastic4play.services.auth.MultiAuthSrv
-import org.thp.cortex.services.WorkerSrv
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class StatusCtrl @Inject() (

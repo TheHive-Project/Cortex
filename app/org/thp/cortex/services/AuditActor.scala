@@ -1,16 +1,12 @@
 package org.thp.cortex.services
 
 import javax.inject.{Inject, Singleton}
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
-
 import play.api.Logger
-
 import akka.actor.{Actor, ActorRef}
 import org.thp.cortex.models.JobStatus
-
-import org.elastic4play.models.BaseEntity
+import org.elastic4play.models.{BaseEntity, BaseModelDef}
 import org.elastic4play.services._
 
 object AuditActor {
@@ -24,10 +20,10 @@ class AuditActor @Inject() (eventSrv: EventSrv, implicit val ec: ExecutionContex
 
   import AuditActor._
 
-  object EntityExtractor {
-    def unapply(e: BaseEntity) = Some((e.model, e.id, e.routing))
+  private object EntityExtractor {
+    def unapply(e: BaseEntity): Option[(BaseModelDef, String, String)] = Some((e.model, e.id, e.routing))
   }
-  var registration                    = Map.empty[String, Seq[ActorRef]]
+  private var registration                    = Map.empty[String, Seq[ActorRef]]
   private[AuditActor] lazy val logger = Logger(getClass)
 
   override def preStart(): Unit = {
@@ -42,17 +38,17 @@ class AuditActor @Inject() (eventSrv: EventSrv, implicit val ec: ExecutionContex
 
   override def receive: Receive = {
     case Register(jobId, timeout) =>
-      logger.info(s"Register new listener for job $jobId ($sender)")
-      val newActorList = registration.getOrElse(jobId, Nil) :+ sender
+      logger.info(s"Register new listener for job $jobId (${sender()})")
+      val newActorList = registration.getOrElse(jobId, Nil) :+ sender()
       registration += (jobId -> newActorList)
-      context.system.scheduler.scheduleOnce(timeout, self, Unregister(jobId, sender))
+      context.system.scheduler.scheduleOnce(timeout, self, Unregister(jobId, sender()))
 
     case Unregister(jobId, actorRef) =>
       logger.info(s"Unregister listener for job $jobId ($actorRef)")
       val newActorList = registration.getOrElse(jobId, Nil).filterNot(_ == actorRef)
       registration += (jobId -> newActorList)
 
-    case AuditOperation(EntityExtractor(model, id, routing), action, details, authContext, date) =>
+    case AuditOperation(EntityExtractor(model, id, _), action, details, _, _) =>
       if (model.modelName == "job" && action == AuditableAction.Update) {
         logger.info(s"Job $id has be updated (${details \ "status"})")
         val status = (details \ "status").asOpt[JobStatus.Type].getOrElse(JobStatus.InProgress)

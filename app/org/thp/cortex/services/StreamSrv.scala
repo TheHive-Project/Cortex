@@ -180,7 +180,7 @@ class StreamActor(
         wr.submit(Nil)
         logger.error("Multiple requests !")
       }
-      context.become(receiveWithState(Some(new WaitingRequest(sender)), currentMessages))
+      context.become(receiveWithState(Some(new WaitingRequest(sender())), currentMessages))
 
     case Submit =>
       waitingRequest match {

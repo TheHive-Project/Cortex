@@ -1,12 +1,9 @@
 package org.thp.cortex.models
 
 import javax.inject.{Inject, Provider, Singleton}
-
 import scala.concurrent.{ExecutionContext, Future}
-
 import play.api.Logger
-import play.api.libs.json.{JsNumber, JsObject, JsString, Json}
-
+import play.api.libs.json.{Format, JsNumber, JsObject, JsString, Json}
 import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.models.{AttributeDef, BaseEntity, EntityDef, HiveEnumeration, ModelDef, AttributeFormat => F, AttributeOption => O}
 import org.elastic4play.services.FindSrv
@@ -14,7 +11,7 @@ import org.elastic4play.services.FindSrv
 object OrganizationStatus extends Enumeration with HiveEnumeration {
   type Type = Value
   val Active, Locked = Value
-  implicit val reads = enumFormat(this)
+  implicit val reads: Format[Value] = enumFormat(this)
 }
 
 trait OrganizationAttributes { _: AttributeDef =>
