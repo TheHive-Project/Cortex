@@ -5,10 +5,8 @@ import scala.concurrent.duration.Duration
 import play.api.Configuration
 import play.api.libs.json._
 
-import org.elastic4play.utils.Collection.distinctBy
-
 case class BaseConfig(name: String, workerNames: Seq[String], items: Seq[ConfigurationDefinitionItem], config: Option[WorkerConfig]) {
-  def +(other: BaseConfig) = BaseConfig(name, workerNames ++ other.workerNames, distinctBy(items ++ other.items)(_.name), config.orElse(other.config))
+  def +(other: BaseConfig): BaseConfig = BaseConfig(name, workerNames ++ other.workerNames, (items ++ other.items).distinctBy(_.name), config.orElse(other.config))
 }
 
 object BaseConfig {

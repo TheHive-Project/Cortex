@@ -5,7 +5,7 @@ import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.models.{AttributeDef, BaseEntity, ChildModelDef, EntityDef, HiveEnumeration, AttributeFormat => F, AttributeOption => O}
 import org.elastic4play.utils.Hasher
 import org.thp.cortex.models.JsonFormat.workerTypeFormat
-import play.api.libs.json.{JsObject, JsString, Json}
+import play.api.libs.json.{Format, JsObject, JsString, Json}
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -17,7 +17,7 @@ object RateUnit extends Enumeration with HiveEnumeration {
   val Hour           = Value(60 * 60)
   val Day            = Value(60 * 60 * 24)
   val Month          = Value(60 * 60 * 24 * 30)
-  implicit val reads = enumFormat(this)
+  implicit val reads: Format[Value] = enumFormat(this)
 }
 
 object WorkerType extends Enumeration with HiveEnumeration {
