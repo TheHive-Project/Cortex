@@ -20,7 +20,7 @@ object Dependencies {
 
   val reflections         = "org.reflections"        % "reflections"                   % "0.10.2"
   val zip4j               = "net.lingala.zip4j"      % "zip4j"                         % "2.11.5"
-  val dockerJavaClient    = "com.github.docker-java" % "docker-java"                   % dockerJavaVersion
+  val dockerJavaClient    = "com.github.docker-java" % "docker-java-core"              % dockerJavaVersion
   val dockerJavaTransport = "com.github.docker-java" % "docker-java-transport-zerodep" % dockerJavaVersion
   val akkaCluster         = "com.typesafe.akka"      %% "akka-cluster"                 % play.core.PlayVersion.akkaVersion
   val akkaClusterTyped    = "com.typesafe.akka"      %% "akka-cluster-typed"           % play.core.PlayVersion.akkaVersion
