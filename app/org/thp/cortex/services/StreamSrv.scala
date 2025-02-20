@@ -146,6 +146,7 @@ class StreamActor(
     case event: MigrationEvent =>
       val newMessages = currentMessages.get(event.modelName).flatten.fold(MigrationEventGroup(event)) {
         case e: MigrationEventGroup => e :+ event
+        case _                      => MigrationEventGroup(event)
       }
       context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + (event.modelName -> Some(newMessages))))
 
@@ -180,7 +181,7 @@ class StreamActor(
         wr.submit(Nil)
         logger.error("Multiple requests !")
       }
-      context.become(receiveWithState(Some(new WaitingRequest(sender)), currentMessages))
+      context.become(receiveWithState(Some(new WaitingRequest(sender())), currentMessages))
 
     case Submit =>
       waitingRequest match {

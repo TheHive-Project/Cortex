@@ -53,11 +53,11 @@ POST          /api/organization/responder/:responderId              org.thp.cort
 
 
 GET           /api/analyzerconfig/:analyzerConfigName               org.thp.cortex.controllers.AnalyzerConfigCtrl.get(analyzerConfigName)
-GET           /api/analyzerconfig                                   org.thp.cortex.controllers.AnalyzerConfigCtrl.list
+GET           /api/analyzerconfig                                   org.thp.cortex.controllers.AnalyzerConfigCtrl.list()
 PATCH         /api/analyzerconfig/:analyzerConfigName               org.thp.cortex.controllers.AnalyzerConfigCtrl.update(analyzerConfigName)
 
 GET           /api/responderconfig/:responderConfigName             org.thp.cortex.controllers.ResponderConfigCtrl.get(responderConfigName)
-GET           /api/responderconfig                                  org.thp.cortex.controllers.ResponderConfigCtrl.list
+GET           /api/responderconfig                                  org.thp.cortex.controllers.ResponderConfigCtrl.list()
 PATCH         /api/responderconfig/:responderConfigName             org.thp.cortex.controllers.ResponderConfigCtrl.update(responderConfigName)
 
 
@@ -103,7 +103,7 @@ POST          /api/user/:userId/key/renew                           org.thp.cort
 
 GET           /api/organization                                     org.thp.cortex.controllers.OrganizationCtrl.find
 POST          /api/organization/_search                             org.thp.cortex.controllers.OrganizationCtrl.find
-POST          /api/organization/_stats                              org.thp.cortex.controllers.OrganizationCtrl.stats
+POST          /api/organization/_stats                              org.thp.cortex.controllers.OrganizationCtrl.stats()
 GET           /api/organization/:id                                 org.thp.cortex.controllers.OrganizationCtrl.get(id)
 POST          /api/organization                                     org.thp.cortex.controllers.OrganizationCtrl.create
 PATCH         /api/organization/:id                                 org.thp.cortex.controllers.OrganizationCtrl.update(id)

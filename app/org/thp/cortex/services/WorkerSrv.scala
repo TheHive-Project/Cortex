@@ -6,8 +6,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import org.elastic4play._
 import org.elastic4play.controllers.{Fields, StringInputValue}
 import org.elastic4play.database.ModifyConfig
-import org.elastic4play.services.QueryDSL.any
-import org.elastic4play.services._
+import org.elastic4play.services.{UserSrv => _, _}
 import org.scalactic.Accumulation._
 import org.scalactic._
 import org.thp.cortex.models._
@@ -17,9 +16,9 @@ import play.api.{Configuration, Logger}
 import java.net.URL
 import java.nio.file.{Files, Path, Paths}
 import javax.inject.{Inject, Provider, Singleton}
-import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 @Singleton
@@ -212,13 +211,16 @@ class WorkerSrv @Inject() (
       }
       .map { worker =>
         val wmap = worker.flatten.map(w => w.id -> w).toMap
-        workerMapLock.synchronized(workerMap = wmap)
+        workerMapLock.synchronized {
+          workerMap = wmap
+        }
         logger.info(s"New worker list:\n\n\t${workerMap.values.map(a => s"${a.name} ${a.version}").mkString("\n\t")}\n")
       }
 
   }
 
-  def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(implicit
+  def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(
+      implicit
       authContext: AuthContext
   ): Future[Worker] = {
     val rawConfig = workerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
@@ -229,7 +231,7 @@ class WorkerSrv @Inject() (
       .validatedBy(_.read(rawConfig))
       .map(JsObject.apply)
 
-    val unknownConfigItems = (rawConfig.value.keySet -- configItems.map(_.name))
+    val unknownConfigItems = (rawConfig.value.keySet.toSet -- configItems.map(_.name))
       .foldLeft[Unit Or Every[AttributeError]](Good(())) {
         case (Good(_), ci) => Bad(One(UnknownAttributeError("worker.config", JsString(ci))))
         case (Bad(e), ci)  => Bad(UnknownAttributeError("worker.config", JsString(ci)) +: e)
@@ -254,10 +256,10 @@ class WorkerSrv @Inject() (
               .set("configuration", cfg.toString)
               .set("type", workerDefinition.tpe.toString)
               .addIfAbsent("dataTypeList", StringInputValue(workerDefinition.dataTypeList))
-          ),
-        {
+          ), {
           case One(e)         => Future.failed(e)
           case Every(es @ _*) => Future.failed(AttributeCheckingError(s"worker(${workerDefinition.name}).configuration", es))
+          case x              => Future.failed(UnknownAttributeError(s"$x", Json.obj()))
         }
       )
   }

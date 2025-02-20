@@ -1,25 +1,25 @@
 package org.thp.cortex.services
 
+import akka.actor.ActorSystem
+import akka.stream.Materializer
+import akka.stream.scaladsl.FileIO
+import org.elastic4play.BadRequestError
+import org.elastic4play.controllers.{Fields, FileInputValue}
+import org.elastic4play.database.ModifyConfig
+import org.elastic4play.services.{AttachmentSrv, AuthContext, CreateSrv, UpdateSrv}
+import org.thp.cortex.models._
+import play.api.libs.json._
+import play.api.{Configuration, Logger}
+
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Date
+import javax.inject.Inject
 import scala.concurrent.duration.DurationLong
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
-import play.api.libs.json._
-import play.api.{Configuration, Logger}
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.FileIO
-
-import javax.inject.Inject
-import org.thp.cortex.models._
-import org.elastic4play.BadRequestError
-import org.elastic4play.controllers.{Fields, FileInputValue}
-import org.elastic4play.database.ModifyConfig
-import org.elastic4play.services.{AttachmentSrv, AuthContext, CreateSrv, UpdateSrv}
 
 class JobRunnerSrv @Inject() (
     config: Configuration,
@@ -36,11 +36,11 @@ class JobRunnerSrv @Inject() (
     implicit val mat: Materializer
 ) {
 
-  val logger: Logger                                   = Logger(getClass)
-  lazy val analyzerExecutionContext: ExecutionContext  = akkaSystem.dispatchers.lookup("analyzer")
-  lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
-  val jobDirectory: Path                               = Paths.get(config.get[String]("job.directory"))
-  private val globalKeepJobFolder: Boolean             = config.get[Boolean]("job.keepJobFolder")
+  val logger: Logger                                           = Logger(getClass)
+  private lazy val analyzerExecutionContext: ExecutionContext  = akkaSystem.dispatchers.lookup("analyzer")
+  private lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
+  val jobDirectory: Path                                       = Paths.get(config.get[String]("job.directory"))
+  private val globalKeepJobFolder: Boolean                     = config.get[Boolean]("job.keepJobFolder")
 
   private val runners: Seq[String] = config
     .getOptional[Seq[String]]("job.runners")
@@ -104,17 +104,24 @@ class JobRunnerSrv @Inject() (
               .runWith(FileIO.toPath(attachmentFile)),
             10.minutes
           )
-        )
-          .map(_ => Some(attachmentFile))
+        ).map(_ => Some(attachmentFile))
       }
       .getOrElse(Success(None))
       .map {
         case Some(file) =>
           Json.obj("file" -> file.getFileName.toString, "filename" -> job.attachment().get.name, "contentType" -> job.attachment().get.contentType)
-        case None if job.data().nonEmpty && job.tpe() == WorkerType.responder =>
-          Json.obj("data" -> Json.parse(job.data().get))
-        case None if job.data().nonEmpty && job.tpe() == WorkerType.analyzer =>
-          Json.obj("data" -> job.data().get)
+        case _ =>
+          if (job.data().nonEmpty) {
+            if (job.tpe() == WorkerType.responder) {
+              Json.obj("data" -> Json.parse(job.data().get))
+            } else if (job.tpe() == WorkerType.analyzer) {
+              Json.obj("data" -> job.data().get)
+            } else {
+              Json.obj()
+            }
+          } else {
+            Json.obj()
+          }
       }
       .map { artifact =>
         val proxy_http = (worker.config \ "proxy_http").asOpt[String].fold(JsObject.empty) { proxy =>
@@ -209,6 +216,9 @@ class JobRunnerSrv @Inject() (
     val executionContext = worker.tpe() match {
       case WorkerType.analyzer  => analyzerExecutionContext
       case WorkerType.responder => responderExecutionContext
+      case x =>
+        logger.error(s"unhandled WorkerType $x")
+        analyzerExecutionContext
     }
     var maybeJobFolder: Option[Path] = None
 
@@ -268,7 +278,8 @@ class JobRunnerSrv @Inject() (
     )
   }
 
-  private def endJob(job: Job, status: JobStatus.Type, errorMessage: Option[String] = None, input: Option[String] = None)(implicit
+  private def endJob(job: Job, status: JobStatus.Type, errorMessage: Option[String] = None, input: Option[String] = None)(
+      implicit
       authContext: AuthContext
   ): Future[Job] = {
     val fields = Fields

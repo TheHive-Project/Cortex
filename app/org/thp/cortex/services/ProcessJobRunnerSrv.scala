@@ -8,7 +8,6 @@ import play.api.libs.json.Json
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 import javax.inject.{Inject, Singleton}
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.sys.process.{Process, ProcessLogger, _}
@@ -24,7 +23,7 @@ class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
   def checkCortexUtilsVersion(pythonVersion: String): Option[(Int, Int, Int)] =
     Try {
       (s"pip$pythonVersion" :: "show" :: "cortexutils" :: Nil)
-        .lineStream
+        .lazyLines
         .collectFirst {
           case pythonPackageVersionRegex(major, minor, patch) => (major.toInt, minor.toInt, patch.toInt)
         }
@@ -34,7 +33,7 @@ class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
       ec: ExecutionContext
   ): Try[Unit] = {
     val baseDirectory = Paths.get(command).getParent.getParent
-    val output        = mutable.StringBuilder.newBuilder
+    val output        = new StringBuilder()
     logger.info(s"Execute $command in $baseDirectory, timeout is ${timeout.fold("none")(_.toString)}")
     val cacertsFile = jobDirectory.resolve("input").resolve("cacerts")
     val env         = if (Files.exists(cacertsFile)) Seq("REQUESTS_CA_BUNDLE" -> cacertsFile.toString) else Nil

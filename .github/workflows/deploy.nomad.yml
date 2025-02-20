@@ -1,0 +1,113 @@
+name: deploy.nomad
+on:
+  workflow_dispatch:
+    inputs:
+      docker_image_version:
+        type: string
+        required: false
+        description: "Docker image version to deploy (default 'latest') (can be a PR tag)"
+        default: 'latest'
+  pull_request:
+    types: [ labeled ]
+
+# Here we define if we should go with a pr-XXX deployment version, or a vXXX (release) version
+# this depends on the event name
+# pull_request = pr-XXX
+# manual = vXXX
+env:
+  deployment_version: ${{ github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.number) || format('{0}{1}', (inputs.docker_image_version != 'latest' && 'v' || ''), inputs.docker_image_version) }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    runs-on:
+      - linux
+    outputs:
+      # We rewrite the deployment version, while keeping docker_image_version too
+      # docker_image_version will be used to pull image
+      # but we need additional value to pass to service names, as it can't contain "." in name
+      # Note: this rewrite could have been done in Nomad template to avoid putting logic here
+      # but we need this value in setup.yml workflow too !
+      expected_deployment_version: ${{ steps.get_rewriten_deployment_version.outputs.rewriten_deployment_version || format('{0}-{1}', 'pr', github.event.number) }}
+    steps:
+      # ...but we rewrite only if a docker_image_version is found
+      # meaning, only if manual trigger for now, otherwise it depends on pr-number
+      # When rewriting, we remove . and - characters because service names can't have "."
+      # so "3.2.0-1" becomes "320-1"
+      # and it does not make sense to keep something like "320-1" so we remove "-"
+      - name: Rewrite deployment_version
+        if: ${{ inputs.docker_image_version }}
+        id: get_rewriten_deployment_version
+        run: |
+          DV=${{ env.deployment_version }}
+          DV2=$(echo $DV | sed 's/\.//g')
+          echo rewriten_deployment_version=$(echo $DV2 | sed 's/-//g') >> $GITHUB_OUTPUT
+  deploy:
+    if: ${{ github.event.label.name == 'ci:deploy' || github.event_name == 'workflow_dispatch' }}
+    needs:
+      - prepare
+    permissions:
+      actions: read
+      contents: write
+    runs-on: [ self-hosted, linux, domain=sb ]
+    steps:
+      - run: echo ${{ github.event.number }}
+      - name: Get nomad token
+        uses: hashicorp/vault-action@v2
+        id: vault
+        with:
+          url: https://vault.service.infra.sb:8200
+          token: ${{ secrets.VAULT_TOKEN }}
+          caCertificate: ${{ secrets.VAULT_CA_CERT }}
+          tlsSkipVerify: true
+          secrets: |
+            /nomad-dev/creds/developers-token-dev secret_id | NOMAD_TOKEN;
+      - uses: actions/checkout@v4
+      - name: Setup `nomad-pack`
+        uses: hashicorp/setup-nomad-pack@main
+        id: setup
+      - name: Deploy job using Nomad Pack
+        id: run
+        # We pass two different version variables: one for Docker pull, the other for Nomad services
+        run: nomad-pack run -var docker_image_version=${{ inputs.docker_image_version || env.deployment_version }} -var service_version=${{ needs.prepare.outputs.expected_deployment_version }} ./deployment/nomad/packs/cortex
+        env:
+          NOMAD_ADDR: "http://10.30.4.180:4646"
+          NOMAD_TOKEN: "${{ env.NOMAD_TOKEN }}"
+  setup:
+    needs:
+      - prepare
+      - deploy
+    uses: ./.github/workflows/setup.fixtures.yml
+    with:
+      expected_deployment_version: ${{ needs.prepare.outputs.expected_deployment_version }}
+  comment:
+    needs:
+      - prepare
+      - deploy 
+      - setup
+    runs-on: [ linux ]
+    steps:
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: |
+            Your code (${{ github.sha }}) was deployed to <https://cortex-${{ needs.prepare.outputs.expected_deployment_version }}.web.dev.sb> :rocket:
+  notify-success:
+    if: success()
+    runs-on: [ linux ]
+    needs:
+      - prepare
+      - deploy
+      - setup
+    steps:
+      - name: Success notification
+        uses: act10ns/slack@v2
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL}}
+        with:
+          status: ${{ job.status }}
+          channel: "#ci"
+          message: ":tada: Cortex dev instance has been (re)deployed successfully :rocket: https://cortex-${{ needs.prepare.outputs.expected_deployment_version }}.web.dev.sb"
+

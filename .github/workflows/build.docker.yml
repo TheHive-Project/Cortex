@@ -1,0 +1,117 @@
+name: Build Docker image
+on:
+  pull_request:
+    types:
+      - labeled
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      image_id:
+        description: "ImageId of the docker image"
+        value: ${{ jobs.build.outputs.image_id }}
+      image_digest:
+        description: "Digest of the image (sha256:xxx)"
+        value: ${{ jobs.build.outputs.image_digest }}
+      image_metadata:
+        description: "Metadata as json"
+        value: ${{ jobs.build.outputs.image_metadata }}
+      image_version:
+        description: "Version number of the Docker image"
+        value: ${{ jobs.build.outputs.image_version }}
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    permissions:
+      actions: read
+      contents: write
+    runs-on: [ self-hosted, linux, domain=sb ]
+    outputs:
+      image_version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - uses: ./.github/actions/get_code_version
+        id: get_version
+
+  build:
+    if: ${{ github.event.label.name == 'docker:build' || github.event_name == 'workflow_dispatch' }}
+    needs:
+      - prepare
+    permissions:
+      actions: read
+      contents: read
+      packages: write
+    runs-on: [ self-hosted, linux, domain=sb ]
+    outputs:
+      image_id: ${{ steps.push.outputs.imageid }}
+      image_digest: ${{ steps.push.outputs.digest }}
+      image_metadata: ${{ steps.push.outputs.metadata }}
+      image_version: ${{ needs.prepare.outputs.image_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - uses: coursier/setup-action@v1
+        with:
+          jvm: corretto:11
+          apps: sbt
+
+      - run: keytool -import -noprompt -trustcacerts -alias StrangeBeeCA -file /etc/ssl/certs/strangebee-sb-caroot.pem -keystore $JAVA_HOME/lib/security/cacerts  -storepass changeit || true
+
+      - uses: actions/setup-node@v3
+        timeout-minutes: 15
+        continue-on-error: true
+        with:
+          node-version: 18.16
+
+      - name: Install bower
+        run: npm install -g bower
+
+      - name: Build packages
+        run: sbt Docker/stage
+
+      # I'm not really at ease with these tags
+      # to me "latest" should be set manually, through a tag, for now
+      # but further, it should "calculate" it, regarding the latest Docker image version available
+      # for exemple if latest available is 3.2.0-1 and the sbt command returns 3.2.1-1,
+      # then latest should apply
+      # Moreover, the -1 is VERY important, because it increases with the number of builds:
+      # - if a Docker image exists with tag 3.2.0-1, it should NOT be overidden but a new
+      # 3.2.0-2 should be created, and the -1 cleaned up later 
+      - name: Generate full docker tags
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            name=${{ vars.SB_GHCR }}/cortex
+          tags: |
+            type=raw,value=${{ github.event.label.name == 'docker:latest' && 'latest' }}
+            type=raw,value=${{ needs.prepare.outputs.image_version }}
+            type=raw,value=${{ github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.number) || format('{0}-{1}', 'release', needs.prepare.outputs.image_version) }}
+          labels: |
+            org.opencontainers.image.title=cortex
+            org.opencontainers.image.description=a Powerful Observable Analysis and Active Response Engine
+            org.opencontainers.image.vendor=StrangeBee
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push docker image
+        uses: docker/build-push-action@v3
+        id: push
+        with:
+          context: target/docker/stage
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}

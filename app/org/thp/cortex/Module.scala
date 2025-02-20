@@ -17,7 +17,7 @@ import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.{Configuration, Environment, Logger, Mode}
 
 import java.lang.reflect.Modifier
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 

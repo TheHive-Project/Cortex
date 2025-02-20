@@ -1,0 +1,21 @@
+---
+name: 'Get latest version of code'
+description: 'Simply run sbt command to get the latest app_version of code currently built'
+outputs:
+  app_version:
+    description: "App version number, like '5.2.1' for example"
+    value: ${{ steps.get_version.outputs.app_version }}
+runs:
+  using: "composite"
+  steps:
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: corretto:11
+        apps: sbt
+    - name: Get app_version
+      id: get_version
+      shell: bash
+      run: |
+        V=$(sbt -no-colors --error "print version" | awk 'END{print $1}')
+        echo "app_version=$V"
+        echo "app_version=$V" >> $GITHUB_OUTPUT

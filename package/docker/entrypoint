@@ -17,7 +17,7 @@ RESPONDER_URLS=()
 IFS=',' read -r -a RESPONDER_URLS <<< "${responder_urls:-$responder_url}"
 START_DOCKER=${start_docker:-0}
 SHOW_SECRET=${show_secret:-0}
-DAEMON_USER=${daemon_user:-cortex}
+DAEMON_USER=${daemon_user:-1001:1001}
 JOB_DIRECTORY=${job_directory:-/tmp/cortex-jobs}
 DOCKER_JOB_DIRECTORY=${docker_job_directory:-}
 
@@ -36,7 +36,7 @@ function usage {
     --analyzer-url <url>         | where analyzers are located (url or path)
     --responder-url <url>        | where responders are located (url or path)
     --start-docker               | start a internal docker (inside container) to run analyzers/responders
-    --daemon-user <user>         | run cortex using this user
+    --daemon-user <uid>[:<gid>]  | run cortex using this user
 _EOF_
   exit 1
 }
@@ -117,7 +117,6 @@ then
     echo -n "\"$1\""
     shift
     for U do echo -n ",\"$U\""; done
-#    printf ",\"%s\"" $@
   }
   test ${#ANALYZER_URLS} = 0 && ANALYZER_URLS+=("$DEFAULT_ANALYZER_URL")
   echo "analyzer.urls=[$(join_urls "${ANALYZER_URLS[@]}")]" >> "$CONFIG_FILE"
@@ -130,28 +129,67 @@ fi
 
 if test $START_DOCKER = 1
 then
-  usermod --append --groups docker "$DAEMON_USER"
-  dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 &> /dev/null &
+  if [[ "$UID" != 0 ]]
+  then
+    echo 'You cannot start the Docker daemon because the current user is not root'
+    exit 1
+  fi
+  if ! ip link add dummy0 type dummy
+  then
+    echo 'You cannot start the Docker daemon because the current container is not privileged'
+    exit 1
+  fi
+  ip link delete dummy0
+  dockerd --host=unix:///var/run/docker.sock &> /dev/null &
   DOCKER_PID=$!
 fi
 
-echo config file is:
-cat "$CONFIG_FILE"
-touch /var/log/cortex/application.log
-chown -R "$DAEMON_USER" /var/log/cortex
-chown -R "$DAEMON_USER" /etc/cortex
-chown -R "$DAEMON_USER" "$CONFIG_FILE"
-test -e /var/run/docker.sock && chown "$DAEMON_USER" /var/run/docker.sock
-if test -n "$JOB_DIRECTORY"
+if test ! -d "$JOB_DIRECTORY"
 then
-  mkdir -p "$JOB_DIRECTORY"
-  chown -R "$DAEMON_USER" "$JOB_DIRECTORY"
+  install -d -o cortex -p "$JOB_DIRECTORY" 2> /dev/null
 fi
 
-su "$DAEMON_USER" -c "bin/cortex \
-  -Dconfig.file=$CONFIG_FILE \
-  -Dlogger.file=/etc/cortex/logback.xml \
-  -Dpidfile.path=/dev/null \
-  $*"
+if [[ "$UID" == 0 ]]
+then
+  if [[ "${DAEMON_USER}" == *:* ]]
+  then
+    DAEMON_UID="${DAEMON_USER%%:*}"
+    DAEMON_GID="${DAEMON_USER##*:}"
+    echo "Using user ${DAEMON_UID} and group ${DAEMON_GID}"
+    groupmod -g "${DAEMON_GID}" cortex
+  else
+    DAEMON_UID="${DAEMON_USER}"
+    echo "Using user ${DAEMON_UID}"
+  fi
+  usermod -u "${DAEMON_UID}" cortex
 
-test $START_DOCKER = 1 && kill ${DOCKER_PID}
+  chown -R cortex:cortex "$CONFIG_FILE" /etc/cortex
+  test -e /var/run/docker.sock && chown cortex:cortex /var/run/docker.sock
+  su - cortex -c "/opt/cortex/bin/cortex \
+    -Dconfig.file=$CONFIG_FILE \
+    -Dlogger.file=/etc/cortex/logback.xml \
+    -Dpidfile.path=/dev/null \
+    $@" &
+else
+  /opt/cortex/bin/cortex \
+    -Dconfig.file=$CONFIG_FILE \
+    -Dlogger.file=/etc/cortex/logback.xml \
+    -Dpidfile.path=/dev/null \
+    $@ &
+fi
+CORTEX_PID=$!
+
+exit_func() {
+  kill "$CORTEX_PID"
+  wait "$CORTEX_PID"
+  if [[ -n "$DOCKER_PID" ]]
+  then
+    kill "$DOCKER_PID"
+    wait "$DOCKER_PID"
+  fi
+}
+
+trap "exit_func; exit" SIGINT
+trap "exit_func; exit" SIGTERM
+wait
+

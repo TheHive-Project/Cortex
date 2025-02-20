@@ -3,9 +3,10 @@
 import footerTpl from './footer.html';
 
 class FooterController {
-  constructor($log) {
+  constructor($log, $scope) {
     'ngInject';
     this.$log = $log;
+    $scope.date = new Date();
   }
 }
 

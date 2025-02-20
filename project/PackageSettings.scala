@@ -105,7 +105,6 @@ object PackageSettings {
         case other                             => Seq(other)
       } ++ Seq(
         file("package/cortex.service") -> "package/cortex.service",
-        file("package/cortex.conf")    -> "package/cortex.conf",
         file("package/cortex")         -> "package/cortex",
         file("package/logback.xml")    -> "conf/logback.xml"
       )

@@ -1,9 +1,7 @@
 package org.thp.cortex.models
 
 import scala.concurrent.Future
-
-import play.api.libs.json.{JsArray, JsBoolean, JsObject, JsString}
-
+import play.api.libs.json.{Format, JsArray, JsBoolean, JsObject, JsString}
 import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.models.{AttributeDef, BaseEntity, EntityDef, HiveEnumeration, ModelDef, AttributeFormat => F, AttributeOption => O}
 import org.elastic4play.services.{User => EUser}
@@ -11,7 +9,7 @@ import org.elastic4play.services.{User => EUser}
 object UserStatus extends Enumeration with HiveEnumeration {
   type Type = Value
   val Ok, Locked     = Value
-  implicit val reads = enumFormat(this)
+  implicit val reads: Format[Value] = enumFormat(this)
 }
 
 trait UserAttributes { _: AttributeDef =>
