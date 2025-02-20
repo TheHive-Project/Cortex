@@ -20,6 +20,7 @@ SHOW_SECRET=${show_secret:-0}
 DAEMON_USER=${daemon_user:-1001:1001}
 JOB_DIRECTORY=${job_directory:-/tmp/cortex-jobs}
 DOCKER_JOB_DIRECTORY=${docker_job_directory:-}
+KUBERNETES_JOB_PVC=${kubernetes_job_pvc:-}
 
 function usage {
   cat <<- _EOF_
@@ -33,6 +34,7 @@ function usage {
     --show-secret                | show the generated secret
     --job-directory <dir>        | use this directory to store job files
     --docker-job-directory <dir> | indicate the job directory in the host (not inside container)
+    --kubernetes-job-pvc <name>  | indicate the ReadWriteMany persistent volume claim holding job directory
     --analyzer-url <url>         | where analyzers are located (url or path)
     --responder-url <url>        | where responders are located (url or path)
     --start-docker               | start a internal docker (inside container) to run analyzers/responders
@@ -56,6 +58,7 @@ do
     "--show-secret")          SHOW_SECRET=1;;
     "--job-directory")        shift; JOB_DIRECTORY=$1;;
     "--docker-job-directory") shift; DOCKER_JOB_DIRECTORY=$1;;
+    "--kubernetes-job-pvc")   shift; KUBERNETES_JOB_PVC=$1;;
     "--analyzer-path")        echo "--analyzer-path is deprecated, please use --analyzer-url"
                               shift; ANALYZER_URLS+=("$1");;
     "--responder-path")       echo "--responder-path is deprecated, please use --responder-url"
@@ -112,6 +115,7 @@ then
 
   test -n "$JOB_DIRECTORY" && echo "job.directory=\"$JOB_DIRECTORY\"" >> "$CONFIG_FILE"
   test -n "$DOCKER_JOB_DIRECTORY" && echo "job.dockerDirectory=\"$DOCKER_JOB_DIRECTORY\"" >> "$CONFIG_FILE"
+  test -n "$KUBERNETES_JOB_PVC" && echo "job.kubernetes.persistentVolumeClaimName=\"$KUBERNETES_JOB_PVC\"" >> "$CONFIG_FILE"
 
   function join_urls {
     echo -n "\"$1\""
