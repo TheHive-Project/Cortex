@@ -42,7 +42,6 @@ object PackageSettings {
     rpmVendor := organizationName.value,
     rpmUrl := organizationHomepage.value.map(_.toString),
     rpmLicense := Some("AGPL"),
-    rpmRequirements += "java-11-openjdk-headless",
     Rpm / maintainerScripts := maintainerScriptsFromDirectory(
       baseDirectory.value / "package" / "rpm",
       Seq(RpmConstants.Pre, RpmConstants.Preun, RpmConstants.Post, RpmConstants.Postun)
@@ -79,7 +78,6 @@ object PackageSettings {
       }
     },
     debianPackageRecommends := Seq("elasticsearch"),
-    debianPackageDependencies += "default-jre-headless | openjdk-11-jre-headless",
     Debian / maintainerScripts := maintainerScriptsFromDirectory(
       baseDirectory.value / "package" / "debian",
       Seq(DebianConstants.Postinst, DebianConstants.Prerm, DebianConstants.Postrm)
