@@ -100,6 +100,7 @@ POST          /api/user/:userId/password/change                     org.thp.cort
 GET           /api/user/:userId/key                                 org.thp.cortex.controllers.UserCtrl.getKey(userId)
 DELETE        /api/user/:userId/key                                 org.thp.cortex.controllers.UserCtrl.removeKey(userId)
 POST          /api/user/:userId/key/renew                           org.thp.cortex.controllers.UserCtrl.renewKey(userId)
+POST          /api/user/:userId/key/set                             org.thp.cortex.controllers.UserCtrl.setKey(userId)
 
 GET           /api/organization                                     org.thp.cortex.controllers.OrganizationCtrl.find
 POST          /api/organization/_search                             org.thp.cortex.controllers.OrganizationCtrl.find

@@ -245,4 +245,13 @@ class UserCtrl @Inject() (
       key <- authSrv.renewKey(userId)
     } yield Ok(key)
   }
+
+  @Timed
+  def setKey(userId: String): Action[Fields] = authenticated(Roles.orgAdmin, Roles.superAdmin).async(fieldsBodyParser) { implicit request =>
+    for {
+      _ <- checkUserOrganization(userId)
+      keyInput <- request.body.getString("key").fold(Future.failed[String](MissingAttributeError("key")))(Future.successful)
+      key      <- authSrv.setKey(userId, keyInput)
+    } yield Ok(key)
+  }
 }

@@ -82,6 +82,9 @@ class MultiAuthSrv(val authProviders: Seq[AuthSrv], implicit val ec: ExecutionCo
   override def getKey(username: String)(implicit authContext: AuthContext): Future[String] =
     forAllAuthProvider(_.getKey(username))
 
+  override def setKey(username: String, key: String)(implicit authContext: AuthContext): Future[String] =
+    forAllAuthProvider(_.setKey(username, key))
+
   override def removeKey(username: String)(implicit authContext: AuthContext): Future[Unit] =
     forAllAuthProvider(_.removeKey(username))
 }

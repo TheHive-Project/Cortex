@@ -46,6 +46,10 @@ class KeyAuthSrv @Inject() (userSrv: UserSrv, implicit val ec: ExecutionContext,
   override def getKey(username: String)(implicit authContext: AuthContext): Future[String] =
     userSrv.get(username).map(_.key().getOrElse(throw BadRequestError(s"User $username hasn't key")))
 
+  override def setKey(username: String, key: String)(implicit authContext: AuthContext): Future[String] =
+    if (key.length < 32) Future.failed(BadRequestError("A safe key must be at least 32 chars"))
+    else userSrv.update(username, Fields.empty.set("key", key)).map(_ => key)
+
   override def removeKey(username: String)(implicit authContext: AuthContext): Future[Unit] =
     userSrv.update(username, Fields.empty.set("key", JsArray())).map(_ => ())
 }

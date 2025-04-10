@@ -65,6 +65,10 @@ jobs:
       - name: Set a password for org admin
         run: |
           curl -k -L -u admin:pwd -H 'Content-Type: application/json' ${{ env.CORTEX_URL }}/api/user/sb_admin/password/set -d '{"password": "strangebee"}'
+      - name: Set api key for org admin
+        # cortex api key stored in GH organisation secret (not inside repo secret)
+        run: |
+          curl -k -L -u admin:pwd -H 'Content-Type: application/json' ${{ env.CORTEX_URL }}/api/user/sb_admin/key/set -d '{"key": "${{ secrets.CORTEX_API_KEY }}"}'
       - name: Enable analyzer ValidateObservable
         run: |
           curl -k -L -u sb_admin:strangebee -H 'Content-Type: application/json' ${{ env.CORTEX_URL }}/api/organization/analyzer/ValidateObservable_1_0 -d '{

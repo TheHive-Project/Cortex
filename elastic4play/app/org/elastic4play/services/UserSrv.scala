@@ -60,6 +60,9 @@ trait AuthSrv {
     Future.failed(AuthorizationError("Renew API key is not supported"))
   def getKey(username: String)(implicit authContext: AuthContext): Future[String] = Future.failed(AuthorizationError("Get API key is not supported"))
 
+  def setKey(username: String, key: String)(implicit authContext: AuthContext): Future[String] =
+    Future.failed(AuthorizationError("Set API key is not supported"))
+
   def removeKey(username: String)(implicit authContext: AuthContext): Future[Unit] =
     Future.failed(AuthorizationError("Remove API key is not supported"))
 }
