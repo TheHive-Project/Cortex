@@ -1,6 +1,6 @@
 package org.thp.cortex.services
 
-import akka.NotUsed
+import akka.{Done, NotUsed}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import org.elastic4play._
@@ -44,6 +44,7 @@ class WorkerSrv @Inject() (
   private lazy val jobRunnerSrv: JobRunnerSrv = jobRunnerSrvProvider.get
   private var workerMap                       = Map.empty[String, WorkerDefinition]
   private object workerMapLock
+  private val updateDockerImage: Boolean = config.get[Boolean]("worker.updateDockerImage")
 
   rescan()
 
@@ -219,6 +220,11 @@ class WorkerSrv @Inject() (
           workerMap = wmap
         }
         logger.info(s"New worker list:\n\n\t${workerMap.values.map(a => s"${a.name} ${a.version}").mkString("\n\t")}\n")
+        if (updateDockerImage) {
+          userSrv.inInitAuthContext { implicit authContext =>
+            updateWorkerDockerImage
+          }
+        }
       }
 
   }
@@ -291,4 +297,24 @@ class WorkerSrv @Inject() (
 
   def update(workerId: String, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Worker] =
     get(workerId).flatMap(worker => update(worker, fields, modifyConfig))
+
+  def updateWorkerDockerImage(implicit authContext: AuthContext): Future[Done] = {
+    import org.elastic4play.services.QueryDSL._
+    find(contains("dockerImage"), None, Nil)
+      ._1
+      .mapAsync(3) { worker =>
+        val done = for {
+          workerDefinition <- workerMap.get(worker.workerDefinitionId())
+          newDockerImage   <- workerDefinition.dockerImage
+          oldDockerImage   <- worker.dockerImage()
+          if oldDockerImage != newDockerImage
+        } yield update(worker, Fields.empty.set("dockerImage", newDockerImage)).map(_ => ())
+        done.getOrElse(Future.successful(())).recoverWith {
+          case error =>
+            logger.warn(s"Unable to update docker image of worker ${worker.workerDefinitionId}", error)
+            Future.failed(error)
+        }
+      }
+      .run()
+  }
 }
