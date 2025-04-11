@@ -6,6 +6,7 @@ job [[ template "job_name" . ]] {
   group "backend_services" {
     network {
       mode = "bridge"
+      dns { servers = ["172.17.0.1"] }
     }
 
     service {
@@ -47,6 +48,7 @@ job [[ template "job_name" . ]] {
     network {
       mode = "bridge"
       port "http" {}
+      dns { servers = ["172.17.0.1"] }
     }
 
     [[ if var "register_service" . ]]
@@ -76,8 +78,19 @@ job [[ template "job_name" . ]] {
       }
     }
 
+    volume "jobs" {
+      type = "host"
+      read_only = false
+      source = "cortex-dev-configs"
+    }
+
     task "cortex" {
       driver = "docker"
+
+      volume_mount {
+        volume      = "jobs"
+        destination = "/data/cortex-dev-configs/"
+      }
 
       restart {
         attempts = 6
@@ -85,11 +98,10 @@ job [[ template "job_name" . ]] {
       }
 
       env {
+        # Do not configure automatically with env variable
+        # We'll pass the configuration file ourselves from a template
         no_config = 1
-        job_directory = "/data/cortex-[[ var "service_version" . ]]/jobs"
-        docker_job_directory = "/data/cortex-[[ var "service_version" . ]]/jobs"
-        start_docker = 1
-      }  
+      }
 
       artifact {
           source      = "https://vault.service.infra.sb:8200/v1/pki/ca/pem"
@@ -98,8 +110,12 @@ job [[ template "job_name" . ]] {
       }
 
       config {
+        [[ if eq true (var "from_docker_hub" . )]]
+        image      = "thehiveproject/cortex:[[ (var "docker_image_version" .) ]]"
+        [[ else ]]
         image      = "[[ var "docker_image" . ]][[ if hasPrefix "sha256" (var "docker_image_version" .) ]][[ "@" ]][[ else ]][[ ":" ]][[ end ]][[ (var "docker_image_version" .) ]]"
-        privileged = true
+        [[ end ]]
+
         ports      = [ "http" ]
         entrypoint = [ "/bin/bash" ]
         args       = [
@@ -109,6 +125,9 @@ job [[ template "job_name" . ]] {
           apt install -y ca-certificates-java
           /usr/sbin/update-ca-certificates
           keytool -importcert -alias strangebee -noprompt -file /local/strangebee-sb-caroot.crt -keystore $JAVA_HOME/lib/security/cacerts -storepass changeit
+          # You absolutely need to create the required subdirectories
+          # otherwise it will fail silently !!!
+          su cortex -c 'mkdir -p /data/cortex-dev-configs/[[ var "service_version" . ]]/jobs'
           /opt/cortex/entrypoint
           EOF
         ]
@@ -116,8 +135,7 @@ job [[ template "job_name" . ]] {
           "/var/run/docker.sock:/var/run/docker.sock",
           "local/application.conf:/etc/cortex/application.conf",
           "local/logback.xml:/etc/cortex/logback.xml",
-          "local/analyzers.json:/etc/cortex/analyzers.json",
-          "local/responders.json:/etc/cortex/responders.json"
+          "local/analyzers.json:/etc/cortex/analyzers.json"
         ]
       }
 
@@ -128,15 +146,21 @@ job [[ template "job_name" . ]] {
       template {
         destination = "local/application.conf"
         data        = <<-EOF
+          # found frome here: https://github.com/StrangeBee/Cortex/blob/develop/conf/application.sample
+          # new requirement !!!!
+          docker {
+            autoUpdate = true
+            pullImageTimeout = 5000
+          }
           play.server.http.port = {{ env "NOMAD_PORT_http" }}
           play.http.secret.key  = "[[ randAlphaNum 128 | sha256sum ]]"
           search {
-            index = cortex
+            index = [[ list "cortex" (var "service_version" .) | join "-" | quote ]]
             uri   = "http://localhost:9200"
           }
-          cache.job           = 10 minutes
-          job.directory       = "/data/cortex-[[ var "docker_image_version" . ]]/jobs"
-          job.dockerDirectory = "/data/cortex-[[ var "docker_image_version" . ]]/jobs"
+          cache.job           = 10m
+          job.directory       = "/data/cortex-dev-configs/[[ var "service_version" . ]]/jobs"
+          job.dockerDirectory = "/data/cortex-dev-configs/[[ var "service_version" . ]]/jobs"
 
           {{ with secret "dev/data/microsoft/oauth2" }}
           auth {
@@ -169,11 +193,11 @@ job [[ template "job_name" . ]] {
 
           analyzer.urls  = [
             "https://download.thehive-project.org/analyzers.json"
+            "https://download.thehive-project.org/repository/download.thehive-project.org/analyzers-devel.json"
             "/etc/cortex/analyzers.json"
           ]
           responder.urls = [
             "https://download.thehive-project.org/responders.json"
-            "/etc/cortex/responders.json"
           ]
         EOF
       }
@@ -182,7 +206,7 @@ job [[ template "job_name" . ]] {
         destination = "local/logback.xml"
         data        = <<-EOF
           <?xml version="1.0" encoding="UTF-8"?>
-          <configuration debug="false">
+          <configuration debug=[[ var "cortex_debug" . | quote ]]>
 
               <conversionRule conversionWord="coloredLevel"
                               converterClass="play.api.libs.logback.ColoredLevel"/>
@@ -198,12 +222,12 @@ job [[ template "job_name" . ]] {
                   <appender-ref ref="STDOUT"/>
               </appender>
 
-              <logger name="play" level="INFO"/>
-              <logger name="application" level="INFO"/>
+              <logger name="play" level=[[ var "debug_level" . | quote ]] />
+              <logger name="application" level=[[ var "debug_level" . | quote ]] />
 
               <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF"/>
 
-              <root level="INFO">
+              <root level=[[ var "debug_level" . | quote ]]>
                   <appender-ref ref="ASYNCSTDOUT"/>
               </root>
 
@@ -211,14 +235,13 @@ job [[ template "job_name" . ]] {
         EOF
       }
 
-      template {
-        destination = "local/analyzers.json"
-        data        = <<-EOF
-        [
-          [[ $seq := until 11 ]]
-          [[- range $idx := $seq ]]
-            [[ `{
-              "name": "testAnalyzer_REPLACEME",
+    template {
+          destination = "local/analyzers.json"
+          data        = <<-EOF
+          [
+              [[ range $y := untilStep 1 11 1 ]]
+              {
+              "name": "testAnalyzer_[[ $y ]]",
               "version": "1.0",
               "author": "TheHive-Project",
               "url": "https://github.com/thehive-project/thehive",
@@ -229,121 +252,55 @@ job [[ template "job_name" . ]] {
               "dataTypeList": ["domain", "ip", "hash", "other"],
               "dockerImage": "tooom/test_analyzer",
               "configurationItems": [
-                {
-                  "name": "artifacts",
-                  "description": "Artifacts to include to output report in JSON format (ex: {\"data\":\"8.8.8.8\",\"dataType\":\"ip\"})",
-                  "type": "string",
-                  "multi": true,
-                  "required": false
-                },
-                {
-                  "name": "summary",
-                  "description": "The value of the summary returned by the analyzer",
-                  "type": "string",
-                  "multi": false,
-                  "required": false
-                },
-                {
-                  "name": "delay",
-                  "description": "The delay, in seconds",
-                  "type": "number",
-                  "multi": false,
-                  "required": false
-                },
-                {
-                  "name": "errorMessage",
-                  "description": "If set, make the analyzer fails with this message",
-                  "type": "string",
-                  "multi": false,
-                  "required": false
-                },
-                {
-                  "name": "report",
-                  "description": "The report",
-                  "type": "string",
-                  "multi": false,
-                  "required": false
-                },
-                {
-                  "name": "operations",
-                  "description": "The operations",
-                  "type": "string",
-                  "multi": true,
-                  "required": false
-                }
+                  {
+                      "name": "artifacts",
+                      "description": "Artifacts to include to output report in JSON format (ex: {\"data\":\"8.8.8.8\",\"dataType\":\"ip\"})",
+                      "type": "string",
+                      "multi": true,
+                      "required": false
+                  },
+                  {
+                      "name": "summary",
+                      "description": "The value of the summary returned by the analyzer",
+                      "type": "string",
+                      "multi": false,
+                      "required": false
+                  },
+                  {
+                      "name": "delay",
+                      "description": "The delay, in seconds",
+                      "type": "number",
+                      "multi": false,
+                      "required": false
+                  },
+                  {
+                      "name": "errorMessage",
+                      "description": "If set, make the analyzer fails with this message",
+                      "type": "string",
+                      "multi": false,
+                      "required": false
+                  },
+                  {
+                      "name": "report",
+                      "description": "The report",
+                      "type": "string",
+                      "multi": false,
+                      "required": false
+                  },
+                  {
+                      "name": "operations",
+                      "description": "The operations",
+                      "type": "string",
+                      "multi": true,
+                      "required": false
+                  }
               ]
-            }` | replace "REPLACEME" ($idx | toString) ]][[ if eq false (eq $idx ($seq | last)) ]],[[ end ]]
-        [[- end ]]
-        ]
-        EOF
+              } [[ if not (eq $y 10) ]],[[ end ]]
+              [[ end ]]
+          ]
+          EOF
       }
 
-      template {
-        destination = "local/responders.json"
-        data        = <<-EOF
-        [
-          [[ $seq := until 11 ]]
-          [[- range $idx := $seq ]]
-            [[ `{
-              "name": "testResponder_REPLACEME",
-              "version": "1.0",
-              "author": "TheHive-Project",
-              "url": "https://github.com/thehive-project/thehive",
-              "license": "AGPL-V3",
-              "baseConfig": "testAnalyzer",
-              "config": {},
-              "description": "Fake analyzer used for functional tests",
-              "dataTypeList": ["thehive:case", "thehive:alert", "thehive:case_task", "thehive:case_task_log", "thehive:case_artifact"],
-              "dockerImage": "tooom/test_analyzer",
-              "configurationItems": [
-                {
-                  "name": "artifacts",
-                  "description": "Artifacts to include to output report in JSON format (ex: {\"data\":\"8.8.8.8\",\"dataType\":\"ip\"})",
-                  "type": "string",
-                  "multi": true,
-                  "required": false
-                },
-                {
-                  "name": "summary",
-                  "description": "The value of the summary returned by the analyzer",
-                  "type": "string",
-                  "multi": false,
-                  "required": false
-                },
-                {
-                  "name": "delay",
-                  "description": "The delay, in seconds",
-                  "type": "number",
-                  "multi": false,
-                  "required": false
-                },
-                {
-                  "name": "errorMessage",
-                  "description": "If set, make the analyzer fails with this message",
-                  "type": "string",
-                  "multi": false,
-                  "required": false
-                },
-                {
-                  "name": "report",
-                  "description": "The report",
-                  "type": "string",
-                  "multi": false,
-                  "required": false
-                },
-                {
-                  "name": "operations",
-                  "description": "The operations",
-                  "type": "string",
-                  "multi": true,
-                  "required": false
-                }
-              ]
-            }`| replace "REPLACEME" ($idx | toString) ]][[ if eq false (eq $idx ($seq | last)) ]],[[ end ]]
-        [[- end ]]
-        ]
-        EOF
-      }
       resources {
         cpu  = 500
         memory = 1024

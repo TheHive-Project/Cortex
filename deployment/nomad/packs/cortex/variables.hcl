@@ -54,11 +54,29 @@ variable "docker_image" {
 variable "docker_image_version" {
   description = "Docker image version to be used by deployment"
   type        = string
-  default     = "latest"
+  default     = "devel"
+}
+
+variable "from_docker_hub" {
+  description = "if we should deploy from Docker hub instead of ghcr.io"
+  type        = bool
+  default     = "false"
 }
 
 variable "service_version" {
   description = "Version name used by services and URL"
   type        = string
   default     = "latest"
+}
+
+variable "cortex_debug" {
+  description = "Cortex Debug"
+  type        = string
+  default     = "false"
+}
+
+variable "debug_level" {
+  description = "Cortex Debug Level"
+  type        = string
+  default     = "INFO"
 }

@@ -1,4 +1,4 @@
-name: Build Docker image
+name: build.docker.image.dev
 on:
   pull_request:
     types:
@@ -86,6 +86,10 @@ jobs:
       # Moreover, the -1 is VERY important, because it increases with the number of builds:
       # - if a Docker image exists with tag 3.2.0-1, it should NOT be overidden but a new
       # 3.2.0-2 should be created, and the -1 cleaned up later 
+      #####
+      # TODO: work on tagging
+      #
+      #
       - name: Generate full docker tags
         id: meta
         uses: docker/metadata-action@v4
@@ -93,9 +97,8 @@ jobs:
           images: |
             name=${{ vars.SB_GHCR }}/cortex
           tags: |
-            type=raw,value=${{ github.event.label.name == 'docker:latest' && 'latest' }}
+            type=raw,value=devel
             type=raw,value=${{ needs.prepare.outputs.image_version }}
-            type=raw,value=${{ github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.number) || format('{0}-{1}', 'release', needs.prepare.outputs.image_version) }}
           labels: |
             org.opencontainers.image.title=cortex
             org.opencontainers.image.description=a Powerful Observable Analysis and Active Response Engine
