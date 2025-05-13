@@ -8,11 +8,12 @@ import play.api.{Configuration, Logger}
 
 import java.nio.file.{Files, Path}
 import java.time.Duration
+import java.util.Collections
 import java.util.concurrent.{Executors, TimeUnit}
 import scala.concurrent.blocking
 import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class DockerClient(config: Configuration) {
   private lazy val logger: Logger           = Logger(getClass.getName)
@@ -32,25 +33,33 @@ class DockerClient(config: Configuration) {
       waitResult
     }
 
-  def prepare(image: String, jobDirectory: Path, jobBaseDirectory: Path, dockerJobBaseDirectory: Path, timeout: FiniteDuration): Try[String] = Try {
-    logger.info(s"image $image pull result: ${pullImage(image)}")
-    val containerCmd = underlyingClient
-      .createContainerCmd(image)
-      .withHostConfig(configure(jobDirectory, jobBaseDirectory, dockerJobBaseDirectory))
-    if (Files.exists(jobDirectory.resolve("input").resolve("cacerts")))
-      containerCmd.withEnv(s"REQUESTS_CA_BUNDLE=/job/input/cacerts")
-    val containerResponse = containerCmd.exec()
-    logger.info(
-      s"about to start container ${containerResponse.getId}\n" +
-        s"  timeout: ${timeout.toString}\n" +
-        s"  image  : $image\n" +
-        s"  volumes : ${jobDirectory.toAbsolutePath}"
-    )
-    if (containerResponse.getWarnings.nonEmpty) logger.warn(s"${containerResponse.getWarnings.mkString(", ")}")
-    scheduleContainerTimeout(containerResponse.getId, timeout)
+  def pullImageIfRequired(image: String): Try[Unit] =
+    if (imageExists(image)) Success(())
+    else {
+      logger.info(s"pulling image $image ...")
+      pullImage(image)
+    }
 
-    containerResponse.getId
-  }
+  def prepare(image: String, jobDirectory: Path, jobBaseDirectory: Path, dockerJobBaseDirectory: Path, timeout: FiniteDuration): Try[String] =
+    pullImageIfRequired(image)
+      .map { _ =>
+        val containerCmd = underlyingClient
+          .createContainerCmd(image)
+          .withHostConfig(configure(jobDirectory, jobBaseDirectory, dockerJobBaseDirectory))
+        if (Files.exists(jobDirectory.resolve("input").resolve("cacerts")))
+          containerCmd.withEnv(s"REQUESTS_CA_BUNDLE=/job/input/cacerts")
+        val containerResponse = containerCmd.exec()
+        logger.info(
+          s"about to start container ${containerResponse.getId}\n" +
+            s"  timeout: ${timeout.toString}\n" +
+            s"  image  : $image\n" +
+            s"  volumes : ${jobDirectory.toAbsolutePath}"
+        )
+        if (containerResponse.getWarnings.nonEmpty) logger.warn(s"${containerResponse.getWarnings.mkString(", ")}")
+        scheduleContainerTimeout(containerResponse.getId, timeout)
+
+        containerResponse.getId
+      }
 
   private def configure(jobDirectory: Path, jobBaseDirectory: Path, dockerJobBaseDirectory: Path): HostConfig = {
     val hostConfigMut = HostConfig
@@ -85,26 +94,66 @@ class DockerClient(config: Configuration) {
   }
 
   def info: Info = underlyingClient.infoCmd().exec()
-  def pullImage(image: String): Boolean = blocking {
-    val pullImageResultCbk = underlyingClient // Blocking
-      .pullImageCmd(image)
-      .start()
-      .awaitCompletion()
-    val timeout = config.get[FiniteDuration]("docker.pullImageTimeout")
 
-    pullImageResultCbk.awaitCompletion(timeout.toMillis, TimeUnit.MILLISECONDS)
+  def pullImage(image: String): Try[Unit] = Try {
+    blocking {
+      val pullImageResultCbk = underlyingClient // Blocking
+        .pullImageCmd(image)
+        .start()
+      val timeout = config.get[FiniteDuration]("docker.pullImageTimeout")
+
+      pullImageResultCbk.awaitCompletion(timeout.toMillis, TimeUnit.MILLISECONDS)
+      ()
+    }
   }
 
-  def clean(containerId: String): Try[Unit] = Try {
+  def imageExists(image: String): Boolean =
+    !underlyingClient.listImagesCmd().withImageNameFilter(image).exec().isEmpty
+
+  def getContainerStatus(containerId: String): Option[String] =
     underlyingClient
-      .killContainerCmd(containerId)
+      .listContainersCmd()
+      .withIdFilter(Collections.singletonList(containerId))
       .exec()
-    underlyingClient
-      .removeContainerCmd(containerId)
-      .withForce(true)
-      .exec()
-    logger.info(s"removed container $containerId")
+      .asScala
+      .headOption
+      .map(_.getStatus)
+
+  def killContainer(containerId: String): Try[Unit] = {
+    logger.info(s"Killing the container $containerId")
+    Try {
+      underlyingClient
+        .killContainerCmd(containerId)
+        .exec()
+      ()
+    }.recoverWith {
+      case error =>
+        logger.warn(s"Unable to kill the container $containerId", error)
+        Failure(error)
+    }
   }
+
+  def removeContainer(containerId: String): Try[Unit] = {
+    logger.info(s"Removing the container $containerId")
+    Try {
+      underlyingClient
+        .removeContainerCmd(containerId)
+        .withForce(true)
+        .exec()
+      ()
+    }.recoverWith {
+      case error =>
+        logger.warn(s"Unable to remove the container $containerId", error)
+        Failure(error)
+    }
+  }
+
+  def clean(containerId: String): Try[Unit] =
+    getContainerStatus(containerId).fold[Try[Unit]](Success(())) { status =>
+      if (status != "exited" && status != "dead")
+        killContainer(containerId)
+      removeContainer(containerId)
+    }
 
   def getLogs(containerId: String): Try[String] = Try {
     val stringBuilder = new StringBuilder()

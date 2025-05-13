@@ -49,7 +49,7 @@ class JobRunnerSrv @Inject() (
     .map(_.toLowerCase)
     .collect {
       case "kubernetes" if k8sJobRunnerSrv.isAvailable => "kubernetes"
-      case "docker" if dockerJobRunnerSrv.isAvailable => "docker"
+      case "docker" if dockerJobRunnerSrv.isAvailable  => "docker"
       case "process" =>
         Seq("", "2", "3").foreach { pythonVersion =>
           val cortexUtilsVersion = processJobRunnerSrv.checkCortexUtilsVersion(pythonVersion)
@@ -229,7 +229,7 @@ class JobRunnerSrv @Inject() (
       syncStartJob(job).get
       val jobFolder = prepareJobFolder(worker, job).get
       maybeJobFolder = Some(jobFolder)
-      runners
+      val result = runners
         .foldLeft[Option[Try[Unit]]](None) {
           case (None, "kubernetes") =>
             worker
@@ -261,12 +261,15 @@ class JobRunnerSrv @Inject() (
             None
 
         }
-        .getOrElse(throw BadRequestError("Worker cannot be run"))
+        .getOrElse(Failure(BadRequestError("Worker cannot be run")))
+      Future.fromTry(result)
     }(executionContext)
+      .flatten
       .transformWith {
         case _: Success[_] =>
           extractReport(maybeJobFolder.get /* can't be none */, job)
         case Failure(error) =>
+          logger.error(s"Worker execution fails", error)
           endJob(job, JobStatus.Failure, Option(error.getMessage), maybeJobFolder.map(jf => readFile(jf.resolve("input").resolve("input.json"))))
 
       }

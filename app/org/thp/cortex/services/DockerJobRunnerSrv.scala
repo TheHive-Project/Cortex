@@ -1,7 +1,7 @@
 package org.thp.cortex.services
 
 import akka.actor.ActorSystem
-import org.thp.cortex.util.docker.{DockerClient => DockerJavaClient}
+import org.thp.cortex.util.docker.DockerClient
 import play.api.libs.json.Json
 import play.api.{Configuration, Logger}
 
@@ -15,7 +15,7 @@ import scala.util.Try
 
 @Singleton
 class DockerJobRunnerSrv(
-    javaClient: DockerJavaClient,
+    dockerClient: DockerClient,
     autoUpdate: Boolean,
     jobBaseDirectory: Path,
     dockerJobBaseDirectory: Path,
@@ -25,7 +25,7 @@ class DockerJobRunnerSrv(
   @Inject()
   def this(config: Configuration, system: ActorSystem) =
     this(
-      new DockerJavaClient(config),
+      new DockerClient(config),
       config.getOptional[Boolean]("docker.autoUpdate").getOrElse(true),
       Paths.get(config.get[String]("job.directory")),
       Paths.get(config.get[String]("job.dockerDirectory")),
@@ -37,7 +37,7 @@ class DockerJobRunnerSrv(
   lazy val isAvailable: Boolean =
     Try {
       logger.debug(s"Retrieve docker information ...")
-      logger.info(s"Docker is available:\n${javaClient.info}")
+      logger.info(s"Docker is available:\n${dockerClient.info}")
       true
     }.recover {
       case error =>
@@ -48,7 +48,7 @@ class DockerJobRunnerSrv(
   private def generateErrorOutput(containerId: String, f: Path) = {
     logger.warn(s"the runner didn't generate any output file $f")
     for {
-      output <- javaClient.getLogs(containerId)
+      output <- dockerClient.getLogs(containerId)
       report = Json.obj("success" -> false, "errorMessage" -> output)
       _ <- Try(Files.write(f, report.toString.getBytes(StandardCharsets.UTF_8)))
     } yield report
@@ -57,22 +57,22 @@ class DockerJobRunnerSrv(
   def run(jobDirectory: Path, dockerImage: String, timeout: Option[FiniteDuration])(implicit executionContext: ExecutionContext): Try[Unit] = {
     val to = timeout.getOrElse(FiniteDuration(5000, TimeUnit.SECONDS))
 
-    if (autoUpdate) Try(javaClient.pullImage(dockerImage))
+    if (autoUpdate) dockerClient.pullImage(dockerImage)
 
     for {
-      containerId <- javaClient.prepare(dockerImage, jobDirectory, jobBaseDirectory, dockerJobBaseDirectory, to)
+      containerId <- dockerClient.prepare(dockerImage, jobDirectory, jobBaseDirectory, dockerJobBaseDirectory, to)
       timeoutScheduled = timeout.map(to =>
         system.scheduler.scheduleOnce(to) {
           logger.info("Timeout reached, stopping the container")
-          javaClient.clean(containerId)
+          dockerClient.clean(containerId)
         }
       )
-      _ <- javaClient.execute(containerId)
+      _ <- dockerClient.execute(containerId)
       _ = timeoutScheduled.foreach(_.cancel())
       outputFile <- Try(jobDirectory.resolve("output").resolve("output.json"))
       isError = Files.notExists(outputFile) || Files.size(outputFile) == 0 || Files.isDirectory(outputFile)
       _       = if (isError) generateErrorOutput(containerId, outputFile).toOption else None
-      _ <- javaClient.clean(containerId)
+      _ <- dockerClient.clean(containerId)
     } yield ()
   }
 
