@@ -135,8 +135,6 @@ job [[ template "job_name" . ]] {
           "/var/run/docker.sock:/var/run/docker.sock",
           "local/application.conf:/etc/cortex/application.conf",
           "local/logback.xml:/etc/cortex/logback.xml",
-          "local/analyzers.json:/etc/cortex/analyzers.json"
-        ]
       }
 
       vault {
@@ -194,7 +192,6 @@ job [[ template "job_name" . ]] {
           analyzer.urls  = [
             "https://download.thehive-project.org/analyzers.json"
             "https://download.thehive-project.org/repository/download.thehive-project.org/analyzers-devel.json"
-            "/etc/cortex/analyzers.json"
           ]
           responder.urls = [
             "https://download.thehive-project.org/responders.json"
@@ -233,72 +230,6 @@ job [[ template "job_name" . ]] {
 
           </configuration>
         EOF
-      }
-
-    template {
-          destination = "local/analyzers.json"
-          data        = <<-EOF
-          [
-              [[ range $y := untilStep 1 11 1 ]]
-              {
-              "name": "testAnalyzer_[[ $y ]]",
-              "version": "1.0",
-              "author": "TheHive-Project",
-              "url": "https://github.com/thehive-project/thehive",
-              "license": "AGPL-V3",
-              "baseConfig": "testAnalyzer",
-              "config": {},
-              "description": "Fake analyzer used for functional tests",
-              "dataTypeList": ["domain", "ip", "hash", "other"],
-              "dockerImage": "tooom/test_analyzer",
-              "configurationItems": [
-                  {
-                      "name": "artifacts",
-                      "description": "Artifacts to include to output report in JSON format (ex: {\"data\":\"8.8.8.8\",\"dataType\":\"ip\"})",
-                      "type": "string",
-                      "multi": true,
-                      "required": false
-                  },
-                  {
-                      "name": "summary",
-                      "description": "The value of the summary returned by the analyzer",
-                      "type": "string",
-                      "multi": false,
-                      "required": false
-                  },
-                  {
-                      "name": "delay",
-                      "description": "The delay, in seconds",
-                      "type": "number",
-                      "multi": false,
-                      "required": false
-                  },
-                  {
-                      "name": "errorMessage",
-                      "description": "If set, make the analyzer fails with this message",
-                      "type": "string",
-                      "multi": false,
-                      "required": false
-                  },
-                  {
-                      "name": "report",
-                      "description": "The report",
-                      "type": "string",
-                      "multi": false,
-                      "required": false
-                  },
-                  {
-                      "name": "operations",
-                      "description": "The operations",
-                      "type": "string",
-                      "multi": true,
-                      "required": false
-                  }
-              ]
-              } [[ if not (eq $y 10) ]],[[ end ]]
-              [[ end ]]
-          ]
-          EOF
       }
 
       resources {

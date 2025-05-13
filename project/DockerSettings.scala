@@ -68,7 +68,7 @@ object DockerSettings {
       case (_, filepath) => filepath == "/opt/cortex/conf/application.conf" || filepath.contains("/package/")
     }),
     dockerCommands := Seq(
-      Cmd("FROM", "python:3.12.9-bookworm"),
+      Cmd("FROM", "python:3.12"),
       Cmd("LABEL", "MAINTAINER=\"TheHive Project <support@thehive-project.org>\"", "repository=\"https://github.com/TheHive-Project/TheHive\""),
       Cmd("WORKDIR", "/opt/cortex"),
       Cmd("ENV", "JAVA_HOME", "/usr/lib/jvm/java-11-amazon-corretto"),
