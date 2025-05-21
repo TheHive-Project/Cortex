@@ -137,9 +137,7 @@ job [[ template "job_name" . ]] {
           "local/logback.xml:/etc/cortex/logback.xml",
       }
 
-      vault {
-        policies = ["cortex-policy"]
-      }
+      vault {}
 
       template {
         destination = "local/application.conf"
