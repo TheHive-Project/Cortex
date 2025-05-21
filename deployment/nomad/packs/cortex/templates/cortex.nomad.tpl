@@ -135,6 +135,7 @@ job [[ template "job_name" . ]] {
           "/var/run/docker.sock:/var/run/docker.sock",
           "local/application.conf:/etc/cortex/application.conf",
           "local/logback.xml:/etc/cortex/logback.xml",
+	]
       }
 
       vault {}
