@@ -125,7 +125,6 @@ object PackageSettings {
         com.typesafe.sbt.packager.linux.LinuxPackageMapping(mappings, pm.fileData).withConfig()
       } :+ packageMapping(
         file("package/cortex.service")  -> "/etc/systemd/system/cortex.service",
-        file("package/cortex.conf")     -> "/etc/init/cortex.conf",
         file("package/cortex")          -> "/etc/init.d/cortex",
         file("conf/application.sample") -> "/etc/cortex/application.conf",
         file("package/logback.xml")     -> "/etc/cortex/logback.xml"

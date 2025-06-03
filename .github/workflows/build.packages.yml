@@ -31,7 +31,7 @@ jobs:
           echo "version=$V"
           echo "version=$V" >> $GITHUB_OUTPUT
       - name: Build packages
-        run: sbt Debian/packageBin Rpm/packageBin Universal/packageBin makeBom
+        run: ./sbt Debian/packageBin Rpm/packageBin Universal/packageBin makeBom
       - name: Move packages
         run: |
           mv target/rpm/RPMS/noarch/cortex*.rpm target/
@@ -51,7 +51,7 @@ jobs:
 
       - name: Store artifacts
         if: github.ref_type != 'tag'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: packages
           path: |

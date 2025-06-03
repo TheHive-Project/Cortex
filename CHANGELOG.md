@@ -1,5 +1,16 @@
 # Change Log
 
+## 3.2.0 (2025-06-02)
+
+ - [DL-1231] Add support of Kubernetes
+ - [DL-1380] Add API endpoint to set user API key
+ - [DL-1442] Remove openjdk dependency from deb/rpm packages
+ - [DL-1602] Add support of authentication on Docker registry
+ - [DL-1767] Update Docker image when the catalog is refreshed
+ - [DL-715 DL-716 DL-718] Update libraries
+ - [DL-717] Replace spotify docker client for java mainstream one
+ - [CTX-27] count jobs artifacts before finding to avoid ES scrolls
+
 ## [3.1.8](https://github.com/TheHive-Project/Cortex/milestone/35) (2023-09-21)
 
 **Pull requests:**
