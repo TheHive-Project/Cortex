@@ -19,7 +19,7 @@ import org.thp.cortex.models._
 
 import org.elastic4play._
 import org.elastic4play.controllers._
-import org.elastic4play.services._
+import org.elastic4play.services.{UserSrv => _, _}
 import org.elastic4play.utils.Hasher
 
 @Singleton
@@ -128,12 +128,22 @@ class JobSrv(
   ): (Source[Artifact, NotUsed], Future[Long]) = {
     import org.elastic4play.services.QueryDSL._
     withUserFilter(userId) { organizationId =>
-      findSrv[ArtifactModel, Artifact](
+      def find(range: Option[String]): (Source[Artifact, NotUsed], Future[Long]) = findSrv[ArtifactModel, Artifact](
         artifactModel,
         and(queryDef, parent("report", parent("job", and(withId(jobId), "organization" ~= organizationId)))),
         range,
         sortBy
       )
+
+      val count = find(Some("0-1"))._2
+      Source
+        .futureSource(count.map {
+          case 0L                         => Source.empty[Artifact]
+          case c if range.contains("all") => find(Some(s"0-$c"))._1
+          case _                          => find(range)._1
+        })
+        .mapMaterializedValue(_ => NotUsed) -> count
+
     }
   }
 

@@ -1,19 +1,17 @@
 package org.thp.cortex.models
 
 import scala.util.Try
-
-import play.api.libs.json.{JsObject, JsString, Json}
+import play.api.libs.json.{Format, JsObject, JsString, Json}
 
 import javax.inject.{Inject, Singleton}
 import org.thp.cortex.models.JsonFormat.workerTypeFormat
-
 import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.models.{AttributeDef, EntityDef, HiveEnumeration, ModelDef, AttributeFormat => F, AttributeOption => O}
 
 object JobStatus extends Enumeration with HiveEnumeration {
   type Type = Value
   val Waiting, InProgress, Success, Failure, Deleted = Value
-  implicit val reads                                 = enumFormat(this)
+  implicit val reads: Format[Value] = enumFormat(this)
 }
 
 trait JobAttributes {

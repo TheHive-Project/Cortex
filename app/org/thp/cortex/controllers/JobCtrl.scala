@@ -1,27 +1,26 @@
 package org.thp.cortex.controllers
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.DurationInt
-import play.api.http.Status
-import play.api.libs.json.{JsObject, JsString, JsValue, Json}
-import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import akka.util.Timeout
 import org.elastic4play.NotFoundError
-
-import javax.inject.{Inject, Named, Singleton}
-import org.thp.cortex.models.{Job, JobStatus, Roles}
-import org.thp.cortex.services.AuditActor.{JobEnded, Register}
-import org.thp.cortex.services.JobSrv
 import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
 import org.elastic4play.services.{QueryDSL, QueryDef}
 import org.elastic4play.utils.RichFuture
+import org.thp.cortex.models.{Job, JobStatus, Roles}
+import org.thp.cortex.services.AuditActor.{JobEnded, Register}
+import org.thp.cortex.services.JobSrv
+import play.api.http.Status
+import play.api.libs.json.{JsObject, JsString, JsValue, Json}
+import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
+
+import javax.inject.{Inject, Named, Singleton}
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class JobCtrl @Inject() (
@@ -132,6 +131,9 @@ class JobCtrl @Inject() (
       case JobStatus.InProgress => Future.successful(JsString("Running"))
       case JobStatus.Waiting    => Future.successful(JsString("Waiting"))
       case JobStatus.Deleted    => Future.successful(JsString("Deleted"))
+      case x =>
+        val errorMessage = job.errorMessage().getOrElse("") + s" unhandled JobStatus $x"
+        Future.successful(Json.obj("errorMessage" -> errorMessage, "input" -> job.input(), "success" -> false))
     }).map { report =>
       Json.toJson(job).as[JsObject] + ("report" -> report)
     }

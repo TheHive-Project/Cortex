@@ -1,13 +1,12 @@
 package org.thp.cortex.services
 
-import akka.NotUsed
+import akka.{Done, NotUsed}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import org.elastic4play._
 import org.elastic4play.controllers.{Fields, StringInputValue}
 import org.elastic4play.database.ModifyConfig
-import org.elastic4play.services.QueryDSL.any
-import org.elastic4play.services._
+import org.elastic4play.services.{UserSrv => _, _}
 import org.scalactic.Accumulation._
 import org.scalactic._
 import org.thp.cortex.models._
@@ -17,9 +16,9 @@ import play.api.{Configuration, Logger}
 import java.net.URL
 import java.nio.file.{Files, Path, Paths}
 import javax.inject.{Inject, Provider, Singleton}
-import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 @Singleton
@@ -45,6 +44,7 @@ class WorkerSrv @Inject() (
   private lazy val jobRunnerSrv: JobRunnerSrv = jobRunnerSrvProvider.get
   private var workerMap                       = Map.empty[String, WorkerDefinition]
   private object workerMapLock
+  private val updateDockerImage: Boolean = config.get[Boolean]("worker.updateDockerImage")
 
   rescan()
 
@@ -175,10 +175,14 @@ class WorkerSrv @Inject() (
       workerDefinitions.filter {
         case w if w.command.isDefined && jobRunnerSrv.processRunnerIsEnable    => true
         case w if w.dockerImage.isDefined && jobRunnerSrv.dockerRunnerIsEnable => true
+        case w if w.dockerImage.isDefined && jobRunnerSrv.k8sRunnerIsEnable    => true
         case w =>
           val reason =
             if (w.command.isDefined) "process runner is disabled"
-            else if (w.dockerImage.isDefined) "Docker runner is disabled"
+            else if (w.dockerImage.isDefined && !jobRunnerSrv.dockerRunnerIsEnable)
+              "Docker runner is disabled"
+            else if (w.dockerImage.isDefined && !jobRunnerSrv.k8sRunnerIsEnable)
+              "Kubernetes runner is disabled"
             else "it doesn't have image nor command"
 
           logger.warn(s"$workerType ${w.name} is disabled because $reason")
@@ -212,13 +216,21 @@ class WorkerSrv @Inject() (
       }
       .map { worker =>
         val wmap = worker.flatten.map(w => w.id -> w).toMap
-        workerMapLock.synchronized(workerMap = wmap)
+        workerMapLock.synchronized {
+          workerMap = wmap
+        }
         logger.info(s"New worker list:\n\n\t${workerMap.values.map(a => s"${a.name} ${a.version}").mkString("\n\t")}\n")
+        if (updateDockerImage) {
+          userSrv.inInitAuthContext { implicit authContext =>
+            updateWorkerDockerImage
+          }
+        }
       }
 
   }
 
-  def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(implicit
+  def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(
+      implicit
       authContext: AuthContext
   ): Future[Worker] = {
     val rawConfig = workerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
@@ -229,7 +241,7 @@ class WorkerSrv @Inject() (
       .validatedBy(_.read(rawConfig))
       .map(JsObject.apply)
 
-    val unknownConfigItems = (rawConfig.value.keySet -- configItems.map(_.name))
+    val unknownConfigItems = (rawConfig.value.keySet.toSet -- configItems.map(_.name))
       .foldLeft[Unit Or Every[AttributeError]](Good(())) {
         case (Good(_), ci) => Bad(One(UnknownAttributeError("worker.config", JsString(ci))))
         case (Bad(e), ci)  => Bad(UnknownAttributeError("worker.config", JsString(ci)) +: e)
@@ -254,10 +266,10 @@ class WorkerSrv @Inject() (
               .set("configuration", cfg.toString)
               .set("type", workerDefinition.tpe.toString)
               .addIfAbsent("dataTypeList", StringInputValue(workerDefinition.dataTypeList))
-          ),
-        {
+          ), {
           case One(e)         => Future.failed(e)
           case Every(es @ _*) => Future.failed(AttributeCheckingError(s"worker(${workerDefinition.name}).configuration", es))
+          case x              => Future.failed(UnknownAttributeError(s"$x", Json.obj()))
         }
       )
   }
@@ -285,4 +297,24 @@ class WorkerSrv @Inject() (
 
   def update(workerId: String, fields: Fields, modifyConfig: ModifyConfig)(implicit authContext: AuthContext): Future[Worker] =
     get(workerId).flatMap(worker => update(worker, fields, modifyConfig))
+
+  def updateWorkerDockerImage(implicit authContext: AuthContext): Future[Done] = {
+    import org.elastic4play.services.QueryDSL._
+    find(contains("dockerImage"), None, Nil)
+      ._1
+      .mapAsync(3) { worker =>
+        val done = for {
+          workerDefinition <- workerMap.get(worker.workerDefinitionId())
+          newDockerImage   <- workerDefinition.dockerImage
+          oldDockerImage   <- worker.dockerImage()
+          if oldDockerImage != newDockerImage
+        } yield update(worker, Fields.empty.set("dockerImage", newDockerImage)).map(_ => ())
+        done.getOrElse(Future.successful(())).recoverWith {
+          case error =>
+            logger.warn(s"Unable to update docker image of worker ${worker.workerDefinitionId}", error)
+            Future.failed(error)
+        }
+      }
+      .run()
+  }
 }

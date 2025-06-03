@@ -10,6 +10,10 @@ jobs:
     runs-on: [ ubuntu-latest  ]
     steps:
       - uses: actions/checkout@v3
+      - uses: coursier/setup-action@v1
+        with:
+          jvm: corretto:11
+          apps: sbt
       - name: Setup node
         uses: actions/setup-node@v3
         timeout-minutes: 15

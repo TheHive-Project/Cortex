@@ -5,7 +5,7 @@ import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.models.{AttributeDef, BaseEntity, ChildModelDef, EntityDef, HiveEnumeration, AttributeFormat => F, AttributeOption => O}
 import org.elastic4play.utils.Hasher
 import org.thp.cortex.models.JsonFormat.workerTypeFormat
-import play.api.libs.json.{JsObject, JsString, Json}
+import play.api.libs.json.{Format, JsObject, JsString, Json}
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -17,7 +17,7 @@ object RateUnit extends Enumeration with HiveEnumeration {
   val Hour           = Value(60 * 60)
   val Day            = Value(60 * 60 * 24)
   val Month          = Value(60 * 60 * 24 * 30)
-  implicit val reads = enumFormat(this)
+  implicit val reads: Format[Value] = enumFormat(this)
 }
 
 object WorkerType extends Enumeration with HiveEnumeration {
@@ -35,7 +35,7 @@ trait WorkerAttributes { _: AttributeDef =>
   val url                = attribute("url", F.textFmt, "Worker url", O.readonly)
   val license            = attribute("license", F.textFmt, "Worker license", O.readonly)
   val command            = optionalAttribute("command", F.textFmt, "Worker command", O.readonly)
-  val dockerImage        = optionalAttribute("dockerImage", F.textFmt, "Worker docker image", O.readonly)
+  val dockerImage        = optionalAttribute("dockerImage", F.textFmt, "Worker docker image")
   val dataTypeList       = multiAttribute("dataTypeList", F.stringFmt, "List of data type this worker can manage")
   val configuration      = attribute("configuration", F.rawFmt, "Configuration of the worker", O.sensitive)
   val baseConfig         = attribute("baseConfig", F.stringFmt, "Base configuration key", O.readonly)

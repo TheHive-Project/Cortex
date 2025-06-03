@@ -6,6 +6,45 @@ import sbt.Keys._
 import sbt._
 
 object DockerSettings {
+
+  def run(commands: String*): Cmd = Cmd("RUN", commands.map(_.trim).mkString(" && ").replaceAll("\\n", " && "))
+  val init =
+    """
+      |apt update
+      |apt upgrade -y
+      |""".stripMargin
+  val installJava =
+    """
+      |apt install -y curl gnupg
+      |curl -fL https://apt.corretto.aws/corretto.key | gpg --dearmor -o /usr/share/keyrings/corretto.gpg
+      |echo 'deb [signed-by=/usr/share/keyrings/corretto.gpg] https://apt.corretto.aws stable main' > /etc/apt/sources.list.d/corretto.list
+      |apt update
+      |apt install -y java-11-amazon-corretto-jdk
+      |""".stripMargin
+  val installDocker =
+    """
+      |curl -fsSL https://download.docker.com/linux/debian/gpg -o /usr/share/keyrings/docker.asc
+      |echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
+      |apt update
+      |apt install -y docker-ce docker-ce-cli containerd.io docker-ce-rootless-extras uidmap iproute2 fuse-overlayfs
+      |""".stripMargin
+  val createDefaultUser =
+    """
+      |groupadd -g 1001 cortex
+      |useradd --system --uid 1001 --gid 1001 --groups docker cortex -d /opt/cortex
+      |mkdir -m 777 /var/log/cortex
+      |""".stripMargin
+  val setupDocker =
+    """
+      |chmod 666 /etc/subuid /etc/subgid
+      |""".stripMargin
+  val cleanup =
+    """
+      |rm -rf /var/lib/apt/lists/*
+      |apt autoclean -y -q
+      |apt autoremove -y -q
+      |""".stripMargin
+
   val default = Seq(
     Docker / version := {
       version.value match {
@@ -16,58 +55,31 @@ object DockerSettings {
         case _                                        => versionUsage(version.value)
       }
     },
+    dockerGroupLayers := PartialFunction.empty,
     Docker / defaultLinuxInstallLocation := "/opt/cortex",
     dockerRepository := Some("thehiveproject"),
     dockerUpdateLatest := !version.value.toUpperCase.contains("RC") && !version.value.contains("SNAPSHOT"),
     dockerExposedPorts := Seq(9001),
     Docker / mappings ++= Seq(
       file("package/docker/entrypoint") -> "/opt/cortex/entrypoint",
-      file("package/logback.xml")       -> "/etc/cortex/logback.xml",
-      file("package/empty")             -> "/var/log/cortex/application.log"
+      file("package/logback.xml")       -> "/etc/cortex/logback.xml"
     ),
     Docker / mappings ~= (_.filterNot {
-      case (_, filepath) => filepath == "/opt/cortex/conf/application.conf"
+      case (_, filepath) => filepath == "/opt/cortex/conf/application.conf" || filepath.contains("/package/")
     }),
     dockerCommands := Seq(
-      Cmd("FROM", "debian:bullseye-slim"),
+      Cmd("FROM", "python:3.12"),
       Cmd("LABEL", "MAINTAINER=\"TheHive Project <support@thehive-project.org>\"", "repository=\"https://github.com/TheHive-Project/TheHive\""),
       Cmd("WORKDIR", "/opt/cortex"),
       Cmd("ENV", "JAVA_HOME", "/usr/lib/jvm/java-11-amazon-corretto"),
-      // format: off
-      Cmd("RUN",
-        "apt", "update", "&&",
-        "apt", "upgrade", "-y", "&&",
-        "apt", "install", "-y", "iptables", "lxc", "wget", "curl", "gnupg", "&&",
-        // install java corretto
-        "curl", "-fL", "https://apt.corretto.aws/corretto.key", "|", "gpg", "--dearmor", "-o", "/usr/share/keyrings/corretto.gpg", "&&",
-        "echo", "'deb [signed-by=/usr/share/keyrings/corretto.gpg] https://apt.corretto.aws stable main'", ">", "/etc/apt/sources.list.d/corretto.list", "&&",
-        "mkdir", "-p", "/usr/share/man/man1", "||", "true", "&&",
-        "apt", "update", "&&", "apt", "install", "-y", "java-11-amazon-corretto-jdk", "&&",
-        // setup for docker
-        "apt", "autoclean", "-y", "-q",  "&&",
-        "apt", "autoremove", "-y", "-q",  "&&",
-        "wget", "-q", "-O", "-", "https://download.docker.com/linux/static/stable/x86_64/docker-18.09.0.tgz", "|",
-        "tar", "-xzC", "/usr/local/bin/", "--strip-components", "1", "&&",
-        "addgroup", "--system", "dockremap", "&&",
-        "adduser", "--system", "--ingroup", "dockremap", "dockremap", "&&",
-        "addgroup", "--system", "docker", "&&",
-        "echo", "dockremap:165536:65536", ">>", "/etc/subuid", "&&",
-        "echo", "dockremap:165536:65536", ">>", "/etc/subgid", "&&",
-        // cleanup
-        "rm", "-rf", "/var/lib/apt/lists/*", "&&",
-        "(", "type", "groupadd", "1>/dev/null", "2>&1", "&&",
-        // setup cortex user
-        "groupadd", "-g", "1001", "cortex", "||",
-        "addgroup", "-g", "1001", "-S", "cortex",
-        ")", "&&",
-        "(", "type", "useradd", "1>/dev/null", "2>&1", "&&",
-        "useradd", "--system", "--uid", "1001", "--gid", "1001", "cortex", "||",
-        "adduser", "-S", "-u", "1001", "-G", "cortex", "cortex",
-        ")"),
-      //format: on
+      run(init,
+      installJava,
+      installDocker,
+      createDefaultUser,
+      setupDocker,
+      cleanup),
       Cmd("ADD", "--chown=root:root", "opt", "/opt"),
-      Cmd("ADD", "--chown=cortex:cortex", "var", "/var"),
-      Cmd("ADD", "--chown=cortex:cortex", "etc", "/etc"),
+      Cmd("ADD", "--chown=cortex:cortex", "--chmod=755", "etc", "/etc"),
       Cmd("VOLUME", "/var/lib/docker"),
       ExecCmd("RUN", "chmod", "+x", "/opt/cortex/bin/cortex", "/opt/cortex/entrypoint"),
       Cmd("EXPOSE", "9001"),

@@ -5,7 +5,7 @@ import com.typesafe.config.{ConfigList, ConfigObject, ConfigValue}
 import play.api.Configuration
 import play.api.libs.json._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object JsonConfig {
   implicit val configValueWrites: Writes[ConfigValue] = Writes((value: ConfigValue) =>
@@ -16,6 +16,7 @@ object JsonConfig {
       case v if v.valueType == BOOLEAN => JsBoolean(v.unwrapped.asInstanceOf[Boolean])
       case v if v.valueType == NULL    => JsNull
       case v if v.valueType == STRING  => JsString(v.unwrapped.asInstanceOf[String])
+      case _                           => JsNull
     }
   )
 

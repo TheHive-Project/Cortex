@@ -91,6 +91,7 @@ class MispSrv @Inject() (
         val message = job.errorMessage().getOrElse("This job has failed, without message!")
         Future.successful(Json.obj("error" -> message))
       case JobStatus.InProgress => Future.successful(Json.obj("error" -> "This job hasn't finished yet"))
+      case x => Future.successful(Json.obj("error" -> s"Unhandled JobStatus $x"))
     }
 
   private def toArtifact(mispType: String, data: String): Either[String, Attachment] =

@@ -42,7 +42,6 @@ object PackageSettings {
     rpmVendor := organizationName.value,
     rpmUrl := organizationHomepage.value.map(_.toString),
     rpmLicense := Some("AGPL"),
-    rpmRequirements += "java-11-openjdk-headless",
     Rpm / maintainerScripts := maintainerScriptsFromDirectory(
       baseDirectory.value / "package" / "rpm",
       Seq(RpmConstants.Pre, RpmConstants.Preun, RpmConstants.Post, RpmConstants.Postun)
@@ -79,7 +78,6 @@ object PackageSettings {
       }
     },
     debianPackageRecommends := Seq("elasticsearch"),
-    debianPackageDependencies += "default-jre-headless | openjdk-11-jre-headless",
     Debian / maintainerScripts := maintainerScriptsFromDirectory(
       baseDirectory.value / "package" / "debian",
       Seq(DebianConstants.Postinst, DebianConstants.Prerm, DebianConstants.Postrm)
@@ -105,7 +103,6 @@ object PackageSettings {
         case other                             => Seq(other)
       } ++ Seq(
         file("package/cortex.service") -> "package/cortex.service",
-        file("package/cortex.conf")    -> "package/cortex.conf",
         file("package/cortex")         -> "package/cortex",
         file("package/logback.xml")    -> "conf/logback.xml"
       )
@@ -128,7 +125,6 @@ object PackageSettings {
         com.typesafe.sbt.packager.linux.LinuxPackageMapping(mappings, pm.fileData).withConfig()
       } :+ packageMapping(
         file("package/cortex.service")  -> "/etc/systemd/system/cortex.service",
-        file("package/cortex.conf")     -> "/etc/init/cortex.conf",
         file("package/cortex")          -> "/etc/init.d/cortex",
         file("conf/application.sample") -> "/etc/cortex/application.conf",
         file("package/logback.xml")     -> "/etc/cortex/logback.xml"

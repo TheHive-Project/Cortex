@@ -1,0 +1,143 @@
+---
+  name: setup.fixtures
+  # Run the fixtures to setup the instance after it's deployed to make it "ready-to-go"
+  # could maybe be split into different "workflow scripts" if logic wants it
+  on:
+    workflow_dispatch:
+      inputs:
+        expected_deployment_version:
+          type: string
+          required: false
+          description: "Docker image version to deploy (default 'latest')"
+          default: "latest"
+    workflow_call:
+      inputs:
+        expected_deployment_version:
+          type: string
+          required: false
+          description: "Docker image version to deploy (default 'latest')"
+          default: "latest"
+  
+  jobs:
+    setup:
+      timeout-minutes: 5
+      permissions:
+        actions: read
+        contents: write
+      runs-on: [ self-hosted, linux, domain=sb ]
+      outputs:
+        CORTEX_URL: ${{ steps.get_cortex_url.outputs.CORTEX_URL }}
+        DB_STATUS: ${{ steps.db_status.outputs.db_status }}
+      steps:
+        - name: Get cortex URL
+          id: get_cortex_url
+          run: |
+            _TMP_VERSION=${{ inputs.expected_deployment_version }}
+            CORTEX_VERSION=${_TMP_VERSION//.-} 
+            echo CORTEX_URL="https://cortex-${CORTEX_VERSION}.web.dev.sb" >> $GITHUB_OUTPUT
+        - name: Wait for Cortex to wake up
+          run: |
+            bash -c 'while [[ "$(curl -k -L -s -o /dev/null -w ''%{http_code}'' ${{ steps.get_cortex_url.outputs.CORTEX_URL }})" != "200" ]]; do echo "Not ready yet" && sleep 5; done'
+        - name: Get DB status
+          id: db_status
+          run: |
+            sleep 30;
+            echo db_status=$(curl -k -L -s -o /dev/null -w ''%{http_code}'' ${{ steps.get_cortex_url.outputs.CORTEX_URL }}/api/user/current) >> $GITHUB_OUTPUT
+        - name: Show output of db_status
+          run: echo "${{ steps.db_status.outputs.db_status }}"
+        - name: Run migration
+          if: ${{ steps.db_status.outputs.db_status }} == "520"
+          run: curl -XPOST -k ${{ steps.get_cortex_url.outputs.CORTEX_URL }}/api/maintenance/migrate
+        - name: Create main admin
+          run: |
+            curl -H 'Content-Type: application/json' -XPOST -k -L ${{ steps.get_cortex_url.outputs.CORTEX_URL }}/api/user -d '{"login": "admin", "password": "pwd", "name": "admin", "roles": ["superadmin"]}'
+    data:
+      needs:
+        - setup
+      if: success()
+      runs-on: [ self-hosted, linux, domain=sb ]
+      steps:
+        - name: Create Strangebee organisation
+          run: |
+            curl -k -L -u admin:pwd -H 'Content-Type: application/json' ${{ needs.setup.outputs.CORTEX_URL }}/api/organization -d '{"name": "strangebee", "description": "my org", "status": "Active"}'
+        - name: Create an org admin user
+          run: |
+            curl -k -L -u admin:pwd -H 'Content-Type: application/json' ${{ needs.setup.outputs.CORTEX_URL }}/api/user -d '{"name": "sb_admin","roles": ["read","analyze","orgadmin"], "organization": "strangebee", "login": "sb_admin"}'
+        - name: Set a password for org admin
+          run: |
+            curl -k -L -u admin:pwd -H 'Content-Type: application/json' ${{ needs.setup.outputs.CORTEX_URL }}/api/user/sb_admin/password/set -d '{"password": "strangebee"}'
+        - name: Set api key for org admin
+          # cortex api key stored in GH organisation secret (not inside repo secret)
+          run: | 
+            curl -k -L -u admin:pwd -H 'Content-Type: application/json' ${{ needs.setup.outputs.CORTEX_URL }}/api/user/sb_admin/key/set -d '{"key": "${{ secrets.CORTEX_API_KEY }}"}'
+        - name: Enable analyzer ValidateObservable
+          run: |
+            curl -k -L -u sb_admin:strangebee -H 'Content-Type: application/json' ${{ needs.setup.outputs.CORTEX_URL }}/api/organization/analyzer/ValidateObservable_1_0 -d '{
+              "name": "ValidateObservable_1_0",
+              "configuration": {
+                "auto_extract_artifacts": false,
+                "check_tlp": true,
+                "max_tlp": 2,
+                "check_pap": true,
+                "max_pap": 2
+              },
+              "jobCache": 10,
+              "jobTimeout": 30
+            }'
+        - name: Enable test analyzer
+          run: |
+            curl -X POST -k -L -u sb_admin:strangebee -H 'Content-Type: application/json' ${{ needs.setup.outputs.CORTEX_URL }}/api/organization/analyzer/testAnalyzer_1_1_0 -d '{
+              "name": "testAnalyzer_1_1_0",
+              "configuration": {
+                "artifacts": [
+                  null
+                ],
+                "operations": [
+                  "[]"
+                ],
+                "auto_extract_artifacts": false,
+                "check_tlp": true,
+                "max_tlp": 2,
+                "check_pap": true,
+                "max_pap": 2
+              },
+              "jobCache": 10,
+              "jobTimeout": 30
+            }'
+        - name: Enable EML parser
+          run: |
+            curl -X POST -k -L -u sb_admin:strangebee -H 'Content-Type: application/json' ${{ needs.setup.outputs.CORTEX_URL }}/api/organization/analyzer/EmlParser_2_1 -d '{
+              "name": "EmlParser_2_1",
+              "configuration": {
+                "email_visualisation": false,
+                "wkhtmltoimage_path": "/usr/bin/wkhtmltoimage",
+                "auto_extract_artifacts": false,
+                "check_tlp": true,
+                "max_tlp": 2,
+                "check_pap": true,
+                "max_pap": 2
+              },
+              "jobCache": 10,
+              "jobTimeout": 30
+            }'
+        - name: Enable test responder
+          run: |
+            curl -X POST -k -L -u sb_admin:strangebee -H 'Content-Type: application/json'  ${{ needs.setup.outputs.CORTEX_URL }}/api/organization/responder/testResponder_1_1_0 -d '{
+              "name": "testResponder_1_1_0",
+              "configuration": {
+                "artifacts": [
+                  "{\"data\":\"8.8.8.8\",\"dataType\":\"ip\"}"
+                ],
+                "summary": "{\"taxonomies\":[{\"level\":\"info\", \"namespace\":\"test\",\"predicate\":\"data\",\"value\":\"test\"}]}",
+                "report": "{       \"taxonomies\": [         {           \"level\": \"info\",           \"namespace\": \"MaxMind\",           \"predicate\": \"Location\",           \"value\": \"csdsdvsd\"         }       ]     }",
+                "operations": [
+                  "[]"
+                ],
+                "jobTimeout": 30,
+                "check_tlp": true,
+                "max_tlp": 3,
+                "check_pap": true,
+                "max_pap": 3
+              },
+              "jobTimeout": 30
+            }'
