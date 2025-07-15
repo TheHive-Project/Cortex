@@ -1,5 +1,6 @@
-import sbt.Keys._
-import sbt._
+import sbt.Keys.*
+import sbt.*
+
 import scala.sys.process.Process
 import Path.rebase
 
@@ -9,12 +10,12 @@ object FrontEnd extends AutoPlugin {
     val frontendFiles = taskKey[Seq[(File, String)]]("Front-end files")
   }
 
-  import autoImport._
+  import autoImport.*
 
   override def trigger = allRequirements
 
-  override def projectSettings =
-    Seq[Setting[_]](frontendFiles := {
+  override def projectSettings: Seq[Def.Setting[?]] =
+    Def.settings(frontendFiles := {
       val s = streams.value
       s.log.info("Building front-end ...")
       s.log.info("npm install")

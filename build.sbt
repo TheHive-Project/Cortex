@@ -1,4 +1,4 @@
-import Common._
+import Common.*
 
 ThisBuild / scalaVersion := Dependencies.scalaVersion
 ThisBuild / evictionErrorLevel := util.Level.Warn

@@ -1,42 +1,32 @@
-import Common.{betaVersion, snapshotVersion, stableVersion, versionUsage}
+import Common.{releaseVersion, snapshotVersion, versionUsage}
 import com.typesafe.sbt.SbtNativePackager.autoImport.{maintainer, maintainerScripts, packageDescription, packageSummary}
-import com.typesafe.sbt.packager.Keys._
+import com.typesafe.sbt.packager.Keys.*
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging.autoImport.maintainerScriptsFromDirectory
-import com.typesafe.sbt.packager.debian.DebianPlugin.autoImport.{debianPackageDependencies, debianPackageRecommends, Debian, DebianConstants}
-import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.{
-  defaultLinuxInstallLocation,
-  linuxEtcDefaultTemplate,
-  linuxMakeStartScript,
-  linuxPackageMappings,
-  packageMapping
-}
+import com.typesafe.sbt.packager.debian.DebianPlugin.autoImport.{Debian, DebianConstants, debianPackageRecommends}
+import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.{defaultLinuxInstallLocation, linuxEtcDefaultTemplate, linuxMakeStartScript, linuxPackageMappings, packageMapping}
 import com.typesafe.sbt.packager.linux.Mapper.configWithNoReplace
 import com.typesafe.sbt.packager.rpm.RpmPlugin.autoImport.{Rpm, RpmConstants}
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport.Universal
-import sbt.Keys._
+import sbt.Keys.*
 import sbt.Package.ManifestAttributes
-import sbt._
+import sbt.{Def, *}
 
-import java.util.jar.Attributes.Name._
+import java.util.jar.Attributes.Name.*
 
 object PackageSettings {
-  val rpmSettings = Seq(
+  val rpmSettings: Seq[Def.Setting[?]] = Def.settings(
     Rpm / version := {
       version.value match {
-        case stableVersion(v1, _)                   => v1
-        case betaVersion(v1, _, _)                  => v1
-        case snapshotVersion(stableVersion(v1, _))  => v1
-        case snapshotVersion(betaVersion(v1, _, _)) => v1
-        case _                                      => versionUsage(version.value)
+        case releaseVersion(v1, _)  => v1
+        case snapshotVersion(v1, _) => v1
+        case _                      => versionUsage(version.value)
       }
     },
     rpmRelease := {
       version.value match {
-        case stableVersion(_, v2)                    => v2
-        case betaVersion(_, v2, v3)                  => "0." + v3 + "RC" + v2
-        case snapshotVersion(stableVersion(_, v2))   => v2 + "-SNAPSHOT"
-        case snapshotVersion(betaVersion(_, v2, v3)) => "0." + v3 + "RC" + v2 + "-SNAPSHOT"
-        case _                                       => versionUsage(version.value)
+        case releaseVersion(_, v2)  => v2
+        case snapshotVersion(_, v2) => v2 + "~SNAPSHOT"
+        case _                      => versionUsage(version.value)
       }
     },
     rpmVendor := organizationName.value,
@@ -51,7 +41,7 @@ object PackageSettings {
     Rpm / linuxEtcDefaultTemplate := (baseDirectory.value / "package" / "etc_default_cortex").asURL,
     Rpm / linuxPackageMappings := configWithNoReplace((Rpm / linuxPackageMappings).value),
     Rpm / packageBin := {
-      import scala.sys.process._
+      import scala.sys.process.*
       val rpmFile = (Rpm / packageBin).value
       Process(
         "rpm" ::
@@ -66,17 +56,9 @@ object PackageSettings {
     }
   )
 
-  val debianSettings = Seq(
+  val debianSettings: Seq[Def.Setting[?]] = Def.settings(
     Debian / linuxPackageMappings += packageMapping(file("LICENSE") -> "/usr/share/doc/cortex/copyright").withPerms("644"),
-    Debian / version := {
-      version.value match {
-        case stableVersion(_, _)                      => version.value
-        case betaVersion(v1, v2, v3)                  => v1 + "-0." + v3 + "RC" + v2
-        case snapshotVersion(stableVersion(v1, v2))   => v1 + "-" + v2 + "-SNAPSHOT"
-        case snapshotVersion(betaVersion(v1, v2, v3)) => v1 + "-0." + v3 + "RC" + v2 + "-SNAPSHOT"
-        case _                                        => versionUsage(version.value)
-      }
-    },
+    Debian / version := version.value,
     debianPackageRecommends := Seq("elasticsearch"),
     Debian / maintainerScripts := maintainerScriptsFromDirectory(
       baseDirectory.value / "package" / "debian",
@@ -86,7 +68,7 @@ object PackageSettings {
     Debian / linuxMakeStartScript := None
   )
 
-  val packageSettings = Seq(
+  val packageSettings: Seq[Def.Setting[?]] = Def.settings(
     packageOptions ++= Seq(
       ManifestAttributes(IMPLEMENTATION_TITLE   -> name.value),
       ManifestAttributes(IMPLEMENTATION_VERSION -> version.value),

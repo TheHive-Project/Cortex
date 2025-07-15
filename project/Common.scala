@@ -1,11 +1,11 @@
 import scala.util.matching.Regex
 
-import sbt.Keys._
-import sbt._
+import sbt.Keys.*
+import sbt.*
 
 object Common {
 
-  val projectSettings = Seq(
+  val projectSettings: Seq[Def.Setting[?]] = Def.settings(
     organizationName := "TheHive-Project",
     organization := "org.thehive-project",
     licenses += "AGPL-V3" -> url("https://www.gnu.org/licenses/agpl-3.0.html"),
@@ -35,23 +35,14 @@ object Common {
     dependencyOverrides += "com.typesafe.akka"        %% "akka-actor" % play.core.PlayVersion.akkaVersion
   )
 
-  val stableVersion: Regex = "(\\d+\\.\\d+\\.\\d+)-(\\d+)".r
-  val betaVersion: Regex   = "(\\d+\\.\\d+\\.\\d+)-[Rr][Cc](\\d+)-(\\d+)".r
-
-  object snapshotVersion {
-
-    def unapply(version: String): Option[String] =
-      if (version.endsWith("-SNAPSHOT")) Some(version.dropRight(9))
-      else None
-  }
+  val releaseVersion: Regex = "(\\d+\\.\\d+\\.\\d+)\\+(\\d+)".r
+  val snapshotVersion: Regex = "(\\d+\\.\\d+\\.\\d+)-SNAPSHOT\\+(\\d+)".r
 
   def versionUsage(version: String): Nothing =
     sys.error(
       s"Invalid version: $version\n" +
         "The accepted formats for version are:\n" +
-        " - 1.2.3-4\n" +
-        " - 1.2.3-RC4-5\n" +
-        " - 1.2.3-4-SNAPSHOT\n" +
-        " - 1.2.3-RC4-5-SNAPSHOT"
+        " - 1.2.3+4\n" +
+        " - 1.2.3-SNAPSHOT+1"
     )
 }
