@@ -1,14 +1,15 @@
 package org.thp.cortex.services
 
 import akka.actor.ActorSystem
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSourceBuilder
-import io.fabric8.kubernetes.api.model.batch.{JobBuilder => KJobBuilder}
+import io.fabric8.kubernetes.api.model.{PersistentVolumeClaimVolumeSourceBuilder, StatusDetails}
+import io.fabric8.kubernetes.api.model.batch.v1.{JobBuilder => KJobBuilder}
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import org.thp.cortex.models._
 import org.thp.cortex.util.FunctionalCondition._
 import play.api.{Configuration, Logger}
 
 import java.nio.file._
+import java.util
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.jdk.CollectionConverters._
@@ -113,7 +114,7 @@ class K8sJobRunnerSrv(
     .build()
 
     val execution = Try {
-      val created_kjob = client.batch().jobs().create(kjob)
+      val created_kjob = client.batch().v1().jobs().create(kjob)
       val created_env = created_kjob
         .getSpec.getTemplate.getSpec.getContainers.get(0)
         .getEnv.asScala
@@ -123,7 +124,7 @@ class K8sJobRunnerSrv(
         s"  image  : $dockerImage\n" +
         s"  mount  : pvc $persistentVolumeClaimName subdir $relativeJobDirectory as /job" +
         created_env.map(ev => s"\n  env    : ${ev.getName} = ${ev.getValue}").mkString)
-      val ended_kjob = client.batch().jobs().withLabel("cortex-job-id", job.id)
+      val ended_kjob = client.batch().v1().jobs().withLabel("cortex-job-id", job.id)
         .waitUntilCondition(x => Option(x).flatMap(j =>
           Option(j.getStatus).flatMap(s =>
             Some(s.getConditions.asScala.map(_.getType).exists(t =>
@@ -139,8 +140,8 @@ class K8sJobRunnerSrv(
     }
     // let's find the job by the attribute we know is fundamentally
     // unique, rather than one constructed from it
-    val deleted = client.batch().jobs().withLabel("cortex-job-id", job.id).delete()
-    if(deleted) {
+    val deleted: util.List[StatusDetails] = client.batch().v1().jobs().withLabel("cortex-job-id", job.id).delete()
+    if(!deleted.isEmpty) {
       logger.info(s"Deleted Kubernetes Job for job ${job.id}")
     } else {
       logger.info(s"While trying to delete Kubernetes Job for ${job.id}, the job was not found; this is OK")
