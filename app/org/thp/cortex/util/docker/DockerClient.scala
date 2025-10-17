@@ -107,8 +107,10 @@ class DockerClient(config: Configuration) {
     }
   }
 
-  private def imageExists(image: String): Boolean =
-    !underlyingClient.listImagesCmd().withImageNameFilter(image).exec().isEmpty
+  private def imageExists(image: String): Boolean = {
+    val imageWithoutTag = image.split(':').head
+    underlyingClient.listImagesCmd().withImageNameFilter(imageWithoutTag).exec().asScala.exists(_.getRepoTags.contains(image))
+  }
 
   private def getContainerStatus(containerId: String): Option[String] =
     underlyingClient
