@@ -5,7 +5,7 @@ ThisBuild / evictionErrorLevel := util.Level.Warn
 
 ThisBuild / dependencyOverrides ++= Seq(
   Dependencies.Play.twirl,
-  "com.fasterxml.jackson.core" % "jackson-databind" % "2.14.3",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.2",
   "org.apache.commons"         % "commons-compress" % "1.23.0",
   "com.google.guava"           % "guava"            % "32.1.1-jre"
 )
@@ -35,9 +35,9 @@ lazy val cortex = (project in file("."))
         Dependencies.akkaClusterTyped
       ),
       dependencyOverrides ++= Seq(
-        "com.github.jnr" % "jffi" % "1.3.11",
-        "com.github.jnr" % "jnr-ffi" % "2.2.13",
-        "com.github.jnr" % "jnr-enxio" % "0.32.14",
+        "com.github.jnr" % "jffi"           % "1.3.11",
+        "com.github.jnr" % "jnr-ffi"        % "2.2.13",
+        "com.github.jnr" % "jnr-enxio"      % "0.32.14",
         "com.github.jnr" % "jnr-unixsocket" % "0.38.19"
       ),
       Compile / packageDoc / publishArtifact := false,
@@ -52,23 +52,21 @@ lazy val cortex = (project in file("."))
     )
   )
 
-val elastic4sVersion = "7.17.4"
+val elastic4sVersion = "8.19.0"
 
 lazy val elastic4play = (project in file("elastic4play"))
   .enablePlugins(PlayScala)
   .settings(
-libraryDependencies ++= Seq(
-  cacheApi,
-  "com.sksamuel.elastic4s" %% "elastic4s-core"          % elastic4sVersion,
-  "com.sksamuel.elastic4s" %% "elastic4s-http-streams"  % elastic4sVersion,
-  "com.sksamuel.elastic4s" %% "elastic4s-client-esjava" % elastic4sVersion,
-  "com.typesafe.akka"      %% "akka-stream-testkit"     % play.core.PlayVersion.akkaVersion % Test,
-  "org.scalactic"          %% "scalactic"               % "3.2.19",
-  specs2                    % Test
-)
-
-)
-
+    libraryDependencies ++= Seq(
+      cacheApi,
+      "nl.gn0s1s"         %% "elastic4s-core" % elastic4sVersion,
+      "nl.gn0s1s"         %% "elastic4s-reactivestreams-akka" % elastic4sVersion,
+      "nl.gn0s1s"         %% "elastic4s-client-esjava" % elastic4sVersion,
+      "com.typesafe.akka" %% "akka-stream-testkit" % play.core.PlayVersion.akkaVersion % Test,
+      "org.scalactic"     %% "scalactic" % "3.2.19",
+      specs2              % Test
+    )
+  )
 
 lazy val cortexWithDeps = (project in file("target/docker-withdeps"))
   .dependsOn(cortex)

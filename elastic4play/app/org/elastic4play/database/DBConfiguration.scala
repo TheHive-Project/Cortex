@@ -1,19 +1,14 @@
 package org.elastic4play.database
 
-import java.nio.file.{Files, Paths}
-import java.security.KeyStore
-
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Sink, Source}
 import com.sksamuel.elastic4s._
+import com.sksamuel.elastic4s.akka.reactivestreams.ReactiveElastic.ReactiveElastic
+import com.sksamuel.elastic4s.akka.reactivestreams.{RequestBuilder, ResponseListener}
 import com.sksamuel.elastic4s.http.JavaClient
 import com.sksamuel.elastic4s.requests.bulk.BulkResponseItem
 import com.sksamuel.elastic4s.requests.searches.{SearchHit, SearchRequest}
-import com.sksamuel.elastic4s.streams.ReactiveElastic.ReactiveElastic
-import com.sksamuel.elastic4s.streams.{RequestBuilder, ResponseListener}
-import javax.inject.{Inject, Named, Singleton}
-import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.CredentialsProvider
 import org.apache.http.client.config.RequestConfig
@@ -25,9 +20,13 @@ import play.api.inject.ApplicationLifecycle
 import play.api.libs.json.JsObject
 import play.api.{Configuration, Logger}
 
-import scala.jdk.CollectionConverters._
+import java.nio.file.{Files, Paths}
+import java.security.KeyStore
+import javax.inject.{Inject, Named, Singleton}
+import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.jdk.CollectionConverters._
 
 /**
   * This class is a wrapper of ElasticSearch client from Elastic4s
@@ -43,7 +42,7 @@ class DBConfiguration @Inject() (
 ) {
   private[DBConfiguration] lazy val logger = Logger(getClass)
 
-  def requestConfigCallback: RequestConfigCallback = (requestConfigBuilder: RequestConfig.Builder) => {
+  private def requestConfigCallback: RequestConfigCallback = (requestConfigBuilder: RequestConfig.Builder) => {
     requestConfigBuilder.setAuthenticationEnabled(credentialsProviderMaybe.isDefined)
     config.getOptional[Boolean]("search.circularRedirectsAllowed").foreach(requestConfigBuilder.setCircularRedirectsAllowed)
     config.getOptional[Int]("search.connectionRequestTimeout").foreach(requestConfigBuilder.setConnectionRequestTimeout)
@@ -62,7 +61,7 @@ class DBConfiguration @Inject() (
     requestConfigBuilder
   }
 
-  lazy val credentialsProviderMaybe: Option[CredentialsProvider] =
+  private lazy val credentialsProviderMaybe: Option[CredentialsProvider] =
     for {
       user     <- config.getOptional[String]("search.user")
       password <- config.getOptional[String]("search.password")
@@ -73,7 +72,7 @@ class DBConfiguration @Inject() (
       provider
     }
 
-  lazy val sslContextMaybe: Option[SSLContext] = config.getOptional[String]("search.keyStore.path").map { keyStore =>
+  private lazy val sslContextMaybe: Option[SSLContext] = config.getOptional[String]("search.keyStore.path").map { keyStore =>
     val keyStorePath     = Paths.get(keyStore)
     val keyStoreType     = config.getOptional[String]("search.keyStore.type").getOrElse(KeyStore.getDefaultType)
     val keyStorePassword = config.getOptional[String]("search.keyStore.password").getOrElse("").toCharArray
@@ -113,7 +112,7 @@ class DBConfiguration @Inject() (
     sslContext
   }
 
-  def httpClientConfig: HttpClientConfigCallback = (httpClientBuilder: HttpAsyncClientBuilder) => {
+  private def httpClientConfig: HttpClientConfigCallback = (httpClientBuilder: HttpAsyncClientBuilder) => {
     sslContextMaybe.foreach(httpClientBuilder.setSSLContext)
     credentialsProviderMaybe.foreach(httpClientBuilder.setDefaultCredentialsProvider)
     httpClientBuilder
@@ -140,6 +139,7 @@ class DBConfiguration @Inject() (
     Future.successful(())
   }
 
+  //noinspection ScalaUnusedSymbol
   def execute[T, U](t: T)(
       implicit
       handler: Handler[T, U],

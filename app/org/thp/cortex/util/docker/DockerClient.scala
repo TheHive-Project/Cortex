@@ -33,7 +33,7 @@ class DockerClient(config: Configuration) {
       waitResult
     }
 
-  def pullImageIfRequired(image: String): Try[Unit] =
+  private def pullImageIfRequired(image: String): Try[Unit] =
     if (imageExists(image)) Success(())
     else {
       logger.info(s"pulling image $image ...")
@@ -107,10 +107,10 @@ class DockerClient(config: Configuration) {
     }
   }
 
-  def imageExists(image: String): Boolean =
+  private def imageExists(image: String): Boolean =
     !underlyingClient.listImagesCmd().withImageNameFilter(image).exec().isEmpty
 
-  def getContainerStatus(containerId: String): Option[String] =
+  private def getContainerStatus(containerId: String): Option[String] =
     underlyingClient
       .listContainersCmd()
       .withIdFilter(Collections.singletonList(containerId))
@@ -119,7 +119,14 @@ class DockerClient(config: Configuration) {
       .headOption
       .map(_.getStatus)
 
-  def killContainer(containerId: String): Try[Unit] = {
+  private def isContainerRunning(containerId: String): Boolean =
+    underlyingClient
+      .inspectContainerCmd(containerId)
+      .exec()
+      .getState
+      .getRunning
+
+  private def killContainer(containerId: String): Try[Unit] = {
     logger.info(s"Killing the container $containerId")
     Try {
       underlyingClient
@@ -133,7 +140,7 @@ class DockerClient(config: Configuration) {
     }
   }
 
-  def removeContainer(containerId: String): Try[Unit] = {
+  private def removeContainer(containerId: String): Try[Unit] = {
     logger.info(s"Removing the container $containerId")
     Try {
       underlyingClient
@@ -150,7 +157,8 @@ class DockerClient(config: Configuration) {
 
   def clean(containerId: String): Try[Unit] =
     getContainerStatus(containerId).fold[Try[Unit]](Success(())) { status =>
-      if (status != "exited" && status != "dead")
+      logger.debug(s"Container about to be cleaned status: $status")
+      if (isContainerRunning(containerId))
         killContainer(containerId)
       removeContainer(containerId)
     }

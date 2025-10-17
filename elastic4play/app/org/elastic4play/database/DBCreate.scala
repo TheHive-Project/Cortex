@@ -1,14 +1,14 @@
 package org.elastic4play.database
 
 import scala.concurrent.{ExecutionContext, Future}
-import play.api.Logger
 import play.api.libs.json.JsValue.jsValueToJsLookup
 import play.api.libs.json._
 import akka.stream.scaladsl.Sink
 import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.akka.reactivestreams.RequestBuilder
 import com.sksamuel.elastic4s.requests.common.RefreshPolicy
 import com.sksamuel.elastic4s.requests.indexes.IndexRequest
-import com.sksamuel.elastic4s.streams.RequestBuilder
+
 import javax.inject.{Inject, Singleton}
 import org.elastic4play.models.BaseEntity
 
@@ -18,9 +18,6 @@ import org.elastic4play.models.BaseEntity
   */
 @Singleton
 class DBCreate @Inject() (db: DBConfiguration) {
-
-  private[DBCreate] lazy val logger = Logger(getClass)
-
   /**
     * Create an entity of type "modelName" with attributes
     *
