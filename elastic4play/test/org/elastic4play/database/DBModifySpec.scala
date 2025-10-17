@@ -1,7 +1,5 @@
 package org.elastic4play.database
 
-import java.util.{Map => JMap}
-
 import org.elastic4play.models.BaseEntity
 import org.junit.runner.RunWith
 import org.specs2.matcher.ValueCheck.typedValueCheck
@@ -11,6 +9,7 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json.{JsArray, JsNull, Json}
 import play.api.test.PlaySpecification
 
+import java.util.{Map => JMap}
 import scala.jdk.CollectionConverters._
 
 @RunWith(classOf[JUnitRunner])
@@ -43,7 +42,7 @@ class DBModifySpec extends PlaySpecification with Mockito {
         ctx._source["n"]=null;
         ctx._source["sub"]["attr"].remove("remove");
         ctx._source.remove("remove")""".filterNot(c => "\n ".contains(c))
-      script.params - "param0" - "param1" must_=== Map("param2"                              -> 42, "param3" -> "blah", "param4" -> false, "param5" -> "subValue")
+      script.params - "param0" - "param1" must_=== Map("param2"                       -> 42, "param3" -> "blah", "param4" -> false, "param5" -> "subValue")
       script.params("param0").asInstanceOf[JMap[_, _]].asScala must_== Map("subAttr1" -> 1)
       script.params("param1").asInstanceOf[Array[Any]].toSeq must contain(exactly[Any]("a", "b", "c"))
     }

@@ -55,7 +55,7 @@ class DBModify @Inject() (db: DBConfiguration) {
   private[database] def buildScript(entity: BaseEntity, updateAttributes: JsObject): Script = {
     val attrs = updateAttributes.fields.zipWithIndex
     val updateScript = attrs.map {
-      case ((name, JsArray(Seq())), _) =>
+      case ((name, JsArray(s)), _) if s.isEmpty =>
         val names = name.split("\\.")
         names.init.map(n => s"""["$n"]""").mkString("ctx._source", "", s""".remove("${names.last}")""")
       case ((name, JsNull), _) =>

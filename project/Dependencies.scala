@@ -1,11 +1,11 @@
 import sbt._
 
 object Dependencies {
-  val scalaVersion      = "2.13.15"
-  val dockerJavaVersion = "3.4.0"
+  val scalaVersion      = "2.13.17"
+  val dockerJavaVersion = "3.6.0"
 
   object Play {
-    val version = play.core.PlayVersion.current
+    val version: String = play.core.PlayVersion.current
     val ws      = "com.typesafe.play" %% "play-ws" % version exclude ("com.typesafe.play", "play-ws-standalone-xml")
     val ahc     = "com.typesafe.play" %% "play-ahc-ws" % version
     val cache   = "com.typesafe.play" %% "play-ehcache" % version
@@ -13,7 +13,7 @@ object Dependencies {
     val specs2  = "com.typesafe.play" %% "play-specs2" % version
     val filters = "com.typesafe.play" %% "filters-helpers" % version
     val guice   = "com.typesafe.play" %% "play-guice" % version
-    val twirl   = "com.typesafe.play" %% "twirl-api" % "1.6.8"
+    val twirl   = "com.typesafe.play" %% "twirl-api" % "1.6.10"
   }
 
   val scalaGuice = "net.codingwell" %% "scala-guice" % "6.0.0"
