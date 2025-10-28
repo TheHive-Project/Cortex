@@ -1,6 +1,6 @@
 [Unit]
 Description=cortex
-Documentation=https://thehive-project.org
+Documentation=https://strangebee.com
 Wants=network-online.target
 After=network-online.target
 

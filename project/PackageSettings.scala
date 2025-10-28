@@ -89,7 +89,7 @@ object PackageSettings {
         file("package/logback.xml")    -> "conf/logback.xml"
       )
     },
-    maintainer := "TheHive Project <support@thehive-project.org>",
+    maintainer := "Strangebee <contact@strangebee.com>",
     packageSummary := "Powerful Observable Analysis Engine",
     packageDescription := """Cortex tries to solve a common problem frequently encountered by SOCs, CSIRTs and security
                             | researchers in the course of threat intelligence, digital forensics and incident response: how to analyze
