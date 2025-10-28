@@ -9,7 +9,7 @@ object Common {
     organizationName := "TheHive-Project",
     organization := "org.thehive-project",
     licenses += "AGPL-V3" -> url("https://www.gnu.org/licenses/agpl-3.0.html"),
-    organizationHomepage := Some(url("http://thehive-project.org/")),
+    organizationHomepage := Some(url("https://strangebee.com/")),
     resolvers += "elasticsearch-releases" at "https://artifacts.elastic.co/maven",
     scalaVersion := Dependencies.scalaVersion,
     scalacOptions ++= Seq(

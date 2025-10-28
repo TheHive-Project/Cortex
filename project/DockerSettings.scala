@@ -41,7 +41,7 @@ object DockerSettings {
     }),
     dockerCommands := Seq(
       Cmd("FROM", "ghcr.io/strangebee/cortex-baselayer:rolling"),
-      Cmd("LABEL", "MAINTAINER=\"TheHive Project <support@thehive-project.org>\"", "repository=\"https://github.com/TheHive-Project/TheHive\""),
+      Cmd("LABEL", "MAINTAINER=\" Strangebee <contact@strangebee.com>\"", "repository=\"https://github.com/TheHive-Project/Cortex\""),
       Cmd("WORKDIR", "/opt/cortex"),
       Cmd("ENV", "JAVA_HOME", "/usr/lib/jvm/java-11-amazon-corretto"),
       run(createDefaultUser, setupDocker),

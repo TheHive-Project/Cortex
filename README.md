@@ -56,10 +56,7 @@ issue on the [analyzers' dedicated GitHub repository](https://github.com/TheHive
 If you have problems with TheHive or would like to request a TheHive-related
 feature, please [open an issue on its dedicated GitHub repository](https://github.com/TheHive-Project/TheHive/issues/new).
 
-Alternatively, if you need to contact the project team, send an email to <support@thehive-project.org>.
-
-# Community Discussions
-We have set up a Google forum at <https://groups.google.com/a/thehive-project.org/d/forum/users>. To request access, you need a Google account. You may create one [using a Gmail address](https://accounts.google.com/SignUp?hl=en) or [without one](https://accounts.google.com/SignUpWithoutGmail?hl=en).
+Alternatively, if you need to contact the project team, send an email to <contact@strangebee.com>.
 
 # Website
-<https://thehive-project.org/>
+<https://strangebee.com/>
