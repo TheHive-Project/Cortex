@@ -1,6 +1,6 @@
 package org.elastic4play.controllers
 
-import akka.util.ByteString
+import org.apache.pekko.util.ByteString
 import org.elastic4play.BadRequestError
 import org.elastic4play.controllers.JsonFormat.{fieldsReader, pathFormat}
 import org.elastic4play.services.Attachment

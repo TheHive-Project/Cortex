@@ -1,6 +1,6 @@
 package org.thp.cortex.services
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import org.thp.cortex.models._
 import play.api.Logger
 import play.api.libs.json.Json

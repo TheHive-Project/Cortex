@@ -1,8 +1,8 @@
 package org.thp.cortex.services
 
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.FileIO
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.FileIO
 import org.elastic4play.BadRequestError
 import org.elastic4play.controllers.{Fields, FileInputValue}
 import org.elastic4play.database.ModifyConfig

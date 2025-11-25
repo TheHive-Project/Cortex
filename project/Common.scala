@@ -1,7 +1,7 @@
-import scala.util.matching.Regex
-
-import sbt.Keys.*
 import sbt.*
+import sbt.Keys.*
+
+import scala.util.matching.Regex
 
 object Common {
 
@@ -19,9 +19,9 @@ object Common {
       "-feature",     // Emit warning and location for usages of features that should be imported explicitly.
       "-unchecked",   // Enable additional warnings where generated code depends on assumptions.
       //"-Xfatal-warnings", // Fail the compilation if there are any warnings.
-      "-Xlint",                  // Enable recommended additional warnings.
-      "-Ywarn-dead-code",        // Warn when dead code is identified.
-      "-Ywarn-numeric-widen"     // Warn when numerics are widened.
+      "-Xlint",              // Enable recommended additional warnings.
+      "-Ywarn-dead-code",    // Warn when dead code is identified.
+      "-Ywarn-numeric-widen" // Warn when numerics are widened.
     ),
     Test / scalacOptions ~= { options =>
       options filterNot (_ == "-Ywarn-dead-code") // Allow dead code in tests (to support using mockito).
@@ -31,18 +31,26 @@ object Common {
     javaOptions += "-Xmx1G",
     // Redirect logs from ElasticSearch (which uses log4j2) to slf4j
     libraryDependencies += "org.apache.logging.log4j" % "log4j-to-slf4j" % "2.17.0",
-    excludeDependencies += "org.apache.logging.log4j" % "log4j-core",
-    dependencyOverrides += "com.typesafe.akka"        %% "akka-actor" % play.core.PlayVersion.akkaVersion
+    excludeDependencies += "org.apache.logging.log4j" % "log4j-core"
   )
 
-  val releaseVersion: Regex = "(\\d+\\.\\d+\\.\\d+)\\+(\\d+)".r
-  val snapshotVersion: Regex = "(\\d+\\.\\d+\\.\\d+)-SNAPSHOT\\+(\\d+)".r
+  val stableVersion: Regex = "(\\d+\\.\\d+\\.\\d+)-(\\d+)".r
+  val betaVersion: Regex   = "(\\d+\\.\\d+\\.\\d+)-[Rr][Cc](\\d+)-(\\d+)".r
+
+  object snapshotVersion {
+
+    def unapply(version: String): Option[String] =
+      if (version.endsWith("-SNAPSHOT")) Some(version.dropRight(9))
+      else None
+  }
 
   def versionUsage(version: String): Nothing =
     sys.error(
       s"Invalid version: $version\n" +
         "The accepted formats for version are:\n" +
-        " - 1.2.3+4\n" +
-        " - 1.2.3-SNAPSHOT+1"
+        " - 1.2.3-4\n" +
+        " - 1.2.3-RC4-5\n" +
+        " - 1.2.3-4-SNAPSHOT\n" +
+        " - 1.2.3-RC4-5-SNAPSHOT"
     )
 }

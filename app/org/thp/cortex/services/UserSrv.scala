@@ -9,8 +9,8 @@ import play.api.Configuration
 import play.api.cache.AsyncCacheApi
 import play.api.mvc.RequestHeader
 
-import akka.NotUsed
-import akka.stream.scaladsl.Source
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.scaladsl.Source
 import org.thp.cortex.models._
 
 import org.elastic4play.controllers.Fields

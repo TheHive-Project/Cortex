@@ -1,7 +1,7 @@
 package org.thp.cortex.services
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, PoisonPill}
-import akka.stream.Materializer
+import org.apache.pekko.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, PoisonPill}
+import org.apache.pekko.stream.Materializer
 import org.elastic4play.services._
 import org.elastic4play.utils.Instance
 import play.api.Logger

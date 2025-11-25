@@ -7,7 +7,7 @@ import scala.util.{Failure, Success, Try}
 
 import play.api.libs.json.{JsObject, JsValue, Writes}
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import org.scalactic.{Bad, Good, Or}
 
 package object utils {

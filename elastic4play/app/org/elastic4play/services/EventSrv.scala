@@ -1,9 +1,9 @@
 package org.elastic4play.services
 
-import akka.actor.ActorRef
-import akka.event.{ActorEventBus, SubchannelClassification}
-import akka.stream.Materializer
-import akka.util.Subclassification
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.event.{ActorEventBus, SubchannelClassification}
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.util.Subclassification
 import org.elastic4play.models.{BaseEntity, HiveEnumeration}
 import play.api.Logger
 import play.api.libs.json.JsObject

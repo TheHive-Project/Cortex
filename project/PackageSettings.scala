@@ -1,4 +1,4 @@
-import Common.{releaseVersion, snapshotVersion, versionUsage}
+import Common.{stableVersion, betaVersion, snapshotVersion, versionUsage}
 import com.typesafe.sbt.SbtNativePackager.autoImport.{maintainer, maintainerScripts, packageDescription, packageSummary}
 import com.typesafe.sbt.packager.Keys.*
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging.autoImport.maintainerScriptsFromDirectory
@@ -14,19 +14,23 @@ import sbt.{Def, *}
 import java.util.jar.Attributes.Name.*
 
 object PackageSettings {
-  val rpmSettings: Seq[Def.Setting[?]] = Def.settings(
+  val rpmSettings = Seq(
     Rpm / version := {
       version.value match {
-        case releaseVersion(v1, _)  => v1
-        case snapshotVersion(v1, _) => v1
-        case _                      => versionUsage(version.value)
+        case stableVersion(v1, _)                   => v1
+        case betaVersion(v1, _, _)                  => v1
+        case snapshotVersion(stableVersion(v1, _))  => v1
+        case snapshotVersion(betaVersion(v1, _, _)) => v1
+        case _                                      => versionUsage(version.value)
       }
     },
     rpmRelease := {
       version.value match {
-        case releaseVersion(_, v2)  => v2
-        case snapshotVersion(_, v2) => v2 + "~SNAPSHOT"
-        case _                      => versionUsage(version.value)
+        case stableVersion(_, v2)                    => v2
+        case betaVersion(_, v2, v3)                  => "0." + v3 + "RC" + v2
+        case snapshotVersion(stableVersion(_, v2))   => v2 + "_SNAPSHOT"
+        case snapshotVersion(betaVersion(_, v2, v3)) => "0." + v3 + "RC" + v2 + "_SNAPSHOT"
+        case _                                       => versionUsage(version.value)
       }
     },
     rpmVendor := organizationName.value,

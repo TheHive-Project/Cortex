@@ -9,9 +9,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.Logger
 import play.api.libs.json.JsValue
 
-import akka.stream.scaladsl.{FileIO, Sink, Source}
-import akka.stream.{IOResult, Materializer}
-import akka.util.ByteString
+import org.apache.pekko.stream.scaladsl.{FileIO, Sink, Source}
+import org.apache.pekko.stream.{IOResult, Materializer}
+import org.apache.pekko.util.ByteString
 
 // TODO use play.api.libs.Codecs
 

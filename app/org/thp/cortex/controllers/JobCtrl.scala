@@ -1,10 +1,10 @@
 package org.thp.cortex.controllers
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.pattern.ask
-import akka.stream.Materializer
-import akka.stream.scaladsl.Sink
-import akka.util.Timeout
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.Sink
+import org.apache.pekko.util.Timeout
 import org.elastic4play.NotFoundError
 import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites

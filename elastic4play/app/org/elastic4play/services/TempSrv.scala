@@ -11,7 +11,7 @@ import play.api.Logger
 import play.api.inject.ApplicationLifecycle
 import play.api.mvc.{Filter, RequestHeader, Result}
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 
 import org.elastic4play.utils.Instance
 

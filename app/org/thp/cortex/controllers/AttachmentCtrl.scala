@@ -2,7 +2,7 @@ package org.thp.cortex.controllers
 
 import java.net.URLEncoder
 import java.nio.file.Files
-import akka.stream.scaladsl.FileIO
+import org.apache.pekko.stream.scaladsl.FileIO
 
 import javax.inject.{Inject, Singleton}
 import net.lingala.zip4j.ZipFile

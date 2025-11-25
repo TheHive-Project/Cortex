@@ -8,7 +8,7 @@ import play.api.libs.ws._
 import play.api.libs.ws.ahc.{AhcWSClient, AhcWSClientConfig, AhcWSClientConfigParser}
 import play.api.{Configuration, Environment, Logger}
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import com.typesafe.sslconfig.ssl.TrustStoreConfig
 
 object CustomWSAPI {

@@ -13,5 +13,5 @@ Seq[(String, ModuleID)](
 ).flatMap(maybeEnable)
 
 // The Play plugin
-addSbtPlugin("com.typesafe.play" % "sbt-plugin"           % "2.9.8")
-addSbtPlugin("org.scalameta"     % "sbt-scalafmt"         % "2.5.5")
+addSbtPlugin("org.playframework" % "sbt-plugin"   % "3.0.9")
+addSbtPlugin("org.scalameta"     % "sbt-scalafmt" % "2.5.5")

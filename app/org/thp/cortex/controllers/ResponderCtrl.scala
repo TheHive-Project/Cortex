@@ -5,7 +5,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.json.{JsNumber, JsObject, Json}
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import javax.inject.{Inject, Singleton}
 import org.thp.cortex.models.{Roles, Worker, WorkerDefinition}
 import org.thp.cortex.services.{UserSrv, WorkerSrv}

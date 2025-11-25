@@ -6,12 +6,12 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import play.api.Logger
 import play.api.libs.json.{Json, _}
 
-import akka.NotUsed
-import akka.actor.ActorRef
-import akka.pattern.ask
-import akka.stream.Materializer
-import akka.stream.scaladsl.{Sink, Source}
-import akka.util.Timeout
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.{Sink, Source}
+import org.apache.pekko.util.Timeout
 import javax.inject.{Inject, Named, Singleton}
 import org.apache.commons.codec.binary.Base64
 import org.thp.cortex.models._

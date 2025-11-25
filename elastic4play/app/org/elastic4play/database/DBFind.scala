@@ -1,9 +1,9 @@
 package org.elastic4play.database
 
-import akka.NotUsed
-import akka.stream.scaladsl.Source
-import akka.stream.stage.{AsyncCallback, GraphStage, GraphStageLogic, OutHandler}
-import akka.stream.{Attributes, Materializer, Outlet, SourceShape}
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.stream.stage.{AsyncCallback, GraphStage, GraphStageLogic, OutHandler}
+import org.apache.pekko.stream.{Attributes, Materializer, Outlet, SourceShape}
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.{ElasticRequest, Show}
 import com.sksamuel.elastic4s.requests.searches.{SearchHit, SearchRequest, SearchResponse}

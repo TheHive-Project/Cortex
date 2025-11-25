@@ -1,6 +1,6 @@
 package org.elastic4play.services
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.cache.SyncCacheApi

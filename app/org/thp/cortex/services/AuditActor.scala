@@ -4,7 +4,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import play.api.Logger
-import akka.actor.{Actor, ActorRef}
+import org.apache.pekko.actor.{Actor, ActorRef}
 import org.thp.cortex.models.JobStatus
 import org.elastic4play.models.{BaseEntity, BaseModelDef}
 import org.elastic4play.services._
