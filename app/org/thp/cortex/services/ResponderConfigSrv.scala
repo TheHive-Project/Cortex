@@ -4,7 +4,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Configuration
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import javax.inject.{Inject, Singleton}
 import org.thp.cortex.models.{BaseConfig, WorkerConfigModel, WorkerType}
 

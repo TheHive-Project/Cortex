@@ -1,9 +1,9 @@
 package org.elastic4play.services
 
-import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.{Sink, Source}
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import com.sksamuel.elastic4s.ElasticDsl._
 import javax.inject.{Inject, Singleton}
 import org.elastic4play.InternalError
@@ -179,7 +179,7 @@ class MigrationSrv @Inject() (
 }
 
 /* Operation applied to the previous state of the database to get next version */
-trait Operation extends ((String => Source[JsObject, NotUsed]) => (String => Source[JsObject, NotUsed]))
+trait Operation extends ((String => Source[JsObject, NotUsed]) => String => Source[JsObject, NotUsed])
 
 object Operation {
 

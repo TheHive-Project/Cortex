@@ -1,8 +1,8 @@
 package org.elastic4play.database
 
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.testkit.scaladsl.TestSink
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.testkit.scaladsl.TestSink
 import com.sksamuel.elastic4s.ElasticDsl.SearchHandler
 import com.sksamuel.elastic4s.requests.searches.{SearchHit, SearchHits, SearchRequest, SearchResponse, Total}
 import org.elastic4play.utils._
@@ -31,43 +31,43 @@ class DBFindSpec extends PlaySpecification with Mockito {
     "if range is not provided, use offset:0 and limit:10" in {
       val db     = mock[DBConfiguration]
       val dbfind = new DBFind(pageSize, keepAlive, db, mat)
-      dbfind.getOffsetAndLimitFromRange(None) must_== ((0, 10))
+      dbfind.getOffsetAndLimitFromRange(None) must_== (0, 10)
     }
 
     "if range is 75, use offset:75 and limit:10" in {
       val db     = mock[DBConfiguration]
       val dbfind = new DBFind(pageSize, keepAlive, db, mat)
-      dbfind.getOffsetAndLimitFromRange(Some("75")) must_== ((75, 10))
+      dbfind.getOffsetAndLimitFromRange(Some("75")) must_== (75, 10)
     }
 
     "if range is 75-NaN, use it as offset:75 and limit:10" in {
       val db     = mock[DBConfiguration]
       val dbfind = new DBFind(pageSize, keepAlive, db, mat)
-      dbfind.getOffsetAndLimitFromRange(Some("75-NaN")) must_== ((75, 10))
+      dbfind.getOffsetAndLimitFromRange(Some("75-NaN")) must_== (75, 10)
     }
 
     "if range is NaN, use it as offset:0 and limit:10" in {
       val db     = mock[DBConfiguration]
       val dbfind = new DBFind(pageSize, keepAlive, db, mat)
-      dbfind.getOffsetAndLimitFromRange(Some("NaN")) must_== ((0, 10))
+      dbfind.getOffsetAndLimitFromRange(Some("NaN")) must_== (0, 10)
     }
 
     "if range is 75-32, use it as offset:75 and limit:10" in {
       val db     = mock[DBConfiguration]
       val dbfind = new DBFind(pageSize, keepAlive, db, mat)
-      dbfind.getOffsetAndLimitFromRange(Some("75-32")) must_== ((75, 10))
+      dbfind.getOffsetAndLimitFromRange(Some("75-32")) must_== (75, 10)
     }
 
     "if range is 75-100, use it as offset:75 and limit:25" in {
       val db     = mock[DBConfiguration]
       val dbfind = new DBFind(pageSize, keepAlive, db, mat)
-      dbfind.getOffsetAndLimitFromRange(Some("75-100")) must_== ((75, 25))
+      dbfind.getOffsetAndLimitFromRange(Some("75-100")) must_== (75, 25)
     }
 
     "if range is all, use it as offset:0 and limit:Int.MaxValue" in {
       val db     = mock[DBConfiguration]
       val dbfind = new DBFind(pageSize, keepAlive, db, mat)
-      dbfind.getOffsetAndLimitFromRange(Some("all")) must_== ((0, Int.MaxValue))
+      dbfind.getOffsetAndLimitFromRange(Some("all")) must_== (0, Int.MaxValue)
     }
 
 //    "execute search using scroll" in {

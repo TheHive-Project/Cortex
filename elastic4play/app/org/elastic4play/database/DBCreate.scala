@@ -3,9 +3,9 @@ package org.elastic4play.database
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.json.JsValue.jsValueToJsLookup
 import play.api.libs.json._
-import akka.stream.scaladsl.Sink
+import org.apache.pekko.stream.scaladsl.Sink
 import com.sksamuel.elastic4s.ElasticDsl._
-import com.sksamuel.elastic4s.akka.reactivestreams.RequestBuilder
+import com.sksamuel.elastic4s.pekko.reactivestreams.RequestBuilder
 import com.sksamuel.elastic4s.requests.common.RefreshPolicy
 import com.sksamuel.elastic4s.requests.indexes.IndexRequest
 

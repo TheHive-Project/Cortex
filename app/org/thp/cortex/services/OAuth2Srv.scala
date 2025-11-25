@@ -1,7 +1,7 @@
 package org.thp.cortex.services
 import java.util.UUID
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import javax.inject.{Inject, Singleton}
 import org.elastic4play.services.{AuthContext, AuthSrv}
 import org.elastic4play.{AuthenticationError, BadRequestError, NotFoundError}

@@ -10,7 +10,7 @@ import play.api.mvc.RequestHeader
 import play.filters.csrf.CSRF.{ErrorHandler => CSRFErrorHandler, TokenProvider}
 import play.filters.csrf.CSRFConfig
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 
 object CSRFFilter {
   private[CSRFFilter] lazy val logger = Logger(getClass)

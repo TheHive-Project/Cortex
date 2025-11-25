@@ -13,13 +13,13 @@ import org.thp.cortex.controllers.{AssetCtrl, AssetCtrlDev, AssetCtrlProd}
 import org.thp.cortex.models.{AuditedModel, Migration}
 import org.thp.cortex.services._
 import org.thp.cortex.services.mappers.{MultiUserMapperSrv, UserMapper}
-import play.api.libs.concurrent.AkkaGuiceSupport
+import play.api.libs.concurrent.PekkoGuiceSupport
 import play.api.{Configuration, Environment, Logger, Mode}
 
 import java.lang.reflect.Modifier
 import scala.jdk.CollectionConverters._
 
-class Module(environment: Environment, configuration: Configuration) extends AbstractModule with ScalaModule with AkkaGuiceSupport {
+class Module(environment: Environment, configuration: Configuration) extends AbstractModule with ScalaModule with PekkoGuiceSupport {
 
   private lazy val logger = Logger(s"module")
 

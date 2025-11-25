@@ -1,7 +1,7 @@
 package org.thp.cortex.services
 
-import akka.stream.Materializer
-import akka.stream.scaladsl.Sink
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.Sink
 import org.elastic4play.controllers.Fields
 import org.elastic4play.services.{AuthCapability, AuthContext, AuthSrv}
 import org.elastic4play.{AuthenticationError, BadRequestError}

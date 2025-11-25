@@ -1,13 +1,23 @@
 import Common.*
+import Dependencies.{nettyVersion, pekkoVersion}
 
 ThisBuild / scalaVersion := Dependencies.scalaVersion
 ThisBuild / evictionErrorLevel := util.Level.Warn
 
 ThisBuild / dependencyOverrides ++= Seq(
   Dependencies.Play.twirl,
-  "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.2",
-  "org.apache.commons"         % "commons-compress" % "1.23.0",
-  "com.google.guava"           % "guava"            % "32.1.1-jre"
+  "com.fasterxml.jackson.core" % "jackson-databind"             % "2.19.2",
+  "org.apache.commons"         % "commons-compress"             % "1.28.0",
+  "com.google.guava"           % "guava"                        % "32.1.1-jre",
+  "org.apache.pekko"           %% "pekko-actor"                 % pekkoVersion,
+  "org.apache.pekko"           %% "pekko-serialization-jackson" % pekkoVersion,
+  "org.apache.pekko"           %% "pekko-actor-typed"           % pekkoVersion,
+  "org.apache.pekko"           %% "pekko-slf4j"                 % pekkoVersion,
+  "ch.qos.logback"             % "logback-core"                 % "1.5.20",
+  "io.netty"                   % "netty-handler-proxy"          % nettyVersion,
+  "io.netty"                   % "netty-resolver-dns"           % nettyVersion,
+  "io.netty"                   % "netty-codec-http"             % nettyVersion,
+  "io.netty"                   % "netty-codec-http2"            % nettyVersion
 )
 lazy val cortex = (project in file("."))
   .enablePlugins(PlayScala)
@@ -20,7 +30,7 @@ lazy val cortex = (project in file("."))
   .settings(
     Seq(
       libraryDependencies ++= Seq(
-        Dependencies.Play.cache,
+        caffeine,
         Dependencies.Play.ws,
         Dependencies.Play.ahc,
         Dependencies.Play.specs2 % Test,
@@ -31,8 +41,8 @@ lazy val cortex = (project in file("."))
         Dependencies.dockerJavaClient,
         Dependencies.dockerJavaTransport,
         Dependencies.k8sClient,
-        Dependencies.akkaCluster,
-        Dependencies.akkaClusterTyped
+        Dependencies.pekkoCluster,
+        Dependencies.pekkoClusterTyped
       ),
       dependencyOverrides ++= Seq(
         "com.github.jnr" % "jffi"           % "1.3.11",
@@ -59,12 +69,12 @@ lazy val elastic4play = (project in file("elastic4play"))
   .settings(
     libraryDependencies ++= Seq(
       cacheApi,
-      "nl.gn0s1s"         %% "elastic4s-core" % elastic4sVersion,
-      "nl.gn0s1s"         %% "elastic4s-reactivestreams-akka" % elastic4sVersion,
-      "nl.gn0s1s"         %% "elastic4s-client-esjava" % elastic4sVersion,
-      "com.typesafe.akka" %% "akka-stream-testkit" % play.core.PlayVersion.akkaVersion % Test,
-      "org.scalactic"     %% "scalactic" % "3.2.19",
-      specs2              % Test
+      "nl.gn0s1s"        %% "elastic4s-core" % elastic4sVersion,
+      "nl.gn0s1s"        %% "elastic4s-reactivestreams-pekko" % elastic4sVersion,
+      "nl.gn0s1s"        %% "elastic4s-client-esjava" % elastic4sVersion,
+      "org.apache.pekko" %% "pekko-stream-testkit" % pekkoVersion % Test,
+      "org.scalactic"    %% "scalactic" % "3.2.19",
+      specs2             % Test
     )
   )
 

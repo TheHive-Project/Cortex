@@ -1,8 +1,8 @@
 package org.thp.cortex.services
 
-import akka.{Done, NotUsed}
-import akka.stream.Materializer
-import akka.stream.scaladsl.{Sink, Source}
+import org.apache.pekko.{Done, NotUsed}
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import org.elastic4play._
 import org.elastic4play.controllers.{Fields, StringInputValue}
 import org.elastic4play.database.ModifyConfig

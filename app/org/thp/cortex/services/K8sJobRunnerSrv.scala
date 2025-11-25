@@ -1,6 +1,6 @@
 package org.thp.cortex.services
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import io.fabric8.kubernetes.api.model.{PersistentVolumeClaimVolumeSourceBuilder, StatusDetails}
 import io.fabric8.kubernetes.api.model.batch.v1.{JobBuilder => KJobBuilder}
 import io.fabric8.kubernetes.client.DefaultKubernetesClient

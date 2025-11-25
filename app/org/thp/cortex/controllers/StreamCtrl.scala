@@ -12,9 +12,9 @@ import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
-import akka.actor.{ActorSystem, Props}
-import akka.util.Timeout
-import akka.pattern.ask
+import org.apache.pekko.actor.{ActorSystem, Props}
+import org.apache.pekko.util.Timeout
+import org.apache.pekko.pattern.ask
 import org.thp.cortex.models.Roles
 import org.thp.cortex.services.StreamActor
 import org.thp.cortex.services.StreamActor.StreamMessages

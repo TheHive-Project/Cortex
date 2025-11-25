@@ -1,11 +1,11 @@
 package org.elastic4play.database
 
-import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Sink, Source}
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import com.sksamuel.elastic4s._
-import com.sksamuel.elastic4s.akka.reactivestreams.ReactiveElastic.ReactiveElastic
-import com.sksamuel.elastic4s.akka.reactivestreams.{RequestBuilder, ResponseListener}
+import com.sksamuel.elastic4s.pekko.reactivestreams.ReactiveElastic.ReactiveElastic
+import com.sksamuel.elastic4s.pekko.reactivestreams.{RequestBuilder, ResponseListener}
 import com.sksamuel.elastic4s.http.JavaClient
 import com.sksamuel.elastic4s.requests.bulk.BulkResponseItem
 import com.sksamuel.elastic4s.requests.searches.{SearchHit, SearchRequest}

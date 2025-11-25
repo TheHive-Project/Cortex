@@ -4,7 +4,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 import play.api.mvc.RequestHeader
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import org.thp.cortex.models.User
 import org.elastic4play.controllers.Fields
 import org.elastic4play.services.{AuthCapability, AuthContext, AuthSrv}

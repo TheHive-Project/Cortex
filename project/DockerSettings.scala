@@ -1,4 +1,4 @@
-import Common.{releaseVersion, snapshotVersion, versionUsage}
+import Common.{stableVersion, snapshotVersion, versionUsage, betaVersion}
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.*
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.defaultLinuxInstallLocation
@@ -22,9 +22,11 @@ object DockerSettings {
   val default: Seq[Def.Setting[?]] = Def.settings(
     Docker / version := {
       version.value match {
-        case releaseVersion(_, _)  => version.value
-        case snapshotVersion(_, _) => version.value
-        case _                     => versionUsage(version.value)
+        case stableVersion(_, _)                      => version.value
+        case betaVersion(v1, v2, v3)                  => v1 + "-0." + v3 + "RC" + v2
+        case snapshotVersion(stableVersion(v1, v2))   => v1 + "-" + v2 + "-SNAPSHOT"
+        case snapshotVersion(betaVersion(v1, v2, v3)) => v1 + "-0." + v3 + "RC" + v2 + "-SNAPSHOT"
+        case _                                        => versionUsage(version.value)
       }
     },
     dockerGroupLayers := PartialFunction.empty,

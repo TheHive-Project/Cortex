@@ -3,11 +3,11 @@ package org.elastic4play.services
 import java.io.InputStream
 import java.nio.file.Files
 
-import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.{FileIO, Sink, Source, StreamConverters}
-import akka.util.ByteString
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.{FileIO, Sink, Source, StreamConverters}
+import org.apache.pekko.util.ByteString
 import com.sksamuel.elastic4s.ElasticDsl.search
 import javax.inject.{Inject, Singleton}
 import org.elastic4play.controllers.JsonFormat.{attachmentInputValueReads, fileInputValueFormat}

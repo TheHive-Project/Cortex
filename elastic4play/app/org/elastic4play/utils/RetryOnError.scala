@@ -6,7 +6,7 @@ import scala.concurrent.duration.DurationInt
 
 import play.api.Logger
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 
 object RetryOnError {
 

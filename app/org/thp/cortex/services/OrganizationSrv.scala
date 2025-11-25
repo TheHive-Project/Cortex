@@ -7,8 +7,8 @@ import scala.concurrent.duration.Duration
 import play.api.Configuration
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.JsObject
-import akka.NotUsed
-import akka.stream.scaladsl.Source
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.scaladsl.Source
 import org.thp.cortex.models.{Organization, OrganizationModel}
 import org.elastic4play.controllers.Fields
 import org.elastic4play.database.ModifyConfig
