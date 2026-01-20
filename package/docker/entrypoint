@@ -169,7 +169,7 @@ then
 
   chown -R cortex:cortex "$CONFIG_FILE" /etc/cortex
   test -e /var/run/docker.sock && chown cortex:cortex /var/run/docker.sock
-  su - cortex -c "/opt/cortex/bin/cortex \
+  su -m cortex -c "/opt/cortex/bin/cortex \
     -Dconfig.file=$CONFIG_FILE \
     -Dlogger.file=/etc/cortex/logback.xml \
     -Dpidfile.path=/dev/null \
