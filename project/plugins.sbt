@@ -8,8 +8,8 @@ def maybeEnable(pair: (String, ModuleID)): Seq[Setting[?]] =
   if (isEnabled(pair._1)) addSbtPlugin(pair._2) else Seq()
 
 Seq[(String, ModuleID)](
-  "sbom"     -> "com.github.sbt" %% "sbt-sbom"             % "0.5.0",
-  "depcheck" -> "net.nmoncho"     % "sbt-dependency-check" % "1.8.3"
+  "sbom"     -> "com.github.sbt" %% "sbt-sbom"            % "0.5.0",
+  "depcheck" -> "net.nmoncho"    % "sbt-dependency-check" % "1.8.3"
 ).flatMap(maybeEnable)
 
 // The Play plugin
