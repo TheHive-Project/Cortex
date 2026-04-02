@@ -1,0 +1,18 @@
+# Git and IDE
+.git
+.gitignore
+**/.idea
+**/.vscode
+
+# Build outputs (rebuilt in the image)
+**/target
+**/node_modules
+www/node_modules
+www/dist
+
+# Docs and local tooling
+*.md
+.cursor
+docker/cortex
+
+# Keep project/build.properties, build.sbt, sources — needed for sbt
