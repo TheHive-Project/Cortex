@@ -11,6 +11,7 @@ import play.api.{Configuration, Logger}
 import java.nio.file._
 import java.util
 import javax.inject.{Inject, Singleton}
+import scala.annotation.tailrec
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
@@ -34,6 +35,27 @@ class K8sJobRunnerSrv(
 
   lazy val logger: Logger = Logger(getClass)
 
+  /** Kubernetes label values must be ≤63 chars and start/end with [A-Za-z0-9] (see label value validation). */
+  private def isKubernetesLabelAlphanum(c: Char): Boolean =
+    (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+
+  private def kubernetesLabelValue(raw: String): String = {
+    @tailrec
+    def trimEnds(s: String): String = {
+      if (s.isEmpty) s
+      else if (!isKubernetesLabelAlphanum(s.head)) trimEnds(s.tail)
+      else if (!isKubernetesLabelAlphanum(s.last)) trimEnds(s.init)
+      else s
+    }
+    val trimmed = trimEnds(raw)
+    if (trimmed.isEmpty) "0"
+    else if (trimmed.length <= 63) trimmed
+    else trimEnds(trimmed.take(63)) match {
+      case t if t.nonEmpty => t
+      case _               => "0"
+    }
+  }
+
   lazy val isAvailable: Boolean =
     Try {
       val ver = client.getVersion
@@ -55,10 +77,11 @@ class K8sJobRunnerSrv(
     // make the default longer than likely values, but still not infinite
     val timeout_or_default = timeout.getOrElse(8.hours)
     // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
-    // FIXME: this collapses case, jeopardizing the uniqueness of the identifier.
-    //  LDH: lowercase, digits, hyphens.
-    val ldh_jobid = job.id.toLowerCase().replace('_', '-')
+    // RFC 1123 names: must start/end with alphanumeric; same trimming as label values.
+    val ldh_jobid = kubernetesLabelValue(job.id.toLowerCase().replace('_', '-'))
     val kjobName = "neuron-job-" + ldh_jobid
+    val jobLabel = kubernetesLabelValue(job.id)
+    val workerLabel = kubernetesLabelValue(job.workerId())
     val pvcvs = new PersistentVolumeClaimVolumeSourceBuilder()
       .withClaimName(persistentVolumeClaimName.get)
       .withReadOnly(false)
@@ -69,8 +92,8 @@ class K8sJobRunnerSrv(
       .withNewMetadata()
       .withName(kjobName)
       .withLabels(Map(
-        "cortex-job-id" -> job.id,
-        "cortex-worker-id" -> job.workerId(),
+        "cortex-job-id" -> jobLabel,
+        "cortex-worker-id" -> workerLabel,
         "cortex-neuron-job" -> "true").asJava)
       .endMetadata()
       .withNewSpec()
@@ -124,7 +147,7 @@ class K8sJobRunnerSrv(
         s"  image  : $dockerImage\n" +
         s"  mount  : pvc $persistentVolumeClaimName subdir $relativeJobDirectory as /job" +
         created_env.map(ev => s"\n  env    : ${ev.getName} = ${ev.getValue}").mkString)
-      val ended_kjob = client.batch().v1().jobs().withLabel("cortex-job-id", job.id)
+      val ended_kjob = client.batch().v1().jobs().withLabel("cortex-job-id", jobLabel)
         .waitUntilCondition(x => Option(x).flatMap(j =>
           Option(j.getStatus).flatMap(s =>
             Some(s.getConditions.asScala.map(_.getType).exists(t =>
@@ -140,7 +163,7 @@ class K8sJobRunnerSrv(
     }
     // let's find the job by the attribute we know is fundamentally
     // unique, rather than one constructed from it
-    val deleted: util.List[StatusDetails] = client.batch().v1().jobs().withLabel("cortex-job-id", job.id).delete()
+    val deleted: util.List[StatusDetails] = client.batch().v1().jobs().withLabel("cortex-job-id", jobLabel).delete()
     if(!deleted.isEmpty) {
       logger.info(s"Deleted Kubernetes Job for job ${job.id}")
     } else {
