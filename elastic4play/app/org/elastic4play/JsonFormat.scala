@@ -4,6 +4,8 @@ import java.util.Date
 
 import scala.util.{Failure, Success, Try}
 
+import scala.reflect.ClassTag
+
 import play.api.libs.json._
 
 import org.elastic4play.controllers.JsonFormat.inputValueFormat
@@ -14,38 +16,31 @@ object JsonFormat {
   private val dateWrites: Writes[Date]  = Writes[Date](d => JsNumber(d.getTime))
   implicit val dateFormat: Format[Date] = Format(dateReads, dateWrites)
 
-  private val invalidFormatAttributeErrorWrites = Writes[InvalidFormatAttributeError] { ifae =>
-    Json.writes[InvalidFormatAttributeError].writes(ifae) +
-      ("type"    -> JsString("InvalidFormatAttributeError")) +
-      ("message" -> JsString(ifae.toString))
-  }
-  private val unknownAttributeErrorWrites = Writes[UnknownAttributeError] { uae =>
-    Json.writes[UnknownAttributeError].writes(uae) +
-      ("type"    -> JsString("UnknownAttributeError")) +
-      ("message" -> JsString(uae.toString))
-  }
-  private val updateReadOnlyAttributeErrorWrites = Writes[UpdateReadOnlyAttributeError] { uroae =>
-    Json.writes[UpdateReadOnlyAttributeError].writes(uroae) +
-      ("type"    -> JsString("UpdateReadOnlyAttributeError")) +
-      ("message" -> JsString(uroae.toString))
-  }
-  private val missingAttributeErrorWrites = Writes[MissingAttributeError] { mae =>
-    Json.writes[MissingAttributeError].writes(mae) +
-      ("type"    -> JsString("MissingAttributeError")) +
-      ("message" -> JsString(mae.toString))
+  private def attributeErrorWrites[E <: AttributeError](underlying: OWrites[E]): OWrites[E] = {
+    OWrites.transform(underlying) { (origErr, obj) =>
+      obj + ("message" -> JsString(origErr.toString))
+    }
   }
 
-  implicit val attributeCheckingExceptionWrites: OWrites[AttributeCheckingError] = OWrites[AttributeCheckingError] { ace =>
-    Json.obj(
-      "tableName" -> ace.tableName,
-      "type"      -> "AttributeCheckingError",
-      "errors" -> JsArray(ace.errors.map {
-        case e: InvalidFormatAttributeError  => invalidFormatAttributeErrorWrites.writes(e)
-        case e: UnknownAttributeError        => unknownAttributeErrorWrites.writes(e)
-        case e: UpdateReadOnlyAttributeError => updateReadOnlyAttributeErrorWrites.writes(e)
-        case e: MissingAttributeError        => missingAttributeErrorWrites.writes(e)
-      })
-    )
+  private[elastic4play] implicit val invalidFormatAttributeErrorWrites: OWrites[InvalidFormatAttributeError] = attributeErrorWrites[InvalidFormatAttributeError](Json.writes[InvalidFormatAttributeError])
+
+  private[elastic4play] implicit val unknownAttributeErrorWrites: OWrites[UnknownAttributeError] = attributeErrorWrites[UnknownAttributeError](Json.writes[UnknownAttributeError])
+
+  private[elastic4play] implicit val updateReadOnlyAttributeErrorWrites: OWrites[UpdateReadOnlyAttributeError] = attributeErrorWrites[UpdateReadOnlyAttributeError](Json.writes[UpdateReadOnlyAttributeError])
+
+  private[elastic4play] implicit val missingAttributeErrorWrites: OWrites[MissingAttributeError] = attributeErrorWrites(Json.writes[MissingAttributeError])
+
+  implicit val attributeCheckingExceptionWrites: OWrites[AttributeCheckingError] = {
+    val pkgName = classOf[AttributeError].getPackage.getName + '.'
+
+    implicit def errWrites: OWrites[AttributeError] = Json.configured(JsonConfiguration(
+      discriminator = "type",
+      typeNaming = JsonNaming(_.stripPrefix(pkgName))
+    )).writes
+
+    val discriminator = "type" -> JsString("AttributeCheckingError")
+
+    Json.writes[AttributeCheckingError].transform(_ + discriminator)
   }
 
   implicit def tryWrites[A](implicit aWrites: Writes[A]): Writes[Try[A]] = Writes[Try[A]] {
