@@ -17,7 +17,6 @@ final class JsonFormatSpec extends org.specs2.mutable.Specification {
       "name" -> "Test 1",
       "format" -> "Foo",
       "value" -> Json.obj("type" -> "JsonInputValue", "value" -> "Input"),
-      "type" -> "InvalidFormatAttributeError",
       "message" -> "Invalid format for Test 1: JsonInputValue(\"Input\"), expected Foo")
 
     "support InvalidFormatAttributeError" in {
@@ -34,7 +33,6 @@ final class JsonFormatSpec extends org.specs2.mutable.Specification {
     val unknownAttrErrJson = Json.obj(
       "name" -> "Test 2",
       "value" -> "Bar",
-      "type" -> "UnknownAttributeError",
       "message" -> "Unknown attribute Test 2: \"Bar\"")
 
     "support UnknownAttributeError" in {
@@ -48,7 +46,6 @@ final class JsonFormatSpec extends org.specs2.mutable.Specification {
 
     val updateRoAttrErrJson = Json.obj(
       "name" -> "Lorem",
-      "type" -> "UpdateReadOnlyAttributeError",
       "message" -> "Attribute Lorem is read-only")
 
     "support UpdateReadOnlyAttributeError" in {
@@ -62,7 +59,6 @@ final class JsonFormatSpec extends org.specs2.mutable.Specification {
 
     val missingAttrErrJson = Json.obj(
       "name" -> "Ipsum",
-      "type" -> "MissingAttributeError",
       "message" -> "Attribute Ipsum is missing")
 
     "support MissingAttributeError" in {
@@ -77,7 +73,11 @@ final class JsonFormatSpec extends org.specs2.mutable.Specification {
 
       val errors = Seq(invalidFormatAttrErr, unknownAttrErr, updateRoAttrErr, missingAttrErr)
 
-      val errorsJson = Seq(invalidFormatAttrErrJson, unknownAttrErrJson, updateRoAttrErrJson, missingAttrErrJson)
+      val errorsJson = Seq(
+        (invalidFormatAttrErrJson + ("type" -> JsString("InvalidFormatAttributeError"))),
+        (unknownAttrErrJson + ("type" -> JsString("UnknownAttributeError"))),
+        (updateRoAttrErrJson + ("type" -> JsString("UpdateReadOnlyAttributeError"))),
+        (missingAttrErrJson + ("type" -> JsString("MissingAttributeError"))))
 
       Json.toJsObject(AttributeCheckingError(
         tableName = "Table 1",
