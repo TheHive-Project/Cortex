@@ -14,22 +14,30 @@ object JsonFormat {
   private val dateWrites: Writes[Date]  = Writes[Date](d => JsNumber(d.getTime))
   implicit val dateFormat: Format[Date] = Format(dateReads, dateWrites)
 
-  private val invalidFormatAttributeErrorWrites = Writes[InvalidFormatAttributeError] { ifae =>
+  private def attributeErrorWrites[E <: AttributeError](underlying: OWrites[E])(tpe: String): OWrites[E] = {
+    val discriminator: (String, JsValue) = "type" -> JsString(tpe)
+
+    OWrites.transform(underlying) { (origErr, obj) =>
+      obj + discriminator + ("message" -> JsString(origErr.toString))
+    }
+  }
+
+  private[elastic4play] val invalidFormatAttributeErrorWrites = OWrites[InvalidFormatAttributeError] { ifae =>
     Json.writes[InvalidFormatAttributeError].writes(ifae) +
       ("type"    -> JsString("InvalidFormatAttributeError")) +
       ("message" -> JsString(ifae.toString))
   }
-  private val unknownAttributeErrorWrites = Writes[UnknownAttributeError] { uae =>
+  private[elastic4play] val unknownAttributeErrorWrites = OWrites[UnknownAttributeError] { uae =>
     Json.writes[UnknownAttributeError].writes(uae) +
       ("type"    -> JsString("UnknownAttributeError")) +
       ("message" -> JsString(uae.toString))
   }
-  private val updateReadOnlyAttributeErrorWrites = Writes[UpdateReadOnlyAttributeError] { uroae =>
+  private[elastic4play] val updateReadOnlyAttributeErrorWrites = OWrites[UpdateReadOnlyAttributeError] { uroae =>
     Json.writes[UpdateReadOnlyAttributeError].writes(uroae) +
       ("type"    -> JsString("UpdateReadOnlyAttributeError")) +
       ("message" -> JsString(uroae.toString))
   }
-  private val missingAttributeErrorWrites = Writes[MissingAttributeError] { mae =>
+  private[elastic4play] val missingAttributeErrorWrites = OWrites[MissingAttributeError] { mae =>
     Json.writes[MissingAttributeError].writes(mae) +
       ("type"    -> JsString("MissingAttributeError")) +
       ("message" -> JsString(mae.toString))
