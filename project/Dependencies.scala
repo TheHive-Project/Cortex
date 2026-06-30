@@ -1,10 +1,14 @@
 import sbt.*
 
 object Dependencies {
-  val scalaVersion      = "2.13.17"
-  val dockerJavaVersion = "3.6.0"
-  val pekkoVersion      = "1.2.1"
-  val nettyVersion      = "4.1.128.Final"
+  val scalaVersion        = "2.13.17"
+  val dockerJavaVersion   = "3.6.0"
+  val pekkoVersion        = "1.2.1"
+  val nettyVersion        = "4.1.135.Final"
+  val bouncyCastleVersion = "1.84"
+  val vertxVersion        = "4.5.27"
+  val lz4Version          = "1.11.0"
+  val jacksonVersion      = "2.22.0"
 
   object Play {
     val version: String = play.core.PlayVersion.current
@@ -24,6 +28,7 @@ object Dependencies {
   val dockerJavaClient    = "com.github.docker-java" % "docker-java-core"              % dockerJavaVersion
   val dockerJavaTransport = "com.github.docker-java" % "docker-java-transport-zerodep" % dockerJavaVersion
   val k8sClient           = "io.fabric8"             % "kubernetes-client"             % "7.4.0"
+  val lz4Java             = "at.yawk.lz4"            % "lz4-java"                      % lz4Version
   val pekkoCluster        = "org.apache.pekko"       %% "pekko-cluster"                % pekkoVersion
   val pekkoClusterTyped   = "org.apache.pekko"       %% "pekko-cluster-typed"          % pekkoVersion
 }

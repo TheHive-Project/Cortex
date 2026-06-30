@@ -1,5 +1,15 @@
 # Change Log
 
+## Unreleased
+
+ - [DL-5871] fix: run analyzer/responder jobs on dedicated thread pools to keep the HTTP API responsive under heavy job load
+
+   **Upgrade note:** the `analyzer` and `responder` thread pools now use a `thread-pool-executor`
+   (`fixed-pool-size`) instead of a `fork-join-executor`. Any custom
+   `analyzer.fork-join-executor` / `responder.fork-join-executor` tuning in `application.conf` is
+   no longer applied — switch to `analyzer.thread-pool-executor.fixed-pool-size`
+   (see `conf/application.sample`).
+
 ## 3.2.0 (2025-06-02)
 
  - [DL-1231] Add support of Kubernetes

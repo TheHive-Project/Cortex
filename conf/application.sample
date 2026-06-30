@@ -54,6 +54,32 @@ search {
 # analyzer. The cache is used only if the second job occurs within cache.job (the default is 10 minutes).
 cache.job = 10 minutes
 
+## KUBERNETES JOB SETTINGS
+#
+# job.kubernetes {
+#   # Extra labels applied to all neuron Job and Pod resources.
+#   # Useful for ArgoCD tracking, cost allocation, or team ownership.
+#   # Keys must be valid K8s label keys (max 253 chars prefix + 63 chars name).
+#   # Values must be max 63 chars, alphanumeric start/end, with [-_.] allowed.
+#   # Example: make neuron jobs visible in ArgoCD application tree:
+#   labels {
+#     "app.kubernetes.io/instance" = "cortex"
+#     "app.kubernetes.io/managed-by" = "Helm"
+#     "app.kubernetes.io/part-of" = "cortex"
+#   }
+#
+#   # Pod-level security context applied to all neuron Job pods.
+#   # Useful for restricted environments requiring non-root execution.
+#   # WARNING: many analyzer/responder images expect to run as root.
+#   # Test your analyzers/responders before configuring securityContext.
+#   securityContext {
+#     runAsUser = 1000
+#     runAsGroup = 1000
+#     fsGroup = 1000
+#     runAsNonRoot = true
+#   }
+# }
+
 ## Authentication
 auth {
 	# "provider" parameter contains the authentication provider(s). It can be multi-valued, which is useful
@@ -182,15 +208,18 @@ analyzer {
     #"/absolute/path/of/analyzers"
   ]
 
-  # Sane defaults. Do not change unless you know what you are doing.
-  fork-join-executor {
-    # Min number of threads available for analysis.
-    parallelism-min = 2
-    # Parallelism (threads) ... ceil(available processors * factor).
-    parallelism-factor = 2.0
-    # Max number of threads available for analysis.
-    parallelism-max = 4
+  # Dedicated thread pool that runs analyzer jobs. Jobs block for their whole
+  # lifetime (container/pod execution, file & ES I/O), so a thread-pool-executor
+  # is used instead of a fork-join pool. fixed-pool-size = max analyzer jobs run
+  # concurrently; extra jobs queue. Tune to your runner: kubernetes/docker mostly
+  # wait on the pod/container (can be high, e.g. dozens); the process runner spawns
+  # local subprocesses (size more conservatively).
+  type = Dispatcher
+  executor = "thread-pool-executor"
+  thread-pool-executor {
+    fixed-pool-size = 20 // 20 jobs in parallel, size according to your k8s or server resources
   }
+  throughput = 1
 }
 
 # RESPONDERS
@@ -202,15 +231,13 @@ responder {
     #"/absolute/path/of/responders"
   ]
 
-  # Sane defaults. Do not change unless you know what you are doing.
-  fork-join-executor {
-    # Min number of threads available for analysis.
-    parallelism-min = 2
-    # Parallelism (threads) ... ceil(available processors * factor).
-    parallelism-factor = 2.0
-    # Max number of threads available for analysis.
-    parallelism-max = 4
+  # Dedicated thread pool that runs responder jobs (see analyzer above).
+  type = Dispatcher
+  executor = "thread-pool-executor"
+  thread-pool-executor {
+    fixed-pool-size = 20
   }
+  throughput = 1
 }
 
 # Proxy configuration to retrieve catalogs
@@ -256,6 +283,11 @@ responder {
 #     memorySwappiness = 0
 #   }
 #   autoUpdate = false
+#   # Prepend a registry prefix to all neuron docker images at runtime.
+#   # Useful for private registries (e.g., Harbor proxy cache).
+#   # The value is prepended as-is; include a trailing '/' if needed.
+#   # Example: "harbor.example.com/docker.io/"
+#   imageRegistryPrefix = ""
 #   pullImageTimeout = 10 minutes
 # }
 

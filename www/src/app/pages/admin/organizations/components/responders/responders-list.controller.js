@@ -33,9 +33,7 @@ export default class OrganizationRespondersController {
   $onInit() {
     this.activeResponders = _.keyBy(this.responders, 'workerDefinitionId');
     this.definitionsIds = _.keys(this.responderDefinitions).sort();
-    this.invalidResponders = _.filter(this.responders, a =>
-      _.isEmpty(a.dataTypeList)
-    );
+    this.obsoleteResponders = _.filter(this.responders, a => !this.definitionsIds.includes(a.workerDefinitionId));
   }
 
   openModal(mode, definition, responder) {

@@ -6,7 +6,8 @@ import play.api.Configuration
 import play.api.libs.json._
 
 case class BaseConfig(name: String, workerNames: Seq[String], items: Seq[ConfigurationDefinitionItem], config: Option[WorkerConfig]) {
-  def +(other: BaseConfig): BaseConfig = BaseConfig(name, workerNames ++ other.workerNames, (items ++ other.items).distinctBy(_.name), config.orElse(other.config))
+  def +(other: BaseConfig): BaseConfig =
+    BaseConfig(name, workerNames ++ other.workerNames, (items ++ other.items).distinctBy(_.name), config.orElse(other.config))
 }
 
 object BaseConfig {

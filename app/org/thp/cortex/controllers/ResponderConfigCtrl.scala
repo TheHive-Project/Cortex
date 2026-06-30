@@ -1,21 +1,20 @@
 package org.thp.cortex.controllers
 
-import scala.concurrent.{ExecutionContext, Future}
-
+import org.elastic4play.BadRequestError
+import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
+import org.thp.cortex.models.{BaseConfig, Roles}
+import org.thp.cortex.services.ResponderConfigSrv
+import play.api.Logger
 import play.api.libs.json.JsObject
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
 import javax.inject.{Inject, Singleton}
-import org.thp.cortex.models.{BaseConfig, Roles}
-import org.thp.cortex.services.{ResponderConfigSrv, UserSrv}
-
-import org.elastic4play.BadRequestError
-import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.chaining.scalaUtilChainingOps
 
 @Singleton
 class ResponderConfigCtrl @Inject() (
     responderConfigSrv: ResponderConfigSrv,
-    userSrv: UserSrv,
     authenticated: Authenticated,
     fieldsBodyParser: FieldsBodyParser,
     renderer: Renderer,
@@ -23,9 +22,11 @@ class ResponderConfigCtrl @Inject() (
     implicit val ec: ExecutionContext
 ) extends AbstractController(components) {
 
-  def get(analyzerConfigName: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { request =>
+  private lazy val logger: Logger = Logger(getClass.getName)
+
+  def get(responderConfigName: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { request =>
     responderConfigSrv
-      .getForUser(request.userId, analyzerConfigName)
+      .getForUser(request.userId, responderConfigName)
       .map(renderer.toOutput(OK, _))
   }
 
@@ -44,12 +45,13 @@ class ResponderConfigCtrl @Inject() (
       }
   }
 
-  def update(analyzerConfigName: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request =>
+  def update(responderConfigName: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request =>
     request.body.getValue("config").flatMap(_.asOpt[JsObject]) match {
       case Some(config) =>
         responderConfigSrv
-          .updateOrCreate(request.userId, analyzerConfigName, config)
+          .updateOrCreate(request.userId, responderConfigName, config)
           .map(renderer.toOutput(OK, _))
+          .tap(_ => logger.info(s"Responder $responderConfigName updated with $config by user id ${request.userId}"))
       case None => Future.failed(BadRequestError("attribute config has invalid format"))
     }
   }

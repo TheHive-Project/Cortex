@@ -1,12 +1,11 @@
 package org.thp.cortex.services
 
-import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.FileIO
 import org.elastic4play.BadRequestError
 import org.elastic4play.controllers.{Fields, FileInputValue}
 import org.elastic4play.database.ModifyConfig
-import org.elastic4play.services.{AttachmentSrv, AuthContext, CreateSrv, UpdateSrv}
+import org.elastic4play.services.{AttachmentSrv, AuthContext, CreateSrv, ExecutionContextSrv, UpdateSrv}
 import org.thp.cortex.models._
 import play.api.libs.json._
 import play.api.{Configuration, Logger}
@@ -32,16 +31,20 @@ class JobRunnerSrv @Inject() (
     createSrv: CreateSrv,
     updateSrv: UpdateSrv,
     attachmentSrv: AttachmentSrv,
-    akkaSystem: ActorSystem,
+    executionContextSrv: ExecutionContextSrv,
     implicit val ec: ExecutionContext,
     implicit val mat: Materializer
 ) {
 
   val logger: Logger                                           = Logger(getClass)
-  private lazy val analyzerExecutionContext: ExecutionContext  = akkaSystem.dispatchers.lookup("analyzer")
-  private lazy val responderExecutionContext: ExecutionContext = akkaSystem.dispatchers.lookup("responder")
+  private lazy val analyzerExecutionContext: ExecutionContext  = executionContextSrv.get("analyzer")
+  private lazy val responderExecutionContext: ExecutionContext = executionContextSrv.get("responder")
   val jobDirectory: Path                                       = Paths.get(config.get[String]("job.directory"))
   private val globalKeepJobFolder: Boolean                     = config.get[Boolean]("job.keepJobFolder")
+  private val imageRegistryPrefix: String                      = config.getOptional[String]("docker.imageRegistryPrefix").getOrElse("")
+
+  private def applyImagePrefix(dockerImage: String): String =
+    JobRunnerSrv.applyImagePrefix(imageRegistryPrefix, dockerImage)
 
   private val runners: Seq[String] = config
     .getOptional[Seq[String]]("job.runners")
@@ -164,7 +167,7 @@ class JobRunnerSrv @Inject() (
       }
   }
 
-  private def extractReport(jobFolder: Path, job: Job)(implicit authContext: AuthContext): Future[Job] = {
+  private def extractReport(jobFolder: Path, job: Job)(implicit authContext: AuthContext, ec: ExecutionContext): Future[Job] = {
     val outputFile = jobFolder.resolve("output").resolve("output.json")
     if (Files.exists(outputFile)) {
       logger.debug(s"Job output: ${new String(Files.readAllBytes(outputFile))}")
@@ -216,7 +219,7 @@ class JobRunnerSrv @Inject() (
   }
 
   def run(worker: Worker, job: Job)(implicit authContext: AuthContext): Future[Job] = {
-    val executionContext = worker.tpe() match {
+    val executionContext: ExecutionContext = worker.tpe() match {
       case WorkerType.analyzer  => analyzerExecutionContext
       case WorkerType.responder => responderExecutionContext
       case x =>
@@ -234,6 +237,7 @@ class JobRunnerSrv @Inject() (
           case (None, "kubernetes") =>
             worker
               .dockerImage()
+              .map(applyImagePrefix)
               .map(dockerImage => k8sJobRunnerSrv.run(jobFolder, dockerImage, job, worker.jobTimeout().map(_.minutes)))
               .orElse {
                 logger.warn(s"worker ${worker.id} can't be run with kubernetes (doesn't have image)")
@@ -242,6 +246,7 @@ class JobRunnerSrv @Inject() (
           case (None, "docker") =>
             worker
               .dockerImage()
+              .map(applyImagePrefix)
               .map(dockerImage => dockerJobRunnerSrv.run(jobFolder, dockerImage, worker.jobTimeout().map(_.minutes)))
               .orElse {
                 logger.warn(s"worker ${worker.id} can't be run with docker (doesn't have image)")
@@ -267,17 +272,20 @@ class JobRunnerSrv @Inject() (
       .flatten
       .transformWith {
         case _: Success[_] =>
-          extractReport(maybeJobFolder.get /* can't be none */, job)
+          extractReport(maybeJobFolder.get /* can't be none */, job)(authContext, executionContext)
         case Failure(error) =>
           logger.error(s"Worker execution fails", error)
-          endJob(job, JobStatus.Failure, Option(error.getMessage), maybeJobFolder.map(jf => readFile(jf.resolve("input").resolve("input.json"))))
+          endJob(job, JobStatus.Failure, Option(error.getMessage), maybeJobFolder.map(jf => readFile(jf.resolve("input").resolve("input.json"))))(
+            authContext,
+            executionContext
+          )
 
-      }
+      }(executionContext)
       .andThen {
         case _ =>
           if (!(job.params \ "keepJobFolder").asOpt[Boolean].contains(true) || globalKeepJobFolder)
             maybeJobFolder.foreach(delete)
-      }
+      }(executionContext)
   }
 
   private def readFile(input: Path): String = new String(Files.readAllBytes(input), StandardCharsets.UTF_8)
@@ -294,7 +302,8 @@ class JobRunnerSrv @Inject() (
 
   private def endJob(job: Job, status: JobStatus.Type, errorMessage: Option[String] = None, input: Option[String] = None)(
       implicit
-      authContext: AuthContext
+      authContext: AuthContext,
+      ec: ExecutionContext
   ): Future[Job] = {
     val fields = Fields
       .empty
@@ -304,4 +313,10 @@ class JobRunnerSrv @Inject() (
       .set("errorMessage", errorMessage.map(JsString.apply))
     updateSrv(job, fields, ModifyConfig.default)
   }
+}
+
+object JobRunnerSrv {
+  def applyImagePrefix(prefix: String, dockerImage: String): String =
+    if (prefix.isEmpty) dockerImage
+    else prefix + dockerImage
 }

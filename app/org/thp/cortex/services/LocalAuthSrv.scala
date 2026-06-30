@@ -1,21 +1,25 @@
 package org.thp.cortex.services
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Random
-import play.api.mvc.RequestHeader
 import org.apache.pekko.stream.Materializer
-import org.thp.cortex.models.User
 import org.elastic4play.controllers.Fields
 import org.elastic4play.services.{AuthCapability, AuthContext, AuthSrv}
 import org.elastic4play.utils.Hasher
 import org.elastic4play.{AuthenticationError, AuthorizationError}
+import org.thp.cortex.models.User
+import play.api.mvc.RequestHeader
+
+import java.security.SecureRandom
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Random.javaRandomToRandom
 
 @Singleton
 class LocalAuthSrv @Inject() (userSrv: UserSrv, implicit val ec: ExecutionContext, implicit val mat: Materializer) extends AuthSrv {
 
   val name: String                                    = "local"
   override val capabilities: Set[AuthCapability.Type] = Set(AuthCapability.changePassword, AuthCapability.setPassword)
+
+  private val random = new SecureRandom()
 
   private[services] def doAuthenticate(user: User, password: String): Boolean =
     user.password().map(_.split(",", 2)).fold(false) {
@@ -38,7 +42,7 @@ class LocalAuthSrv @Inject() (userSrv: UserSrv, implicit val ec: ExecutionContex
     }
 
   override def setPassword(username: String, newPassword: String)(implicit authContext: AuthContext): Future[Unit] = {
-    val seed    = Random.nextString(10).replace(',', '!')
+    val seed    = random.nextString(10).replace(',', '!')
     val newHash = seed + "," + Hasher("SHA-256").fromString(seed + newPassword).head.toString
     userSrv.update(username, Fields.empty.set("password", newHash)).map(_ => ())
   }

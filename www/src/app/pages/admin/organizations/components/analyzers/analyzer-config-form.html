@@ -63,13 +63,13 @@
   <div class="form-group">
     <label class="col-sm-3 control-label">HTTP Proxy</label>
     <div class="col-sm-9">
-      <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_http">
+      <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_http" null-if-empty>
     </div>
   </div>
   <div class="form-group">
     <label class="col-sm-3 control-label">HTTPS Proxy</label>
     <div class="col-sm-9">
-      <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_https">
+      <input class="form-control" type="text" ng-model="$ctrl.analyzer.configuration.proxy_https" null-if-empty>
     </div>
   </div>
   <div class="form-group">

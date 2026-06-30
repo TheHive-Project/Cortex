@@ -8,7 +8,6 @@ import play.api.{Configuration, Logger}
 
 import java.nio.file.{Files, Path}
 import java.time.Duration
-import java.util.Collections
 import java.util.concurrent.{Executors, TimeUnit}
 import scala.concurrent.blocking
 import scala.concurrent.duration.FiniteDuration
@@ -46,6 +45,7 @@ class DockerClient(config: Configuration) {
         val containerCmd = underlyingClient
           .createContainerCmd(image)
           .withHostConfig(configure(jobDirectory, jobBaseDirectory, dockerJobBaseDirectory))
+          .withEnv("JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8")
         if (Files.exists(jobDirectory.resolve("input").resolve("cacerts")))
           containerCmd.withEnv(s"REQUESTS_CA_BUNDLE=/job/input/cacerts")
         val containerResponse = containerCmd.exec()
@@ -113,13 +113,13 @@ class DockerClient(config: Configuration) {
   }
 
   private def getContainerStatus(containerId: String): Option[String] =
-    underlyingClient
-      .listContainersCmd()
-      .withIdFilter(Collections.singletonList(containerId))
-      .exec()
-      .asScala
-      .headOption
-      .map(_.getStatus)
+    Try(
+      underlyingClient
+        .inspectContainerCmd(containerId)
+        .exec()
+        .getState
+        .getStatus
+    ).toOption
 
   private def isContainerRunning(containerId: String): Boolean =
     underlyingClient

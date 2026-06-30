@@ -10,7 +10,7 @@ import org.elastic4play.services.FindSrv
 
 object OrganizationStatus extends Enumeration with HiveEnumeration {
   type Type = Value
-  val Active, Locked = Value
+  val Active, Locked                = Value
   implicit val reads: Format[Value] = enumFormat(this)
 }
 

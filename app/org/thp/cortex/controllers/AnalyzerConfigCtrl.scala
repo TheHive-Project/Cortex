@@ -1,27 +1,28 @@
 package org.thp.cortex.controllers
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-
+import org.elastic4play.BadRequestError
+import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
+import org.thp.cortex.models.{BaseConfig, Roles}
+import org.thp.cortex.services.AnalyzerConfigSrv
+import play.api.Logger
 import play.api.libs.json.JsObject
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
-import org.thp.cortex.models.{BaseConfig, Roles}
-import org.thp.cortex.services.{AnalyzerConfigSrv, UserSrv}
-
-import org.elastic4play.BadRequestError
-import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.chaining.scalaUtilChainingOps
 
 @Singleton
 class AnalyzerConfigCtrl @Inject() (
     analyzerConfigSrv: AnalyzerConfigSrv,
-    userSrv: UserSrv,
     authenticated: Authenticated,
     fieldsBodyParser: FieldsBodyParser,
     renderer: Renderer,
     components: ControllerComponents,
     implicit val ec: ExecutionContext
 ) extends AbstractController(components) {
+
+  private lazy val logger: Logger = Logger(getClass.getName)
 
   def get(analyzerConfigName: String): Action[AnyContent] = authenticated(Roles.orgAdmin).async { request =>
     analyzerConfigSrv
@@ -50,6 +51,7 @@ class AnalyzerConfigCtrl @Inject() (
         analyzerConfigSrv
           .updateOrCreate(request.userId, analyzerConfigName, config)
           .map(renderer.toOutput(OK, _))
+          .tap(_ => logger.info(s"Analyzer $analyzerConfigName updated with $config by user id ${request.userId}"))
       case None => Future.failed(BadRequestError("attribute config has invalid format"))
     }
   }

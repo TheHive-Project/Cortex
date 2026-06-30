@@ -13,7 +13,9 @@ trait AssetCtrl {
 }
 
 @Singleton
-class AssetCtrlProd @Inject() (errorHandler: HttpErrorHandler, meta: AssetsMetadata, env: Environment) extends Assets(errorHandler, meta, env) with AssetCtrl {
+class AssetCtrlProd @Inject() (errorHandler: HttpErrorHandler, meta: AssetsMetadata, env: Environment)
+    extends Assets(errorHandler, meta, env)
+    with AssetCtrl {
   def get(file: String): Action[AnyContent] = at("/www", file)
 }
 

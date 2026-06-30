@@ -21,24 +21,26 @@ DAEMON_USER=${daemon_user:-1001:1001}
 JOB_DIRECTORY=${job_directory:-/tmp/cortex-jobs}
 DOCKER_JOB_DIRECTORY=${docker_job_directory:-}
 KUBERNETES_JOB_PVC=${kubernetes_job_pvc:-}
+DOCKER_IMAGE_REGISTRY_PREFIX=${docker_image_registry_prefix:-}
 
 function usage {
   cat <<- _EOF_
     Available options:
-    --no-config                  | do not configure TheHive (add secret and elasticsearch)
-    --no-config-secret           | do not add random secret to configuration
-    --no-config-es               | do not add elasticsearch hosts to configuration
-    --es-uri <uri>               | use this string to configure elasticsearch hosts (format: http(s)://host:port,host:port(/prefix)?querystring)
-    --es-hostname <host>         | resolve this hostname to find elasticsearch instances
-    --secret <secret>            | secret to secure sessions
-    --show-secret                | show the generated secret
-    --job-directory <dir>        | use this directory to store job files
-    --docker-job-directory <dir> | indicate the job directory in the host (not inside container)
-    --kubernetes-job-pvc <name>  | indicate the ReadWriteMany persistent volume claim holding job directory
-    --analyzer-url <url>         | where analyzers are located (url or path)
-    --responder-url <url>        | where responders are located (url or path)
-    --start-docker               | start a internal docker (inside container) to run analyzers/responders
-    --daemon-user <uid>[:<gid>]  | run cortex using this user
+    --no-config                                | do not configure TheHive (add secret and elasticsearch)
+    --no-config-secret                         | do not add random secret to configuration
+    --no-config-es                             | do not add elasticsearch hosts to configuration
+    --es-uri <uri>                             | use this string to configure elasticsearch hosts (format: http(s)://host:port,host:port(/prefix)?querystring)
+    --es-hostname <host>                       | resolve this hostname to find elasticsearch instances
+    --secret <secret>                          | secret to secure sessions
+    --show-secret                              | show the generated secret
+    --job-directory <dir>                      | use this directory to store job files
+    --docker-job-directory <dir>               | indicate the job directory in the host (not inside container)
+    --kubernetes-job-pvc <name>                | indicate the ReadWriteMany persistent volume claim holding job directory
+    --docker-image-registry-prefix <prefix>    | prepend this prefix to all neuron docker images
+    --analyzer-url <url>                       | where analyzers are located (url or path)
+    --responder-url <url>                      | where responders are located (url or path)
+    --start-docker                             | start a internal docker (inside container) to run analyzers/responders
+    --daemon-user <uid>[:<gid>]                | run cortex using this user
 _EOF_
   exit 1
 }
@@ -47,28 +49,29 @@ STOP=0
 while test $# -gt 0 -o $STOP = 1
 do
   case "$1" in
-    "--no-config")            CONFIG=0;;
-    "--no-config-secret")     CONFIG_SECRET=0;;
-    "--no-config-es")         CONFIG_ES=0;;
-    "--es-hosts")             echo "--es-hosts is deprecated, please use --es-uri"
-                              usage;;
-    "--es-uri")               shift; ES_URI=$1;;
-    "--es-hostname")          shift; ES_HOSTNAME=$1;;
-    "--secret")               shift; SECRET=$1;;
-    "--show-secret")          SHOW_SECRET=1;;
-    "--job-directory")        shift; JOB_DIRECTORY=$1;;
-    "--docker-job-directory") shift; DOCKER_JOB_DIRECTORY=$1;;
-    "--kubernetes-job-pvc")   shift; KUBERNETES_JOB_PVC=$1;;
-    "--analyzer-path")        echo "--analyzer-path is deprecated, please use --analyzer-url"
-                              shift; ANALYZER_URLS+=("$1");;
-    "--responder-path")       echo "--responder-path is deprecated, please use --responder-url"
-                              shift; RESPONDER_URLS+=("$1");;
-    "--analyzer-url")         shift; ANALYZER_URLS+=("$1");;
-    "--responder-url")        shift; RESPONDER_URLS+=("$1");;
-    "--start-docker")         START_DOCKER=1;;
-    "--daemon-user")          shift; DAEMON_USER=$1;;
-    "--")                     STOP=1;;
-    *)                        echo "unrecognized option: $1"; usage;;
+    "--no-config")                       CONFIG=0;;
+    "--no-config-secret")                CONFIG_SECRET=0;;
+    "--no-config-es")                    CONFIG_ES=0;;
+    "--es-hosts")                        echo "--es-hosts is deprecated, please use --es-uri"
+                                         usage;;
+    "--es-uri")                          shift; ES_URI=$1;;
+    "--es-hostname")                     shift; ES_HOSTNAME=$1;;
+    "--secret")                          shift; SECRET=$1;;
+    "--show-secret")                     SHOW_SECRET=1;;
+    "--job-directory")                   shift; JOB_DIRECTORY=$1;;
+    "--docker-job-directory")            shift; DOCKER_JOB_DIRECTORY=$1;;
+    "--kubernetes-job-pvc")              shift; KUBERNETES_JOB_PVC=$1;;
+    "--docker-image-registry-prefix")    shift; DOCKER_IMAGE_REGISTRY_PREFIX=$1;;
+    "--analyzer-path")                   echo "--analyzer-path is deprecated, please use --analyzer-url"
+                                         shift; ANALYZER_URLS+=("$1");;
+    "--responder-path")                  echo "--responder-path is deprecated, please use --responder-url"
+                                         shift; RESPONDER_URLS+=("$1");;
+    "--analyzer-url")                    shift; ANALYZER_URLS+=("$1");;
+    "--responder-url")                   shift; RESPONDER_URLS+=("$1");;
+    "--start-docker")                    START_DOCKER=1;;
+    "--daemon-user")                     shift; DAEMON_USER=$1;;
+    "--")                                STOP=1;;
+    *)                                   echo "unrecognized option: $1"; usage;;
   esac
   shift
 done
@@ -116,6 +119,7 @@ then
   test -n "$JOB_DIRECTORY" && echo "job.directory=\"$JOB_DIRECTORY\"" >> "$CONFIG_FILE"
   test -n "$DOCKER_JOB_DIRECTORY" && echo "job.dockerDirectory=\"$DOCKER_JOB_DIRECTORY\"" >> "$CONFIG_FILE"
   test -n "$KUBERNETES_JOB_PVC" && echo "job.kubernetes.persistentVolumeClaimName=\"$KUBERNETES_JOB_PVC\"" >> "$CONFIG_FILE"
+  test -n "$DOCKER_IMAGE_REGISTRY_PREFIX" && echo "docker.imageRegistryPrefix=\"$DOCKER_IMAGE_REGISTRY_PREFIX\"" >> "$CONFIG_FILE"
 
   function join_urls {
     echo -n "\"$1\""

@@ -23,7 +23,7 @@ class AuditActor @Inject() (eventSrv: EventSrv, implicit val ec: ExecutionContex
   private object EntityExtractor {
     def unapply(e: BaseEntity): Option[(BaseModelDef, String, String)] = Some((e.model, e.id, e.routing))
   }
-  private var registration                    = Map.empty[String, Seq[ActorRef]]
+  private var registration            = Map.empty[String, Seq[ActorRef]]
   private[AuditActor] lazy val logger = Logger(getClass)
 
   override def preStart(): Unit = {

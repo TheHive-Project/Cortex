@@ -10,6 +10,7 @@ import userAvatarDirective from './directives/user-avatar/user-avatar.directive'
 import tlpDirective from './directives/tlp/tlp.directive';
 import taxonomieDirective from './directives/taxonomie/taxonomie.directive';
 import autofocusDirective from './directives/autofocus/autofocus.directive';
+import nullIfEmpty from './directives/null-if-empty/null-if-empty.directive';
 
 import constants from './services/constants';
 
@@ -44,6 +45,7 @@ userAvatarDirective(core)
 tlpDirective(core);
 taxonomieDirective(core);
 autofocusDirective(core);
+nullIfEmpty(core);
 
 /* Common services */
 
