@@ -1,26 +1,22 @@
 package org.thp.cortex.controllers
 
-import javax.inject.{Inject, Singleton}
-
-import scala.concurrent.{ExecutionContext, Future}
-
-import play.api.Logger
-import play.api.http.Status
-import play.api.mvc._
-
-import org.thp.cortex.models.Roles
-import org.thp.cortex.services.{OrganizationSrv, UserSrv}
-
-import org.elastic4play.{BadRequestError, NotFoundError}
 import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.{aggReads, queryReads}
 import org.elastic4play.services.{UserSrv => _, _}
+import org.elastic4play.{BadRequestError, NotFoundError}
+import org.thp.cortex.models.Roles
+import org.thp.cortex.services.{OrganizationSrv, UserSrv}
+import play.api.Logger
+import play.api.http.Status
+import play.api.mvc._
+
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class OrganizationCtrl @Inject() (
     organizationSrv: OrganizationSrv,
-    authSrv: AuthSrv,
     auxSrv: AuxSrv,
     userSrv: UserSrv,
     authenticated: Authenticated,
@@ -36,7 +32,10 @@ class OrganizationCtrl @Inject() (
   def create: Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request =>
     organizationSrv
       .create(request.body)
-      .map(organization => renderer.toOutput(CREATED, organization))
+      .map { organization =>
+        logger.info(s"Organization ${organization.id} created by user ${request.userId}")
+        renderer.toOutput(CREATED, organization)
+      }
   }
 
   def get(organizationId: String): Action[Fields] = authenticated(Roles.superAdmin, Roles.orgAdmin).async(fieldsBodyParser) { implicit request =>
@@ -55,9 +54,12 @@ class OrganizationCtrl @Inject() (
     if (organizationId == "cortex")
       Future.failed(BadRequestError("Cortex organization can't be updated"))
     else
-      organizationSrv.update(organizationId, request.body).map { organization =>
-        renderer.toOutput(OK, organization)
-      }
+      organizationSrv
+        .update(organizationId, request.body)
+        .map { organization =>
+          logger.info(s"Organization ${organization.id} updated by user ${request.userId}")
+          renderer.toOutput(OK, organization)
+        }
   }
 
   def delete(organizationId: String): Action[AnyContent] = authenticated(Roles.superAdmin).async { implicit request =>
@@ -66,7 +68,10 @@ class OrganizationCtrl @Inject() (
     else
       organizationSrv
         .delete(organizationId)
-        .map(_ => NoContent)
+        .map { organization =>
+          logger.info(s"Organization ${organization.id} deleted by user ${request.userId}")
+          NoContent
+        }
   }
 
   def find: Action[Fields] = authenticated(Roles.superAdmin).async(fieldsBodyParser) { implicit request =>

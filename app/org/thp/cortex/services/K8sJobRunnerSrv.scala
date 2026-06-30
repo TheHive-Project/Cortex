@@ -1,9 +1,10 @@
 package org.thp.cortex.services
 
-import org.apache.pekko.actor.ActorSystem
-import io.fabric8.kubernetes.api.model.{PersistentVolumeClaimVolumeSourceBuilder, StatusDetails}
 import io.fabric8.kubernetes.api.model.batch.v1.{JobBuilder => KJobBuilder}
+import io.fabric8.kubernetes.api.model.{PersistentVolumeClaimVolumeSourceBuilder, PodSecurityContext, PodSecurityContextBuilder, StatusDetails}
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
+import org.apache.pekko.actor.ActorSystem
+import org.elastic4play.utils.Hasher
 import org.thp.cortex.models._
 import org.thp.cortex.util.FunctionalCondition._
 import play.api.{Configuration, Logger}
@@ -20,6 +21,8 @@ class K8sJobRunnerSrv(
     client: DefaultKubernetesClient,
     jobBaseDirectory: Path,
     persistentVolumeClaimName: Option[String], // if not provided k8s runner is unavailable
+    extraLabels: Map[String, String],
+    podSecurityContext: Option[PodSecurityContext],
     implicit val system: ActorSystem
 ) {
 
@@ -29,10 +32,14 @@ class K8sJobRunnerSrv(
       new DefaultKubernetesClient(),
       Paths.get(config.get[String]("job.directory")),
       config.getOptional[String]("job.kubernetes.persistentVolumeClaimName"),
+      K8sJobRunnerSrv.parseLabels(config),
+      K8sJobRunnerSrv.parsePodSecurityContext(config),
       system: ActorSystem
     )
 
   lazy val logger: Logger = Logger(getClass)
+
+  import K8sJobRunnerSrv.{maxNameLen, sanitizeLabelValue}
 
   lazy val isAvailable: Boolean =
     Try {
@@ -40,9 +47,11 @@ class K8sJobRunnerSrv(
       logger.info(s"Kubernetes is available: major ${ver.getMajor} minor ${ver.getMinor} git ${ver.getGitCommit}")
     } match {
       case _: Success[_] if persistentVolumeClaimName.isDefined => true
-      case _: Success[_]  =>
-        logger.info(s"Kubernetes is not available because no persistent volume claim is provided. " +
-          "Please add `job.kubernetes.persistentVolumeClaimName=...` in the configuration")
+      case _: Success[_] =>
+        logger.info(
+          s"Kubernetes is not available because no persistent volume claim is provided. " +
+            "Please add `job.kubernetes.persistentVolumeClaimName=...` in the configuration"
+        )
         false
       case Failure(error) =>
         logger.info(s"Kubernetes is not available", error)
@@ -50,35 +59,49 @@ class K8sJobRunnerSrv(
     }
 
   def run(jobDirectory: Path, dockerImage: String, job: Job, timeout: Option[FiniteDuration]): Try[Unit] = {
-    val cacertsFile = jobDirectory.resolve("input").resolve("cacerts")
+    val cacertsFile          = jobDirectory.resolve("input").resolve("cacerts")
     val relativeJobDirectory = jobBaseDirectory.relativize(jobDirectory).toString
     // make the default longer than likely values, but still not infinite
     val timeout_or_default = timeout.getOrElse(8.hours)
     // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
-    // FIXME: this collapses case, jeopardizing the uniqueness of the identifier.
-    //  LDH: lowercase, digits, hyphens.
-    val ldh_jobid = job.id.toLowerCase().replace('_', '-')
-    val kjobName = "neuron-job-" + ldh_jobid
-    val pvcvs = new PersistentVolumeClaimVolumeSourceBuilder()
+    // K8s names must be RFC 1123 DNS labels: lowercase, digits, hyphens, max 63 chars.
+    // To preserve uniqueness after case-folding and char replacement, we append a short
+    // hash of the original ID when the sanitized name would need truncation.
+    val sanitizedJobId = sanitizeLabelValue(job.id)
+    val ldhJobId       = job.id.toLowerCase().replace('_', '-').replaceAll("[^a-z0-9-]", "").replaceAll("^-+|-+$", "")
+    val prefix         = "neuron-job-"
+    // FIXME to be tested by Sonny
+    val kJobName = if ((prefix + ldhJobId).length <= maxNameLen) {
+      prefix + ldhJobId
+    } else {
+      val hash     = Hasher("SHA-256").fromString(job.id).head.toString.take(8) // 8 hex chars
+      val maxIdLen = maxNameLen - prefix.length - 1 - hash.length               // 1 for the separator hyphen
+      prefix + ldhJobId.take(maxIdLen).stripSuffix("-") + "-" + hash
+    }
+    val persistentVolumeClaimVolumeSource = new PersistentVolumeClaimVolumeSourceBuilder()
       .withClaimName(persistentVolumeClaimName.get)
       .withReadOnly(false)
       .build()
 
+    val cortexLabels = Map("cortex-job-id" -> sanitizedJobId, "cortex-worker-id" -> sanitizeLabelValue(job.workerId()), "cortex-neuron-job" -> "true")
+    val allLabels    = K8sJobRunnerSrv.buildJobLabels(cortexLabels, extraLabels)
+
     val kjob = new KJobBuilder()
       .withApiVersion("batch/v1")
       .withNewMetadata()
-      .withName(kjobName)
-      .withLabels(Map(
-        "cortex-job-id" -> job.id,
-        "cortex-worker-id" -> job.workerId(),
-        "cortex-neuron-job" -> "true").asJava)
+      .withName(kJobName)
+      .withLabels(allLabels.asJava)
       .endMetadata()
       .withNewSpec()
       .withNewTemplate()
+      .withNewMetadata()
+      .withLabels(allLabels.asJava)
+      .endMetadata()
       .withNewSpec()
+      .when(podSecurityContext.isDefined)(_.withSecurityContext(podSecurityContext.get))
       .addNewVolume()
       .withName("job-directory")
-      .withPersistentVolumeClaim(pvcvs)
+      .withPersistentVolumeClaim(persistentVolumeClaimVolumeSource)
       .endVolume()
       .addNewContainer()
       .withName("neuron")
@@ -89,10 +112,10 @@ class K8sJobRunnerSrv(
       .withValue(relativeJobDirectory)
       .endEnv()
       .when(Files.exists(cacertsFile))(
-      _.addNewEnv()
-        .withName("REQUESTS_CA_BUNDLE")
-        .withValue("/job/input/cacerts")
-        .endEnv()
+        _.addNewEnv()
+          .withName("REQUESTS_CA_BUNDLE")
+          .withValue("/job/input/cacerts")
+          .endEnv()
       )
       .addNewVolumeMount()
       .withName("job-directory")
@@ -109,43 +132,133 @@ class K8sJobRunnerSrv(
       .endContainer()
       .withRestartPolicy("Never")
       .endSpec()
-    .endTemplate()
-    .endSpec()
-    .build()
+      .endTemplate()
+      .endSpec()
+      .build()
 
     val execution = Try {
       val created_kjob = client.batch().v1().jobs().create(kjob)
       val created_env = created_kjob
-        .getSpec.getTemplate.getSpec.getContainers.get(0)
-        .getEnv.asScala
+        .getSpec
+        .getTemplate
+        .getSpec
+        .getContainers
+        .get(0)
+        .getEnv
+        .asScala
       logger.info(
         s"Created Kubernetes Job ${created_kjob.getMetadata.getName}\n" +
-        s"  timeout: ${timeout_or_default.toString}\n" +
-        s"  image  : $dockerImage\n" +
-        s"  mount  : pvc $persistentVolumeClaimName subdir $relativeJobDirectory as /job" +
-        created_env.map(ev => s"\n  env    : ${ev.getName} = ${ev.getValue}").mkString)
-      val ended_kjob = client.batch().v1().jobs().withLabel("cortex-job-id", job.id)
-        .waitUntilCondition(x => Option(x).flatMap(j =>
-          Option(j.getStatus).flatMap(s =>
-            Some(s.getConditions.asScala.map(_.getType).exists(t =>
-              t.equals("Complete") || t.equals("Failed")))))
-          .getOrElse(false),
-          timeout_or_default.length, timeout_or_default.unit)
-      if(ended_kjob != null) {
-        logger.info(s"Kubernetes Job ${ended_kjob.getMetadata.getName} " +
-          s"(for job ${job.id}) status is now ${ended_kjob.getStatus.toString}")
+          s"  timeout: ${timeout_or_default.toString}\n" +
+          s"  image  : $dockerImage\n" +
+          s"  mount  : pvc $persistentVolumeClaimName subdir $relativeJobDirectory as /job" +
+          created_env.map(ev => s"\n  env    : ${ev.getName} = ${ev.getValue}").mkString
+      )
+      val endedKJob = client
+        .batch()
+        .v1()
+        .jobs()
+        .withLabel("cortex-job-id", sanitizedJobId)
+        .waitUntilCondition(
+          x =>
+            Option(x)
+              .flatMap(j =>
+                Option(j.getStatus).flatMap(s => Some(s.getConditions.asScala.map(_.getType).exists(t => t.equals("Complete") || t.equals("Failed"))))
+              )
+              .getOrElse(false),
+          timeout_or_default.length,
+          timeout_or_default.unit
+        )
+      if (endedKJob != null) {
+        logger.info(
+          s"Kubernetes Job ${endedKJob.getMetadata.getName} " +
+            s"(for job ${job.id}) status is now ${endedKJob.getStatus.toString}"
+        )
       } else {
         logger.info(s"Kubernetes Job for ${job.id} no longer exists")
       }
     }
     // let's find the job by the attribute we know is fundamentally
     // unique, rather than one constructed from it
-    val deleted: util.List[StatusDetails] = client.batch().v1().jobs().withLabel("cortex-job-id", job.id).delete()
-    if(!deleted.isEmpty) {
+    val deleted: util.List[StatusDetails] = client.batch().v1().jobs().withLabel("cortex-job-id", sanitizedJobId).delete()
+    if (!deleted.isEmpty) {
       logger.info(s"Deleted Kubernetes Job for job ${job.id}")
     } else {
       logger.info(s"While trying to delete Kubernetes Job for ${job.id}, the job was not found; this is OK")
     }
     execution
   }
+}
+
+object K8sJobRunnerSrv {
+  private[services] val maxNameLen = 63
+  private[services] val maxKeyLen  = 253
+
+  /** Sanitize a string for use as a K8s label value: max 63 chars, alphanumeric/.-_ only,
+    * must start and end with an alphanumeric character. */
+  private[services] def sanitizeLabelValue(s: String): String =
+    s.replaceAll("[^a-zA-Z0-9._-]", "").replaceAll("^[^a-zA-Z0-9]+", "").replaceAll("[^a-zA-Z0-9]+$", "").take(maxNameLen)
+
+  private val labelKeyPattern = "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?" +
+    "([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$"
+  private val labelValuePattern = "^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$"
+  private val labelKeyRegex     = labelKeyPattern.r
+  private val labelValueRegex   = labelValuePattern.r
+  private val logger: Logger    = Logger(classOf[K8sJobRunnerSrv])
+
+  def parseLabels(config: Configuration): Map[String, String] = {
+    val labels = config
+      .getOptional[Configuration]("job.kubernetes.labels")
+      .fold(Map.empty[String, String])(
+        _.underlying.root().asScala.map { case (k, v) => k -> v.unwrapped().toString }.toMap
+      )
+    labels.foreach {
+      case (k, v) =>
+        if (k.length > maxKeyLen || labelKeyRegex.findFirstIn(k).isEmpty)
+          logger.warn(s"job.kubernetes.labels: key '$k' may be rejected by Kubernetes (invalid label key format)")
+        if (v.length > maxNameLen || labelValueRegex.findFirstIn(v).isEmpty)
+          logger.warn(s"job.kubernetes.labels: value '$v' for key '$k' may be rejected by Kubernetes (invalid label value format)")
+    }
+    labels
+  }
+
+  def buildJobLabels(cortexLabels: Map[String, String], extraLabels: Map[String, String]): Map[String, String] =
+    cortexLabels ++ extraLabels
+
+  private object SecCtxKey {
+    val RunAsUser        = "runAsUser"
+    val RunAsGroup       = "runAsGroup"
+    val FsGroup          = "fsGroup"
+    val RunAsNonRoot     = "runAsNonRoot"
+    val all: Set[String] = Set(RunAsUser, RunAsGroup, FsGroup, RunAsNonRoot)
+  }
+
+  private def warnIfNegative(name: String, value: Long): Unit =
+    if (value < 0L) logger.warn(s"job.kubernetes.securityContext.$name=$value is negative; Kubernetes may reject the pod")
+
+  def parsePodSecurityContext(config: Configuration): Option[PodSecurityContext] =
+    config.getOptional[Configuration]("job.kubernetes.securityContext").flatMap { sc =>
+      val configuredKeys = sc.underlying.root().asScala.keys.toSet
+      configuredKeys.diff(SecCtxKey.all).foreach { unknown =>
+        logger.warn(s"job.kubernetes.securityContext: unknown key '$unknown' (supported: ${SecCtxKey.all.mkString(", ")})")
+      }
+
+      val runAsUser    = sc.getOptional[Long](SecCtxKey.RunAsUser)
+      val runAsGroup   = sc.getOptional[Long](SecCtxKey.RunAsGroup)
+      val fsGroup      = sc.getOptional[Long](SecCtxKey.FsGroup)
+      val runAsNonRoot = sc.getOptional[Boolean](SecCtxKey.RunAsNonRoot)
+
+      runAsUser.foreach(warnIfNegative(SecCtxKey.RunAsUser, _))
+      runAsGroup.foreach(warnIfNegative(SecCtxKey.RunAsGroup, _))
+      fsGroup.foreach(warnIfNegative(SecCtxKey.FsGroup, _))
+
+      if (runAsUser.isEmpty && runAsGroup.isEmpty && fsGroup.isEmpty && runAsNonRoot.isEmpty) None
+      else {
+        val builder = new PodSecurityContextBuilder()
+        runAsUser.foreach(v => builder.withRunAsUser(v))
+        runAsGroup.foreach(v => builder.withRunAsGroup(v))
+        fsGroup.foreach(v => builder.withFsGroup(v))
+        runAsNonRoot.foreach(v => builder.withRunAsNonRoot(v))
+        Some(builder.build())
+      }
+    }
 }

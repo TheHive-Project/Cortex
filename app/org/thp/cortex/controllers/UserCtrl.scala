@@ -1,23 +1,20 @@
 package org.thp.cortex.controllers
 
-import javax.inject.{Inject, Singleton}
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
-
+import org.elastic4play._
+import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
+import org.elastic4play.models.JsonFormat.baseModelEntityWrites
+import org.elastic4play.services.JsonFormat.queryReads
+import org.elastic4play.services.{AuthContext, AuthSrv, QueryDSL, QueryDef}
+import org.thp.cortex.models.{OrganizationStatus, Roles}
+import org.thp.cortex.services.{OrganizationSrv, UserSrv}
 import play.api.Logger
 import play.api.http.Status
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 
-import org.thp.cortex.models.{OrganizationStatus, Roles}
-import org.thp.cortex.services.{OrganizationSrv, UserSrv}
-
-import org.elastic4play.models.JsonFormat.baseModelEntityWrites
-import org.elastic4play.services.JsonFormat.queryReads
-import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
-import org.elastic4play.services.{AuthContext, AuthSrv, QueryDSL, QueryDef}
-import org.elastic4play._
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class UserCtrl @Inject() (
@@ -32,7 +29,7 @@ class UserCtrl @Inject() (
 ) extends AbstractController(components)
     with Status {
 
-  private[UserCtrl] lazy val logger = Logger(getClass)
+  private[UserCtrl] val logger = Logger(getClass)
 
   @Timed
   def create: Action[Fields] = authenticated(Roles.orgAdmin, Roles.superAdmin).async(fieldsBodyParser) { implicit request =>
@@ -46,6 +43,7 @@ class UserCtrl @Inject() (
           (userOrganizationId == organizationId &&
             !request.body.getStrings("roles").getOrElse(Nil).contains(Roles.superAdmin.name)))
       user <- userSrv.create(request.body.set("organization", organizationId))
+      _ = logger.info(s"User ${user.id} created by user ${request.userId}")
     } yield renderer.toOutput(CREATED, user))
       .recoverWith {
         case _: NoSuchElementException => Future.failed(AuthorizationError("You are not authorized to perform this action"))
@@ -123,6 +121,7 @@ class UserCtrl @Inject() (
       else Future.failed(AuthorizationError("You are not permitted to change user settings"))
       _    <- authChecks
       user <- userSrv.update(userId, request.body)
+      _ = logger.info(s"User ${user.id} updated by user ${request.userId}")
     } yield renderer.toOutput(OK, user)
   }
 
@@ -168,6 +167,7 @@ class UserCtrl @Inject() (
       else Future.failed(NotFoundError(s"user $userId not found"))
       _ <- if (userId != request.userId) Future.successful(()) else Future.failed(BadRequestError(s"You cannot disable your own account"))
       _ <- userSrv.delete(userId)
+      _ = logger.info(s"User $userId deleted by user ${request.userId}")
     } yield NoContent
   }
 
@@ -249,7 +249,7 @@ class UserCtrl @Inject() (
   @Timed
   def setKey(userId: String): Action[Fields] = authenticated(Roles.orgAdmin, Roles.superAdmin).async(fieldsBodyParser) { implicit request =>
     for {
-      _ <- checkUserOrganization(userId)
+      _        <- checkUserOrganization(userId)
       keyInput <- request.body.getString("key").fold(Future.failed[String](MissingAttributeError("key")))(Future.successful)
       key      <- authSrv.setKey(userId, keyInput)
     } yield Ok(key)

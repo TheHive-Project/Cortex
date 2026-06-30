@@ -8,18 +8,20 @@ import org.elastic4play.{AuthenticationError, BadRequestError}
 import play.api.libs.json.JsArray
 import play.api.mvc.RequestHeader
 
+import java.security.SecureRandom
 import java.util.Base64
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Random
 
 @Singleton
 class KeyAuthSrv @Inject() (userSrv: UserSrv, implicit val ec: ExecutionContext, implicit val mat: Materializer) extends AuthSrv {
   override val name = "key"
 
+  private val secureRandom = new SecureRandom()
+
   final protected def generateKey(): String = {
     val bytes = Array.ofDim[Byte](24)
-    Random.nextBytes(bytes)
+    secureRandom.nextBytes(bytes)
     Base64.getEncoder.encodeToString(bytes)
   }
 

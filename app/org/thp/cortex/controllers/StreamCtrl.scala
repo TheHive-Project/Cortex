@@ -1,27 +1,24 @@
 package org.thp.cortex.controllers
 
-import javax.inject.{Inject, Singleton}
-
-import scala.collection.immutable
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.{DurationLong, FiniteDuration}
-import scala.util.Random
-
-import play.api.{Configuration, Logger}
+import org.apache.pekko.actor.{ActorSystem, Props}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.util.Timeout
+import org.elastic4play.Timed
+import org.elastic4play.controllers._
+import org.elastic4play.services.{AuxSrv, EventSrv, MigrationSrv}
+import org.thp.cortex.models.Roles
+import org.thp.cortex.services.StreamActor.StreamMessages
+import org.thp.cortex.services.{StreamActor, UserSrv}
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
+import play.api.{Configuration, Logger}
 
-import org.apache.pekko.actor.{ActorSystem, Props}
-import org.apache.pekko.util.Timeout
-import org.apache.pekko.pattern.ask
-import org.thp.cortex.models.Roles
-import org.thp.cortex.services.StreamActor
-import org.thp.cortex.services.StreamActor.StreamMessages
-
-import org.elastic4play.Timed
-import org.elastic4play.controllers._
-import org.elastic4play.services.{AuxSrv, EventSrv, MigrationSrv, UserSrv}
+import java.security.SecureRandom
+import javax.inject.{Inject, Singleton}
+import scala.collection.immutable
+import scala.concurrent.duration.{DurationLong, FiniteDuration}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class StreamCtrl(
@@ -70,17 +67,32 @@ class StreamCtrl(
     )
   private[StreamCtrl] lazy val logger = Logger(getClass)
 
+  // The bootstrap user has no User document in ES yet (initial setup / migration), so there is no
+  // organization to look up. Such a stream is left unbound (None) instead of being tied to an org.
+  private val initialUserId = "init"
+
+  private def organizationId(userId: String): Future[Option[String]] =
+    if (userId == initialUserId) Future.successful(None)
+    else userSrv.getOrganizationId(userId).map(Some(_))
+
   /** Create a new stream entry with the event head
     */
   @Timed("controllers.StreamCtrl.create")
-  def create: Action[AnyContent] = authenticated(Roles.read) {
-    val id = generateStreamId()
-    system.actorOf(Props(classOf[StreamActor], cacheExpiration, refresh, nextItemMaxWait, globalMaxWait, eventSrv, auxSrv), s"stream-$id")
-    Ok(id)
+  def create: Action[AnyContent] = authenticated(Roles.read).async { request =>
+    // the stream is bound to the creator's organization
+    organizationId(request.userId).map { organizationId =>
+      val id = generateStreamId()
+      system.actorOf(
+        Props(classOf[StreamActor], cacheExpiration, refresh, nextItemMaxWait, globalMaxWait, eventSrv, auxSrv, userSrv, organizationId),
+        s"stream-$id"
+      )
+      Ok(id)
+    }
   }
 
   val alphanumeric: immutable.IndexedSeq[Char] = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
-  private[controllers] def generateStreamId()  = Seq.fill(10)(alphanumeric(Random.nextInt(alphanumeric.size))).mkString
+  private val random                           = new SecureRandom()
+  private[controllers] def generateStreamId()  = Seq.fill(10)(alphanumeric(random.nextInt(alphanumeric.size))).mkString
   private[controllers] def isValidStreamId(streamId: String): Boolean =
     streamId.length == 10 && streamId.forall(alphanumeric.contains)
 
@@ -94,18 +106,28 @@ class StreamCtrl(
     if (!isValidStreamId(id)) {
       Future.successful(BadRequest("Invalid stream id"))
     } else {
-      val futureStatus = authenticated.expirationStatus(request) match {
-        case ExpirationError if !migrationSrv.isMigrating =>
-          userSrv.getInitialUser(request).recoverWith { case _ => authenticated.getFromApiKey(request) }.map(_ => OK)
-        case _: ExpirationWarning => Future.successful(220)
-        case _                    => Future.successful(OK)
-      }
+      val futureOrganizationAndStatus: Future[(Option[String], Status)] =
+        if (migrationSrv.isMigrating)
+          Future.successful((None, Ok))
+        else
+          authenticated.expirationStatus(request) match {
+            case ExpirationError =>
+              userSrv
+                .getInitialUser(request)
+                .recoverWith { case _ => authenticated.getFromApiKey(request) }
+                .flatMap(authContext => organizationId(authContext.userId).map(_ -> Ok))
+            case _: ExpirationWarning =>
+              authenticated.getContext(request).flatMap(authContext => organizationId(authContext.userId).map(_ -> new Status(220)))
+            case _ =>
+              authenticated.getContext(request).flatMap(authContext => organizationId(authContext.userId).map(_ -> Ok))
+          }
 
-      futureStatus.flatMap { status =>
-        (system.actorSelection(s"/user/stream-$id") ? StreamActor.GetOperations) map {
-          case StreamMessages(operations) => renderer.toOutput(status, operations)
-          case m                          => InternalServerError(s"Unexpected message : $m (${m.getClass})")
-        }
+      futureOrganizationAndStatus.flatMap {
+        case (organizationId, status) =>
+          (system.actorSelection(s"/user/stream-$id") ? StreamActor.GetOperations(organizationId)) map {
+            case StreamMessages(operations) => renderer.toOutput(status.header.status, operations)
+            case m                          => InternalServerError(s"Unexpected message : $m (${m.getClass})")
+          }
       }
     }
   }
@@ -114,7 +136,7 @@ class StreamCtrl(
   def status: Action[AnyContent] = Action { implicit request =>
     val status = authenticated.expirationStatus(request) match {
       case ExpirationWarning(duration) => Json.obj("remaining" -> duration.toSeconds, "warning" -> true)
-      case ExpirationError             => Json.obj("remaining" -> 0, "warning" -> true)
+      case ExpirationError             => Json.obj("remaining" -> 0, "warning"                  -> true)
       case ExpirationOk(duration)      => Json.obj("remaining" -> duration.toSeconds, "warning" -> false)
     }
     Ok(status)

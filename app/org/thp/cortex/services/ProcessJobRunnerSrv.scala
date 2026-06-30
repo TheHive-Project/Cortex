@@ -29,7 +29,8 @@ class ProcessJobRunnerSrv @Inject() (implicit val system: ActorSystem) {
         }
     }.getOrElse(None)
 
-  def run(jobDirectory: Path, command: String, job: Job, timeout: Option[FiniteDuration])(implicit
+  def run(jobDirectory: Path, command: String, job: Job, timeout: Option[FiniteDuration])(
+      implicit
       ec: ExecutionContext
   ): Try[Unit] = {
     val baseDirectory = Paths.get(command).getParent.getParent

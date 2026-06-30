@@ -12,11 +12,11 @@ import scala.util.Try
 
 object RateUnit extends Enumeration with HiveEnumeration {
   type Type = Value
-  val Second         = Value(1)
-  val Minute         = Value(60)
-  val Hour           = Value(60 * 60)
-  val Day            = Value(60 * 60 * 24)
-  val Month          = Value(60 * 60 * 24 * 30)
+  val Second                        = Value(1)
+  val Minute                        = Value(60)
+  val Hour                          = Value(60 * 60)
+  val Day                           = Value(60 * 60 * 24)
+  val Month                         = Value(60 * 60 * 24 * 30)
   implicit val reads: Format[Value] = enumFormat(this)
 }
 

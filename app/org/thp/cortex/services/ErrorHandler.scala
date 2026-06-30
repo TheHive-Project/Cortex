@@ -30,11 +30,11 @@ class ErrorHandler extends HttpErrorHandler {
   def toErrorResult(ex: Throwable): (Int, JsValue) =
     ex match {
       case AuthenticationError(message) => Status.UNAUTHORIZED -> Json.obj("type" -> "AuthenticationError", "message" -> message)
-      case AuthorizationError(message)  => Status.FORBIDDEN    -> Json.obj("type" -> "AuthorizationError", "message" -> message)
+      case AuthorizationError(message)  => Status.FORBIDDEN    -> Json.obj("type" -> "AuthorizationError", "message"  -> message)
       case UpdateError(_, message, attributes) =>
         Status.INTERNAL_SERVER_ERROR -> Json.obj("type" -> "UpdateError", "message" -> message, "object" -> attributes)
       case rle: RateLimitExceeded => Status.TOO_MANY_REQUESTS     -> Json.obj("type" -> "RateLimitExceeded", "message" -> rle.getMessage)
-      case InternalError(message) => Status.INTERNAL_SERVER_ERROR -> Json.obj("type" -> "InternalError", "message" -> message)
+      case InternalError(message) => Status.INTERNAL_SERVER_ERROR -> Json.obj("type" -> "InternalError", "message"     -> message)
       case nfe: NumberFormatException =>
         Status.BAD_REQUEST -> Json.obj("type" -> "NumberFormatException", "message" -> ("Invalid format " + nfe.getMessage))
       case NotFoundError(message)        => Status.NOT_FOUND   -> Json.obj("type" -> "NotFoundError", "message" -> message)
@@ -46,7 +46,7 @@ class ErrorHandler extends HttpErrorHandler {
         Status.INTERNAL_SERVER_ERROR -> Json.obj("type" -> "NoNodeAvailable", "message" -> "ElasticSearch cluster is unreachable")
       case CreateError(_, message, attributes) =>
         Status.INTERNAL_SERVER_ERROR -> Json.obj("type" -> "CreateError", "message" -> message, "object" -> attributes)
-      case ErrorWithObject(tpe, message, obj) => Status.BAD_REQUEST           -> Json.obj("type" -> tpe, "message" -> message, "object" -> obj)
+      case ErrorWithObject(tpe, message, obj) => Status.BAD_REQUEST           -> Json.obj("type" -> tpe, "message"        -> message, "object" -> obj)
       case GetError(message)                  => Status.INTERNAL_SERVER_ERROR -> Json.obj("type" -> "GetError", "message" -> message)
       case MultiError(message, exceptions) =>
         val suberrors = exceptions.map(e => toErrorResult(e))

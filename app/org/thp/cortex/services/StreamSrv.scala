@@ -2,7 +2,7 @@ package org.thp.cortex.services
 
 import org.apache.pekko.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, PoisonPill}
 import org.apache.pekko.stream.Materializer
-import org.elastic4play.services._
+import org.elastic4play.services.{UserSrv => _, _}
 import org.elastic4play.utils.Instance
 import play.api.Logger
 import play.api.libs.json.JsObject
@@ -29,7 +29,7 @@ class DeadLetterMonitoringActor @Inject() (system: ActorSystem) extends Actor {
   }
 
   override def receive: Receive = {
-    case DeadLetter(StreamActor.GetOperations, sender, recipient) =>
+    case DeadLetter(_: StreamActor.GetOperations, sender, recipient) =>
       logger.warn(s"receive dead GetOperations message, $sender → $recipient")
       sender ! StreamActor.StreamNotFound
     case other =>
@@ -42,13 +42,16 @@ object StreamActor {
   case class Initialize(requestId: String) extends EventMessage
   /* Request process has finished, prepare to send associated messages */
   case class Commit(requestId: String) extends EventMessage
-  /* Ask messages, wait if there is no ready messages*/
-  case object GetOperations
+  /* Ask messages, wait if there is no ready messages. Carries the polling user's
+     organization (None for the unbound bootstrap stream) so the actor can authorize the access. */
+  case class GetOperations(organizationId: Option[String])
   /* Pending messages must be sent to sender */
   case object Submit
   /* List of ready messages */
   case class StreamMessages(messages: Seq[JsObject])
   case object StreamNotFound
+  /* Internal: an audit operation that has passed the organization filter and may be buffered */
+  private case class FilteredAuditOperation(operation: AuditOperation)
 }
 
 class StreamActor(
@@ -57,7 +60,9 @@ class StreamActor(
     nextItemMaxWait: FiniteDuration,
     globalMaxWait: FiniteDuration,
     eventSrv: EventSrv,
-    auxSrv: AuxSrv
+    auxSrv: AuxSrv,
+    userSrv: UserSrv,
+    streamOrganizationId: Option[String]
 ) extends Actor
     with ActorLogging {
   import context.dispatcher
@@ -98,11 +103,11 @@ class StreamActor(
     }
   }
 
-  var killCancel: Cancellable = FakeCancellable
+  private var killCancel: Cancellable = FakeCancellable
 
   /** renew global timer and rearm it
     */
-  def renewExpiration(): Unit =
+  private def renewExpiration(): Unit =
     if (killCancel.cancel())
       killCancel = context.system.scheduler.scheduleOnce(cacheExpiration, self, PoisonPill)
 
@@ -154,8 +159,19 @@ class StreamActor(
     case EndOfMigrationEvent =>
       context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + ("end" -> Some(MigrationEventGroup.endOfMigration))))
 
-    /* */
     case operation: AuditOperation =>
+      // AuditOperation is delivered through the event bus with no sender, so a foreign-org
+      // operation is simply ignored (there is no poller waiting for a reply here).
+      userSrv
+        .getOrganizationId(operation.authContext.userId)
+        .foreach { organizationId =>
+          // An unbound (bootstrap) stream owns no organization, so it never buffers audit operations.
+          if (streamOrganizationId.contains(organizationId)) {
+            self ! FilteredAuditOperation(operation)
+          }
+        }
+
+    case FilteredAuditOperation(operation) =>
       val requestId           = operation.authContext.requestId
       val normalizedOperation = normalizeOperation(operation)
       logger.debug(s"Receiving audit operation : $operation ⇒ $normalizedOperation")
@@ -175,13 +191,20 @@ class StreamActor(
       }
       context.become(receiveWithState(waitingRequest.map(_.renew), currentMessages + (requestId -> Some(updatedOperationGroup))))
 
-    case GetOperations =>
+    case GetOperations(organizationId) =>
       renewExpiration()
-      waitingRequest.foreach { wr =>
-        wr.submit(Nil)
-        logger.error("Multiple requests !")
+      // A poller may read this stream only if it belongs to the organization that owns the
+      // stream. Otherwise behave as if the stream did not exist, to avoid leaking its existence.
+      if (streamOrganizationId == organizationId) {
+        waitingRequest.foreach { wr =>
+          wr.submit(Nil)
+          logger.error("Multiple requests !")
+        }
+        context.become(receiveWithState(Some(new WaitingRequest(sender())), currentMessages))
+      } else {
+        logger.warn(s"Unauthorized stream access attempt from organization '${organizationId.getOrElse("<unbound>")}'")
+        sender() ! StreamNotFound
       }
-      context.become(receiveWithState(Some(new WaitingRequest(sender())), currentMessages))
 
     case Submit =>
       waitingRequest match {

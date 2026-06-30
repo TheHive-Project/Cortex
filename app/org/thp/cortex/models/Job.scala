@@ -11,7 +11,7 @@ import org.elastic4play.models.{AttributeDef, EntityDef, HiveEnumeration, ModelD
 object JobStatus extends Enumeration with HiveEnumeration {
   type Type = Value
   val Waiting, InProgress, Success, Failure, Deleted = Value
-  implicit val reads: Format[Value] = enumFormat(this)
+  implicit val reads: Format[Value]                  = enumFormat(this)
 }
 
 trait JobAttributes {

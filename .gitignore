@@ -21,3 +21,5 @@ conf/application.conf
 
 sbt-launch.jar
 .vscode
+.claude
+.site

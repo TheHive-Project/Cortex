@@ -8,7 +8,7 @@ import org.elastic4play.services.{User => EUser}
 
 object UserStatus extends Enumeration with HiveEnumeration {
   type Type = Value
-  val Ok, Locked     = Value
+  val Ok, Locked                    = Value
   implicit val reads: Format[Value] = enumFormat(this)
 }
 
