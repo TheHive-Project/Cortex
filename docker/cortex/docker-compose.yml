@@ -9,7 +9,7 @@ services:
       - thread_pool.search.queue_size=100000
       - thread_pool.write.queue_size=10000
   cortex:
-    image: thehiveproject/cortex:3.1.0-0.3RC1
+    image: thehiveproject/cortex:latest
     environment:
       - job_directory=${job_directory}
     volumes:
