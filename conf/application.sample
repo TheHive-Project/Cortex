@@ -142,6 +142,7 @@ auth {
         #redirectUri = "https://my-cortex-instance.example/api/ssoLogin"
         #responseType = "code"
         #grantType = "authorization_code"
+        #pkce = false
 
         # URL from where to get the access token
         #authorizationUrl = "https://auth-site.com/OAuth/Authorize"

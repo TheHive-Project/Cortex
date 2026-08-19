@@ -1,5 +1,8 @@
 package org.thp.cortex.services
+
 import java.util.UUID
+import java.security.{MessageDigest, SecureRandom}
+import java.util.Base64
 
 import org.apache.pekko.stream.Materializer
 import javax.inject.{Inject, Singleton}
@@ -26,11 +29,11 @@ case class OAuth2Config(
     scope: Seq[String],
     authorizationHeader: String,
     autoupdate: Boolean,
-    autocreate: Boolean
+    autocreate: Boolean,
+    pkce: Boolean
 )
 
 object OAuth2Config {
-
   def apply(configuration: Configuration): Option[OAuth2Config] =
     for {
       clientId     <- configuration.getOptional[String]("auth.oauth2.clientId")
@@ -45,19 +48,11 @@ object OAuth2Config {
       authorizationHeader = configuration.getOptional[String]("auth.oauth2.authorizationHeader").getOrElse("Bearer")
       autocreate          = configuration.getOptional[Boolean]("auth.sso.autocreate").getOrElse(false)
       autoupdate          = configuration.getOptional[Boolean]("auth.sso.autoupdate").getOrElse(false)
+      pkce                = configuration.getOptional[Boolean]("auth.oauth2.pkce").getOrElse(false)
     } yield OAuth2Config(
-      clientId,
-      clientSecret,
-      redirectUri,
-      responseType,
-      grantType,
-      authorizationUrl,
-      tokenUrl,
-      userUrl,
-      scope,
-      authorizationHeader,
-      autocreate,
-      autoupdate
+      clientId, clientSecret, redirectUri, responseType, grantType,
+      authorizationUrl, tokenUrl, userUrl, scope, authorizationHeader,
+      autocreate, autoupdate, pkce
     )
 }
 
@@ -76,8 +71,6 @@ class OAuth2Srv(
 
   override val name: String = "oauth2"
   private val logger        = Logger(getClass)
-
-  val Oauth2TokenQueryString = "code"
 
   private def withOAuth2Config[A](body: OAuth2Config => Future[A]): Future[A] =
     oauth2Config.fold[Future[A]](Future.failed(AuthenticationError("OAuth2 not configured properly")))(body)
@@ -100,13 +93,10 @@ class OAuth2Srv(
   private def isSecuredAuthCode(request: RequestHeader): Boolean =
     request.queryString.contains("code") && request.queryString.contains("state")
 
-  /** Filter checking whether we initiate the OAuth2 process
-    * and redirecting to OAuth2 server if necessary
-    * @return
-    */
   private def authRedirect(oauth2Config: OAuth2Config): Result = {
     val state = UUID.randomUUID().toString
-    val queryStringParams = Map[String, Seq[String]](
+
+    var queryStringParams = Map[String, Seq[String]](
       "scope"         -> Seq(oauth2Config.scope.mkString(" ")),
       "response_type" -> Seq(oauth2Config.responseType),
       "redirect_uri"  -> Seq(oauth2Config.redirectUri),
@@ -114,26 +104,42 @@ class OAuth2Srv(
       "state"         -> Seq(state)
     )
 
-    logger.debug(s"Redirecting to ${oauth2Config.redirectUri} with $queryStringParams and state $state")
+    var sessionData = Seq("state" -> state)
+
+    if (oauth2Config.pkce) {
+      val secureRandom = new SecureRandom()
+      val verifierBytes = new Array[Byte](32)
+      secureRandom.nextBytes(verifierBytes)
+      val codeVerifier = Base64.getUrlEncoder.withoutPadding.encodeToString(verifierBytes)
+
+      val md = MessageDigest.getInstance("SHA-256")
+      val digest = md.digest(codeVerifier.getBytes("US-ASCII"))
+      val codeChallenge = Base64.getUrlEncoder.withoutPadding.encodeToString(digest)
+
+      queryStringParams = queryStringParams ++ Map(
+        "code_challenge"        -> Seq(codeChallenge),
+        "code_challenge_method" -> Seq("S256")
+      )
+      sessionData = sessionData :+ ("code_verifier" -> codeVerifier)
+    }
+
+    logger.debug(s"Redirecting to ${oauth2Config.authorizationUrl} (PKCE: ${oauth2Config.pkce})")
     Results
       .Redirect(oauth2Config.authorizationUrl, queryStringParams, status = 302)
-      .withSession("state" -> state)
+      .withSession(sessionData: _*)
   }
 
-  /** Enriching the initial request with OAuth2 token gotten
-    * from OAuth2 code
-    * @return
-    */
   private def getToken(oauth2Config: OAuth2Config, request: RequestHeader): Future[String] = {
     val token =
       for {
-        state   <- request.session.get("state")
-        stateQs <- request.queryString.get("state").flatMap(_.headOption)
+        state        <- request.session.get("state")
+        stateQs      <- request.queryString.get("state").flatMap(_.headOption)
         if state == stateQs
       } yield request.queryString.get("code").flatMap(_.headOption) match {
         case Some(code) =>
-          logger.debug(s"Attempting to retrieve OAuth2 token from ${oauth2Config.tokenUrl} with code $code")
-          getAuthTokenFromCode(oauth2Config, code, state)
+          val codeVerifierOpt = request.session.get("code_verifier")
+          logger.debug(s"Attempting to retrieve OAuth2 token with code $code")
+          getAuthTokenFromCode(oauth2Config, code, state, codeVerifierOpt)
             .map { t =>
               logger.trace(s"Got token $t")
               t
@@ -144,43 +150,31 @@ class OAuth2Srv(
     token.getOrElse(Future.failed(BadRequestError("OAuth2 states mismatch")))
   }
 
-  /** Querying the OAuth2 server for a token
-    * @param code the previously obtained code
-    * @return
-    */
-  private def getAuthTokenFromCode(oauth2Config: OAuth2Config, code: String, state: String): Future[String] = {
-    logger.trace(s"""
-                    |Request to ${oauth2Config.tokenUrl} with
-                    |  code:          $code
-                    |  grant_type:    ${oauth2Config.grantType}
-                    |  client_secret: ${oauth2Config.clientSecret}
-                    |  redirect_uri:  ${oauth2Config.redirectUri}
-                    |  client_id:     ${oauth2Config.clientId}
-                    |  state:         $state
-                    |""".stripMargin)
+  private def getAuthTokenFromCode(oauth2Config: OAuth2Config, code: String, state: String, codeVerifierOpt: Option[String]): Future[String] = {
+    var postData = Map(
+      "code"         -> code,
+      "grant_type"   -> oauth2Config.grantType,
+      "redirect_uri" -> oauth2Config.redirectUri,
+      "client_id"    -> oauth2Config.clientId,
+      "state"        -> state
+    )
+
+    codeVerifierOpt.foreach { verifier =>
+      postData = postData + ("code_verifier" -> verifier)
+    }
+
+    val finalPostData = if (oauth2Config.clientSecret.nonEmpty) postData + ("client_secret" -> oauth2Config.clientSecret) else postData
+
     ws.url(oauth2Config.tokenUrl)
-      .withHttpHeaders("Accept" -> "application/json")
-      .post(
-        Map(
-          "code"          -> code,
-          "grant_type"    -> oauth2Config.grantType,
-          "client_secret" -> oauth2Config.clientSecret,
-          "redirect_uri"  -> oauth2Config.redirectUri,
-          "client_id"     -> oauth2Config.clientId,
-          "state"         -> state
-        )
-      )
+      .withHttpHeaders("Accept" -> "application/json", "Content-Type" -> "application/x-www-form-urlencoded")
+      .post(finalPostData)
       .transform {
         case Success(r) if r.status == 200 => Success((r.json \ "access_token").asOpt[String].getOrElse(""))
         case Failure(error)                => Failure(AuthenticationError(s"OAuth2 token verification failure ${error.getMessage}"))
-        case Success(r)                    => Failure(AuthenticationError(s"OAuth2/token unexpected response from server (${r.status} ${r.statusText})"))
+        case Success(r)                    => Failure(AuthenticationError(s"OAuth2/token unexpected response from server (${r.status} ${r.statusText}) - Body: ${r.body}"))
       }
   }
 
-  /** Client query for user data with OAuth2 token
-    * @param token the token
-    * @return
-    */
   private def getUserData(oauth2Config: OAuth2Config, token: String): Future[JsObject] = {
     logger.trace(s"Request to ${oauth2Config.userUrl} with authorization header: ${oauth2Config.authorizationHeader} $token")
     ws.url(oauth2Config.userUrl)
@@ -203,10 +197,7 @@ class OAuth2Srv(
           case u if oauth2Config.autoupdate =>
             logger.debug(s"Updating OAuth/OIDC user")
             userSrv.inInitAuthContext { implicit authContext =>
-              // Only update name and roles, not login (can't change it)
-              userSrv
-                .update(u, userFields.unset("login"))
-
+              userSrv.update(u, userFields.unset("login"))
             }
           case u => Future.successful(u)
         }
