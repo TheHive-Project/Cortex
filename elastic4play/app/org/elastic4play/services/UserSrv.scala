@@ -34,7 +34,7 @@ trait User {
 
 object AuthCapability extends Enumeration {
   type Type = Value
-  val changePassword, setPassword, authByKey = Value
+  val changePassword, setPassword, authByKey, mfa = Value
 }
 
 trait AuthSrv {

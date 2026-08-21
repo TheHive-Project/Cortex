@@ -31,6 +31,9 @@ export default class SettingsPageController {
       passwordConfirm: ''
     };
     this.keyData = {};
+    this.mfaData = {
+      enrolling: false
+    };
   }
 
   $onInit() {
@@ -48,6 +51,8 @@ export default class SettingsPageController {
 
     this.canChangeKey =
       this.config.config.capabilities.indexOf('authByKey') !== -1;
+
+    this.canUseMfa = this.config.config.capabilities.indexOf('mfa') !== -1;
 
     this.$scope.$watch('$ctrl.avatar', value => {
       if (!value) {
@@ -184,5 +189,100 @@ export default class SettingsPageController {
     this.NotificationService.success(
       'API key has been successfully copied to clipboard.'
     );
+  }
+
+  /** Step 1: ask the server for a secret. Nothing is persisted until the code is verified. */
+  startMfaEnrolment() {
+    this.UserService.mfaInit(this.currentUser.id)
+      .then(data => {
+        this.mfaData = {
+          enrolling: true,
+          secret: data.secret,
+          uri: data.uri,
+          qrCode: data.qrCode,
+          code: '',
+          backupCodes: null
+        };
+      })
+      .catch(err => {
+        this.NotificationService.log(
+          ((err || {}).data || {}).message ||
+            'Unable to start multi-factor enrolment.',
+          'error'
+        );
+      });
+  }
+
+  /** Step 2: prove the authenticator is set up. Only then does the server store the secret. */
+  confirmMfaEnrolment(form) {
+    if (!form.$valid) {
+      return;
+    }
+
+    this.UserService.mfaSet(this.currentUser.id, this.mfaData.code)
+      .then(data => {
+        // The codes are shown once and stored hashed, so keep them on screen until dismissed.
+        this.mfaData.backupCodes = data.backupCodes;
+        this.mfaData.code = '';
+        this.NotificationService.success(
+          'Multi-factor authentication has been enabled.'
+        );
+      })
+      .catch(err => {
+        this.mfaData.code = '';
+        this.NotificationService.log(
+          ((err || {}).data || {}).message || 'Invalid code, try again.',
+          'error'
+        );
+      });
+  }
+
+  cancelMfaEnrolment() {
+    this.mfaData = {
+      enrolling: false
+    };
+  }
+
+  /** Dismisses the one-time backup code list and refreshes the cached current user. */
+  finishMfaEnrolment() {
+    this.mfaData = {
+      enrolling: false
+    };
+    this.$state.reload();
+  }
+
+  copyBackupCodes() {
+    this.clipboard.copyText(this.mfaData.backupCodes.join('\n'));
+    this.NotificationService.success('Backup codes copied to clipboard.');
+  }
+
+  disableMfa() {
+    let modalInstance = this.ModalService.confirm(
+      'Disable two-factor authentication',
+      'Are you sure? Your account will be protected by your password alone, and your backup codes will stop working.',
+      {
+        flavor: 'danger',
+        okText: 'Yes, disable it'
+      }
+    );
+
+    modalInstance.result
+      .then(() => this.UserService.mfaUnset(this.currentUser.id))
+      .then(() => {
+        this.NotificationService.success(
+          'Multi-factor authentication has been disabled.'
+        );
+        this.$state.reload();
+      })
+      .catch(err => {
+        // A string rejection is the modal being dismissed, not a failure.
+        if (!_.isString(err)) {
+          this.NotificationService.log(
+            ((err || {}).data || {}).message ||
+              'Unable to disable multi-factor authentication.',
+            'error'
+          );
+        }
+      });
   }
 }

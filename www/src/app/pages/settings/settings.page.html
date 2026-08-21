@@ -127,6 +127,101 @@
       </div>
     </form>
 
+    <!-- Two-factor authentication -->
+    <div class="box box-primary" ng-if="$ctrl.canUseMfa">
+      <div class="box-header">
+        <h3 class="box-title">Two-factor authentication</h3>
+      </div>
+      <div class="box-body">
+
+        <!-- Not enrolled -->
+        <div ng-if="!$ctrl.currentUser.hasMFA && !$ctrl.mfaData.enrolling">
+          <p>
+            Protect your account with a time-based one-time code from an authenticator app
+            (Google Authenticator, Aegis, 1Password, ...) in addition to your password.
+          </p>
+          <p class="text-muted">
+            Your API key is not affected: integrations such as TheHive keep working unchanged.
+          </p>
+          <button class="btn btn-primary" type="button" ng-click="$ctrl.startMfaEnrolment()">Enable</button>
+        </div>
+
+        <!-- Enrolling: scan the QR then confirm with a code -->
+        <form name="mfaForm" class="form-horizontal" ng-if="$ctrl.mfaData.enrolling && !$ctrl.mfaData.backupCodes"
+              ng-submit="$ctrl.confirmMfaEnrolment(mfaForm)" novalidate>
+          <p>Scan this QR code with your authenticator app, then enter the code it displays.</p>
+
+          <div class="text-center mv-s">
+            <img alt="Two-factor authentication QR code" ng-src="{{$ctrl.mfaData.qrCode}}" width="220" height="220"/>
+          </div>
+
+          <div class="form-group">
+            <label class="col-md-3 control-label">Or enter this key</label>
+            <div class="col-md-9">
+              <input type="text" class="form-control input-sm" readonly ng-model="$ctrl.mfaData.secret"/>
+            </div>
+          </div>
+
+          <div class="form-group" ng-class="{ 'has-error' : !mfaForm.code.$pristine && mfaForm.code.$invalid}">
+            <label class="col-md-3 control-label">Verification code
+              <i class="fa fa-asterisk text-danger"></i>
+            </label>
+            <div class="col-md-9">
+              <input type="text" name="code" class="form-control input-sm" placeholder="6-digit code"
+                     autocomplete="one-time-code" ng-model="$ctrl.mfaData.code" required/>
+              <div ng-messages="mfaForm.code.$error" ng-show="!mfaForm.code.$pristine && mfaForm.code.$error">
+                <div ng-messages-include="settings-error.html"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-s">
+            <button class="btn btn-default" type="button" ng-click="$ctrl.cancelMfaEnrolment()">Cancel</button>
+            <button class="btn btn-primary pull-right" type="submit" ng-disabled="mfaForm.$invalid">Verify and enable</button>
+          </div>
+        </form>
+
+        <!-- Enrolled: the one-time backup code list -->
+        <div ng-if="$ctrl.mfaData.backupCodes">
+          <div class="callout callout-warning">
+            <h4>Save your backup codes now</h4>
+            <p>
+              Each code can be used once in place of your authenticator, if you lose access to it.
+              They are stored hashed and will never be shown again.
+            </p>
+          </div>
+          <div class="row mv-s">
+            <div class="col-xs-6" ng-repeat="code in $ctrl.mfaData.backupCodes">
+              <code>{{code}}</code>
+            </div>
+          </div>
+          <div class="mt-s">
+            <button class="btn btn-default" type="button" ng-click="$ctrl.copyBackupCodes()">
+              <i class="fa fa-copy"></i> Copy
+            </button>
+            <button class="btn btn-primary pull-right" type="button" ng-click="$ctrl.finishMfaEnrolment()">
+              I saved them
+            </button>
+          </div>
+        </div>
+
+        <!-- Already enabled -->
+        <div ng-if="$ctrl.currentUser.hasMFA && !$ctrl.mfaData.enrolling">
+          <div class="callout callout-info mv-0">
+            <h4>Two-factor authentication is enabled</h4>
+            <p>
+              You have {{$ctrl.currentUser.remainingBackupCodes}} unused backup code(s).
+              To get a new set, disable and enable it again.
+            </p>
+          </div>
+          <div class="mt-s">
+            <button class="btn btn-danger" type="button" ng-click="$ctrl.disableMfa()">Disable</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Update API Key -->
     <form ng-if="$ctrl.canChangeKey">
       <div class="box box-primary">

@@ -25,6 +25,14 @@ object Dependencies {
 
   val reflections         = "org.reflections"        % "reflections"                   % "0.10.2"
   val zip4j               = "net.lingala.zip4j"      % "zip4j"                         % "2.11.5"
+  // RFC 6238 TOTP (multi-factor authentication). Its only transitives (commons-codec,
+  // httpclient) are already on the classpath at higher versions via elasticsearch-rest-client
+  // and docker-java, so they are evicted upward and this adds a single jar.
+  val googleAuth          = "com.warrenstrange"      % "googleauth"                    % "1.5.0"
+  // QR code encoding for MFA enrolment. Only the "core" module, which has no transitive
+  // dependencies: the image writers live in zxing "javase", which we don't use because the
+  // QR is rendered to SVG directly.
+  val zxing               = "com.google.zxing"       % "core"                          % "3.5.4"
   val dockerJavaClient    = "com.github.docker-java" % "docker-java-core"              % dockerJavaVersion
   val dockerJavaTransport = "com.github.docker-java" % "docker-java-transport-zerodep" % dockerJavaVersion
   val k8sClient           = "io.fabric8"             % "kubernetes-client"             % "7.4.0"

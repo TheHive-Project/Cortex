@@ -2,7 +2,7 @@ package org.thp.cortex.services
 
 import org.elastic4play.JsonFormat.attributeCheckingExceptionWrites
 import org.elastic4play._
-import org.thp.cortex.models.{JobNotFoundError, RateLimitExceeded, WorkerNotFoundError}
+import org.thp.cortex.models.{JobNotFoundError, MultiFactorCodeInvalid, MultiFactorCodeRequired, RateLimitExceeded, WorkerNotFoundError}
 import play.api.Logger
 import play.api.http.Status.{BAD_REQUEST, FORBIDDEN, NOT_FOUND}
 import play.api.http.{HttpErrorHandler, Status, Writeable}
@@ -33,8 +33,13 @@ class ErrorHandler extends HttpErrorHandler {
       case AuthorizationError(message)  => Status.FORBIDDEN    -> Json.obj("type" -> "AuthorizationError", "message"  -> message)
       case UpdateError(_, message, attributes) =>
         Status.INTERNAL_SERVER_ERROR -> Json.obj("type" -> "UpdateError", "message" -> message, "object" -> attributes)
-      case rle: RateLimitExceeded => Status.TOO_MANY_REQUESTS     -> Json.obj("type" -> "RateLimitExceeded", "message" -> rle.getMessage)
-      case InternalError(message) => Status.INTERNAL_SERVER_ERROR -> Json.obj("type" -> "InternalError", "message"     -> message)
+      case rle: RateLimitExceeded => Status.TOO_MANY_REQUESTS -> Json.obj("type" -> "RateLimitExceeded", "message" -> rle.getMessage)
+      // The password was correct but the second factor is missing or wrong. Both are 401 so that
+      // a client which knows nothing about MFA still treats them as an authentication failure;
+      // the "type" field is what lets an MFA-aware client tell "ask for a code" from "code refused".
+      case mfa: MultiFactorCodeRequired => Status.UNAUTHORIZED          -> Json.obj("type" -> "MultiFactorCodeRequired", "message" -> mfa.getMessage)
+      case mfa: MultiFactorCodeInvalid  => Status.UNAUTHORIZED          -> Json.obj("type" -> "MultiFactorCodeInvalid", "message"  -> mfa.getMessage)
+      case InternalError(message)       => Status.INTERNAL_SERVER_ERROR -> Json.obj("type" -> "InternalError", "message"           -> message)
       case nfe: NumberFormatException =>
         Status.BAD_REQUEST -> Json.obj("type" -> "NumberFormatException", "message" -> ("Invalid format " + nfe.getMessage))
       case NotFoundError(message)        => Status.NOT_FOUND   -> Json.obj("type" -> "NotFoundError", "message" -> message)

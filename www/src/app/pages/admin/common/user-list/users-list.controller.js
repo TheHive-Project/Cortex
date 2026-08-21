@@ -32,6 +32,38 @@ export default class UsersListController {
   $onInit() {
     this.canSetPass =
       this.main.config.config.capabilities.indexOf('setPassword') !== -1;
+
+    this.canUseMfa = this.main.config.config.capabilities.indexOf('mfa') !== -1;
+  }
+
+  /** Admin recovery path for a user who lost their authenticator. Only clears it — an admin
+    * can never enrol on someone else's behalf, since that needs the user's own device. */
+  resetMfa(user) {
+    let modalInstance = this.ModalService.confirm(
+      'Reset two-factor authentication',
+      `Are you sure you want to reset two-factor authentication for ${user.id}? They will sign in with their password alone until they enable it again.`,
+      {
+        flavor: 'danger',
+        okText: 'Yes, reset it'
+      }
+    );
+
+    modalInstance.result
+      .then(() => this.UserService.mfaUnset(user.id))
+      .then(() => {
+        this.reload();
+        this.NotificationService.success(
+          `Two-factor authentication of user ${user.id} has been reset.`
+        );
+      })
+      .catch(err => {
+        // A string rejection is the modal being dismissed, not a failure.
+        if (!_.isString(err)) {
+          this.NotificationService.error(
+            'Unable to reset two-factor authentication.'
+          );
+        }
+      });
   }
 
   reload() {

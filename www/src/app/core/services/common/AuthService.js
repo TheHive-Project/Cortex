@@ -13,14 +13,22 @@ export default class AuthService {
     this.currentUser = null;
   }
 
-  login(username, password) {
+  login(username, password, code) {
     let defer = this.$q.defer();
 
+    let payload = {
+      user: username,
+      password: password
+    };
+
+    // Second factor. Omitted on the first attempt: the server answers with a
+    // MultiFactorCodeRequired error and the login form retries with a code.
+    if (!_.isEmpty(code)) {
+      payload.code = code;
+    }
+
     this.$http
-      .post('./api/login', {
-        user: username,
-        password: password
-      })
+      .post('./api/login', payload)
       .then(response => defer.resolve(response.data))
       .catch(err => defer.reject(err));
 

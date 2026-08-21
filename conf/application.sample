@@ -94,6 +94,40 @@ auth {
 	# - oauth2 : use OAuth/OIDC to authenticate users. Configuration is under "auth.oauth2" and "auth.sso" keys
 	provider = [local]
 
+	# Multi-factor authentication (TOTP, RFC 6238 — Google Authenticator, Aegis, 1Password, ...).
+	#
+	# This is opt-in per user: turning it on here only makes the feature available in the user's
+	# settings page, it does not force anyone to enrol. Each user who enables it is issued a set
+	# of single-use backup codes; an org admin or a superadmin can reset a user's MFA if they
+	# lose their authenticator.
+	#
+	# Only password logins are challenged (local, ldap, ad). API keys are never challenged — that
+	# is how TheHive and MISP integrate with Cortex — and with oauth2 the identity provider owns
+	# MFA. HTTP basic auth has nowhere to carry a code, so an enrolled user cannot use it.
+	multifactor {
+		# Set to false to hide the feature entirely. Users who already enrolled are then no
+		# longer challenged, so prefer resetting them individually over flipping this off.
+		#enabled = true
+
+		# Name displayed in the authenticator app next to the account
+		#issuer = "Cortex"
+
+		# Number of 30-second windows accepted, centred on now. 3 tolerates one step of clock
+		# drift either way; raise it only if your users' devices are badly synchronised.
+		#windowSize = 3
+
+		# How many single-use backup codes are generated at enrolment. They are shown once and
+		# stored hashed, so a user who loses them must re-enrol.
+		#backupCodes = 10
+
+		# Wrong codes tolerated before the second factor is refused for 'lockoutDuration'.
+		# Without this a 6-digit code is brute-forceable. The counter is held in memory per
+		# Cortex instance, so behind a load balancer the effective limit is maxAttempts per
+		# instance.
+		#maxAttempts = 5
+		#lockoutDuration = 15 minutes
+	}
+
 	ad {
 		# The Windows domain name in DNS format. This parameter is required if you do not use
 		# 'serverNames' below.

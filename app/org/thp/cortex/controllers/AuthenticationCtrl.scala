@@ -3,11 +3,10 @@ package org.thp.cortex.controllers
 import javax.inject.{Inject, Singleton}
 import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
 import org.elastic4play.database.DBIndex
-import org.elastic4play.services.AuthSrv
 import org.elastic4play.services.JsonFormat.authContextWrites
 import org.elastic4play.{AuthorizationError, MissingAttributeError, Timed}
 import org.thp.cortex.models.UserStatus
-import org.thp.cortex.services.UserSrv
+import org.thp.cortex.services.{CortexAuthSrv, UserSrv}
 import play.api.Configuration
 import play.api.mvc._
 
@@ -16,7 +15,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class AuthenticationCtrl @Inject() (
     configuration: Configuration,
-    authSrv: AuthSrv,
+    // CortexAuthSrv rather than the AuthSrv trait: the second-factor-aware authenticate overload lives there
+    authSrv: CortexAuthSrv,
     userSrv: UserSrv,
     authenticated: Authenticated,
     dbIndex: DBIndex,
@@ -32,9 +32,12 @@ class AuthenticationCtrl @Inject() (
       case false => Future.successful(Results.Status(520))
       case _ =>
         for {
-          user        <- request.body.getString("user").fold[Future[String]](Future.failed(MissingAttributeError("user")))(Future.successful)
-          password    <- request.body.getString("password").fold[Future[String]](Future.failed(MissingAttributeError("password")))(Future.successful)
-          authContext <- authSrv.authenticate(user, password)
+          user     <- request.body.getString("user").fold[Future[String]](Future.failed(MissingAttributeError("user")))(Future.successful)
+          password <- request.body.getString("password").fold[Future[String]](Future.failed(MissingAttributeError("password")))(Future.successful)
+          // Optional second factor. Absent on the first attempt; the client retries with it after a
+          // MultiFactorCodeRequired error. Also accepts a single-use backup code.
+          code = request.body.getString("code")
+          authContext <- authSrv.authenticate(user, password, code)
         } yield authenticated.setSessingUser(renderer.toOutput(OK, authContext), authContext)
     }
   }

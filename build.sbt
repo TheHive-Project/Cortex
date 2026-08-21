@@ -80,6 +80,8 @@ lazy val cortex = (project in file("."))
         Dependencies.scalaGuice,
         Dependencies.reflections,
         Dependencies.zip4j,
+        Dependencies.googleAuth,
+        Dependencies.zxing,
         Dependencies.dockerJavaClient,
         Dependencies.dockerJavaTransport,
         Dependencies.k8sClient,
