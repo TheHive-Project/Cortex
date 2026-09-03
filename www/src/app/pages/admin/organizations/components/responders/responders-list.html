@@ -58,56 +58,55 @@
         <div class="flex-col flex-w-100"></div>
       </div>
       <!-- One row per enabled responder (a definition can be enabled several times), or one row per definition not enabled yet -->
-      <div class="flex-row media" ng-repeat="row in $ctrl.rows | filter:$ctrl.rowFilter track by (row.responder ? row.responder.id : row.definition.id)"
-        ng-init="definition = row.definition; responder = row.responder;">
+      <div class="flex-row media" ng-repeat="row in $ctrl.rows | filter:$ctrl.rowFilter track by (row.responder ? row.responder.id : row.definition.id)">
         <div class="flex-col flex-1">
           <h4 class="media-heading">
-            <span class="mr-m text-primary">{{definition.id}}</span>
-            <span class="text-muted" ng-if="responder && responder.name !== definition.id">
-              <i class="fa fa-long-arrow-right mr-xxs"></i>{{responder.name}}
+            <span class="mr-m text-primary">{{row.definition.id}}</span>
+            <span class="text-muted" ng-if="row.responder && row.responder.name !== row.definition.id">
+              <i class="fa fa-long-arrow-right mr-xxs"></i>{{row.responder.name}}
             </span>
           </h4>
           <h4 class="media-heading">
             <small class="mr-xxs">
-              <strong>Version:</strong> {{definition.version}}</small>
-            <small class="mr-xxs" ng-if="definition.author">
-              <strong>Author:</strong> {{definition.author}}</small>
-            <small class="mr-xxs" ng-if="definition.license">
-              <strong>License:</strong> {{definition.license}}</small>
-            <small class="mr-xxs" ng-if="definition.runners.length > 0">
-              <strong>Type:</strong> {{definition.runners.join(', ')}}</small>
+              <strong>Version:</strong> {{row.definition.version}}</small>
+            <small class="mr-xxs" ng-if="row.definition.author">
+              <strong>Author:</strong> {{row.definition.author}}</small>
+            <small class="mr-xxs" ng-if="row.definition.license">
+              <strong>License:</strong> {{row.definition.license}}</small>
+            <small class="mr-xxs" ng-if="row.definition.runners.length > 0">
+              <strong>Type:</strong> {{row.definition.runners.join(', ')}}</small>
           </h4>
-          <div class="mt-xs text-muted">{{responder && responder.description ? responder.description : definition.description}}</div>
+          <div class="mt-xs text-muted">{{row.responder && row.responder.description ? row.responder.description : row.definition.description}}</div>
         </div>
-        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="responder">
-          <tlp value="responder.configuration.check_tlp ? responder.configuration.max_tlp : undefined"></tlp>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="row.responder">
+          <tlp value="row.responder.configuration.check_tlp ? row.responder.configuration.max_tlp : undefined"></tlp>
         </div>
-        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="responder">
-          <tlp value="responder.configuration.check_pap ? responder.configuration.max_pap : undefined" namespace="PAP"></tlp>
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="row.responder">
+          <tlp value="row.responder.configuration.check_pap ? row.responder.configuration.max_pap : undefined" namespace="PAP"></tlp>
         </div>
-        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="responder">
-          <span ng-show="responder.rate && responder.rateUnit" class="label label-lg label-primary">
-            {{responder.rate}} per {{responder.rateUnit}}
+        <div class="flex-col flex-w-100 text-center vertical centered" ng-if="row.responder">
+          <span ng-show="row.responder.rate && row.responder.rateUnit" class="label label-lg label-primary">
+            {{row.responder.rate}} per {{row.responder.rateUnit}}
           </span>
-          <span ng-show="!responder.rate || !responder.rateUnit" class="label label-lg label-default">None</span>
+          <span ng-show="!row.responder.rate || !row.responder.rateUnit" class="label label-lg label-default">None</span>
         </div>
-        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="responder"
-          ng-click="$ctrl.edit('edit', definition, responder)">
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="row.responder"
+          ng-click="$ctrl.edit('edit', row.definition, row.responder)">
           <a href class="text-primary">
             <i class="fa fa-edit"></i>Edit</a>
         </div>
-        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="responder"
-          ng-click="$ctrl.duplicate(definition, responder)">
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="row.responder"
+          ng-click="$ctrl.duplicate(row.definition, row.responder)">
           <a href class="text-primary">
             <i class="fa fa-clone"></i>Duplicate</a>
         </div>
-        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="responder" ng-click="$ctrl.disable(responder.id)">
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-if="row.responder" ng-click="$ctrl.disable(row.responder.id)">
           <a href class="text-danger">
             <i class="fa fa-ban"></i>Disable</a>
         </div>
-        <div class="flex-col flex-w-100" ng-if="!responder"></div>
-        <div class="flex-col flex-w-100" ng-if="!responder"></div>
-        <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.enable(definition.id)" ng-if="!responder">
+        <div class="flex-col flex-w-100" ng-if="!row.responder"></div>
+        <div class="flex-col flex-w-100" ng-if="!row.responder"></div>
+        <div class="flex-col flex-icon flex-w-100 text-center" ng-click="$ctrl.enable(row.definition.id)" ng-if="!row.responder">
           <a href class="text-success">
             <i class="fa fa-plus"></i>Enable</a>
         </div>

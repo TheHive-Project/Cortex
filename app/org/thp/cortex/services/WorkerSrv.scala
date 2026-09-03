@@ -4,7 +4,7 @@ import org.apache.pekko.{Done, NotUsed}
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import org.elastic4play._
-import org.elastic4play.controllers.{Fields, StringInputValue}
+import org.elastic4play.controllers.{Fields, JsonInputValue, StringInputValue}
 import org.elastic4play.database.ModifyConfig
 import org.elastic4play.services.{UserSrv => _, _}
 import org.scalactic.Accumulation._
@@ -26,7 +26,7 @@ object WorkerSrv {
   /** Attributes inherited from the source worker when it is duplicated, unless the caller overrides them */
   private val inheritedAttributes: Seq[String] = Seq("description", "dataTypeList", "rate", "rateUnit", "jobCache", "jobTimeout")
 
-  /** Upper bound for a worker name (stored as an Elasticsearch keyword, shown in TheHive menus) */
+  /** Upper bound for the name of a duplicated worker (stored as an Elasticsearch keyword, shown in TheHive menus) */
   val maxNameLength: Int = 128
 
   /**
@@ -39,20 +39,31 @@ object WorkerSrv {
   def duplicateFields(source: JsObject, overrides: Fields): Try[Fields] = {
     val sourceName   = (source \ "name").asOpt[String]
     val sourceConfig = (source \ "configuration").asOpt[String].flatMap(c => Try(Json.parse(c).as[JsObject]).toOption).getOrElse(JsObject.empty)
-    val overrideConfig = overrides.getValue("configuration").flatMap(_.asOpt[JsObject]).getOrElse(JsObject.empty)
-    val cleanOverrides = overrides.getString("description").filter(_.trim.isEmpty).fold(overrides)(_ => overrides.unset("description"))
+    // A null or blank description means "keep the source description"
+    val blankDescription = overrides.get("description").exists {
+      case JsonInputValue(JsNull) => true
+      case _                      => overrides.getString("description").exists(_.trim.isEmpty)
+    }
+    val cleanOverrides = if (blankDescription) overrides.unset("description") else overrides
+    val overrideConfig: Try[JsObject] = overrides.getValue("configuration") match {
+      case None | Some(JsNull) => Success(JsObject.empty)
+      case Some(cfg: JsObject) => Success(cfg)
+      case Some(_)             => Failure(BadRequestError("The configuration of a duplicated worker must be a JSON object"))
+    }
 
-    overrides.getString("name").map(_.trim).filter(_.nonEmpty) match {
-      case None => Failure(MissingAttributeError("name"))
-      case Some(name) if name.length > maxNameLength =>
-        Failure(BadRequestError(s"The worker name must not exceed $maxNameLength characters"))
-      case Some(name) if sourceName.contains(name) =>
-        Failure(BadRequestError(s"The duplicated worker must have a name different from the original one ($name)"))
-      case Some(name) =>
-        val fields = inheritedAttributes.foldLeft(cleanOverrides.set("name", name)) { (fields, attribute) =>
-          (source \ attribute).toOption.filterNot(_ == JsNull).fold(fields)(value => fields.addIfAbsent(attribute, value))
-        }
-        Success(fields.set("configuration", sourceConfig.deepMerge(overrideConfig)))
+    overrideConfig.flatMap { overrideConfig =>
+      overrides.getString("name").map(_.trim).filter(_.nonEmpty) match {
+        case None => Failure(MissingAttributeError("name"))
+        case Some(name) if name.length > maxNameLength =>
+          Failure(BadRequestError(s"The worker name must not exceed $maxNameLength characters"))
+        case Some(name) if sourceName.contains(name) =>
+          Failure(BadRequestError(s"The duplicated worker must have a name different from the original one ($name)"))
+        case Some(name) =>
+          val fields = inheritedAttributes.foldLeft(cleanOverrides.set("name", name)) { (fields, attribute) =>
+            (source \ attribute).toOption.filterNot(_ == JsNull).fold(fields)(value => fields.addIfAbsent(attribute, value))
+          }
+          Success(fields.set("configuration", sourceConfig.deepMerge(overrideConfig)))
+      }
     }
   }
 }
@@ -268,7 +279,18 @@ class WorkerSrv @Inject() (
   def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(
       implicit
       authContext: AuthContext
+  ): Future[Worker] = create(organization, workerDefinition, workerFields, keepDescription = false)
+
+  /**
+    * @param keepDescription when true, a "description" present in the fields is stored instead of the definition's one.
+    *                        Only the duplicate path uses it: the description attribute is read-only afterwards, so the
+    *                        public enable endpoints must not let clients set it by accident.
+    */
+  private def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields, keepDescription: Boolean)(
+      implicit
+      authContext: AuthContext
   ): Future[Worker] = {
+    val description = if (keepDescription) workerFields.getString("description").getOrElse(workerDefinition.description) else workerDefinition.description
     val rawConfig = workerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
     val configItems = workerDefinition.configurationItems ++ BaseConfig.global(workerDefinition.tpe, config).items ++ BaseConfig
       .tlp
@@ -291,7 +313,7 @@ class WorkerSrv @Inject() (
             organization,
             workerFields
               .set("workerDefinitionId", workerDefinition.id)
-              .addIfAbsent("description", workerDefinition.description)
+              .set("description", description)
               .set("author", workerDefinition.author)
               .set("version", workerDefinition.version)
               .set("dockerImage", workerDefinition.dockerImage.map(JsString))
@@ -335,7 +357,7 @@ class WorkerSrv @Inject() (
         }
       )
       organization <- organizationSrv.get(worker.organization)
-      duplicated   <- create(organization, workerDefinition, duplicateFields)
+      duplicated   <- create(organization, workerDefinition, duplicateFields, keepDescription = true)
     } yield duplicated
 
   def delete(worker: Worker)(implicit authContext: AuthContext): Future[Unit] =

@@ -178,9 +178,22 @@ export default class OrganizationRespondersController {
       });
   }
 
-  // Message returned by the Cortex API, if any, to append to a notification
+  // Message returned by the Cortex API, if any, to append to a notification.
+  // Attribute validation failures carry an `errors` array instead of a message.
   serverMessage(err) {
-    return err && err.data && err.data.message ? ` ${err.data.message}` : '';
+    const data = err && err.data;
+
+    if (!data) {
+      return '';
+    }
+    if (data.message) {
+      return ` ${data.message}`;
+    }
+    if (_.isArray(data.errors) && data.errors.length > 0) {
+      return ' ' + _.map(data.errors, e => e.message || e.name || e.type).join(', ');
+    }
+
+    return '';
   }
 
   duplicate(definition, responder) {

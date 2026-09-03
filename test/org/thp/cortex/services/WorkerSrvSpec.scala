@@ -80,6 +80,17 @@ class WorkerSrvSpec extends PlaySpecification {
       fields.getString("description") must beSome("Send an email")
     }
 
+    "treat a JSON null description like a blank one" in {
+      val fields = WorkerSrv.duplicateFields(source, Fields.empty.set("name", "copy").set("description", JsNull)).get
+      fields.getString("description") must beSome("Send an email")
+    }
+
+    "reject a configuration override that is not a JSON object" in {
+      WorkerSrv.duplicateFields(source, Fields.empty.set("name", "copy").set("configuration", "{\"from\": \"x\"}")) must beFailedTry
+        .withThrowable[BadRequestError]
+      WorkerSrv.duplicateFields(source, Fields.empty.set("name", "copy").set("configuration", JsNull)) must beSuccessfulTry
+    }
+
     "tolerate a source without configuration or options" in {
       val bare   = Json.obj("name" -> "Echo_1_0", "description" -> "echo", "rate" -> JsNull)
       val fields = WorkerSrv.duplicateFields(bare, Fields.empty.set("name", "Echo copy").set("configuration", Json.obj("k" -> "v"))).get

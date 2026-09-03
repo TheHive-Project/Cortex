@@ -7,9 +7,10 @@ import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponent
 
 import org.apache.pekko.stream.Materializer
 import javax.inject.{Inject, Singleton}
-import org.thp.cortex.models.{Roles, Worker, WorkerDefinition}
+import org.thp.cortex.models.{Roles, Worker, WorkerDefinition, WorkerType}
 import org.thp.cortex.services.{UserSrv, WorkerSrv}
 
+import org.elastic4play.NotFoundError
 import org.elastic4play.controllers.{Authenticated, Fields, FieldsBodyParser, Renderer}
 import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
@@ -83,6 +84,8 @@ class ResponderCtrl @Inject() (
   def duplicate(responderId: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request =>
     for {
       responder  <- workerSrv.getForUser(request.userId, responderId)
+      // the lookup is not typed: refuse to create an analyzer through the responder API
+      _          <- if (responder.tpe() == WorkerType.responder) Future.unit else Future.failed(NotFoundError(s"responder $responderId not found"))
       duplicated <- workerSrv.duplicate(responder, request.body)
     } yield renderer.toOutput(CREATED, responderJson(isAdmin = true)(duplicated))
   }
