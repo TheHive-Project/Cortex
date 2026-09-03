@@ -80,6 +80,13 @@ class ResponderCtrl @Inject() (
     } yield renderer.toOutput(CREATED, responderJson(responder, Some(workerDefinition)))
   }
 
+  def duplicate(responderId: String): Action[Fields] = authenticated(Roles.orgAdmin).async(fieldsBodyParser) { implicit request =>
+    for {
+      responder  <- workerSrv.getForUser(request.userId, responderId)
+      duplicated <- workerSrv.duplicate(responder, request.body)
+    } yield renderer.toOutput(CREATED, responderJson(isAdmin = true)(duplicated))
+  }
+
   def listDefinitions: Action[AnyContent] = authenticated(Roles.orgAdmin, Roles.superAdmin).async { _ =>
     val (responders, responderTotal) = workerSrv.listResponderDefinitions
     renderer.toOutput(OK, responders, responderTotal)

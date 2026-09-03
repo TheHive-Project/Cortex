@@ -2,9 +2,22 @@
   <h4>Base details</h4>
 
   <div class="form-group">
-    <label class="col-sm-3 control-label">Name</label>
+    <label class="col-sm-3 control-label">Name
+      <i class="fa fa-asterisk text-danger" ng-if="$ctrl.mode === 'duplicate'"></i>
+    </label>
     <div class="col-sm-9">
-      <input class="form-control" type="text" name="name" ng-disabled="true" ng-model="$ctrl.responder.name" />
+      <input class="form-control" type="text" name="name" ng-disabled="$ctrl.mode !== 'duplicate'"
+        ng-required="$ctrl.mode === 'duplicate'" ng-model="$ctrl.responder.name" />
+      <p class="help-block" ng-if="$ctrl.mode === 'duplicate'">
+        The copy keeps the docker image of <strong>{{$ctrl.definition.id}}</strong> from the catalog. Give it a name that is
+        not already used by another responder of the organization.
+      </p>
+    </div>
+  </div>
+  <div class="form-group" ng-if="$ctrl.mode === 'duplicate'">
+    <label class="col-sm-3 control-label">Description</label>
+    <div class="col-sm-9">
+      <textarea class="form-control vertical" rows="3" name="description" ng-model="$ctrl.responder.description"></textarea>
     </div>
   </div>
 </section>

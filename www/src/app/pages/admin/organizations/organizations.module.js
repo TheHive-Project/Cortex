@@ -191,6 +191,7 @@ const organizationsModule = angular
     bindings: {
       responder: '=',
       definition: '=',
+      mode: '<',
       configuration: '<',
       globalConfig: '<',
       baseConfig: '<'

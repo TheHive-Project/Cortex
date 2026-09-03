@@ -28,12 +28,39 @@ export default class OrganizationRespondersController {
     this.state = {
       filterAvailable: ''
     };
+
+    // Predicate used by the template to filter rows on the definition id or the responder name
+    this.rowFilter = row => {
+      const needle = (this.state.filterAvailable || '').toLowerCase();
+
+      if (!needle) {
+        return true;
+      }
+
+      return (
+        row.definition.id.toLowerCase().includes(needle) ||
+        (row.responder && (row.responder.name || '').toLowerCase().includes(needle))
+      );
+    };
   }
 
   $onInit() {
-    this.activeResponders = _.keyBy(this.responders, 'workerDefinitionId');
+    // A definition can be enabled several times (duplicates): group the enabled responders by definition
+    this.activeResponders = _.groupBy(this.responders, 'workerDefinitionId');
     this.definitionsIds = _.keys(this.responderDefinitions).sort();
     this.obsoleteResponders = _.filter(this.responders, a => !this.definitionsIds.includes(a.workerDefinitionId));
+
+    // One row per enabled responder, or a single row for a definition that is not enabled yet
+    this.rows = _.flatMap(this.definitionsIds, def => {
+      const definition = this.responderDefinitions[def];
+      const instances = _.sortBy(this.activeResponders[def] || [], 'name');
+
+      if (instances.length === 0) {
+        return [{ definition: definition, responder: null }];
+      }
+
+      return _.map(instances, responder => ({ definition: definition, responder: responder }));
+    });
   }
 
   openModal(mode, definition, responder) {
@@ -91,6 +118,19 @@ export default class OrganizationRespondersController {
             definition.id,
             response
           );
+        } else if (mode === 'duplicate') {
+          return this.OrganizationService.duplicateResponder(
+            responder.id,
+            _.pick(
+              response,
+              'name',
+              'description',
+              'configuration',
+              'rate',
+              'rateUnit',
+              'jobTimeout'
+            )
+          );
         } else {
           return this.OrganizationService.updateResponder(
             responder.id,
@@ -130,6 +170,26 @@ export default class OrganizationRespondersController {
       .catch(err => {
         if (!_.isString(err)) {
           this.NotificationService.error('Failed to enable the responder.');
+        }
+      });
+  }
+
+  duplicate(definition, responder) {
+    // Pre-fill the copy with the source values; the name must be changed by the user
+    const copy = _.assign({}, responder, {
+      name: `${responder.name} (copy)`
+    });
+
+    this.openModal('duplicate', definition, copy)
+      .then(() => {
+        this.NotificationService.success('Responder duplicated successfully');
+      })
+      .catch(err => {
+        if (!_.isString(err)) {
+          this.NotificationService.error(
+            'Failed to duplicate the responder.' +
+              (err && err.data && err.data.message ? ` ${err.data.message}` : '')
+          );
         }
       });
   }

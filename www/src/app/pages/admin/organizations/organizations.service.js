@@ -122,6 +122,10 @@ export default class OrganizationService {
     return this.$http.patch(`./api/responder/${responderId}`, config);
   }
 
+  duplicateResponder(responderId, config) {
+    return this.$http.post(`./api/responder/${responderId}/duplicate`, config);
+  }
+
   disableResponder(responderId) {
     return this.$http.delete(`./api/responder/${responderId}`);
   }

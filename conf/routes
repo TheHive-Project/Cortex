@@ -45,6 +45,7 @@ POST          /api/organization/analyzer/:analyzerId                org.thp.cort
 
 DELETE        /api/responder/:id                                    org.thp.cortex.controllers.ResponderCtrl.delete(id)
 PATCH         /api/responder/:id                                    org.thp.cortex.controllers.ResponderCtrl.update(id)
+POST          /api/responder/:id/duplicate                          org.thp.cortex.controllers.ResponderCtrl.duplicate(id)
 GET           /api/responderdefinition                              org.thp.cortex.controllers.ResponderCtrl.listDefinitions
 POST          /api/responderdefinition/scan                         org.thp.cortex.controllers.ResponderCtrl.scan
 GET           /api/organization/responder                           org.thp.cortex.controllers.ResponderCtrl.find

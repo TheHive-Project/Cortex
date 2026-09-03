@@ -10,7 +10,7 @@ import org.elastic4play.services.{UserSrv => _, _}
 import org.scalactic.Accumulation._
 import org.scalactic._
 import org.thp.cortex.models._
-import play.api.libs.json.{JsObject, JsString, Json}
+import play.api.libs.json.{JsNull, JsObject, JsString, Json}
 import play.api.{Configuration, Logger}
 
 import java.net.URL
@@ -20,6 +20,37 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
+
+object WorkerSrv {
+
+  /** Attributes inherited from the source worker when it is duplicated, unless the caller overrides them */
+  private val inheritedAttributes: Seq[String] = Seq("description", "dataTypeList", "rate", "rateUnit", "jobCache", "jobTimeout")
+
+  /**
+    * Build the creation fields of a copy of a worker.
+    * @param source    raw attributes of the worker to copy (as stored in the database)
+    * @param overrides fields provided by the caller: "name" is mandatory and must differ from the source name;
+    *                  "description", "configuration" and the options are optional and default to the source values.
+    *                  Configuration keys absent from the override are inherited from the source configuration.
+    */
+  def duplicateFields(source: JsObject, overrides: Fields): Try[Fields] = {
+    val sourceName   = (source \ "name").asOpt[String]
+    val sourceConfig = (source \ "configuration").asOpt[String].flatMap(c => Try(Json.parse(c).as[JsObject]).toOption).getOrElse(JsObject.empty)
+    val overrideConfig = overrides.getValue("configuration").flatMap(_.asOpt[JsObject]).getOrElse(JsObject.empty)
+    val cleanOverrides = overrides.getString("description").filter(_.trim.isEmpty).fold(overrides)(_ => overrides.unset("description"))
+
+    overrides.getString("name").map(_.trim).filter(_.nonEmpty) match {
+      case None => Failure(MissingAttributeError("name"))
+      case Some(name) if sourceName.contains(name) =>
+        Failure(BadRequestError(s"The duplicated worker must have a name different from the original one ($name)"))
+      case Some(name) =>
+        val fields = inheritedAttributes.foldLeft(cleanOverrides.set("name", name)) { (fields, attribute) =>
+          (source \ attribute).toOption.filterNot(_ == JsNull).fold(fields)(value => fields.addIfAbsent(attribute, value))
+        }
+        Success(fields.set("configuration", sourceConfig.deepMerge(overrideConfig)))
+    }
+  }
+}
 
 @Singleton
 class WorkerSrv @Inject() (
@@ -255,7 +286,7 @@ class WorkerSrv @Inject() (
             organization,
             workerFields
               .set("workerDefinitionId", workerDefinition.id)
-              .set("description", workerDefinition.description)
+              .addIfAbsent("description", workerDefinition.description)
               .set("author", workerDefinition.author)
               .set("version", workerDefinition.version)
               .set("dockerImage", workerDefinition.dockerImage.map(JsString))
@@ -279,6 +310,24 @@ class WorkerSrv @Inject() (
       organization <- organizationSrv.get(organizationId)
       worker       <- create(organization, workerDefinition, workerFields)
     } yield worker
+
+  /**
+    * Create a copy of an existing worker in the same organization. The copy is backed by the same worker
+    * definition (hence the same docker image or command) but has its own name, description, configuration
+    * and options. See [[WorkerSrv.duplicateFields]] for the accepted fields.
+    */
+  def duplicate(worker: Worker, fields: Fields)(implicit authContext: AuthContext): Future[Worker] =
+    for {
+      duplicateFields <- Future.fromTry(WorkerSrv.duplicateFields(worker.attributes, fields))
+      workerDefinition <- Future.fromTry(
+        getDefinition(worker.workerDefinitionId()).recoverWith {
+          case _: NotFoundError =>
+            Failure(NotFoundError(s"Worker definition ${worker.workerDefinitionId()} is not in the catalog, an obsolete worker can't be duplicated"))
+        }
+      )
+      organization <- organizationSrv.get(worker.organization)
+      duplicated   <- create(organization, workerDefinition, duplicateFields)
+    } yield duplicated
 
   def delete(worker: Worker)(implicit authContext: AuthContext): Future[Unit] =
     deleteSrv.realDelete(worker)
