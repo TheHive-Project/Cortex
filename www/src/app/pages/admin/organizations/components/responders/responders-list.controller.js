@@ -155,7 +155,9 @@ export default class OrganizationRespondersController {
       })
       .catch(err => {
         if (!_.isString(err)) {
-          this.NotificationService.error('Failed to edit the responder.');
+          this.NotificationService.error(
+            'Failed to edit the responder.' + this.serverMessage(err)
+          );
         }
       });
   }
@@ -169,9 +171,16 @@ export default class OrganizationRespondersController {
       })
       .catch(err => {
         if (!_.isString(err)) {
-          this.NotificationService.error('Failed to enable the responder.');
+          this.NotificationService.error(
+            'Failed to enable the responder.' + this.serverMessage(err)
+          );
         }
       });
+  }
+
+  // Message returned by the Cortex API, if any, to append to a notification
+  serverMessage(err) {
+    return err && err.data && err.data.message ? ` ${err.data.message}` : '';
   }
 
   duplicate(definition, responder) {
@@ -187,8 +196,7 @@ export default class OrganizationRespondersController {
       .catch(err => {
         if (!_.isString(err)) {
           this.NotificationService.error(
-            'Failed to duplicate the responder.' +
-              (err && err.data && err.data.message ? ` ${err.data.message}` : '')
+            'Failed to duplicate the responder.' + this.serverMessage(err)
           );
         }
       });

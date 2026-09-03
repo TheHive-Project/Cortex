@@ -41,6 +41,8 @@ class ErrorHandler extends HttpErrorHandler {
       case BadRequestError(message)      => Status.BAD_REQUEST -> Json.obj("type" -> "BadRequest", "message" -> message)
       case SearchError(message)          => Status.BAD_REQUEST -> Json.obj("type" -> "SearchError", "message" -> s"$message")
       case ace: AttributeCheckingError   => Status.BAD_REQUEST -> Json.toJson(ace)
+      case ae: AttributeError            => Status.BAD_REQUEST -> Json.obj("type" -> ae.getClass.getSimpleName, "message" -> ae.getMessage, "name" -> ae.name)
+      case ConflictError(message, obj)   => Status.CONFLICT    -> Json.obj("type" -> "ConflictError", "message" -> message, "object" -> obj)
       case iae: IllegalArgumentException => Status.BAD_REQUEST -> Json.obj("type" -> "IllegalArgument", "message" -> iae.getMessage)
       case _: ConnectException =>
         Status.INTERNAL_SERVER_ERROR -> Json.obj("type" -> "NoNodeAvailable", "message" -> "ElasticSearch cluster is unreachable")

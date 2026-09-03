@@ -297,7 +297,11 @@ class WorkerSrv @Inject() (
               .set("configuration", cfg.toString)
               .set("type", workerDefinition.tpe.toString)
               .addIfAbsent("dataTypeList", StringInputValue(workerDefinition.dataTypeList))
-          ), {
+          ).recoverWith {
+            case _: ConflictError =>
+              val name = workerFields.getString("name").getOrElse(workerDefinition.name)
+              Future.failed(ConflictError(s"A ${workerDefinition.tpe} named \"$name\" already exists in this organization", Json.obj("name" -> name)))
+          }, {
           case One(e)         => Future.failed(e)
           case Every(es @ _*) => Future.failed(AttributeCheckingError(s"worker(${workerDefinition.name}).configuration", es))
           case x              => Future.failed(UnknownAttributeError(s"$x", Json.obj()))
