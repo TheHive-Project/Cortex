@@ -26,6 +26,9 @@ object WorkerSrv {
   /** Attributes inherited from the source worker when it is duplicated, unless the caller overrides them */
   private val inheritedAttributes: Seq[String] = Seq("description", "dataTypeList", "rate", "rateUnit", "jobCache", "jobTimeout")
 
+  /** Upper bound for a worker name (stored as an Elasticsearch keyword, shown in TheHive menus) */
+  val maxNameLength: Int = 128
+
   /**
     * Build the creation fields of a copy of a worker.
     * @param source    raw attributes of the worker to copy (as stored in the database)
@@ -41,6 +44,8 @@ object WorkerSrv {
 
     overrides.getString("name").map(_.trim).filter(_.nonEmpty) match {
       case None => Failure(MissingAttributeError("name"))
+      case Some(name) if name.length > maxNameLength =>
+        Failure(BadRequestError(s"The worker name must not exceed $maxNameLength characters"))
       case Some(name) if sourceName.contains(name) =>
         Failure(BadRequestError(s"The duplicated worker must have a name different from the original one ($name)"))
       case Some(name) =>

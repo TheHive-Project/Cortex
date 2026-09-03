@@ -7,7 +7,7 @@
     </label>
     <div class="col-sm-9">
       <input class="form-control" type="text" name="name" ng-disabled="$ctrl.mode !== 'duplicate'"
-        ng-required="$ctrl.mode === 'duplicate'" ng-model="$ctrl.responder.name" />
+        ng-required="$ctrl.mode === 'duplicate'" ng-maxlength="128" ng-model="$ctrl.responder.name" />
       <p class="help-block" ng-if="$ctrl.mode === 'duplicate'">
         The copy keeps the docker image of <strong>{{$ctrl.definition.id}}</strong> from the catalog. Give it a name that is
         not already used by another responder of the organization.

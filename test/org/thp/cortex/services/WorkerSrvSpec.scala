@@ -30,6 +30,11 @@ class WorkerSrvSpec extends PlaySpecification {
       WorkerSrv.duplicateFields(source, Fields.empty.set("name", "  ")) must beFailedTry.withThrowable[MissingAttributeError]
     }
 
+    "reject a name longer than the maximum" in {
+      WorkerSrv.duplicateFields(source, Fields.empty.set("name", "x" * (WorkerSrv.maxNameLength + 1))) must beFailedTry.withThrowable[BadRequestError]
+      WorkerSrv.duplicateFields(source, Fields.empty.set("name", "x" * WorkerSrv.maxNameLength)) must beSuccessfulTry
+    }
+
     "reject the name of the original worker" in {
       WorkerSrv.duplicateFields(source, Fields.empty.set("name", "Mailer_1_0")) must beFailedTry.withThrowable[BadRequestError]
     }
