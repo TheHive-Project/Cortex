@@ -4,7 +4,7 @@ import org.apache.pekko.{Done, NotUsed}
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import org.elastic4play._
-import org.elastic4play.controllers.{Fields, JsonInputValue, StringInputValue}
+import org.elastic4play.controllers.{Fields, StringInputValue}
 import org.elastic4play.database.ModifyConfig
 import org.elastic4play.services.{UserSrv => _, _}
 import org.scalactic.Accumulation._
@@ -39,12 +39,8 @@ object WorkerSrv {
   def duplicateFields(source: JsObject, overrides: Fields): Try[Fields] = {
     val sourceName   = (source \ "name").asOpt[String]
     val sourceConfig = (source \ "configuration").asOpt[String].flatMap(c => Try(Json.parse(c).as[JsObject]).toOption).getOrElse(JsObject.empty)
-    // A null or blank description means "keep the source description"
-    val blankDescription = overrides.get("description").exists {
-      case JsonInputValue(JsNull) => true
-      case _                      => overrides.getString("description").exists(_.trim.isEmpty)
-    }
-    val cleanOverrides = if (blankDescription) overrides.unset("description") else overrides
+    // A blank description means "keep the source description"
+    val cleanOverrides = overrides.getString("description").filter(_.trim.isEmpty).fold(overrides)(_ => overrides.unset("description"))
     val overrideConfig: Try[JsObject] = overrides.getValue("configuration") match {
       case None | Some(JsNull) => Success(JsObject.empty)
       case Some(cfg: JsObject) => Success(cfg)
@@ -279,18 +275,7 @@ class WorkerSrv @Inject() (
   def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields)(
       implicit
       authContext: AuthContext
-  ): Future[Worker] = create(organization, workerDefinition, workerFields, keepDescription = false)
-
-  /**
-    * @param keepDescription when true, a "description" present in the fields is stored instead of the definition's one.
-    *                        Only the duplicate path uses it: the description attribute is read-only afterwards, so the
-    *                        public enable endpoints must not let clients set it by accident.
-    */
-  private def create(organization: Organization, workerDefinition: WorkerDefinition, workerFields: Fields, keepDescription: Boolean)(
-      implicit
-      authContext: AuthContext
   ): Future[Worker] = {
-    val description = if (keepDescription) workerFields.getString("description").getOrElse(workerDefinition.description) else workerDefinition.description
     val rawConfig = workerFields.getValue("configuration").fold(JsObject.empty)(_.as[JsObject])
     val configItems = workerDefinition.configurationItems ++ BaseConfig.global(workerDefinition.tpe, config).items ++ BaseConfig
       .tlp
@@ -313,7 +298,7 @@ class WorkerSrv @Inject() (
             organization,
             workerFields
               .set("workerDefinitionId", workerDefinition.id)
-              .set("description", description)
+              .set("description", workerDefinition.description)
               .set("author", workerDefinition.author)
               .set("version", workerDefinition.version)
               .set("dockerImage", workerDefinition.dockerImage.map(JsString))
@@ -357,7 +342,9 @@ class WorkerSrv @Inject() (
         }
       )
       organization <- organizationSrv.get(worker.organization)
-      duplicated   <- create(organization, workerDefinition, duplicateFields, keepDescription = true)
+      // create() always stores the definition's description; carry the requested one through a definition copy
+      description = duplicateFields.getString("description").getOrElse(workerDefinition.description)
+      duplicated <- create(organization, workerDefinition.copy(description = description), duplicateFields)
     } yield duplicated
 
   def delete(worker: Worker)(implicit authContext: AuthContext): Future[Unit] =
