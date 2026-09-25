@@ -1,10 +1,11 @@
-package org.thp.cortex.services
+package org.thp.cortex.services.auth.oauth2
+
 import java.util.UUID
 
-import org.apache.pekko.stream.Materializer
 import javax.inject.{Inject, Singleton}
 import org.elastic4play.services.{AuthContext, AuthSrv}
 import org.elastic4play.{AuthenticationError, BadRequestError, NotFoundError}
+import org.thp.cortex.services.UserSrv
 import org.thp.cortex.services.mappers.UserMapper
 import play.api.libs.json.JsObject
 import play.api.libs.ws.WSClient
@@ -14,73 +15,20 @@ import play.api.{Configuration, Logger}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class OAuth2Config(
-    clientId: String,
-    clientSecret: String,
-    redirectUri: String,
-    responseType: String,
-    grantType: String,
-    authorizationUrl: String,
-    tokenUrl: String,
-    userUrl: String,
-    scope: Seq[String],
-    authorizationHeader: String,
-    autoupdate: Boolean,
-    autocreate: Boolean
-)
-
-object OAuth2Config {
-
-  def apply(configuration: Configuration): Option[OAuth2Config] =
-    for {
-      clientId     <- configuration.getOptional[String]("auth.oauth2.clientId")
-      clientSecret <- configuration.getOptional[String]("auth.oauth2.clientSecret")
-      redirectUri  <- configuration.getOptional[String]("auth.oauth2.redirectUri")
-      responseType <- configuration.getOptional[String]("auth.oauth2.responseType")
-      grantType = configuration.getOptional[String]("auth.oauth2.grantType").getOrElse("authorization_code")
-      authorizationUrl <- configuration.getOptional[String]("auth.oauth2.authorizationUrl")
-      tokenUrl         <- configuration.getOptional[String]("auth.oauth2.tokenUrl")
-      userUrl          <- configuration.getOptional[String]("auth.oauth2.userUrl")
-      scope            <- configuration.getOptional[Seq[String]]("auth.oauth2.scope")
-      authorizationHeader = configuration.getOptional[String]("auth.oauth2.authorizationHeader").getOrElse("Bearer")
-      autocreate          = configuration.getOptional[Boolean]("auth.sso.autocreate").getOrElse(false)
-      autoupdate          = configuration.getOptional[Boolean]("auth.sso.autoupdate").getOrElse(false)
-    } yield OAuth2Config(
-      clientId,
-      clientSecret,
-      redirectUri,
-      responseType,
-      grantType,
-      authorizationUrl,
-      tokenUrl,
-      userUrl,
-      scope,
-      authorizationHeader,
-      autocreate,
-      autoupdate
-    )
-}
-
 @Singleton
-class OAuth2Srv(
+final class OAuth2Srv(
     ws: WSClient,
     userSrv: UserSrv,
     ssoMapper: UserMapper,
-    oauth2Config: Option[OAuth2Config],
-    implicit val ec: ExecutionContext,
-    implicit val mat: Materializer
-) extends AuthSrv {
+    oauth2Config: Option[OAuth2Config]
+)(implicit ec: ExecutionContext)
+    extends AuthSrv {
 
-  @Inject() def this(ws: WSClient, ssoMapper: UserMapper, userSrv: UserSrv, configuration: Configuration, ec: ExecutionContext, mat: Materializer) =
-    this(ws, userSrv, ssoMapper, OAuth2Config(configuration), ec, mat)
+  @Inject() def this(ws: WSClient, ssoMapper: UserMapper, userSrv: UserSrv, configuration: Configuration, ec: ExecutionContext) =
+    this(ws, userSrv, ssoMapper, OAuth2Config(configuration))(ec)
 
   override val name: String = "oauth2"
   private val logger        = Logger(getClass)
-
-  val Oauth2TokenQueryString = "code"
-
-  private def withOAuth2Config[A](body: OAuth2Config => Future[A]): Future[A] =
-    oauth2Config.fold[Future[A]](Future.failed(AuthenticationError("OAuth2 not configured properly")))(body)
 
   override def authenticate()(implicit request: RequestHeader): Future[Either[Result, AuthContext]] =
     withOAuth2Config { oauth2Config =>
@@ -96,6 +44,9 @@ class OAuth2Srv(
           case error => Future.failed(AuthenticationError(s"OAuth2 authentication failure: ${error.getMessage}"))
         }
     }
+
+  private def withOAuth2Config[A](body: OAuth2Config => Future[A]): Future[A] =
+    oauth2Config.fold[Future[A]](Future.failed(AuthenticationError("OAuth2 not configured properly")))(body)
 
   private def isSecuredAuthCode(request: RequestHeader): Boolean =
     request.queryString.contains("code") && request.queryString.contains("state")
