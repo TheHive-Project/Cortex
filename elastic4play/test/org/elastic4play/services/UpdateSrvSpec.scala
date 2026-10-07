@@ -1,12 +1,11 @@
 package org.elastic4play.services
 
 import java.util.{Date, UUID}
-
 import org.elastic4play.controllers.JsonInputValue
 import org.elastic4play.database.DBModify
 import org.elastic4play.models.{Attribute, EntityDef, ModelDef, AttributeFormat => F}
 import org.elastic4play.utils.RichFuture
-import org.elastic4play.{AttributeCheckingError, InvalidFormatAttributeError, UnknownAttributeError}
+import org.elastic4play.{AttributeCheckingError, InvalidFormatAttributeError, MissingAttributeError, UnknownAttributeError}
 import org.junit.runner.RunWith
 import org.specs2.mock.Mockito
 import org.specs2.runner.JUnitRunner
@@ -17,16 +16,19 @@ import play.api.test.PlaySpecification
 class UpdateSrvSpec extends PlaySpecification with Mockito {
 
   class TestModel extends ModelDef[TestModel, TestEntity]("testModel", "TestModel", "/test") {
-    val textAttribute: Attribute[String]      = attribute("textAttribute", F.textFmt, "textAttribute")
-    val stringAttribute: Attribute[String]    = attribute("stringAttribute", F.stringFmt, "stringAttribute")
-    val dateAttribute: Attribute[Date]        = attribute("dateAttribute", F.dateFmt, "dateAttribute")
-    val booleanAttribute: Attribute[Boolean]  = attribute("booleanAttribute", F.booleanFmt, "booleanAttribute")
-    val uuidAttribute: Attribute[UUID]        = attribute("uuidAttribute", F.uuidFmt, "uuidAttribute")
-    val hashAttribute: Attribute[String]      = attribute("hashAttribute", F.hashFmt, "hashAttribute")
-    val metricAttribute: Attribute[JsValue]   = attribute("metricAttribute", F.metricsFmt, "metricAttribute")
-    val multiAttibute: Attribute[Seq[String]] = multiAttribute("multiAttribute", F.stringFmt, "multiAttribute")
+    val textAttribute: Attribute[String]        = attribute("textAttribute", F.textFmt, "textAttribute")
+    val stringAttribute: Attribute[String]      = attribute("stringAttribute", F.stringFmt, "stringAttribute")
+    val dateAttribute: Attribute[Date]          = attribute("dateAttribute", F.dateFmt, "dateAttribute")
+    val booleanAttribute: Attribute[Boolean]    = attribute("booleanAttribute", F.booleanFmt, "booleanAttribute")
+    val uuidAttribute: Attribute[UUID]          = attribute("uuidAttribute", F.uuidFmt, "uuidAttribute")
+    val hashAttribute: Attribute[String]        = attribute("hashAttribute", F.hashFmt, "hashAttribute")
+    val metricAttribute: Attribute[JsValue]     = attribute("metricAttribute", F.metricsFmt, "metricAttribute")
+    val multiAttribute: Attribute[Seq[String]]  = multiAttribute("multiAttribute", F.stringFmt, "multiAttribute")
+    val optAttribute: Attribute[Option[String]] = optionalAttribute("optAttribute", F.stringFmt, "optAttribute")
   }
+
   class TestEntity(model: TestModel, attributes: JsObject) extends EntityDef[TestModel, TestEntity](model, attributes)
+
   val fieldsSrv: FieldsSrv         = mock[FieldsSrv]
   val dbModify: DBModify           = mock[DBModify]
   val eventSrv: EventSrv           = mock[EventSrv]
@@ -92,6 +94,20 @@ class UpdateSrvSpec extends PlaySpecification with Mockito {
           )
       }
     }
-  }
 
+    "can remove an optional value with an empty array" in {
+      val attrs = Json.obj("optAttribute" -> JsArray.empty)
+      updateSrv.checkAttributes(attrs, model).await must not(throwA[AttributeCheckingError])
+    }
+
+    "refuse to remove a required attribute" in {
+      val attrs = Json.obj("textAttribute" -> JsArray.empty)
+      updateSrv.checkAttributes(attrs, model).await must throwA[AttributeCheckingError].like {
+        case AttributeCheckingError(_, errors) =>
+          errors must contain(
+            MissingAttributeError("textAttribute")
+          )
+      }
+    }
+  }
 }

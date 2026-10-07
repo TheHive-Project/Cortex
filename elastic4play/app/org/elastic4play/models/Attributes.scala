@@ -128,8 +128,10 @@ case class Attribute[T](
   def validateForUpdate(subNames: Seq[String], value: JsValue): JsValue Or Every[AttributeError] = {
     val result = value match {
       case _ if isReadonly                       => Bad(One(UpdateReadOnlyAttributeError(attributeName)))
-      case JsNull | JsArray(Seq()) if isRequired => Bad(One(MissingAttributeError(attributeName)))
-      case JsNull | JsArray(Seq())               => Good(value)
+      case JsNull if isRequired                  => Bad(One(MissingAttributeError(attributeName)))
+      case JsArray(s) if isRequired && s.isEmpty => Bad(One(MissingAttributeError(attributeName)))
+      case JsNull                                => Good(value)
+      case JsArray(s) if s.isEmpty               => Good(value)
       case v =>
         format
           .checkJsonForUpdate(subNames, v)
