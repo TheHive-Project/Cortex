@@ -27,6 +27,51 @@ import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.jdk.CollectionConverters._
+import scala.util.{Try, Using}
+
+object DBConfiguration {
+  private[DBConfiguration] lazy val logger = Logger(getClass)
+
+  /**
+    * Load the store configured under `search.<kind>` (if any) and build something from it.
+    * A store which cannot be loaded is a configuration error: it is reported with its path (never its password)
+    * instead of silently widening or narrowing the TLS trust.
+    */
+  private def loadStore[A](kind: String, config: Configuration)(build: (KeyStore, Array[Char]) => A): Option[A] =
+    config.getOptional[String](s"search.$kind.path").map { path =>
+      val storeType = config.getOptional[String](s"search.$kind.type").getOrElse(KeyStore.getDefaultType)
+      val password  = config.getOptional[String](s"search.$kind.password").getOrElse("").toCharArray
+      Try(Using.resource(Files.newInputStream(Paths.get(path))) { in =>
+        val ks = KeyStore.getInstance(storeType)
+        ks.load(in, password)
+        build(ks, password)
+      }).fold(e => throw new IllegalArgumentException(s"Failed to load $kind from $path (search.$kind): ${e.getMessage}", e), identity)
+    }
+
+  /**
+    * Build the SSL context from `search.keyStore` and `search.trustStore`.
+    * Without trustStore the JVM default trust is used, without keyStore no client certificate is sent.
+    * @throws IllegalArgumentException if a configured store cannot be loaded
+    */
+  def buildSslContext(config: Configuration): Option[SSLContext] = {
+    val keyManagers = loadStore("keyStore", config) { (ks, password) =>
+      val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm)
+      kmf.init(ks, password)
+      kmf.getKeyManagers
+    }
+    val trustManagers = loadStore("trustStore", config) { (ks, _) =>
+      val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
+      tmf.init(ks)
+      tmf.getTrustManagers
+    }
+    if (keyManagers.isEmpty && trustManagers.isEmpty) None
+    else {
+      val sslContext = SSLContext.getInstance("TLS")
+      sslContext.init(keyManagers.orNull, trustManagers.orNull, null)
+      Some(sslContext)
+    }
+  }
+}
 
 /**
   * This class is a wrapper of ElasticSearch client from Elastic4s
@@ -40,7 +85,11 @@ class DBConfiguration @Inject() (
     @Named("databaseVersion") val version: Int,
     implicit val actorSystem: ActorSystem
 ) {
-  private[DBConfiguration] lazy val logger = Logger(getClass)
+
+  import DBConfiguration._
+
+  // built eagerly: a store which cannot be loaded makes the injector (so the application start) fail
+  private val sslContextMaybe: Option[SSLContext] = buildSslContext(config)
 
   private def requestConfigCallback: RequestConfigCallback = (requestConfigBuilder: RequestConfig.Builder) => {
     requestConfigBuilder.setAuthenticationEnabled(credentialsProviderMaybe.isDefined)
@@ -71,46 +120,6 @@ class DBConfiguration @Inject() (
       provider.setCredentials(AuthScope.ANY, credentials)
       provider
     }
-
-  private lazy val sslContextMaybe: Option[SSLContext] = config.getOptional[String]("search.keyStore.path").map { keyStore =>
-    val keyStorePath     = Paths.get(keyStore)
-    val keyStoreType     = config.getOptional[String]("search.keyStore.type").getOrElse(KeyStore.getDefaultType)
-    val keyStorePassword = config.getOptional[String]("search.keyStore.password").getOrElse("").toCharArray
-    val keyInputStream   = Files.newInputStream(keyStorePath)
-    val keyManagers =
-      try {
-        val keyStore = KeyStore.getInstance(keyStoreType)
-        keyStore.load(keyInputStream, keyStorePassword)
-        val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm)
-        kmf.init(keyStore, keyStorePassword)
-        kmf.getKeyManagers
-      } finally {
-        keyInputStream.close()
-      }
-
-    val trustManagers = config
-      .getOptional[String]("search.trustStore.path")
-      .map { trustStorePath =>
-        val keyStoreType       = config.getOptional[String]("search.trustStore.type").getOrElse(KeyStore.getDefaultType)
-        val trustStorePassword = config.getOptional[String]("search.trustStore.password").getOrElse("").toCharArray
-        val trustInputStream   = Files.newInputStream(Paths.get(trustStorePath))
-        try {
-          val keyStore = KeyStore.getInstance(keyStoreType)
-          keyStore.load(trustInputStream, trustStorePassword)
-          val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
-          tmf.init(keyStore)
-          tmf.getTrustManagers
-        } finally {
-          trustInputStream.close()
-        }
-      }
-      .getOrElse(Array.empty)
-
-    // Configure the SSL context to use TLS
-    val sslContext = SSLContext.getInstance("TLS")
-    sslContext.init(keyManagers, trustManagers, null)
-    sslContext
-  }
 
   private def httpClientConfig: HttpClientConfigCallback = (httpClientBuilder: HttpAsyncClientBuilder) => {
     sslContextMaybe.foreach(httpClientBuilder.setSSLContext)
