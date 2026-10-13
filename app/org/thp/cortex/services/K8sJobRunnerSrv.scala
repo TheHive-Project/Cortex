@@ -1,7 +1,7 @@
 package org.thp.cortex.services
 
 import io.fabric8.kubernetes.api.model.batch.v1.{JobBuilder => KJobBuilder}
-import io.fabric8.kubernetes.api.model.{PersistentVolumeClaimVolumeSourceBuilder, PodSecurityContext, PodSecurityContextBuilder, StatusDetails}
+import io.fabric8.kubernetes.api.model._
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import org.apache.pekko.actor.ActorSystem
 import org.elastic4play.utils.Hasher
@@ -21,6 +21,7 @@ class K8sJobRunnerSrv(
     client: DefaultKubernetesClient,
     jobBaseDirectory: Path,
     persistentVolumeClaimName: Option[String], // if not provided k8s runner is unavailable
+    imagePullSecrets: Seq[String],
     extraLabels: Map[String, String],
     podSecurityContext: Option[PodSecurityContext],
     implicit val system: ActorSystem
@@ -32,6 +33,7 @@ class K8sJobRunnerSrv(
       new DefaultKubernetesClient(),
       Paths.get(config.get[String]("job.directory")),
       config.getOptional[String]("job.kubernetes.persistentVolumeClaimName"),
+      config.getOptional[Seq[String]]("job.kubernetes.imagePullSecrets").getOrElse(Seq.empty),
       K8sJobRunnerSrv.parseLabels(config),
       K8sJobRunnerSrv.parsePodSecurityContext(config),
       system: ActorSystem
@@ -70,7 +72,6 @@ class K8sJobRunnerSrv(
     val sanitizedJobId = sanitizeLabelValue(job.id)
     val ldhJobId       = job.id.toLowerCase().replace('_', '-').replaceAll("[^a-z0-9-]", "").replaceAll("^-+|-+$", "")
     val prefix         = "neuron-job-"
-    // FIXME to be tested by Sonny
     val kJobName = if ((prefix + ldhJobId).length <= maxNameLen) {
       prefix + ldhJobId
     } else {
@@ -131,6 +132,9 @@ class K8sJobRunnerSrv(
       .endVolumeMount()
       .endContainer()
       .withRestartPolicy("Never")
+      .when(imagePullSecrets.nonEmpty)(
+        _.withImagePullSecrets(imagePullSecrets.map(new LocalObjectReference(_)).asJava)
+      )
       .endSpec()
       .endTemplate()
       .endSpec()
