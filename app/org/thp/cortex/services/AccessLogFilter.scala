@@ -21,7 +21,7 @@ class AccessLogFilter @Inject() (errorHandler: HttpErrorHandler)(implicit ec: Ex
           val requestTime = endTime - startTime
 
           logger.info(
-            s"${requestHeader.remoteAddress} ${requestHeader.method} ${requestHeader.uri} took ${requestTime}ms and returned ${result.header.status} ${result
+            s"${requestHeader.remoteAddress} ${requestHeader.method} ${LoggedUri(requestHeader)} took ${requestTime}ms and returned ${result.header.status} ${result
               .body
               .contentLength
               .fold("")(b => s"$b bytes")}"

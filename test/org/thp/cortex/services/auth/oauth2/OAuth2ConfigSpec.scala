@@ -46,5 +46,51 @@ class OAuth2ConfigSpec extends PlaySpecification {
       // THEN - OAuth2 is not configured
       oauth2Config must beNone
     }
+
+    "enable only the user creation when only auth.sso.autocreate is set" in {
+      // GIVEN - a configuration asking to create unknown users, but not to update existing ones
+      val configuration = Configuration.from(baseConfig + ("auth.sso.autocreate" -> true) + ("auth.sso.autoupdate" -> false))
+
+      // WHEN - the OAuth2 configuration is read
+      val oauth2Config = OAuth2Config(configuration)
+
+      // THEN - unknown users are created, existing users are not updated
+      oauth2Config.map(_.autocreate) must beSome(true)
+      oauth2Config.map(_.autoupdate) must beSome(false)
+    }
+
+    "enable only the user update when only auth.sso.autoupdate is set" in {
+      // GIVEN - a configuration asking to update existing users, but not to create unknown ones
+      val configuration = Configuration.from(baseConfig + ("auth.sso.autocreate" -> false) + ("auth.sso.autoupdate" -> true))
+
+      // WHEN - the OAuth2 configuration is read
+      val oauth2Config = OAuth2Config(configuration)
+
+      // THEN - existing users are updated, unknown users are not created
+      oauth2Config.map(_.autoupdate) must beSome(true)
+      oauth2Config.map(_.autocreate) must beSome(false)
+    }
+
+    "disable PKCE when not set in configuration" in {
+      // GIVEN - a valid OAuth2 configuration without the pkce key
+      val configuration = Configuration.from(baseConfig)
+
+      // WHEN - the OAuth2 configuration is read
+      val oauth2Config = OAuth2Config(configuration)
+
+      // THEN - PKCE is disabled
+      oauth2Config.map(_.usePkce) must beSome(false)
+    }
+
+    "enable PKCE when set to true in configuration" in {
+      // GIVEN - a valid OAuth2 configuration with pkce = true
+      val configuration = Configuration.from(baseConfig + ("auth.oauth2.pkce" -> true))
+
+      // WHEN - the OAuth2 configuration is read
+      val oauth2Config = OAuth2Config(configuration)
+
+      // THEN - PKCE is enabled
+      oauth2Config.map(_.usePkce) must beSome(true)
+    }
   }
 }

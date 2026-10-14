@@ -17,7 +17,7 @@ import scala.concurrent.Future
 class ErrorHandler extends HttpErrorHandler {
   private[ErrorHandler] lazy val logger = Logger(getClass)
 
-  def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
+  override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
     val tpe = statusCode match {
       case BAD_REQUEST => "BadRequest"
       case FORBIDDEN   => "Forbidden"
@@ -27,7 +27,7 @@ class ErrorHandler extends HttpErrorHandler {
     Future.successful(toResult(statusCode, Json.obj("type" -> tpe, "message" -> message)))
   }
 
-  def toErrorResult(ex: Throwable): (Int, JsValue) =
+  private def toErrorResult(ex: Throwable): (Int, JsValue) =
     ex match {
       case AuthenticationError(message) => Status.UNAUTHORIZED -> Json.obj("type" -> "AuthenticationError", "message" -> message)
       case AuthorizationError(message)  => Status.FORBIDDEN    -> Json.obj("type" -> "AuthorizationError", "message"  -> message)
@@ -62,14 +62,14 @@ class ErrorHandler extends HttpErrorHandler {
         Status.INTERNAL_SERVER_ERROR -> (if (ex.getCause == null) json else json + ("cause" -> JsString(ex.getCause.getMessage)))
     }
 
-  def toResult[C](status: Int, c: C)(implicit writeable: Writeable[C]): Result =
+  private def toResult[C](status: Int, c: C)(implicit writeable: Writeable[C]): Result =
     Result(header = ResponseHeader(status), body = writeable.toEntity(c))
 
-  def onServerError(request: RequestHeader, exception: Throwable): Future[Result] = {
+  override def onServerError(request: RequestHeader, exception: Throwable): Future[Result] = {
     val (status, body) = toErrorResult(exception)
     if (!exception.isInstanceOf[AuthenticationError])
-      if (logger.isDebugEnabled) logger.warn(s"${request.method} ${request.uri} returned $status", exception)
-      else logger.warn(s"${request.method} ${request.uri} returned $status")
+      if (logger.isDebugEnabled) logger.warn(s"${request.method} ${LoggedUri(request)} returned $status", exception)
+      else logger.warn(s"${request.method} ${LoggedUri(request)} returned $status")
     Future.successful(toResult(status, body))
   }
 }

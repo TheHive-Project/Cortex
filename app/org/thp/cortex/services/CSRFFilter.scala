@@ -20,7 +20,7 @@ object CSRFFilter {
     val isApi       = request.uri.startsWith("/api")
     val isInSession = request.session.data.nonEmpty
     val check       = !isLogin && isApi && isInSession
-    logger.debug(s"[csrf] uri ${request.uri} (isLogin=$isLogin, isApi=$isApi, isInSession=$isInSession): ${if (check) "" else "don't"} check")
+    logger.debug(s"[csrf] uri ${LoggedUri(request)} (isLogin=$isLogin, isApi=$isApi, isInSession=$isInSession): ${if (check) "" else "don't"} check")
     check
   }
 

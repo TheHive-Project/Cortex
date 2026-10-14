@@ -8,6 +8,7 @@ import org.elastic4play.services.JsonFormat.authContextWrites
 import org.elastic4play.{AuthorizationError, MissingAttributeError, Timed}
 import org.thp.cortex.models.UserStatus
 import org.thp.cortex.services.UserSrv
+import org.thp.cortex.services.auth.oauth2.OAuth2Srv
 import play.api.Configuration
 import play.api.mvc._
 
@@ -50,7 +51,11 @@ class AuthenticationCtrl @Inject() (
             case Right(authContext) =>
               userSrv.get(authContext.userId).map { user =>
                 if (user.status() == UserStatus.Ok)
-                  authenticated.setSessingUser(Redirect(configuration.get[String]("play.http.context").stripSuffix("/") + "/index.html"), authContext)
+                  authenticated
+                    .setSessingUser(Redirect(configuration.get[String]("play.http.context").stripSuffix("/") + "/index.html"), authContext)
+                    // The OAuth2 state and PKCE code verifier are single-use values of the login flow, which is now complete:
+                    // don't keep them in the session cookie (signed, not encrypted) for the whole session
+                    .removingFromSession(OAuth2Srv.FlowSessionKeys.toSeq: _*)
                 else
                   throw AuthorizationError("Your account is locked")
               }

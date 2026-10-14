@@ -1,5 +1,37 @@
 # Change Log
 
+## Unreleased
+
+ - [DL-7443] feat: PKCE support for OAuth2 authentication (RFC 7636), disabled by default (`auth.oauth2.pkce = true` to enable).
+   Thanks to @EnzoCyberSec for the initial proposal ([#494](https://github.com/TheHive-Project/Cortex/pull/494)).
+   - an empty `auth.oauth2.clientSecret` now means a public client: the `client_secret` parameter is no longer sent to the token request
+     (previously an empty `client_secret=` was sent). Public clients should enable PKCE: a warning is logged at startup otherwise.
+   - the client secret, the authorization code, the state and the access tokens are no longer written in logs: OAuth2
+     DEBUG/TRACE logs, and the query string of the SSO callback (`/api/ssoLogin`) in the request and error logs.
+   - the OAuth2 state and PKCE code verifier are removed from the session once the user is logged in.
+   - an error sent back by the authorization server on the callback (e.g. `access_denied`) now makes the login fail with this
+     error, instead of redirecting the user to the authorization server again.
+   - the OAuth2 error returned by the token endpoint (`error`, `error_description`) is now part of the authentication failure
+     written in the server logs.
+
+   **Deprecation:** a public client (empty `auth.oauth2.clientSecret`) without PKCE leaves the authorization code exchange
+   unprotected, which was already the case before this version. This configuration is deprecated and will be rejected in a
+   future version: enable PKCE (`auth.oauth2.pkce = true`), or set the client secret.
+
+ - [DL-7443] fix: `auth.sso.autocreate` and `auth.sso.autoupdate` were swapped for OAuth2 authentication
+
+   **Upgrade note:** until now, `auth.sso.autocreate = true` updated existing users, and `auth.sso.autoupdate = true` created
+   unknown users. They now do what their name says. If you swapped them to work around this bug, swap them back. Check in
+   particular that `autocreate` is only enabled if unknown users of the authorization server must get a Cortex account.
+
+ - [DL-5871] fix: run analyzer/responder jobs on dedicated thread pools to keep the HTTP API responsive under heavy job load
+
+   **Upgrade note:** the `analyzer` and `responder` thread pools now use a `thread-pool-executor`
+   (`fixed-pool-size`) instead of a `fork-join-executor`. Any custom
+   `analyzer.fork-join-executor` / `responder.fork-join-executor` tuning in `application.conf` is
+   no longer applied — switch to `analyzer.thread-pool-executor.fixed-pool-size`
+   (see `conf/application.sample`).
+
 ## 3.2.0 (2025-06-02)
 
  - [DL-1231] Add support of Kubernetes

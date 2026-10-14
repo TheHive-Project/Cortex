@@ -30,13 +30,18 @@ import scala.util.Try
 
 /** Test helpers for OAuth2Srv
   */
-object OAuth2Fixtures {
+private[oauth2] object OAuth2Fixtures {
 
   /** OAuth2 configuration of a client registered at https://idp.example */
-  private def createOAuth2Config(tokenUrl: String = "https://idp.example/token", userUrl: String = "https://idp.example/userinfo"): OAuth2Config =
+  private def createOAuth2Config(
+      tokenUrl: String = "https://idp.example/token",
+      userUrl: String = "https://idp.example/userinfo",
+      usePkce: Boolean = false,
+      clientSecret: String = "client-secret"
+  ): OAuth2Config =
     OAuth2Config(
       clientId = "client-id",
-      clientSecret = "client-secret",
+      clientSecret = clientSecret,
       redirectUri = "https://cortex.example/api/ssoLogin",
       responseType = "code",
       grantType = "authorization_code",
@@ -46,7 +51,8 @@ object OAuth2Fixtures {
       scope = Seq("openid", "profile"),
       authorizationHeader = "Bearer",
       autoupdate = false,
-      autocreate = false
+      autocreate = false,
+      usePkce = usePkce
     )
 
   /** Login of the user known by the fake authorization server, and existing in Cortex */
@@ -74,22 +80,31 @@ object OAuth2Fixtures {
 
   private def authContextOf(login: String): AuthContext =
     new AuthContext {
-      override final def userId: String     = login
-      override final def userName: String   = login
-      override final def requestId: String  = "request-id"
-      override final def roles: Seq[Role]   = Nil
-      override final def authMethod: String = "oauth2"
+      final override def userId: String     = login
+      final override def userName: String   = login
+      final override def requestId: String  = "request-id"
+      final override def roles: Seq[Role]   = Nil
+      final override def authMethod: String = "oauth2"
     }
 
   /** An OAuth2 service whose authorization server is not reachable (none of its endpoints can be called) */
-  def createOAuth2Service(): OAuth2Srv =
-    new OAuth2Srv(ws = mock(classOf[WSClient]), userSrv = createUserSrv(), ssoMapper = FakeUserMapper, oauth2Config = Some(createOAuth2Config()))(
-      global
-    )
+  def createOAuth2Service(usePkce: Boolean = false): OAuth2Srv =
+    new OAuth2Srv(
+      ws = mock(classOf[WSClient]),
+      userSrv = createUserSrv(),
+      ssoMapper = FakeUserMapper,
+      oauth2Config = Some(createOAuth2Config(usePkce = usePkce))
+    )(global)
 
   /** The user starts to log in (no code nor state in request): return the redirection to the authorization server */
   def startLogIn(srv: OAuth2Srv): Result =
     await(srv.authenticate()(FakeRequest())).swap.getOrElse(throw new IllegalStateException("expected a redirection"))
+
+  /** The user denies the authorization: the authorization server redirects back with an error (RFC 6749 section 4.1.2.1) */
+  def denyAuthorization(srv: OAuth2Srv, session: Seq[(String, String)]): Try[Either[Result, AuthContext]] = {
+    val callback = FakeRequest(GET, "/api/ssoLogin?error=access_denied&error_description=User%20denied%20access&state=the-state")
+    Try(await(srv.authenticate()(callback.withSession(session: _*))))
+  }
 
   /** Parameters of the authorization request the browser sends to the authorization server when following the redirection */
   def readAuthorizationRequest(redirection: Result): Map[String, Seq[String]] =
@@ -102,6 +117,14 @@ object OAuth2Fixtures {
   /** State kept in Cortex session by the redirection */
   def readStateFromSession(redirection: Result): Option[String] =
     redirection.newSession.flatMap(_.get("state"))
+
+  /** Whole Cortex session set by the redirection, as the browser sends it back on the callback */
+  def readSession(redirection: Result): Seq[(String, String)] =
+    redirection.newSession.map(_.data.toSeq).getOrElse(Nil)
+
+  /** PKCE code verifier kept in Cortex session by the redirection */
+  def readCodeVerifierFromSession(redirection: Result): Option[String] =
+    redirection.newSession.flatMap(_.get("code_verifier"))
 
   private def readLocation(redirection: Result): String =
     redirection.header.headers.getOrElse(LOCATION, throw new IllegalStateException("Location header missing"))
@@ -152,10 +175,23 @@ object OAuth2Fixtures {
         )
     }
 
+  /** Token endpoint response with an access token (RFC 6749 section 5.1) */
+  val validTokenResponse: Result = Results.Ok(Json.obj("access_token" -> "access-token", "token_type" -> "Bearer"))
+
+  /** Token endpoint error response (RFC 6749 section 5.2) */
+  val tokenErrorResponse: Result =
+    Results.BadRequest(Json.obj("error" -> "invalid_grant", "error_description" -> "PKCE verification failed"))
+
   /** The authorization server redirects back with an authorization code (code and state in request):
     * exchange it against a fake authorization server
     */
-  def exchangeAuthorizationCode(session: Seq[(String, String)]): CodeExchange = {
+  def exchangeAuthorizationCode(
+      session: Seq[(String, String)],
+      usePkce: Boolean = false,
+      clientSecret: String = "client-secret",
+      tokenResponse: Result = validTokenResponse,
+      callbackState: String = "the-state"
+  ): CodeExchange = {
     val tokenRequest          = new AtomicReference[Option[Map[String, Seq[String]]]](None)
     val userInfoAuthorization = new AtomicReference[Option[String]](None)
     val outcome = Server.withRouterFromComponents() { components =>
@@ -163,7 +199,7 @@ object OAuth2Fixtures {
         case sird.POST(p"/token") =>
           components.defaultActionBuilder { request =>
             tokenRequest.set(Some(request.body.asFormUrlEncoded.getOrElse(Map.empty)))
-            Results.Ok(Json.obj("access_token" -> "access-token", "token_type" -> "Bearer"))
+            tokenResponse
           }
         case sird.GET(p"/userinfo") =>
           components.defaultActionBuilder { request =>
@@ -177,9 +213,16 @@ object OAuth2Fixtures {
           ws,
           createUserSrv(),
           FakeUserMapper,
-          Some(createOAuth2Config(tokenUrl = s"http://localhost:$port/token", userUrl = s"http://localhost:$port/userinfo"))
+          Some(
+            createOAuth2Config(
+              tokenUrl = s"http://localhost:$port/token",
+              userUrl = s"http://localhost:$port/userinfo",
+              usePkce = usePkce,
+              clientSecret = clientSecret
+            )
+          )
         )(global)
-        val request = FakeRequest(GET, "/api/ssoLogin?code=authorization-code&state=the-state").withSession(session: _*)
+        val request = FakeRequest(GET, s"/api/ssoLogin?code=authorization-code&state=$callbackState").withSession(session: _*)
         Try(await(srv.authenticate()(request)))
       }
     }

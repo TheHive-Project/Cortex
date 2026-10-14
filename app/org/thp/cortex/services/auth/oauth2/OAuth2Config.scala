@@ -14,7 +14,8 @@ final private[oauth2] case class OAuth2Config(
     scope: Seq[String],
     authorizationHeader: String,
     autoupdate: Boolean,
-    autocreate: Boolean
+    autocreate: Boolean,
+    usePkce: Boolean
 )
 
 private[oauth2] object OAuth2Config {
@@ -33,18 +34,20 @@ private[oauth2] object OAuth2Config {
       authorizationHeader = configuration.getOptional[String]("auth.oauth2.authorizationHeader").getOrElse("Bearer")
       autocreate          = configuration.getOptional[Boolean]("auth.sso.autocreate").getOrElse(false)
       autoupdate          = configuration.getOptional[Boolean]("auth.sso.autoupdate").getOrElse(false)
+      usePkce             = configuration.getOptional[Boolean]("auth.oauth2.pkce").getOrElse(false)
     } yield OAuth2Config(
-      clientId,
-      clientSecret,
-      redirectUri,
-      responseType,
-      grantType,
-      authorizationUrl,
-      tokenUrl,
-      userUrl,
-      scope,
-      authorizationHeader,
-      autocreate,
-      autoupdate
+      clientId = clientId,
+      clientSecret = clientSecret,
+      redirectUri = redirectUri,
+      responseType = responseType,
+      grantType = grantType,
+      authorizationUrl = authorizationUrl,
+      tokenUrl = tokenUrl,
+      userUrl = userUrl,
+      scope = scope,
+      authorizationHeader = authorizationHeader,
+      autoupdate = autoupdate,
+      autocreate = autocreate,
+      usePkce = usePkce
     )
 }

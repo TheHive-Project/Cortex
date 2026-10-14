@@ -138,10 +138,13 @@ auth {
     oauth2 {
         # URL of the authorization server
         #clientId = "client-id"
+        # Client secret of a confidential client. Set it to "" for a public client, which should enable PKCE.
         #clientSecret = "client-secret"
         #redirectUri = "https://my-cortex-instance.example/api/ssoLogin"
         #responseType = "code"
         #grantType = "authorization_code"
+        # Use PKCE (RFC 7636) to protect the authorization code exchange. Recommended, required by some authorization servers.
+        #pkce = false
 
         # URL from where to get the access token
         #authorizationUrl = "https://auth-site.com/OAuth/Authorize"
