@@ -24,6 +24,7 @@ class K8sJobRunnerSrv(
     imagePullSecrets: Seq[String],
     extraLabels: Map[String, String],
     podSecurityContext: Option[PodSecurityContext],
+    backoffLimit: Int,
     implicit val system: ActorSystem
 ) {
 
@@ -36,6 +37,7 @@ class K8sJobRunnerSrv(
       config.getOptional[Seq[String]]("job.kubernetes.imagePullSecrets").getOrElse(Seq.empty),
       K8sJobRunnerSrv.parseLabels(config),
       K8sJobRunnerSrv.parsePodSecurityContext(config),
+      config.getOptional[Int]("job.kubernetes.backoffLimit").getOrElse(0),
       system: ActorSystem
     )
 
@@ -94,6 +96,7 @@ class K8sJobRunnerSrv(
       .withLabels(allLabels.asJava)
       .endMetadata()
       .withNewSpec()
+      .withBackoffLimit(backoffLimit)
       .withNewTemplate()
       .withNewMetadata()
       .withLabels(allLabels.asJava)
