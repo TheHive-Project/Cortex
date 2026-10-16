@@ -6,7 +6,7 @@ import org.elastic4play.models.JsonFormat.baseModelEntityWrites
 import org.elastic4play.services.JsonFormat.queryReads
 import org.elastic4play.services.{AuthContext, AuthSrv, QueryDSL, QueryDef}
 import org.thp.cortex.models.{OrganizationStatus, Roles}
-import org.thp.cortex.services.{OrganizationSrv, UserSrv}
+import org.thp.cortex.services.{OrganizationSrv, TOTPSrv, UserSrv}
 import play.api.Logger
 import play.api.http.Status
 import play.api.libs.json.{JsObject, Json}
@@ -20,6 +20,7 @@ import scala.util.Try
 class UserCtrl @Inject() (
     userSrv: UserSrv,
     authSrv: AuthSrv,
+    totpSrv: TOTPSrv,
     organizationSrv: OrganizationSrv,
     authenticated: Authenticated,
     renderer: Renderer,
@@ -112,6 +113,8 @@ class UserCtrl @Inject() (
       if (request.body.contains("password"))
         Future.failed(AuthorizationError("You must use dedicated API (setPassword, changePassword) to update password"))
       else if (request.body.contains("key")) Future.failed(AuthorizationError("You must use dedicated API (renewKey, removeKey) to update key"))
+      else if (request.body.contains("totpSecret") || request.body.contains("totpScratchCodes"))
+        Future.failed(AuthorizationError("You must use dedicated API (mfa/init, mfa/set, mfa/unset) to update multi-factor authentication"))
       else Future.successful(())
 
     for {
@@ -253,5 +256,69 @@ class UserCtrl @Inject() (
       keyInput <- request.body.getString("key").fold(Future.failed[String](MissingAttributeError("key")))(Future.successful)
       key      <- authSrv.setKey(userId, keyInput)
     } yield Ok(key)
+  }
+
+  /** Session key holding the secret between `mfaInit` and `mfaSet`.
+    *
+    * Keeping the pending secret in the (signed) session rather than server-side memory keeps enrolment working across a horizontally scaled Cortex
+    * without sticky sessions, and stops the client from choosing its own secret. The value is readable by the user's own browser, which is fine —
+    * it is the very thing they are about to scan.
+    */
+  private val pendingMfaSecret = "mfaSecret"
+
+  @Timed
+  def mfaInit(userId: String): Action[AnyContent] = authenticated().async { implicit request =>
+    if (userId != request.authContext.userId)
+      Future.failed(AuthorizationError("You can't enable multi-factor authentication for another user"))
+    else if (!totpSrv.enabled)
+      Future.failed(BadRequestError("Multi-factor authentication is disabled on this instance"))
+    else {
+      val secret = totpSrv.generateSecret()
+      Future.successful(
+        renderer
+          .toOutput(
+            OK,
+            Json.obj(
+              "secret" -> secret,                             // for manual entry
+              "uri"    -> totpSrv.otpAuthUri(userId, secret), // for a click-through on mobile
+              "qrCode" -> totpSrv.qrCode(userId, secret)      // SVG data URI, for an <img>
+            )
+          )
+          .addingToSession(pendingMfaSecret -> secret)
+      )
+    }
+  }
+
+  @Timed
+  def mfaSet(userId: String): Action[Fields] = authenticated().async(fieldsBodyParser) { implicit request =>
+    if (userId != request.authContext.userId)
+      Future.failed(AuthorizationError("You can't enable multi-factor authentication for another user"))
+    else
+      for {
+        secret <- request
+          .session
+          .get(pendingMfaSecret)
+          .fold(Future.failed[String](BadRequestError("No multi-factor enrolment in progress, start it again")))(Future.successful)
+        code <- request.body.getString("code").fold(Future.failed[String](MissingAttributeError("code")))(Future.successful)
+        _    <- totpSrv.verifyForEnrolment(userId, secret, code)
+        (backupCodes, backupCodeHashes) = totpSrv.generateBackupCodes()
+        _ <- totpSrv.enable(userId, secret, backupCodeHashes)
+        _ = logger.info(s"User $userId enabled multi-factor authentication")
+      } yield renderer
+        .toOutput(OK, Json.obj("backupCodes" -> backupCodes))
+        .removingFromSession(pendingMfaSecret)
+  }
+
+  /** Self-service disable, and the admin reset for a user who lost their authenticator. */
+  @Timed
+  def mfaUnset(userId: String): Action[AnyContent] = authenticated().async { implicit request =>
+    val isAdmin = request.roles.contains(Roles.orgAdmin) || request.roles.contains(Roles.superAdmin)
+    for {
+      _ <- if (userId == request.authContext.userId || isAdmin) Future.successful(())
+      else Future.failed(AuthorizationError("You are not authorized to perform this operation"))
+      _ <- checkUserOrganization(userId)
+      _ <- totpSrv.disable(userId)
+      _ = logger.info(s"Multi-factor authentication of user $userId reset by user ${request.userId}")
+    } yield NoContent
   }
 }

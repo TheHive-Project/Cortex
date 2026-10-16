@@ -82,6 +82,32 @@ export default class UserService {
       .catch(err => this.$q.reject(err));
   }
 
+  /** Starts MFA enrolment: returns {secret, uri}. The server keeps the pending secret in the session. */
+  mfaInit(id) {
+    return this.$http
+      .post(`./api/user/${id}/mfa/init`)
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
+  }
+
+  /** Confirms enrolment with a code from the authenticator app. Returns {backupCodes}, shown once. */
+  mfaSet(id, code) {
+    return this.$http
+      .post(`./api/user/${id}/mfa/set`, {
+        code: code
+      })
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
+  }
+
+  /** Self-service disable, and the org admin / superadmin reset. */
+  mfaUnset(id) {
+    return this.$http
+      .post(`./api/user/${id}/mfa/unset`)
+      .then(response => this.$q.resolve(response.data))
+      .catch(err => this.$q.reject(err));
+  }
+
   getUserInfo(login) {
     let defer = this.$q.defer();
 

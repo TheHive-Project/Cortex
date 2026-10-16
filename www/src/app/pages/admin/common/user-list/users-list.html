@@ -17,6 +17,7 @@
       <div class="flex-col flex-2"></div>
       <div class="flex-col flex-1">Password</div>
       <div class="flex-col flex-2">API Key</div>
+      <div class="flex-col flex-w-100 text-center" ng-if="$ctrl.canUseMfa">2FA</div>
       <div class="flex-col flex-w-100"></div>
       <div class="flex-col flex-w-100"></div>
     </div>
@@ -81,7 +82,13 @@
             </span>
           </div>
         </span>
-        </td>
+      </div>
+      <div class="flex-col flex-w-100 text-center vertical centered" ng-if="$ctrl.canUseMfa">
+        <span ng-if="user.hasMFA">
+          <span class="label label-success">Enabled</span>
+          <a href class="text-danger" ng-click="$ctrl.resetMfa(user)" title="Reset two-factor authentication">Reset</a>
+        </span>
+        <span class="text-muted" ng-if="!user.hasMFA">&mdash;</span>
       </div>
       <div class="flex-col flex-icon flex-w-100" ng-click="$ctrl.openModal('edit', user)">
         <a href class="text-primary">

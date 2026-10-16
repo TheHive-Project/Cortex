@@ -1,7 +1,7 @@
 package org.thp.cortex.models
 
 import scala.concurrent.Future
-import play.api.libs.json.{Format, JsArray, JsBoolean, JsObject, JsString}
+import play.api.libs.json.{Format, JsArray, JsBoolean, JsNumber, JsObject, JsString}
 import org.elastic4play.models.JsonFormat.enumFormat
 import org.elastic4play.models.{AttributeDef, BaseEntity, EntityDef, HiveEnumeration, ModelDef, AttributeFormat => F, AttributeOption => O}
 import org.elastic4play.services.{User => EUser}
@@ -23,6 +23,9 @@ trait UserAttributes { _: AttributeDef =>
   val avatar       = optionalAttribute("avatar", F.rawFmt, "Base64 representation of user avatar image", O.unaudited)
   val preferences  = attribute("preferences", F.rawFmt, "User preferences", "{}", O.sensitive, O.unaudited)
   val organization = attribute("organization", F.stringFmt, "User organization")
+  val totpSecret   = optionalAttribute("totpSecret", F.stringFmt, "TOTP shared secret (base32)", O.sensitive, O.unaudited)
+  // Single-use backup codes, consumed one by one when the user can't produce a TOTP code
+  val totpScratchCodes = multiAttribute("totpScratchCodes", F.stringFmt, "Unused MFA backup codes", O.sensitive, O.unaudited)
 }
 
 class UserModel extends ModelDef[UserModel, User]("user", "User", "/user") with UserAttributes with AuditedModel {
@@ -40,7 +43,9 @@ class User(model: UserModel, attributes: JsObject) extends EntityDef[UserModel, 
 
   override def toJson: JsObject =
     super.toJson +
-      ("roles"       -> JsArray(roles().map(r => JsString(r.name.toLowerCase())))) +
-      ("hasKey"      -> JsBoolean(key().isDefined)) +
-      ("hasPassword" -> JsBoolean(password().isDefined))
+      ("roles"                -> JsArray(roles().map(r => JsString(r.name.toLowerCase())))) +
+      ("hasKey"               -> JsBoolean(key().isDefined)) +
+      ("hasPassword"          -> JsBoolean(password().isDefined)) +
+      ("hasMFA"               -> JsBoolean(totpSecret().isDefined)) +
+      ("remainingBackupCodes" -> JsNumber(totpScratchCodes().size))
 }
