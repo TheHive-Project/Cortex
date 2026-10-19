@@ -28,10 +28,7 @@ object Common {
     },
     Test / parallelExecution := false,
     Test / fork := true,
-    javaOptions += "-Xmx1G",
-    // Redirect logs from ElasticSearch (which uses log4j2) to slf4j
-    libraryDependencies += "org.apache.logging.log4j" % "log4j-to-slf4j" % "2.17.0",
-    excludeDependencies += "org.apache.logging.log4j" % "log4j-core"
+    javaOptions += "-Xmx1G"
   )
 
   val stableVersion: Regex = "(\\d+\\.\\d+\\.\\d+)-(\\d+)".r

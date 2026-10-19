@@ -1,4 +1,4 @@
-import Common.{stableVersion, snapshotVersion, versionUsage, betaVersion}
+import Common.{betaVersion, snapshotVersion, stableVersion, versionUsage}
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.*
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.defaultLinuxInstallLocation

@@ -1,15 +1,21 @@
-import Common.{stableVersion, betaVersion, snapshotVersion, versionUsage}
+import Common.{betaVersion, snapshotVersion, stableVersion, versionUsage}
 import com.typesafe.sbt.SbtNativePackager.autoImport.{maintainer, maintainerScripts, packageDescription, packageSummary}
 import com.typesafe.sbt.packager.Keys.*
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging.autoImport.maintainerScriptsFromDirectory
-import com.typesafe.sbt.packager.debian.DebianPlugin.autoImport.{Debian, DebianConstants, debianPackageRecommends}
-import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.{defaultLinuxInstallLocation, linuxEtcDefaultTemplate, linuxMakeStartScript, linuxPackageMappings, packageMapping}
+import com.typesafe.sbt.packager.debian.DebianPlugin.autoImport.{debianPackageRecommends, Debian, DebianConstants}
+import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.{
+  defaultLinuxInstallLocation,
+  linuxEtcDefaultTemplate,
+  linuxMakeStartScript,
+  linuxPackageMappings,
+  packageMapping
+}
 import com.typesafe.sbt.packager.linux.Mapper.configWithNoReplace
 import com.typesafe.sbt.packager.rpm.RpmPlugin.autoImport.{Rpm, RpmConstants}
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport.Universal
 import sbt.Keys.*
 import sbt.Package.ManifestAttributes
-import sbt.{Def, *}
+import sbt.*
 
 import java.util.jar.Attributes.Name.*
 

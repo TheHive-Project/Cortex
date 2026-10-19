@@ -3,7 +3,7 @@ package org.thp.cortex.util.docker
 import com.github.dockerjava.api.model._
 import com.github.dockerjava.core.{DefaultDockerClientConfig, DockerClientConfig, DockerClientImpl}
 import com.github.dockerjava.transport.DockerHttpClient
-import com.github.dockerjava.zerodep.ZerodepDockerHttpClient
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient
 import play.api.{Configuration, Logger}
 
 import java.nio.file.{Files, Path}
@@ -194,7 +194,7 @@ class DockerClient(config: Configuration) {
 
   private def getHttpClient: (DockerClientConfig, DockerHttpClient) = {
     val dockerConf = getBaseConfig
-    val dockerClient = new ZerodepDockerHttpClient.Builder()
+    val dockerClient = new ApacheDockerHttpClient.Builder()
       .dockerHost(dockerConf.getDockerHost)
       .sslConfig(dockerConf.getSSLConfig)
       .maxConnections(if (config.has("docker.httpClient.maxConnections")) config.get[Int]("docker.httpClient.maxConnections") else 100)

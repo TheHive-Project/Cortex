@@ -1,6 +1,5 @@
 // Comment to get more information during initialization
 logLevel := Level.Info
-evictionErrorLevel := util.Level.Warn
 
 lazy val isEnabled: Set[String] = sys.props.getOrElse("plugins", "").split(",").map(_.trim).toSet
 
@@ -9,9 +8,9 @@ def maybeEnable(pair: (String, ModuleID)): Seq[Setting[?]] =
 
 Seq[(String, ModuleID)](
   "sbom"     -> "com.github.sbt" %% "sbt-sbom"            % "0.5.0",
-  "depcheck" -> "net.nmoncho"    % "sbt-dependency-check" % "1.9.0"
+  "depcheck" -> "net.nmoncho"    % "sbt-dependency-check" % "2.0.0"
 ).flatMap(maybeEnable)
 
 // The Play plugin
-addSbtPlugin("org.playframework" % "sbt-plugin"   % "3.0.9")
-addSbtPlugin("org.scalameta"     % "sbt-scalafmt" % "2.5.5")
+addSbtPlugin("org.playframework" % "sbt-plugin"   % "3.0.12")
+addSbtPlugin("org.scalameta"     % "sbt-scalafmt" % "2.6.2")
